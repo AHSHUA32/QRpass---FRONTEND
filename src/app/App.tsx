@@ -1,4 +1,11 @@
-import { login, register, createItem, getItems, getPendingItems, approveItem, verifyItem, createScanLog, getScanLogs, getAllItems, } from "../services/api";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import { autoTable } from "jspdf-autotable";
+import { login, register, createItem, getItems, getPendingItems, approveItem, verifyItem, 
+         createScanLog, getScanLogs, getAllItems, getSecurityIncidents, createSecurityIncident, 
+         resolveSecurityIncident,getLostFoundItems, createLostFoundItem, claimLostFoundItem,markLostFoundRecovered,  
+         getNotifications, markNotificationRead, markAllNotificationsRead, getDashboard,
+         getSystemRecords, getReports, getUsers, updateUserStatus, createUser,updateUser, logout,  } from "../services/api";
 import { QRCodeSVG } from "qrcode.react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import React, { useState, useEffect, useId } from "react";
@@ -1004,128 +1011,909 @@ function useNotifs(role: "student" | "security") {
 }
 
 function StudentLostAndFound() {
-  const items = useLFItems();
-  const [selectedItem, setSelectedItem] = useState<LFItem | null>(null);
-  const [inquiryMsg, setInquiryMsg] = useState("");
-  const [inquirySent, setInquirySent] = useState<string[]>([]);
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [search, setSearch] = useState("");
+  const [claimingId, setClaimingId] =
+    useState<number | null>(null);
 
-  function handleInquire(lf: LFItem) {
-    if (!inquiryMsg.trim()) return;
-    updateLFItem(lf.id, {
-      inquiries: [...lf.inquiries, { name: "Adrian N. Badon", message: inquiryMsg, time: new Date().toLocaleString("en-PH") }],
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD LOST & FOUND REGISTRY
+  |--------------------------------------------------------------------------
+  */
+
+  async function loadItems() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data =
+        await getLostFoundItems();
+
+      setItems(
+        Array.isArray(data)
+          ? data
+          : data?.items ?? []
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load Lost & Found registry."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+  /*
+  |--------------------------------------------------------------------------
+  | CLAIM ITEM
+  |--------------------------------------------------------------------------
+  */
+
+  async function handleClaim(
+    id: number
+  ) {
+    const confirmed =
+      window.confirm(
+        "Submit a claim for this item? You will still need to visit the CSU office for ownership verification."
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setClaimingId(id);
+      setError("");
+      setSuccess("");
+
+      const result =
+        await claimLostFoundItem(id);
+
+      setSuccess(
+        result?.message ||
+          "Claim submitted successfully."
+      );
+
+      await loadItems();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 4000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to submit claim."
+      );
+    } finally {
+      setClaimingId(null);
+    }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | SEARCH
+  |--------------------------------------------------------------------------
+  */
+
+  const filteredItems =
+    items.filter((item) => {
+      const query =
+        search
+          .trim()
+          .toLowerCase();
+
+      if (!query) {
+        return true;
+      }
+
+      const searchableText = [
+        item.id,
+        item.item_name,
+        item.category,
+        item.brand_model,
+        item.color,
+        item.location_found,
+        item.description,
+        item.status,
+        item.finder?.name,
+        item.finder?.username,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(
+        query
+      );
     });
-    addNotif({ role: "security", type: "info", message: `Student Adrian N. Badon inquired about: "${lf.item}"`, time: new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" }) });
-    setInquiryMsg("");
-    setSelectedItem(null);
-    setInquirySent(prev => [...prev, lf.id]);
+
+  /*
+  |--------------------------------------------------------------------------
+  | FORMAT DATE
+  |--------------------------------------------------------------------------
+  */
+
+  function formatDate(
+    value?: string | null
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return value;
+    }
+
+    return date.toLocaleDateString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }
+    );
   }
 
-  function handleClaim(lf: LFItem) {
-    updateLFItem(lf.id, { status: "Claimed" });
-    addNotif({ role: "security", type: "success", message: `Student Adrian N. Badon claimed item: "${lf.item}" — please verify ownership at the guardhouse.`, time: new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" }) });
-    setSelectedItem(null);
-    setInquirySent(prev => [...prev, lf.id]);
-  }
-
-  const statusColor: Record<string, string> = { Open: "bg-blue-100 text-blue-700", Claimed: "bg-green-100 text-green-700", Recovered: "bg-teal-100 text-teal-700" };
-  const typeColor = { lost: "bg-red-100 text-red-700", found: "bg-teal-100 text-teal-700" };
+  /*
+  |--------------------------------------------------------------------------
+  | PAGE
+  |--------------------------------------------------------------------------
+  */
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Lost & Found" subtitle="Browse lost and found items posted by Security Personnel. Inquire or claim items that belong to you." />
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2.5 flex items-center gap-2">
-        <AlertTriangle size={14} className="text-yellow-600 flex-shrink-0" />
-        <p className="text-xs text-yellow-800">Only Security Personnel (CSU) are authorized to post lost or found items. Contact the guardhouse to report a lost item.</p>
-      </div>
-      <div className="space-y-3">
-        {items.length === 0 && (
-          <div className="text-center py-10 text-muted-foreground text-sm">No lost & found items posted yet.</div>
-        )}
-        {items.map(lf => (
-          <div key={lf.id} className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
-            <div className="flex gap-3 p-4">
-              {lf.imageUrl ? (
-                <img src={lf.imageUrl} alt={lf.item} className="w-20 h-20 object-cover rounded-md flex-shrink-0 border border-border" />
-              ) : (
-                <div className="w-20 h-20 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
-                  <Package size={24} className="text-muted-foreground" />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full uppercase ${typeColor[lf.type]}`}>{lf.type}</span>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColor[lf.status]}`}>{lf.status}</span>
-                </div>
-                <p className="font-semibold text-sm text-foreground mt-1">{lf.item}</p>
-                <p className="text-xs text-muted-foreground">{lf.description}</p>
-                <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
-                  <span>📍 {lf.location}</span>
-                  <span>📅 {lf.date}</span>
-                  <span>👤 Posted by: {lf.postedBy}</span>
-                </div>
-                {lf.status === "Open" && !inquirySent.includes(lf.id) && (
-                  <div className="flex gap-2 mt-3">
-                    <button onClick={() => setSelectedItem(selectedItem?.id === lf.id ? null : lf)}
-                      className="text-xs bg-primary text-white px-3 py-1.5 rounded font-semibold hover:opacity-90">
-                      Inquire
-                    </button>
-                    {lf.type === "found" && (
-                      <button onClick={() => handleClaim(lf)}
-                        className="text-xs bg-green-600 text-white px-3 py-1.5 rounded font-semibold hover:opacity-90">
-                        Claim This Item
-                      </button>
-                    )}
-                  </div>
-                )}
-                {inquirySent.includes(lf.id) && (
-                  <p className="text-xs text-green-600 font-medium mt-2">✓ Inquiry / Claim submitted — Security has been notified. Please proceed to the guardhouse.</p>
-                )}
-                {lf.status === "Claimed" && !inquirySent.includes(lf.id) && (
-                  <p className="text-xs text-muted-foreground mt-2 italic">This item has already been claimed.</p>
-                )}
-              </div>
-            </div>
-            {selectedItem?.id === lf.id && (
-              <div className="border-t border-border px-4 py-3 bg-muted/30 space-y-2">
-                <p className="text-xs font-semibold text-foreground">Send an inquiry message to Security:</p>
-                <textarea
-                  value={inquiryMsg}
-                  onChange={e => setInquiryMsg(e.target.value)}
-                  placeholder="Describe why you think this is your item or ask for more details..."
-                  rows={2}
-                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-                />
-                <div className="flex gap-2 justify-end">
-                  <button onClick={() => setSelectedItem(null)} className="text-xs px-3 py-1.5 border border-border rounded text-muted-foreground hover:bg-muted">Cancel</button>
-                  <button onClick={() => handleInquire(lf)} className="text-xs bg-primary text-white px-3 py-1.5 rounded font-semibold hover:opacity-90">Send Inquiry</button>
-                </div>
-              </div>
-            )}
+      <PageHeader
+        title="Lost & Found"
+        subtitle="Browse items turned over to the Civil Security Unit and submit a claim if an item belongs to you."
+      />
+
+      {/* Information */}
+
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+        <div className="flex items-start gap-2">
+          <Shield
+            size={16}
+            className="mt-0.5 flex-shrink-0 text-blue-700"
+          />
+
+          <div>
+            <p className="text-sm font-medium text-blue-900">
+              CSU Lost & Found Procedure
+            </p>
+
+            <p className="mt-1 text-xs text-blue-800">
+              Found items must be
+              physically turned over to
+              the CSU office. CSU
+              personnel will record the
+              item in QRPass and credit
+              the person who turned it
+              over. Students can browse
+              records and submit claims,
+              but cannot create Lost &
+              Found reports.
+            </p>
           </div>
-        ))}
+        </div>
       </div>
+
+      {/* Messages */}
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
+      {/* Statistics */}
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard
+          label="Total Reports"
+          value={String(
+            items.length
+          )}
+          icon={
+            <BookOpen size={20} />
+          }
+          color="#003087"
+        />
+
+        <StatCard
+          label="Available Items"
+          value={String(
+            items.filter(
+              (item) =>
+                String(
+                  item.status ?? ""
+                ).toLowerCase() ===
+                "found"
+            ).length
+          )}
+          icon={
+            <Package size={20} />
+          }
+          color="#f5c200"
+        />
+
+        <StatCard
+          label="Recovered"
+          value={String(
+            items.filter(
+              (item) =>
+                String(
+                  item.status ?? ""
+                ).toLowerCase() ===
+                "recovered"
+            ).length
+          )}
+          icon={
+            <CheckCircle
+              size={20}
+            />
+          }
+          color="#2ecc71"
+        />
+      </div>
+
+      {/* Search */}
+
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="relative flex-1">
+          <Search
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+
+          <input
+            type="text"
+            value={search}
+            onChange={(e) =>
+              setSearch(
+                e.target.value
+              )
+            }
+            placeholder="Search item, category, location, finder..."
+            className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={loadItems}
+          disabled={loading}
+          className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading
+            ? "Refreshing..."
+            : "Refresh"}
+        </button>
+      </div>
+
+      {/* Loading */}
+
+      {loading && (
+        <div className="rounded-lg border border-border bg-card p-10 text-center">
+          <p className="text-sm text-muted-foreground">
+            Loading Lost & Found
+            registry...
+          </p>
+        </div>
+      )}
+
+      {/* Empty */}
+
+      {!loading &&
+        filteredItems.length ===
+          0 && (
+          <div className="rounded-lg border border-border bg-card p-10 text-center">
+            <BookOpen
+              size={32}
+              className="mx-auto mb-3 text-muted-foreground"
+            />
+
+            <p className="text-sm font-medium text-foreground">
+              No Lost & Found
+              records found.
+            </p>
+
+            <p className="mt-1 text-xs text-muted-foreground">
+              Items turned over to
+              CSU will appear here.
+            </p>
+          </div>
+        )}
+
+      {/* Registry */}
+
+      {!loading &&
+        filteredItems.map(
+          (item) => {
+            const status =
+              String(
+                item.status ??
+                  "Found"
+              );
+
+            const statusLower =
+              status.toLowerCase();
+
+            const isFound =
+              statusLower ===
+              "found";
+
+            const isClaimed =
+              statusLower ===
+              "claimed";
+
+            const isRecovered =
+              statusLower ===
+              "recovered";
+
+            return (
+              <div
+                key={item.id}
+                className="rounded-lg border border-border bg-card shadow-sm"
+              >
+                <div className="p-4">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+
+                    <div className="min-w-0 flex-1">
+
+                      {/* Header */}
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-base font-semibold text-foreground">
+                          {item.item_name}
+                        </h3>
+
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            isRecovered
+                              ? "bg-green-100 text-green-700"
+                              : isClaimed
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {status}
+                        </span>
+
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                          Report #
+                          {item.id}
+                        </span>
+                      </div>
+
+                      {/* Details */}
+
+                      <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Category
+                          </p>
+
+                          <p className="font-medium text-foreground">
+                            {item.category ||
+                              "—"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Brand /
+                            Model
+                          </p>
+
+                          <p className="font-medium text-foreground">
+                            {item.brand_model ||
+                              "—"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Color
+                          </p>
+
+                          <p className="font-medium text-foreground">
+                            {item.color ||
+                              "—"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Date Found
+                          </p>
+
+                          <p className="font-medium text-foreground">
+                            {formatDate(
+                              item.date_found
+                            )}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Location
+                            Found
+                          </p>
+
+                          <p className="font-medium text-foreground">
+                            {item.location_found ||
+                              "—"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Turned Over
+                            By
+                          </p>
+
+                          <p className="font-medium text-foreground">
+                            {item.finder
+                              ?.name ||
+                              "Not specified"}
+                          </p>
+
+                          {item.finder
+                            ?.username && (
+                            <p className="text-xs text-muted-foreground">
+                              {
+                                item
+                                  .finder
+                                  .username
+                              }
+                            </p>
+                          )}
+                        </div>
+
+                      </div>
+
+                      {/* Description */}
+
+                      {item.description && (
+                        <div className="mt-4 rounded-lg bg-muted/40 p-3">
+                          <p className="text-xs font-medium text-muted-foreground">
+                            Item
+                            Description
+                          </p>
+
+                          <p className="mt-1 text-sm text-foreground">
+                            {
+                              item.description
+                            }
+                          </p>
+                        </div>
+                      )}
+
+                      {/* CSU */}
+
+                      {item.processor && (
+                        <div className="mt-3 text-xs text-muted-foreground">
+                          Processed by
+                          CSU:{" "}
+                          <span className="font-medium text-foreground">
+                            {
+                              item
+                                .processor
+                                .name
+                            }
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Claim Action */}
+
+                    <div className="flex-shrink-0">
+
+                      {isFound && (
+                        <button
+                          type="button"
+                          disabled={
+                            claimingId ===
+                            Number(
+                              item.id
+                            )
+                          }
+                          onClick={() =>
+                            handleClaim(
+                              Number(
+                                item.id
+                              )
+                            )
+                          }
+                          className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+                        >
+                          {claimingId ===
+                          Number(
+                            item.id
+                          )
+                            ? "Submitting..."
+                            : "Claim Item"}
+                        </button>
+                      )}
+
+                      {isClaimed && (
+                        <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
+                          Claim pending
+                          CSU verification
+                        </div>
+                      )}
+
+                      {isRecovered && (
+                        <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-800">
+                          Returned to
+                          owner
+                        </div>
+                      )}
+
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            );
+          }
+        )}
     </div>
   );
 }
 
 function StudentNotifications() {
-  const liveNotifs = useNotifs("student");
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [markingId, setMarkingId] = useState<number | null>(null);
+  const [markingAll, setMarkingAll] = useState(false);
+  const [error, setError] = useState("");
+
+  async function loadNotifications() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getNotifications();
+
+      setNotifications(data.notifications ?? []);
+    } catch (err) {
+      console.error("Failed to load notifications:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load notifications."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  async function handleMarkRead(id: number) {
+    try {
+      setMarkingId(id);
+      setError("");
+
+      await markNotificationRead(id);
+
+      setNotifications((previous) =>
+        previous.map((notification) =>
+          notification.id === id
+            ? {
+                ...notification,
+                is_read: true,
+                read_at: new Date().toISOString(),
+              }
+            : notification
+        )
+      );
+    } catch (err) {
+      console.error(
+        "Failed to mark notification as read:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark notification as read."
+      );
+    } finally {
+      setMarkingId(null);
+    }
+  }
+
+  async function handleMarkAllRead() {
+    const unreadExists = notifications.some(
+      (notification) => !notification.is_read
+    );
+
+    if (!unreadExists) return;
+
+    try {
+      setMarkingAll(true);
+      setError("");
+
+      await markAllNotificationsRead();
+
+      setNotifications((previous) =>
+        previous.map((notification) => ({
+          ...notification,
+          is_read: true,
+          read_at:
+            notification.read_at ??
+            new Date().toISOString(),
+        }))
+      );
+    } catch (err) {
+      console.error(
+        "Failed to mark all notifications as read:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark all notifications as read."
+      );
+    } finally {
+      setMarkingAll(false);
+    }
+  }
+
+  function formatDate(dateString: string) {
+    if (!dateString) return "—";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString();
+  }
+
+  function formatTime(dateString: string) {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  const unreadCount = notifications.filter(
+    (notification) => !notification.is_read
+  ).length;
+
+  const readCount =
+    notifications.length - unreadCount;
+
   return (
-    <div className="space-y-5">
-      <PageHeader title="Notifications" subtitle="Alerts and updates from the QRpass system." />
-      <Card title="All Notifications" action={<button className="text-xs text-muted-foreground hover:text-foreground">Mark all as read</button>}>
-        <div className="p-3 space-y-2">
-          {liveNotifs.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">No notifications yet.</p>}
-          {liveNotifs.map(n => <NotifItem key={n.id} type={n.type} message={n.message} time={n.time} />)}
-          <NotifItem type="success" message="Your Laptop Dell XPS 15 has been approved by PCO. QR code is now active." time="Jun 10, 2026 – 9:42 AM" />
-          <NotifItem type="warning" message="iPad Pro registration requires additional documentation from the registrar." time="Jun 14, 2026 – 2:15 PM" />
-          <NotifItem type="info" message="Scheduled campus QR item check on June 18 — ensure all items are QR-registered." time="Jun 13, 2026 – 10:00 AM" />
+    <div className="space-y-6">
+      {/* HEADER */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Notifications
+          </h1>
+
+          <p className="text-sm text-gray-500 mt-1">
+            View updates about your registered items and
+            QRPass activity.
+          </p>
         </div>
-      </Card>
+
+        <div className="flex gap-2">
+          <button
+            onClick={loadNotifications}
+            disabled={loading}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+          >
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+
+          <button
+            onClick={handleMarkAllRead}
+            disabled={
+              markingAll ||
+              unreadCount === 0
+            }
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+          >
+            {markingAll
+              ? "Updating..."
+              : "Mark All as Read"}
+          </button>
+        </div>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* SUMMARY */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Total Notifications
+          </p>
+
+          <p className="text-3xl font-bold text-gray-900 mt-2">
+            {notifications.length}
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Unread
+          </p>
+
+          <p className="text-3xl font-bold text-blue-600 mt-2">
+            {unreadCount}
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Read
+          </p>
+
+          <p className="text-3xl font-bold text-green-600 mt-2">
+            {readCount}
+          </p>
+        </div>
+      </div>
+
+      {/* NOTIFICATIONS */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-bold text-gray-900">
+            Recent Notifications
+          </h2>
+        </div>
+
+        {loading ? (
+          <div className="py-14 text-center text-gray-500">
+            Loading notifications...
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="py-14 text-center">
+            <p className="font-semibold text-gray-700">
+              No notifications yet.
+            </p>
+
+            <p className="text-sm text-gray-500 mt-1">
+              Item approval and other QRPass updates will
+              appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {notifications.map((notification) => {
+              const unread = !notification.is_read;
+
+              return (
+                <div
+                  key={notification.id}
+                  className={`p-5 ${
+                    unread
+                      ? "bg-blue-50/60"
+                      : "bg-white"
+                  }`}
+                >
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-gray-900">
+                          {notification.title}
+                        </h3>
+
+                        {unread && (
+                          <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-bold uppercase">
+                            New
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-sm text-gray-600 mt-2">
+                        {notification.message}
+                      </p>
+
+                      <div className="flex flex-wrap gap-3 mt-3 text-xs text-gray-500">
+                        <span>
+                          {formatDate(
+                            notification.created_at
+                          )}
+                        </span>
+
+                        <span>
+                          {formatTime(
+                            notification.created_at
+                          )}
+                        </span>
+
+                        <span className="capitalize">
+                          {String(
+                            notification.type ??
+                              "system"
+                          ).replace(/_/g, " ")}
+                        </span>
+                      </div>
+                    </div>
+
+                    {unread ? (
+                      <button
+                        onClick={() =>
+                          handleMarkRead(
+                            notification.id
+                          )
+                        }
+                        disabled={
+                          markingId === notification.id
+                        }
+                        className="px-3 py-2 border border-blue-200 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-50 disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {markingId ===
+                        notification.id
+                          ? "Updating..."
+                          : "Mark as Read"}
+                      </button>
+                    ) : (
+                      <span className="px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold whitespace-nowrap">
+                        Read
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
 // ══════════════════════════════════════════════════════════════════════════════
 // SECURITY (CSU) PAGES
 // ══════════════════════════════════════════════════════════════════════════════
@@ -1141,31 +1929,127 @@ function SecurityScanVerify() {
   const [recentLogs, setRecentLogs] = useState<any[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
+  const [incidentMessage, setIncidentMessage] = useState("");
+
+  // Keeps the latest selected gate available to the camera scanner
+  const gateRef = React.useRef(gate);
+
+  useEffect(() => {
+    gateRef.current = gate;
+  }, [gate]);
+
+  async function loadRecentLogs() {
+    try {
+      setLoadingLogs(true);
+
+      const data = await getScanLogs();
+
+      setRecentLogs((data.logs ?? []).slice(0, 5));
+    } catch (error) {
+      console.error(
+        "Failed to load recent scan logs:",
+        error
+      );
+    } finally {
+      setLoadingLogs(false);
+    }
+  }
+
+  async function recordSecurityIncident(
+    code: string,
+    errorMessage: string
+  ) {
+    try {
+      let incidentType = "";
+
+      if (
+        errorMessage
+          .toLowerCase()
+          .includes("not found")
+      ) {
+        incidentType = "Unregistered Item";
+      } else if (
+        errorMessage
+          .toLowerCase()
+          .includes("not approved")
+      ) {
+        incidentType = "Unapproved Item";
+      } else {
+        // Do not create incidents for network/server errors
+        return;
+      }
+
+      await createSecurityIncident({
+        registered_item_id: null,
+        scanned_code: code,
+        incident_type: incidentType,
+        item_name:
+          incidentType === "Unregistered Item"
+            ? "Unknown Item"
+            : "Unapproved Item",
+        serial_number: null,
+        gate: gateRef.current,
+        description:
+          incidentType === "Unregistered Item"
+            ? `Unregistered QR ID or serial number "${code}" was presented at ${gateRef.current}.`
+            : `An item that has not yet been approved was presented at ${gateRef.current}. Code: ${code}.`,
+      });
+
+      setIncidentMessage(
+        `${incidentType} has been flagged and recorded at ${gateRef.current}.`
+      );
+    } catch (incidentError) {
+      console.error(
+        "Failed to record security incident:",
+        incidentError
+      );
+
+      setIncidentMessage(
+        "The item could not be verified, but the security incident could not be saved."
+      );
+    }
+  }
+
   async function verifyCode(code: string) {
     const cleanCode = code.trim();
 
     if (!cleanCode) {
-      setVerifyError("Please enter a QR ID or serial number.");
+      setVerifyError(
+        "Please enter a QR ID or serial number."
+      );
       setScanResult(null);
+      setIncidentMessage("");
       return;
     }
 
     try {
       setVerifying(true);
       setVerifyError("");
+      setIncidentMessage("");
       setScanResult(null);
 
       const data = await verifyItem(cleanCode);
 
       setInput(cleanCode);
       setScanResult(data.item);
+
+      // Successful verification removes previous incident warning
+      setIncidentMessage("");
     } catch (error) {
       setScanResult(null);
+      setInput(cleanCode);
 
-      setVerifyError(
+      const message =
         error instanceof Error
           ? error.message
-          : "Item verification failed."
+          : "Item verification failed.";
+
+      setVerifyError(message);
+
+      // Automatically record unregistered/unapproved items
+      await recordSecurityIncident(
+        cleanCode,
+        message
       );
     } finally {
       setVerifying(false);
@@ -1176,21 +2060,9 @@ function SecurityScanVerify() {
     await verifyCode(input);
   }
 
-  async function loadRecentLogs() {
-    try {
-      setLoadingLogs(true);
-
-      const data = await getScanLogs();
-
-      setRecentLogs((data.logs ?? []).slice(0, 5));
-    } catch (error) {
-      console.error("Failed to load recent scan logs:", error);
-    } finally {
-      setLoadingLogs(false);
-    }
-  }
-
-  async function handleLog(direction: "IN" | "OUT") {
+  async function handleLog(
+    direction: "IN" | "OUT"
+  ) {
     if (!scanResult) {
       alert("Please verify an item first.");
       return;
@@ -1207,7 +2079,9 @@ function SecurityScanVerify() {
 
       await loadRecentLogs();
 
-      alert(`Item logged ${direction} successfully!`);
+      alert(
+        `Item logged ${direction} successfully!`
+      );
     } catch (error) {
       alert(
         error instanceof Error
@@ -1219,10 +2093,12 @@ function SecurityScanVerify() {
     }
   }
 
+  // Load recent successful scans
   useEffect(() => {
     loadRecentLogs();
   }, []);
 
+  // Camera QR scanner
   useEffect(() => {
     const scanner = new Html5QrcodeScanner(
       "qr-reader",
@@ -1248,7 +2124,7 @@ function SecurityScanVerify() {
           });
       },
       () => {
-        // Normal while camera is searching for a QR code.
+        // Normal while camera is searching for a QR code
       }
     );
 
@@ -1261,14 +2137,49 @@ function SecurityScanVerify() {
     <div className="space-y-5">
       <PageHeader
         title="Scan & Verify"
-        subtitle="Scan an item's QR code or enter the QR ID or serial number to verify registration status."
+        subtitle="Scan an item's QR code or manually enter the QR ID or serial number."
       />
 
-      {/* QR SCANNER */}
+      {/* SCANNER */}
       <div className="bg-card rounded-lg border border-border p-5 shadow-sm">
         <div className="flex flex-col items-center gap-4">
+          {/* GATE SELECTION */}
           <div className="w-full max-w-md">
-            <div id="qr-reader" className="w-full" />
+            <label className="block text-xs font-semibold text-foreground mb-1">
+              Current Gate
+            </label>
+
+            <select
+              value={gate}
+              onChange={(e) =>
+                setGate(e.target.value)
+              }
+              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+            >
+              <option value="Gate 1">
+                Gate 1
+              </option>
+
+              <option value="Gate 2">
+                Gate 2
+              </option>
+
+              <option value="Gate 3">
+                Gate 3
+              </option>
+
+              <option value="Main Entrance">
+                Main Entrance
+              </option>
+            </select>
+          </div>
+
+          {/* CAMERA */}
+          <div className="w-full max-w-md">
+            <div
+              id="qr-reader"
+              className="w-full"
+            />
           </div>
 
           {/* MANUAL INPUT */}
@@ -1281,7 +2192,9 @@ function SecurityScanVerify() {
 
               <input
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) =>
+                  setInput(e.target.value)
+                }
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     doScan();
@@ -1297,17 +2210,58 @@ function SecurityScanVerify() {
               disabled={verifying}
               className="bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 disabled:opacity-50"
             >
-              {verifying ? "Verifying..." : "Verify"}
+              {verifying
+                ? "Verifying..."
+                : "Verify"}
             </button>
           </div>
 
-          {/* ERROR */}
+          {/* VERIFICATION ERROR */}
           {verifyError && (
-            <div className="w-full max-w-sm bg-red-50 border border-red-200 text-red-700 text-xs rounded-md p-3">
-              <div className="flex items-center gap-2">
-                <AlertCircle size={15} />
+            <div className="w-full max-w-md bg-red-50 border border-red-200 text-red-700 rounded-md p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle
+                  size={17}
+                  className="mt-0.5 flex-shrink-0"
+                />
 
-                <span>{verifyError}</span>
+                <div>
+                  <p className="text-xs font-semibold">
+                    Verification Failed
+                  </p>
+
+                  <p className="text-xs mt-0.5">
+                    {verifyError}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* FLAGGED INCIDENT */}
+          {incidentMessage && (
+            <div className="w-full max-w-md bg-red-50 border-2 border-red-300 rounded-md p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle
+                  size={20}
+                  className="text-red-600 mt-0.5 flex-shrink-0"
+                />
+
+                <div>
+                  <p className="text-sm font-bold text-red-700">
+                    SECURITY ALERT — FLAGGED
+                  </p>
+
+                  <p className="text-xs text-red-700 mt-1">
+                    {incidentMessage}
+                  </p>
+
+                  <p className="text-xs text-red-600 mt-2">
+                    Security personnel should inspect
+                    the item before allowing entry or
+                    exit.
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -1335,7 +2289,7 @@ function SecurityScanVerify() {
                 </span>
               </div>
 
-              {/* ITEM DETAILS */}
+              {/* ITEM INFORMATION */}
               <div className="grid md:grid-cols-2 gap-x-6 gap-y-2 text-xs">
                 <div>
                   <span className="text-muted-foreground">
@@ -1363,7 +2317,8 @@ function SecurityScanVerify() {
                   </span>
 
                   <span className="font-medium">
-                    {scanResult.brand_model || "—"}
+                    {scanResult.brand_model ||
+                      "—"}
                   </span>
                 </div>
 
@@ -1403,7 +2358,8 @@ function SecurityScanVerify() {
                   </span>
 
                   <span className="font-medium">
-                    {scanResult.user?.name ?? "Unknown"}
+                    {scanResult.user?.name ??
+                      "Unknown"}
                   </span>
                 </div>
 
@@ -1413,7 +2369,8 @@ function SecurityScanVerify() {
                   </span>
 
                   <span className="font-mono font-medium">
-                    {scanResult.user?.username ?? "—"}
+                    {scanResult.user?.username ??
+                      "—"}
                   </span>
                 </div>
 
@@ -1425,11 +2382,14 @@ function SecurityScanVerify() {
                   <span className="font-medium">
                     {new Date(
                       scanResult.created_at
-                    ).toLocaleDateString("en-PH", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    ).toLocaleDateString(
+                      "en-PH",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      }
+                    )}
                   </span>
                 </div>
 
@@ -1442,37 +2402,21 @@ function SecurityScanVerify() {
                 </div>
               </div>
 
-              {/* ENTRY / EXIT CONTROLS */}
+              {/* ENTRY / EXIT */}
               <div className="mt-5 pt-4 border-t border-border">
                 <p className="text-xs font-semibold text-foreground mb-2">
                   Entry / Exit Log
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    value={gate}
-                    onChange={(e) => setGate(e.target.value)}
-                    className="px-3 py-2 text-xs border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  >
-                    <option value="Gate 1">
-                      Gate 1
-                    </option>
-
-                    <option value="Gate 2">
-                      Gate 2
-                    </option>
-
-                    <option value="Gate 3">
-                      Gate 3
-                    </option>
-
-                    <option value="Main Entrance">
-                      Main Entrance
-                    </option>
-                  </select>
+                  <span className="text-xs border border-border rounded-md px-3 py-2 bg-muted/30">
+                    {gate}
+                  </span>
 
                   <button
-                    onClick={() => handleLog("IN")}
+                    onClick={() =>
+                      handleLog("IN")
+                    }
                     disabled={logging}
                     className="text-xs bg-green-600 text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
                   >
@@ -1482,7 +2426,9 @@ function SecurityScanVerify() {
                   </button>
 
                   <button
-                    onClick={() => handleLog("OUT")}
+                    onClick={() =>
+                      handleLog("OUT")
+                    }
                     disabled={logging}
                     className="text-xs bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
                   >
@@ -1497,7 +2443,7 @@ function SecurityScanVerify() {
         </div>
       )}
 
-      {/* RECENT SCAN LOGS */}
+      {/* RECENT SCANS */}
       <Card
         title="Recent Scan Logs"
         action={
@@ -1562,12 +2508,15 @@ function SecurityScanVerify() {
                     <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(
                         log.scanned_at
-                      ).toLocaleString("en-PH", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      ).toLocaleString(
+                        "en-PH",
+                        {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
                     </td>
 
                     <td className="py-2.5 px-3 text-xs font-mono text-primary whitespace-nowrap">
@@ -1575,11 +2524,13 @@ function SecurityScanVerify() {
                     </td>
 
                     <td className="py-2.5 px-3 text-sm font-medium whitespace-nowrap">
-                      {log.item?.item_name ?? "Unknown"}
+                      {log.item?.item_name ??
+                        "Unknown"}
                     </td>
 
                     <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                      {log.item?.user?.name ?? "Unknown"}
+                      {log.item?.user?.name ??
+                        "Unknown"}
                     </td>
 
                     <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
@@ -1616,59 +2567,122 @@ function SecurityScanVerify() {
 
 function SecurityEntryExitLog() {
   const [logs, setLogs] = useState<any[]>([]);
+  const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadLogs() {
+  async function loadData() {
+    setLoading(true);
+
     try {
-      setLoading(true);
-
-      const data = await getScanLogs();
-
-      setLogs(data.logs ?? []);
+      const logsData = await getScanLogs();
+      setLogs(logsData.logs ?? []);
     } catch (error) {
       console.error("Failed to load scan logs:", error);
-    } finally {
-      setLoading(false);
+      setLogs([]);
     }
+
+    try {
+      const incidentsData = await getSecurityIncidents();
+      setIncidents(incidentsData.incidents ?? []);
+    } catch (error) {
+      console.error("Failed to load security incidents:", error);
+      setIncidents([]);
+    }
+
+    setLoading(false);
   }
 
   useEffect(() => {
-    loadLogs();
+    loadData();
   }, []);
 
-  // Today's date
-  const today = new Date();
+  async function handleResolveIncident(id: number) {
+    const confirmed = window.confirm(
+      "Are you sure you want to resolve this security incident?"
+    );
 
-  // Only scans made today
-  const todayLogs = logs.filter((log) => {
-    const scanDate = new Date(log.scanned_at);
+    if (!confirmed) return;
+
+    try {
+      await resolveSecurityIncident(id);
+
+      alert("Security incident resolved successfully.");
+
+      await loadData();
+    } catch (error) {
+      console.error("Failed to resolve incident:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to resolve security incident."
+      );
+    }
+  }
+
+  function isToday(dateString: string) {
+    if (!dateString) return false;
+
+    const date = new Date(dateString);
+    const today = new Date();
 
     return (
-      scanDate.getFullYear() === today.getFullYear() &&
-      scanDate.getMonth() === today.getMonth() &&
-      scanDate.getDate() === today.getDate()
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
     );
-  });
+  }
 
-  // Verified scans today
+  const todayLogs = logs.filter((log) =>
+    isToday(log.scanned_at)
+  );
+
+  const todayIncidents = incidents.filter((incident) =>
+    isToday(incident.reported_at)
+  );
+
   const verifiedCount = todayLogs.filter(
-    (log) => log.result === "Verified"
+    (log) =>
+      String(log.result ?? "")
+        .toLowerCase() === "verified"
   ).length;
 
-  // Flagged scans today
-  const flaggedCount = todayLogs.filter(
-    (log) => log.result === "Flagged"
+  const flaggedCount = todayIncidents.filter(
+    (incident) =>
+      String(incident.status ?? "")
+        .toLowerCase() === "flagged"
   ).length;
 
-  // Unique students today
-  const uniqueUsers = new Set(
+  const uniqueStudents = new Set(
     todayLogs
-      .map((log) => log.item?.user?.id)
+      .map(
+        (log) =>
+          log.item?.user?.id ??
+          log.item?.user?.username ??
+          null
+      )
       .filter(Boolean)
   ).size;
 
-  // CSV export
-  function handleExport() {
+  const scannedToday =
+    todayLogs.length + todayIncidents.length;
+
+  function formatDate(dateString: string) {
+    if (!dateString) return "—";
+
+    return new Date(dateString).toLocaleDateString();
+  }
+
+  function formatTime(dateString: string) {
+    if (!dateString) return "—";
+
+    return new Date(dateString).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function exportCSV() {
     if (logs.length === 0) {
       alert("There are no entry / exit records to export.");
       return;
@@ -1677,174 +2691,171 @@ function SecurityEntryExitLog() {
     const headers = [
       "Date",
       "Time",
-      "Student / Person",
-      "ID",
+      "Owner",
+      "Owner ID",
       "Item",
-      "QR ID",
+      "Serial Number",
+      "QR Code",
       "Gate",
       "Direction",
-      "Scanned By",
       "Result",
+      "Scanned By",
     ];
 
-    function escapeCSV(value: any) {
-      const text = String(value ?? "");
+    const rows = logs.map((log) => [
+      formatDate(log.scanned_at),
+      formatTime(log.scanned_at),
+      log.item?.user?.name ?? "",
+      log.item?.user?.username ?? "",
+      log.item?.item_name ?? "",
+      log.item?.serial_number ?? "",
+      log.qr_code ?? "",
+      log.gate ?? "",
+      log.direction ?? "",
+      log.result ?? "",
+      log.scanner?.name ?? "",
+    ]);
 
-      return `"${text.replace(/"/g, '""')}"`;
-    }
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((value) => {
+            const text = String(value ?? "").replace(
+              /"/g,
+              '""'
+            );
 
-    const rows = logs.map((log) => {
-      const scannedDate = new Date(log.scanned_at);
+            return `"${text}"`;
+          })
+          .join(",")
+      )
+      .join("\n");
 
-      return [
-        scannedDate.toLocaleDateString("en-PH", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }),
-
-        scannedDate.toLocaleTimeString("en-PH", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-
-        log.item?.user?.name ?? "Unknown",
-        log.item?.user?.username ?? "—",
-        log.item?.item_name ?? "Unknown",
-        log.qr_code ?? "—",
-        log.gate ?? "—",
-        log.direction ?? "—",
-        log.scanner?.name ?? "Unknown",
-        log.result ?? "—",
-      ];
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
     });
-
-    const csvContent = [
-      headers.map(escapeCSV).join(","),
-      ...rows.map((row) =>
-        row.map(escapeCSV).join(",")
-      ),
-    ].join("\n");
-
-    const blob = new Blob(
-      ["\uFEFF" + csvContent],
-      {
-        type: "text/csv;charset=utf-8;",
-      }
-    );
 
     const url = URL.createObjectURL(blob);
 
     const link = document.createElement("a");
-
-    const fileDate = new Date()
-      .toISOString()
-      .split("T")[0];
-
     link.href = url;
-
-    link.download =
-      `QRPass-Entry-Exit-Log-${fileDate}.csv`;
+    link.download = `qrpass-entry-exit-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
 
     document.body.appendChild(link);
-
     link.click();
-
     document.body.removeChild(link);
 
     URL.revokeObjectURL(url);
   }
 
   return (
-    <div className="space-y-5">
-      <PageHeader
-        title="Entry / Exit Log"
-        subtitle="Record of all QR-scanned items at campus entry and exit points."
-        action={
-          <div className="flex items-center gap-3">
-            <button
-              onClick={loadLogs}
-              disabled={loading}
-              className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
-            >
-              <RefreshCw size={12} />
+    <div className="space-y-6">
+      {/* HEADER */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Entry / Exit Log
+          </h1>
 
-              {loading
-                ? "Refreshing..."
-                : "Refresh"}
-            </button>
+          <p className="text-sm text-gray-500 mt-1">
+            Monitor verified item scans and security
+            incidents.
+          </p>
+        </div>
 
-            <button
-              onClick={handleExport}
-              disabled={logs.length === 0}
-              className="text-xs flex items-center gap-1 bg-primary text-white px-3 py-1.5 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
-            >
-              <Download size={12} />
-              Export CSV
-            </button>
-          </div>
-        }
-      />
+        <div className="flex gap-2">
+          <button
+            onClick={loadData}
+            disabled={loading}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+          >
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+
+          <button
+            onClick={exportCSV}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700"
+          >
+            Export CSV
+          </button>
+        </div>
+      </div>
 
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard
-          label="Scanned Today"
-          value={String(todayLogs.length)}
-          icon={<ScanLine size={20} />}
-          color="#003087"
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Scanned Today
+          </p>
 
-        <StatCard
-          label="Verified"
-          value={String(verifiedCount)}
-          icon={<CheckCircle size={20} />}
-          color="#2ecc71"
-        />
+          <p className="text-3xl font-bold text-gray-900 mt-2">
+            {scannedToday}
+          </p>
+        </div>
 
-        <StatCard
-          label="Flagged"
-          value={String(flaggedCount)}
-          icon={<AlertTriangle size={20} />}
-          color="#e8543a"
-        />
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Verified
+          </p>
 
-        <StatCard
-          label="Unique Students"
-          value={String(uniqueUsers)}
-          icon={<Users size={20} />}
-          color="#f5c200"
-        />
+          <p className="text-3xl font-bold text-green-600 mt-2">
+            {verifiedCount}
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Flagged
+          </p>
+
+          <p className="text-3xl font-bold text-red-600 mt-2">
+            {flaggedCount}
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Unique Students
+          </p>
+
+          <p className="text-3xl font-bold text-blue-600 mt-2">
+            {uniqueStudents}
+          </p>
+        </div>
       </div>
 
       {/* ENTRY / EXIT RECORDS */}
-      <Card
-        title="Entry / Exit Records"
-        action={
-          <span className="text-xs text-muted-foreground">
-            {logs.length} total records
-          </span>
-        }
-      >
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-bold text-gray-900">
+            Entry / Exit Records
+          </h2>
+
+          <p className="text-sm text-gray-500 mt-1">
+            Successful QR verification records.
+          </p>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-muted/50">
+          <table className="w-full min-w-[1050px]">
+            <thead className="bg-gray-50">
+              <tr>
                 {[
                   "Date",
                   "Time",
-                  "Student / Person",
-                  "ID",
+                  "Owner",
                   "Item",
-                  "QR ID",
+                  "QR Code",
                   "Gate",
                   "Direction",
-                  "Scanned By",
                   "Result",
+                  "Scanned By",
                 ].map((heading) => (
                   <th
                     key={heading}
-                    className="text-left py-2 px-3 text-xs text-muted-foreground font-medium whitespace-nowrap"
+                    className="py-3 px-3 text-left text-xs font-semibold text-gray-600"
                   >
                     {heading}
                   </th>
@@ -1852,110 +2863,259 @@ function SecurityEntryExitLog() {
               </tr>
             </thead>
 
-            <tbody>
+            <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
                   <td
-                    colSpan={10}
-                    className="text-center py-8 text-sm text-muted-foreground"
+                    colSpan={9}
+                    className="py-10 text-center text-gray-500"
                   >
-                    Loading scan logs...
+                    Loading entry / exit records...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={10}
-                    className="text-center py-8 text-sm text-muted-foreground"
+                    colSpan={9}
+                    className="py-10 text-center text-gray-500"
                   >
-                    No entry / exit records yet.
+                    No entry / exit records found.
                   </td>
                 </tr>
               ) : (
-                logs.map((log) => {
-                  const scannedDate = new Date(
-                    log.scanned_at
-                  );
+                logs.map((log) => (
+                  <tr
+                    key={log.id}
+                    className="hover:bg-gray-50"
+                  >
+                    <td className="py-3 px-3 text-sm text-gray-700">
+                      {formatDate(log.scanned_at)}
+                    </td>
 
-                  return (
-                    <tr
-                      key={log.id}
-                      className="border-t border-border hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {scannedDate.toLocaleDateString(
-                          "en-PH",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          }
-                        )}
-                      </td>
+                    <td className="py-3 px-3 text-sm text-gray-700">
+                      {formatTime(log.scanned_at)}
+                    </td>
 
-                      <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {scannedDate.toLocaleTimeString(
-                          "en-PH",
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }
-                        )}
-                      </td>
-
-                      <td className="py-2.5 px-3 text-sm text-foreground whitespace-nowrap">
+                    <td className="py-3 px-3">
+                      <div className="text-sm font-semibold text-gray-900">
                         {log.item?.user?.name ??
                           "Unknown"}
-                      </td>
+                      </div>
 
-                      <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground whitespace-nowrap">
+                      <div className="text-xs text-gray-500">
                         {log.item?.user?.username ??
-                          "—"}
-                      </td>
+                          ""}
+                      </div>
+                    </td>
 
-                      <td className="py-2.5 px-3 text-sm text-foreground whitespace-nowrap">
+                    <td className="py-3 px-3">
+                      <div className="text-sm font-semibold text-gray-900">
                         {log.item?.item_name ??
-                          "Unknown"}
-                      </td>
+                          "Unknown Item"}
+                      </div>
 
-                      <td className="py-2.5 px-3 text-xs font-mono text-primary whitespace-nowrap">
-                        {log.qr_code}
-                      </td>
+                      <div className="text-xs text-gray-500">
+                        {log.item?.serial_number ??
+                          ""}
+                      </div>
+                    </td>
 
-                      <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {log.gate}
-                      </td>
+                    <td className="py-3 px-3 text-sm font-mono text-gray-700">
+                      {log.qr_code ?? "—"}
+                    </td>
 
-                      <td className="py-2.5 px-3">
-                        <span
-                          className={`text-xs font-bold ${
-                            log.direction === "IN"
-                              ? "text-green-600"
-                              : "text-blue-600"
-                          }`}
-                        >
-                          {log.direction}
-                        </span>
-                      </td>
+                    <td className="py-3 px-3 text-sm text-gray-700">
+                      {log.gate ?? "—"}
+                    </td>
 
-                      <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {log.scanner?.name ??
-                          "Unknown"}
-                      </td>
+                    <td className="py-3 px-3">
+                      <span
+                        className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          log.direction === "IN"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-purple-100 text-purple-700"
+                        }`}
+                      >
+                        {log.direction ?? "—"}
+                      </span>
+                    </td>
 
-                      <td className="py-2.5 px-3">
-                        <StatusBadge
-                          status={log.result}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })
+                    <td className="py-3 px-3">
+                      <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        {log.result ?? "Verified"}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-3 text-sm text-gray-700">
+                      {log.scanner?.name ?? "—"}
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
+
+      {/* FLAGGED / UNREGISTERED ITEMS */}
+      <div className="bg-white border border-red-200 rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-red-100 bg-red-50">
+          <h2 className="text-lg font-bold text-red-700">
+            Flagged / Unregistered Items
+          </h2>
+
+          <p className="text-sm text-red-600 mt-1">
+            Failed QR verification attempts that require
+            security attention.
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1100px]">
+            <thead className="bg-gray-50">
+              <tr>
+                {[
+                  "Date",
+                  "Time",
+                  "Code",
+                  "Incident",
+                  "Item",
+                  "Gate",
+                  "Reported By",
+                  "Status",
+                  "Action",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="py-3 px-3 text-left text-xs font-semibold text-gray-600"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="py-10 text-center text-gray-500"
+                  >
+                    Loading security incidents...
+                  </td>
+                </tr>
+              ) : incidents.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="py-10 text-center text-gray-500"
+                  >
+                    No security incidents found.
+                  </td>
+                </tr>
+              ) : (
+                incidents.map((incident) => (
+                  <tr
+                    key={incident.id}
+                    className="hover:bg-red-50/40"
+                  >
+                    <td className="py-3 px-3 text-sm text-gray-700">
+                      {formatDate(
+                        incident.reported_at
+                      )}
+                    </td>
+
+                    <td className="py-3 px-3 text-sm text-gray-700">
+                      {formatTime(
+                        incident.reported_at
+                      )}
+                    </td>
+
+                    <td className="py-3 px-3 text-sm font-mono text-gray-700">
+                      {incident.scanned_code ??
+                        "—"}
+                    </td>
+
+                    <td className="py-3 px-3">
+                      <span className="text-sm font-semibold text-red-700">
+                        {incident.incident_type ??
+                          "Security Incident"}
+                      </span>
+
+                      {incident.description && (
+                        <div className="text-xs text-gray-500 mt-1 max-w-[240px]">
+                          {incident.description}
+                        </div>
+                      )}
+                    </td>
+
+                    <td className="py-3 px-3">
+                      <div className="text-sm font-semibold text-gray-900">
+                        {incident.item?.item_name ??
+                          incident.item_name ??
+                          "Unknown Item"}
+                      </div>
+
+                      <div className="text-xs text-gray-500">
+                        {incident.item?.serial_number ??
+                          incident.serial_number ??
+                          ""}
+                      </div>
+                    </td>
+
+                    <td className="py-3 px-3 text-sm text-gray-700">
+                      {incident.gate ?? "—"}
+                    </td>
+
+                    <td className="py-3 px-3 text-sm text-gray-700">
+                      {incident.reporter?.name ??
+                        "Security Personnel"}
+                    </td>
+
+                    <td className="py-3 px-3">
+                      {String(
+                        incident.status ?? ""
+                      ).toLowerCase() ===
+                      "resolved" ? (
+                        <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                          Resolved
+                        </span>
+                      ) : (
+                        <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                          Flagged
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="py-3 px-3">
+                      {String(
+                        incident.status ?? ""
+                      ).toLowerCase() ===
+                      "flagged" ? (
+                        <button
+                          onClick={() =>
+                            handleResolveIncident(
+                              incident.id
+                            )
+                          }
+                          className="px-3 py-1.5 bg-green-600 text-white rounded-md text-xs font-semibold hover:bg-green-700"
+                        >
+                          Resolve
+                        </button>
+                      ) : (
+                        <span className="text-xs font-semibold text-green-600">
+                          Resolved
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
@@ -2007,166 +3167,1444 @@ function SecurityNotifications() {
 }
 
 function SecurityLostFound() {
-  const items = useLFItems();
-  const [tab, setTab] = useState<"view" | "post">("view");
-  const [postType, setPostType] = useState<"lost" | "found">("found");
-  const [postItem, setPostItem] = useState("");
-  const [postDesc, setPostDesc] = useState("");
-  const [postLocation, setPostLocation] = useState("");
-  const [postImage, setPostImage] = useState<string | undefined>();
-  const [postSuccess, setPostSuccess] = useState(false);
+  /*
+  |--------------------------------------------------------------------------
+  | REGISTRY STATE
+  |--------------------------------------------------------------------------
+  */
 
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) setPostImage(URL.createObjectURL(file));
+  const [items, setItems] =
+    useState<any[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  const [success, setSuccess] =
+    useState("");
+
+  const [search, setSearch] =
+    useState("");
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | PAGE MODE
+  |--------------------------------------------------------------------------
+  */
+
+  const [tab, setTab] =
+    useState<"registry" | "report">(
+      "registry"
+    );
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | SUBMISSION STATE
+  |--------------------------------------------------------------------------
+  */
+
+  const [submitting, setSubmitting] =
+    useState(false);
+
+  const [
+    recoveringId,
+    setRecoveringId,
+  ] = useState<number | null>(null);
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | FOUND ITEM FORM
+  |--------------------------------------------------------------------------
+  */
+
+  const [form, setForm] = useState({
+    found_by_identifier: "",
+    item_name: "",
+    category: "",
+    brand_model: "",
+    color: "",
+    location_found: "",
+    date_found: "",
+    description: "",
+  });
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD LOST & FOUND REGISTRY
+  |--------------------------------------------------------------------------
+  */
+
+  async function loadItems() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data =
+        await getLostFoundItems();
+
+      const list =
+        Array.isArray(data)
+          ? data
+          : data?.items ?? [];
+
+      setItems(list);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load Lost & Found registry."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function handleMarkClaimed(id: string, itemName: string) {
-    updateLFItem(id, { status: "Claimed" });
-    addNotif({ role: "student", type: "success", message: `Your item "${itemName}" has been marked as Claimed by Security. Please proceed to the guardhouse.`, time: new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" }) });
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD PAGE
+  |--------------------------------------------------------------------------
+  */
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | FORM CHANGE
+  |--------------------------------------------------------------------------
+  */
+
+  function handleFormChange(
+    e:
+      React.ChangeEvent<
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | HTMLSelectElement
+      >
+  ) {
+    const {
+      name,
+      value,
+    } = e.target;
+
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
   }
 
-  function handlePost(e: React.FormEvent) {
+
+  /*
+  |--------------------------------------------------------------------------
+  | SUBMIT FOUND ITEM
+  |--------------------------------------------------------------------------
+  |
+  | Finder:
+  | Person who physically found / turned over the item.
+  |
+  | Processor:
+  | Automatically assigned by Laravel from the logged-in CSU account.
+  |
+  */
+
+  async function handleSubmit(
+    e: React.FormEvent
+  ) {
     e.preventDefault();
-    const newItem: LFItem = {
-      id: `LF-${Date.now()}`,
-      type: postType,
-      item: postItem,
-      description: postDesc,
-      location: postLocation,
-      date: new Date().toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" }),
-      postedBy: "Guard Ramos",
-      postedByRole: "security",
-      imageUrl: postImage,
-      status: "Open",
-      inquiries: [],
-    };
-    addLFItem(newItem);
-    const msg = postType === "found"
-      ? `Security found an item: "${postItem}" at ${postLocation}. Check Lost & Found if it's yours.`
-      : `Security posted a lost item report: "${postItem}" at ${postLocation}. Contact the guardhouse if you have information.`;
-    addNotif({ role: "student", type: postType === "found" ? "info" : "warning", message: msg, time: new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" }) });
-    setPostItem(""); setPostDesc(""); setPostLocation(""); setPostImage(undefined); setPostSuccess(true);
-    setTimeout(() => { setPostSuccess(false); setTab("view"); }, 2000);
+
+    setError("");
+    setSuccess("");
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FRONTEND VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      !form.found_by_identifier.trim()
+    ) {
+      setError(
+        "Please enter the Student/Employee ID of the person who turned over the item."
+      );
+
+      return;
+    }
+
+
+    if (!form.item_name.trim()) {
+      setError(
+        "Please enter the item name."
+      );
+
+      return;
+    }
+
+
+    if (
+      !form.location_found.trim()
+    ) {
+      setError(
+        "Please enter where the item was found."
+      );
+
+      return;
+    }
+
+
+    if (!form.date_found) {
+      setError(
+        "Please select the date the item was found."
+      );
+
+      return;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SEND TO LARAVEL
+    |--------------------------------------------------------------------------
+    */
+
+    try {
+      setSubmitting(true);
+
+      const result =
+        await createLostFoundItem({
+          found_by_identifier:
+            form.found_by_identifier.trim(),
+
+          item_name:
+            form.item_name.trim(),
+
+          category:
+            form.category.trim() ||
+            undefined,
+
+          brand_model:
+            form.brand_model.trim() ||
+            undefined,
+
+          color:
+            form.color.trim() ||
+            undefined,
+
+          location_found:
+            form.location_found.trim(),
+
+          date_found:
+            form.date_found,
+
+          description:
+            form.description.trim() ||
+            undefined,
+        });
+
+
+      setSuccess(
+        result?.message ||
+          "Found item recorded successfully."
+      );
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | CLEAR FORM
+      |--------------------------------------------------------------------------
+      */
+
+      setForm({
+        found_by_identifier: "",
+        item_name: "",
+        category: "",
+        brand_model: "",
+        color: "",
+        location_found: "",
+        date_found: "",
+        description: "",
+      });
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | REFRESH REGISTRY
+      |--------------------------------------------------------------------------
+      */
+
+      await loadItems();
+
+      setTab("registry");
+
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to record the found item."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  const typeColor: Record<string, string> = { lost: "bg-red-100 text-red-700", found: "bg-teal-100 text-teal-700" };
-  const statusColor: Record<string, string> = { Open: "bg-blue-100 text-blue-700", Claimed: "bg-green-100 text-green-700", Recovered: "bg-teal-100 text-teal-700" };
+
+  /*
+  |--------------------------------------------------------------------------
+  | MARK CLAIMED ITEM AS RECOVERED
+  |--------------------------------------------------------------------------
+  */
+
+  async function handleRecovered(
+    id: number
+  ) {
+    const confirmed =
+      window.confirm(
+        "Confirm that CSU has verified the claimant's ownership and the item has been returned to the rightful owner?"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setRecoveringId(id);
+      setError("");
+      setSuccess("");
+
+      const result =
+        await markLostFoundRecovered(
+          id
+        );
+
+      setSuccess(
+        result?.message ||
+          "Item marked as recovered."
+      );
+
+      await loadItems();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark the item as recovered."
+      );
+    } finally {
+      setRecoveringId(null);
+    }
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | SEARCH
+  |--------------------------------------------------------------------------
+  */
+
+  const filteredItems =
+    items.filter((item) => {
+      const query =
+        search
+          .trim()
+          .toLowerCase();
+
+      if (!query) {
+        return true;
+      }
+
+      const searchableText = [
+        item.id,
+        item.item_name,
+        item.category,
+        item.brand_model,
+        item.color,
+        item.location_found,
+        item.description,
+        item.status,
+
+        item.finder?.name,
+        item.finder?.username,
+
+        item.processor?.name,
+        item.processor?.username,
+
+        item.claimant?.name,
+        item.claimant?.username,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(
+        query
+      );
+    });
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | STATISTICS
+  |--------------------------------------------------------------------------
+  */
+
+  const foundCount =
+    items.filter(
+      (item) =>
+        String(
+          item.status ?? ""
+        ).toLowerCase() ===
+        "found"
+    ).length;
+
+
+  const claimedCount =
+    items.filter(
+      (item) =>
+        String(
+          item.status ?? ""
+        ).toLowerCase() ===
+        "claimed"
+    ).length;
+
+
+  const recoveredCount =
+    items.filter(
+      (item) =>
+        String(
+          item.status ?? ""
+        ).toLowerCase() ===
+        "recovered"
+    ).length;
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | DATE FORMATTER
+  |--------------------------------------------------------------------------
+  */
+
+  function formatDate(
+    value?: string | null
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return value;
+    }
+
+    return date.toLocaleDateString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }
+    );
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | STATUS STYLE
+  |--------------------------------------------------------------------------
+  */
+
+  function getStatusClass(
+    status: string
+  ) {
+    const normalized =
+      status.toLowerCase();
+
+    if (
+      normalized === "recovered"
+    ) {
+      return (
+        "bg-green-100 " +
+        "text-green-700"
+      );
+    }
+
+    if (
+      normalized === "claimed"
+    ) {
+      return (
+        "bg-yellow-100 " +
+        "text-yellow-700"
+      );
+    }
+
+    return (
+      "bg-blue-100 " +
+      "text-blue-700"
+    );
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | PAGE
+  |--------------------------------------------------------------------------
+  */
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Lost & Found" subtitle="Post lost or found items and manage student inquiries and claims." />
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <StatCard label="Total Reports" value={String(items.length)} icon={<BookOpen size={20} />} color="#003087" />
-        <StatCard label="Open" value={String(items.filter(i => i.status === "Open").length)} icon={<Clock size={20} />} color="#f5c200" />
-        <StatCard label="Claimed" value={String(items.filter(i => i.status === "Claimed").length)} icon={<CheckCircle size={20} />} color="#2ecc71" />
-      </div>
-      <div className="flex gap-2 border-b border-border">
-        {(["view", "post"] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className="px-4 py-2 text-sm font-semibold border-b-2 transition-colors"
-            style={{ borderColor: tab === t ? "#003087" : "transparent", color: tab === t ? "#003087" : "var(--muted-foreground)" }}>
-            {t === "view" ? "All Reports" : "Post Item"}
-          </button>
-        ))}
+
+      <PageHeader
+        title="Lost & Found"
+        subtitle="Record items turned over to the CSU office, credit the finder, and process ownership claims."
+      />
+
+
+      {/* ===============================================================
+          CSU PROCEDURE NOTICE
+      ================================================================ */}
+
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+
+        <div className="flex items-start gap-3">
+
+          <Shield
+            size={18}
+            className="mt-0.5 flex-shrink-0 text-blue-700"
+          />
+
+          <div>
+
+            <p className="text-sm font-semibold text-blue-900">
+              CSU Lost & Found
+              Procedure
+            </p>
+
+            <p className="mt-1 text-xs leading-relaxed text-blue-800">
+              A found item must first
+              be physically turned over
+              to the Civil Security
+              Unit. CSU personnel then
+              records the item in
+              QRPass and credits the
+              person who turned it
+              over. Claims must be
+              verified by CSU before
+              an item is released.
+            </p>
+
+          </div>
+
+        </div>
+
       </div>
 
-      {tab === "view" && (
-        <div className="space-y-3">
-          {items.map(lf => (
-            <div key={lf.id} className="bg-card rounded-lg border border-border shadow-sm">
-              <div className="flex gap-3 p-4">
-                {lf.imageUrl ? (
-                  <img src={lf.imageUrl} alt={lf.item} className="w-20 h-20 object-cover rounded-md flex-shrink-0 border border-border" />
-                ) : (
-                  <div className="w-20 h-20 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
-                    <Package size={24} className="text-muted-foreground" />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full uppercase ${typeColor[lf.type]}`}>{lf.type}</span>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColor[lf.status]}`}>{lf.status}</span>
-                  </div>
-                  <p className="font-semibold text-sm text-foreground mt-1">{lf.item}</p>
-                  <p className="text-xs text-muted-foreground">{lf.description}</p>
-                  <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-muted-foreground">
-                    <span>📍 {lf.location}</span><span>📅 {lf.date}</span><span>👤 {lf.postedBy}</span>
-                  </div>
-                  {lf.inquiries.length > 0 && (
-                    <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-md p-2">
-                      <p className="text-xs font-semibold text-yellow-800 mb-1">📬 {lf.inquiries.length} Inquiry / Claim</p>
-                      {lf.inquiries.map((inq, i) => (
-                        <div key={i} className="text-xs text-yellow-700"><strong>{inq.name}:</strong> {inq.message} <span className="text-yellow-500">— {inq.time}</span></div>
-                      ))}
-                    </div>
-                  )}
-                  {lf.status === "Open" && (
-                    <button onClick={() => handleMarkClaimed(lf.id, lf.item)}
-                      className="mt-2 text-xs bg-green-600 text-white px-3 py-1.5 rounded font-semibold hover:opacity-90">
-                      Mark as Claimed
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+
+      {/* ===============================================================
+          MESSAGES
+      ================================================================ */}
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
         </div>
       )}
 
-      {tab === "post" && (
-        <div className="bg-card rounded-lg border border-border shadow-sm">
-          <div className="px-4 py-3 border-b border-border"><h3 className="font-semibold text-sm text-foreground">Post a Lost or Found Item</h3></div>
-          {postSuccess ? (
-            <div className="p-8 flex flex-col items-center gap-3">
-              <CheckCircle size={36} className="text-green-500" />
-              <p className="font-semibold text-foreground">Item posted! Students have been notified.</p>
-            </div>
-          ) : (
-            <form onSubmit={handlePost} className="p-4 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-2">Type</label>
-                <div className="flex gap-3">
-                  {(["found", "lost"] as const).map(t => (
-                    <button type="button" key={t} onClick={() => setPostType(t)}
-                      className="flex-1 py-2 rounded-md border-2 font-semibold text-sm capitalize transition-all"
-                      style={{ borderColor: postType === t ? "#003087" : "var(--border)", backgroundColor: postType === t ? "#003087" : "white", color: postType === t ? "white" : "var(--foreground)" }}>
-                      {t === "found" ? "📦 Found Item" : "🔍 Lost Item"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="grid md:grid-cols-2 gap-4">
-              {([["Item Name", postItem, setPostItem, "e.g. Laptop bag, charger..."], ["Location", postLocation, setPostLocation, "e.g. Gate 1, Library"]] as const).map(([label, val, setter, ph]) => (                  <div key={label as string}>
-                    <label className="block text-xs font-semibold text-foreground mb-1">{label}</label>
-                    <input type="text" value={val as string} onChange={e => (setter as (v: string) => void)(e.target.value)} placeholder={ph as string} required
-                      className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                  </div>
-                ))}
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-foreground mb-1">Description</label>
-                  <textarea value={postDesc} onChange={e => setPostDesc(e.target.value)} required rows={2}
-                    placeholder="Describe the item — color, brand, condition, distinguishing marks..."
-                    className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-foreground mb-1">Upload Photo (optional)</label>
-                  <input type="file" accept="image/*" onChange={handleImageUpload}
-                    className="block w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:opacity-90" />
-                  {postImage && <img src={postImage} alt="preview" className="mt-2 h-24 object-cover rounded-md border border-border" />}
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <button type="submit" className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90">Post Item</button>
-              </div>
-            </form>
+
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
+
+      {/* ===============================================================
+          STATISTICS
+      ================================================================ */}
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+
+        <StatCard
+          label="Total Reports"
+          value={String(
+            items.length
           )}
+          icon={
+            <BookOpen size={20} />
+          }
+          color="#003087"
+        />
+
+
+        <StatCard
+          label="Found"
+          value={String(
+            foundCount
+          )}
+          icon={
+            <Package size={20} />
+          }
+          color="#00aeef"
+        />
+
+
+        <StatCard
+          label="Pending Claims"
+          value={String(
+            claimedCount
+          )}
+          icon={
+            <Clock size={20} />
+          }
+          color="#f5c200"
+        />
+
+
+        <StatCard
+          label="Recovered"
+          value={String(
+            recoveredCount
+          )}
+          icon={
+            <CheckCircle
+              size={20}
+            />
+          }
+          color="#2ecc71"
+        />
+
+      </div>
+
+
+      {/* ===============================================================
+          TAB BUTTONS
+      ================================================================ */}
+
+      <div className="flex flex-wrap gap-2 border-b border-border pb-3">
+
+        <button
+          type="button"
+          onClick={() => {
+            setTab("registry");
+            setError("");
+          }}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            tab === "registry"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Lost & Found Registry
+        </button>
+
+
+        <button
+          type="button"
+          onClick={() => {
+            setTab("report");
+            setError("");
+          }}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            tab === "report"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          + Record Found Item
+        </button>
+
+      </div>
+
+
+      {/* ===============================================================
+          REGISTRY TAB
+      ================================================================ */}
+
+      {tab === "registry" && (
+        <div className="space-y-4">
+
+          {/* Search */}
+
+          <div className="flex flex-col gap-2 sm:flex-row">
+
+            <div className="relative flex-1">
+
+              <Search
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+
+              <input
+                type="text"
+                value={search}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+                placeholder="Search report, item, finder, claimant, location..."
+                className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              />
+
+            </div>
+
+
+            <button
+              type="button"
+              onClick={loadItems}
+              disabled={loading}
+              className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading
+                ? "Refreshing..."
+                : "Refresh"}
+            </button>
+
+          </div>
+
+
+          {/* Loading */}
+
+          {loading && (
+            <div className="rounded-lg border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+              Loading Lost & Found
+              records...
+            </div>
+          )}
+
+
+          {/* Empty */}
+
+          {!loading &&
+            filteredItems.length ===
+              0 && (
+              <div className="rounded-lg border border-border bg-card p-10 text-center">
+
+                <BookOpen
+                  size={32}
+                  className="mx-auto mb-3 text-muted-foreground"
+                />
+
+                <p className="text-sm font-medium text-foreground">
+                  No Lost & Found
+                  records found.
+                </p>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Record an item after
+                  it has been turned
+                  over to the CSU
+                  office.
+                </p>
+
+              </div>
+            )}
+
+
+          {/* Records */}
+
+          {!loading &&
+            filteredItems.map(
+              (item) => {
+
+                const status =
+                  String(
+                    item.status ??
+                      "Found"
+                  );
+
+                const statusLower =
+                  status.toLowerCase();
+
+                const isClaimed =
+                  statusLower ===
+                  "claimed";
+
+                const isRecovered =
+                  statusLower ===
+                  "recovered";
+
+                return (
+                  <div
+                    key={item.id}
+                    className="rounded-lg border border-border bg-card shadow-sm"
+                  >
+
+                    <div className="p-4">
+
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+
+                        <div className="min-w-0 flex-1">
+
+                          {/* Header */}
+
+                          <div className="flex flex-wrap items-center gap-2">
+
+                            <h3 className="text-base font-semibold text-foreground">
+                              {item.item_name}
+                            </h3>
+
+
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusClass(
+                                status
+                              )}`}
+                            >
+                              {status}
+                            </span>
+
+
+                            <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                              Report #
+                              {item.id}
+                            </span>
+
+                          </div>
+
+
+                          {/* Item Info */}
+
+                          <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Category
+                              </p>
+
+                              <p className="font-medium text-foreground">
+                                {item.category ||
+                                  "—"}
+                              </p>
+                            </div>
+
+
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Brand /
+                                Model
+                              </p>
+
+                              <p className="font-medium text-foreground">
+                                {item.brand_model ||
+                                  "—"}
+                              </p>
+                            </div>
+
+
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Color
+                              </p>
+
+                              <p className="font-medium text-foreground">
+                                {item.color ||
+                                  "—"}
+                              </p>
+                            </div>
+
+
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Location
+                                Found
+                              </p>
+
+                              <p className="font-medium text-foreground">
+                                {item.location_found ||
+                                  "—"}
+                              </p>
+                            </div>
+
+
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Date Found
+                              </p>
+
+                              <p className="font-medium text-foreground">
+                                {formatDate(
+                                  item.date_found
+                                )}
+                              </p>
+                            </div>
+
+
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Date
+                                Reported
+                              </p>
+
+                              <p className="font-medium text-foreground">
+                                {formatDate(
+                                  item.created_at
+                                )}
+                              </p>
+                            </div>
+
+                          </div>
+
+
+                          {/* Finder Credit */}
+
+                          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3">
+
+                            <div className="flex items-start gap-2">
+
+                              <User
+                                size={15}
+                                className="mt-0.5 flex-shrink-0 text-green-700"
+                              />
+
+                              <div>
+
+                                <p className="text-xs font-semibold text-green-800">
+                                  Turned Over
+                                  By / Finder
+                                  Credit
+                                </p>
+
+                                <p className="mt-1 text-sm font-medium text-green-900">
+                                  {item.finder
+                                    ?.name ||
+                                    "Not available"}
+                                </p>
+
+                                {item.finder
+                                  ?.username && (
+                                  <p className="text-xs text-green-700">
+                                    ID:{" "}
+                                    {
+                                      item
+                                        .finder
+                                        .username
+                                    }
+                                  </p>
+                                )}
+
+                              </div>
+
+                            </div>
+
+                          </div>
+
+
+                          {/* CSU Processor */}
+
+                          <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/50 p-3">
+
+                            <p className="text-xs text-muted-foreground">
+                              Processed by
+                              CSU
+                            </p>
+
+                            <p className="mt-0.5 text-sm font-medium text-foreground">
+                              {item.processor
+                                ?.name ||
+                                item.reporter
+                                  ?.name ||
+                                "—"}
+                            </p>
+
+                          </div>
+
+
+                          {/* Claim Information */}
+
+                          {item.claimant && (
+                            <div className="mt-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+
+                              <p className="text-xs font-semibold text-yellow-800">
+                                Claimant
+                              </p>
+
+                              <p className="mt-1 text-sm font-medium text-yellow-900">
+                                {
+                                  item
+                                    .claimant
+                                    .name
+                                }
+                              </p>
+
+                              {item.claimant
+                                .username && (
+                                <p className="text-xs text-yellow-700">
+                                  ID:{" "}
+                                  {
+                                    item
+                                      .claimant
+                                      .username
+                                  }
+                                </p>
+                              )}
+
+                              {item.claimed_at && (
+                                <p className="mt-1 text-xs text-yellow-700">
+                                  Claim
+                                  submitted:{" "}
+                                  {formatDate(
+                                    item.claimed_at
+                                  )}
+                                </p>
+                              )}
+
+                            </div>
+                          )}
+
+
+                          {/* Description */}
+
+                          {item.description && (
+                            <div className="mt-3 rounded-lg bg-muted/40 p-3">
+
+                              <p className="text-xs font-medium text-muted-foreground">
+                                Description
+                              </p>
+
+                              <p className="mt-1 text-sm text-foreground">
+                                {
+                                  item.description
+                                }
+                              </p>
+
+                            </div>
+                          )}
+
+                        </div>
+
+
+                        {/* Actions */}
+
+                        <div className="flex flex-shrink-0 flex-col gap-2">
+
+                          {isClaimed && (
+                            <button
+                              type="button"
+                              disabled={
+                                recoveringId ===
+                                Number(
+                                  item.id
+                                )
+                              }
+                              onClick={() =>
+                                handleRecovered(
+                                  Number(
+                                    item.id
+                                  )
+                                )
+                              }
+                              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {recoveringId ===
+                              Number(
+                                item.id
+                              )
+                                ? "Processing..."
+                                : "Verify & Mark Recovered"}
+                            </button>
+                          )}
+
+
+                          {isRecovered && (
+                            <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
+                              Item returned
+                              to verified
+                              owner
+                            </div>
+                          )}
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+                );
+              }
+            )}
+
         </div>
       )}
+
+
+      {/* ===============================================================
+          RECORD FOUND ITEM TAB
+      ================================================================ */}
+
+      {tab === "report" && (
+        <div className="rounded-lg border border-border bg-card shadow-sm">
+
+          {/* Form Header */}
+
+          <div className="border-b border-border px-4 py-4">
+
+            <h3 className="font-semibold text-foreground">
+              Record Found Item
+            </h3>
+
+            <p className="mt-1 text-xs text-muted-foreground">
+              Use this form only after
+              the physical item has
+              been surrendered to the
+              CSU office.
+            </p>
+
+          </div>
+
+
+          <form
+            onSubmit={
+              handleSubmit
+            }
+            className="space-y-5 p-4"
+          >
+
+            {/* Finder Credit */}
+
+            <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+
+              <div className="mb-3">
+
+                <p className="text-sm font-semibold text-green-900">
+                  Finder / Turnover
+                  Credit
+                </p>
+
+                <p className="mt-1 text-xs text-green-700">
+                  Enter the QRPass
+                  Student or Employee
+                  ID of the person who
+                  physically found and
+                  turned over the
+                  item.
+                </p>
+
+              </div>
+
+
+              <label className="mb-1 block text-xs font-medium text-green-900">
+                Student / Employee ID
+                *
+              </label>
+
+              <input
+                type="text"
+                name="found_by_identifier"
+                value={
+                  form.found_by_identifier
+                }
+                onChange={
+                  handleFormChange
+                }
+                required
+                placeholder="Example: 26-9999"
+                className="w-full rounded-lg border border-green-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-200"
+              />
+
+              <p className="mt-1 text-xs text-green-700">
+                QRPass will use this
+                ID to identify and
+                credit the finder.
+              </p>
+
+            </div>
+
+
+            {/* Item Name / Category */}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+              <div>
+
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Item Name *
+                </label>
+
+                <input
+                  type="text"
+                  name="item_name"
+                  value={
+                    form.item_name
+                  }
+                  onChange={
+                    handleFormChange
+                  }
+                  required
+                  placeholder="Example: Laptop"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Category
+                </label>
+
+                <select
+                  name="category"
+                  value={
+                    form.category
+                  }
+                  onChange={
+                    handleFormChange
+                  }
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                >
+
+                  <option value="">
+                    Select category
+                  </option>
+
+                  <option value="Laptop">
+                    Laptop
+                  </option>
+
+                  <option value="Mobile Phone">
+                    Mobile Phone
+                  </option>
+
+                  <option value="Tablet">
+                    Tablet
+                  </option>
+
+                  <option value="Bag">
+                    Bag
+                  </option>
+
+                  <option value="Wallet">
+                    Wallet
+                  </option>
+
+                  <option value="ID / Card">
+                    ID / Card
+                  </option>
+
+                  <option value="Accessories">
+                    Accessories
+                  </option>
+
+                  <option value="Other">
+                    Other
+                  </option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+
+            {/* Brand / Color */}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+              <div>
+
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Brand / Model
+                </label>
+
+                <input
+                  type="text"
+                  name="brand_model"
+                  value={
+                    form.brand_model
+                  }
+                  onChange={
+                    handleFormChange
+                  }
+                  placeholder="Example: Acer Aspire 5"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Color
+                </label>
+
+                <input
+                  type="text"
+                  name="color"
+                  value={
+                    form.color
+                  }
+                  onChange={
+                    handleFormChange
+                  }
+                  placeholder="Example: Black"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+
+              </div>
+
+            </div>
+
+
+            {/* Location / Date */}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+              <div>
+
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Location Found *
+                </label>
+
+                <input
+                  type="text"
+                  name="location_found"
+                  value={
+                    form.location_found
+                  }
+                  onChange={
+                    handleFormChange
+                  }
+                  required
+                  placeholder="Example: 4th Floor Computer Laboratory"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Date Found *
+                </label>
+
+                <input
+                  type="date"
+                  name="date_found"
+                  value={
+                    form.date_found
+                  }
+                  onChange={
+                    handleFormChange
+                  }
+                  required
+                  max={
+                    new Date()
+                      .toISOString()
+                      .split("T")[0]
+                  }
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+
+              </div>
+
+            </div>
+
+
+            {/* Description */}
+
+            <div>
+
+              <label className="mb-1 block text-xs font-medium text-foreground">
+                Item Description
+              </label>
+
+              <textarea
+                name="description"
+                value={
+                  form.description
+                }
+                onChange={
+                  handleFormChange
+                }
+                rows={4}
+                placeholder="Describe identifying features, case, stickers, scratches, accessories, or other useful details."
+                className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              />
+
+            </div>
+
+
+            {/* Security Notice */}
+
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3">
+
+              <p className="text-xs text-yellow-800">
+                Confirm that the item
+                has already been
+                physically received by
+                CSU before saving this
+                record.
+              </p>
+
+            </div>
+
+
+            {/* Buttons */}
+
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+
+              <button
+                type="button"
+                onClick={() => {
+                  setTab(
+                    "registry"
+                  );
+
+                  setError("");
+                }}
+                className="rounded-lg border border-border bg-background px-5 py-2 text-sm font-medium hover:bg-muted"
+              >
+                Cancel
+              </button>
+
+
+              <button
+                type="submit"
+                disabled={
+                  submitting
+                }
+                className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {submitting
+                  ? "Saving..."
+                  : "Record Found Item"}
+              </button>
+
+            </div>
+
+          </form>
+
+        </div>
+      )}
+
     </div>
   );
 }
-
 // ══════════════════════════════════════════════════════════════════════════════
 // PCO PAGES
 // ══════════════════════════════════════════════════════════════════════════════
@@ -2814,14 +5252,408 @@ function PCOReports() {
 }
 
 function PCONotifications() {
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [processingId, setProcessingId] = useState<number | null>(null);
+  const [markingAll, setMarkingAll] = useState(false);
+
+  async function loadNotifications() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getNotifications();
+
+      setNotifications(data.notifications ?? []);
+      setUnreadCount(data.unread_count ?? 0);
+    } catch (err) {
+      console.error(
+        "Failed to load PCO notifications:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load notifications."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  async function handleMarkRead(id: number) {
+    try {
+      setProcessingId(id);
+
+      await markNotificationRead(id);
+
+      setNotifications((current) =>
+        current.map((notification) =>
+          notification.id === id
+            ? {
+                ...notification,
+                is_read: true,
+                read_at:
+                  notification.read_at ??
+                  new Date().toISOString(),
+              }
+            : notification
+        )
+      );
+
+      setUnreadCount((current) =>
+        Math.max(0, current - 1)
+      );
+    } catch (err) {
+      console.error(
+        "Failed to mark notification as read:",
+        err
+      );
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark notification as read."
+      );
+    } finally {
+      setProcessingId(null);
+    }
+  }
+
+  async function handleMarkAllRead() {
+    try {
+      setMarkingAll(true);
+
+      await markAllNotificationsRead();
+
+      setNotifications((current) =>
+        current.map((notification) => ({
+          ...notification,
+          is_read: true,
+          read_at:
+            notification.read_at ??
+            new Date().toISOString(),
+        }))
+      );
+
+      setUnreadCount(0);
+    } catch (err) {
+      console.error(
+        "Failed to mark all notifications as read:",
+        err
+      );
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark all notifications as read."
+      );
+    } finally {
+      setMarkingAll(false);
+    }
+  }
+
+  function formatNotificationDate(
+    dateString: string
+  ) {
+    if (!dateString) {
+      return "—";
+    }
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleString([], {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function getNotificationStyle(type: string) {
+    switch (
+      String(type ?? "").toLowerCase()
+    ) {
+      case "new_item_registration":
+        return {
+          background:
+            "bg-yellow-50 border-yellow-200",
+          iconBackground:
+            "bg-yellow-100 text-yellow-700",
+        };
+
+      case "item_approved":
+        return {
+          background:
+            "bg-green-50 border-green-200",
+          iconBackground:
+            "bg-green-100 text-green-700",
+        };
+
+      case "item_submitted":
+        return {
+          background:
+            "bg-blue-50 border-blue-200",
+          iconBackground:
+            "bg-blue-100 text-blue-700",
+        };
+
+      case "lost_found_claim":
+        return {
+          background:
+            "bg-purple-50 border-purple-200",
+          iconBackground:
+            "bg-purple-100 text-purple-700",
+        };
+
+      default:
+        return {
+          background:
+            "bg-muted/30 border-border",
+          iconBackground:
+            "bg-muted text-muted-foreground",
+        };
+    }
+  }
+
+  const readCount =
+    notifications.length - unreadCount;
+
   return (
     <div className="space-y-5">
-      <PageHeader title="Notifications" subtitle="PCO alerts and item registration updates." />
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <PageHeader
+          title="Notifications"
+          subtitle="PCO item registration alerts and system updates."
+        />
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={loadNotifications}
+            disabled={loading}
+            className="px-3 py-2 border border-border rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+          >
+            {loading
+              ? "Refreshing..."
+              : "Refresh"}
+          </button>
+
+          <button
+            onClick={handleMarkAllRead}
+            disabled={
+              markingAll ||
+              unreadCount === 0
+            }
+            className="px-3 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            {markingAll
+              ? "Marking..."
+              : "Mark All as Read"}
+          </button>
+        </div>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* SUMMARY */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <StatCard
+          label="All Notifications"
+          value={String(
+            notifications.length
+          )}
+          icon={
+            <FileText size={20} />
+          }
+          color="#003087"
+        />
+
+        <StatCard
+          label="Unread"
+          value={String(unreadCount)}
+          icon={
+            <AlertTriangle size={20} />
+          }
+          color="#f5c200"
+        />
+
+        <StatCard
+          label="Read"
+          value={String(readCount)}
+          icon={
+            <CheckCircle size={20} />
+          }
+          color="#2ecc71"
+        />
+      </div>
+
+      {/* NOTIFICATIONS */}
       <Card title="All Notifications">
-        <div className="p-3 space-y-2">
-          <NotifItem type="warning" message="8 item registration requests are awaiting PCO approval." time="Jun 16, 2026 – 8:00 AM" />
-          <NotifItem type="success" message="12 items approved and QR codes issued today." time="Jun 16, 2026 – 12:00 PM" />
-          <NotifItem type="info" message="System reminder: Monthly PCO item registration report due June 30." time="Jun 14, 2026 – 9:00 AM" />
+        <div className="p-3">
+          {loading ? (
+            <div className="py-12 text-center">
+              <p className="text-sm text-muted-foreground">
+                Loading notifications...
+              </p>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="py-12 text-center">
+              <CheckCircle
+                size={36}
+                className="mx-auto mb-3 text-muted-foreground"
+              />
+
+              <p className="text-sm font-semibold text-foreground">
+                No notifications
+              </p>
+
+              <p className="text-xs text-muted-foreground mt-1">
+                New item registration
+                requests will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {notifications.map(
+                (notification: any) => {
+                  const styles =
+                    getNotificationStyle(
+                      notification.type
+                    );
+
+                  const isRead =
+                    Boolean(
+                      notification.is_read
+                    );
+
+                  return (
+                    <div
+                      key={
+                        notification.id
+                      }
+                      className={`border rounded-lg p-4 transition-colors ${
+                        isRead
+                          ? "bg-white border-border"
+                          : styles.background
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* ICON */}
+                        <div
+                          className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                            isRead
+                              ? "bg-muted text-muted-foreground"
+                              : styles.iconBackground
+                          }`}
+                        >
+                          {notification.type ===
+                          "new_item_registration" ? (
+                            <Clock
+                              size={17}
+                            />
+                          ) : notification.type ===
+                            "item_approved" ? (
+                            <CheckCircle
+                              size={17}
+                            />
+                          ) : (
+                            <FileText
+                              size={17}
+                            />
+                          )}
+                        </div>
+
+                        {/* CONTENT */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3
+                                  className={`text-sm ${
+                                    isRead
+                                      ? "font-medium"
+                                      : "font-bold"
+                                  }`}
+                                >
+                                  {notification.title ??
+                                    "Notification"}
+                                </h3>
+
+                                {!isRead && (
+                                  <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                                )}
+                              </div>
+
+                              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                {notification.message}
+                              </p>
+                            </div>
+
+                            <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                              {formatNotificationDate(
+                                notification.created_at
+                              )}
+                            </span>
+                          </div>
+
+                          {/* ACTION */}
+                          {!isRead && (
+                            <div className="mt-3">
+                              <button
+                                onClick={() =>
+                                  handleMarkRead(
+                                    notification.id
+                                  )
+                                }
+                                disabled={
+                                  processingId ===
+                                  notification.id
+                                }
+                                className="text-xs text-primary font-semibold hover:underline disabled:opacity-50"
+                              >
+                                {processingId ===
+                                notification.id
+                                  ? "Marking..."
+                                  : "Mark as Read"}
+                              </button>
+                            </div>
+                          )}
+
+                          {isRead &&
+                            notification.read_at && (
+                              <p className="text-[10px] text-muted-foreground mt-2">
+                                Read{" "}
+                                {formatNotificationDate(
+                                  notification.read_at
+                                )}
+                              </p>
+                            )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+              )}
+            </div>
+          )}
         </div>
       </Card>
     </div>
@@ -2832,40 +5664,349 @@ function PCONotifications() {
 // ADMIN PAGES
 // ══════════════════════════════════════════════════════════════════════════════
 function AdminDashboard() {
+  const [dashboardData, setDashboardData] =
+    useState<any>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function loadDashboard() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getDashboard();
+
+      setDashboardData(data);
+    } catch (err) {
+      console.error(
+        "Failed to load dashboard:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load dashboard data."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  function formatActivityTime(
+    dateString: string | null
+  ) {
+    if (!dateString) return "—";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  const stats = dashboardData?.stats ?? {
+    total_items: 0,
+    active_qr_codes: 0,
+    pending_registrations: 0,
+    scans_today: 0,
+    flagged_incidents: 0,
+    lost_found_items: 0,
+  };
+
+  const itemTypes =
+    dashboardData?.item_types ?? [];
+
+  const recentScans =
+    dashboardData?.recent_scans ?? [];
+
+  const recentIncidents =
+    dashboardData?.recent_incidents ?? [];
+
+  const maxItemTypeCount = Math.max(
+    ...itemTypes.map((item: any) =>
+      Number(item.total ?? 0)
+    ),
+    1
+  );
+
+  const recentActivity = [
+    ...recentScans.map((scan: any) => ({
+      id: `scan-${scan.id}`,
+      type: "scan",
+      date: scan.scanned_at,
+      message: `${
+        scan.direction ?? "QR"
+      } scan verified for ${
+        scan.item?.item_name ?? "registered item"
+      } at ${scan.gate ?? "campus gate"}.`,
+    })),
+
+    ...recentIncidents.map(
+      (incident: any) => ({
+        id: `incident-${incident.id}`,
+        type: "incident",
+        date: incident.reported_at,
+        message: `${
+          incident.incident_type ??
+          "Security incident"
+        } reported at ${
+          incident.gate ?? "campus gate"
+        }${
+          incident.scanned_code
+            ? ` — ${incident.scanned_code}`
+            : ""
+        }.`,
+      })
+    ),
+  ]
+    .sort(
+      (a, b) =>
+        new Date(b.date ?? 0).getTime() -
+        new Date(a.date ?? 0).getTime()
+    )
+    .slice(0, 8);
+
+  if (loading && !dashboardData) {
+    return (
+      <div className="space-y-5">
+        <PageHeader
+          title="Overview Dashboard"
+          subtitle="System-wide summary of QRpass operations."
+        />
+
+        <div className="bg-white border border-border rounded-lg p-10 text-center text-sm text-muted-foreground">
+          Loading dashboard data...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
-      <PageHeader title="Overview Dashboard" subtitle="System-wide summary of QRpass operations." />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Total Items Registered" value="842" icon={<Package size={20} />} color="#003087" />
-        <StatCard label="QR Codes Active" value="820" icon={<QrCode size={20} />} color="#00aeef" />
-        <StatCard label="Scans Today" value="214" icon={<ScanLine size={20} />} color="#f5c200" />
-        <StatCard label="Incidents" value="4" icon={<AlertTriangle size={20} />} color="#e8543a" />
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <PageHeader
+          title="Overview Dashboard"
+          subtitle="System-wide summary of QRpass operations."
+        />
+
+        <button
+          onClick={loadDashboard}
+          disabled={loading}
+          className="px-3 py-2 border border-border rounded-md text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
+        >
+          {loading
+            ? "Refreshing..."
+            : "Refresh Dashboard"}
+        </button>
       </div>
-      <div className="grid md:grid-cols-2 gap-5">
-        <Card title="Registration Trend (June 2026)">
-          <div className="p-4 space-y-2">
-            {[["Laptops", 241, "#003087"], ["Mobile Phones", 198, "#00aeef"], ["Tablets", 142, "#f5c200"], ["Cameras", 89, "#2ecc71"], ["Other Equipment", 172, "#8b5cf6"]].map(([label, count, color]) => (
-              <div key={label as string}>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-foreground">{label}</span>
-                  <span className="text-muted-foreground">{count}</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${Math.round((count as number) / 842 * 100)}%`, backgroundColor: color as string }} />
-                </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* MAIN STATISTICS */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <StatCard
+          label="Total Items"
+          value={String(stats.total_items)}
+          icon={<Package size={20} />}
+          color="#003087"
+        />
+
+        <StatCard
+          label="Active QR"
+          value={String(stats.active_qr_codes)}
+          icon={<QrCode size={20} />}
+          color="#00aeef"
+        />
+
+        <StatCard
+          label="Scans Today"
+          value={String(stats.scans_today)}
+          icon={<ScanLine size={20} />}
+          color="#f5c200"
+        />
+
+        <StatCard
+          label="Flagged Incidents"
+          value={String(stats.flagged_incidents)}
+          icon={<AlertTriangle size={20} />}
+          color="#e8543a"
+        />
+
+        <StatCard
+          label="Pending"
+          value={String(
+            stats.pending_registrations
+          )}
+          icon={<Clock size={20} />}
+          color="#8b5cf6"
+        />
+
+        <StatCard
+          label="Lost & Found"
+          value={String(stats.lost_found_items)}
+          icon={<Search size={20} />}
+          color="#2ecc71"
+        />
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-5">
+        {/* ITEM TYPES */}
+        <Card title="Registered Items by Type">
+          <div className="p-4">
+            {itemTypes.length === 0 ? (
+              <div className="py-10 text-center">
+                <p className="text-sm font-semibold text-foreground">
+                  No registered items yet.
+                </p>
+
+                <p className="text-xs text-muted-foreground mt-1">
+                  Item statistics will appear here after
+                  students register items.
+                </p>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-4">
+                {itemTypes.map(
+                  (item: any, index: number) => {
+                    const count = Number(
+                      item.total ?? 0
+                    );
+
+                    const percentage =
+                      (count /
+                        maxItemTypeCount) *
+                      100;
+
+                    const colors = [
+                      "#003087",
+                      "#00aeef",
+                      "#f5c200",
+                      "#2ecc71",
+                      "#8b5cf6",
+                      "#e8543a",
+                    ];
+
+                    const color =
+                      colors[
+                        index %
+                          colors.length
+                      ];
+
+                    return (
+                      <div
+                        key={
+                          item.item_type ??
+                          index
+                        }
+                      >
+                        <div className="flex items-center justify-between gap-3 mb-1.5">
+                          <span className="text-xs font-medium text-foreground">
+                            {item.item_type ||
+                              "Other"}
+                          </span>
+
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            {count}
+                          </span>
+                        </div>
+
+                        <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-300"
+                            style={{
+                              width: `${Math.max(
+                                percentage,
+                                3
+                              )}%`,
+                              backgroundColor:
+                                color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+            )}
           </div>
         </Card>
+
+        {/* RECENT ACTIVITY */}
         <Card title="Recent System Activity">
-          <div className="divide-y divide-border">
-            {[["PCO approved Laptop Dell XPS for Maria Santos", "9:45 AM"], ["QR scan flagged at Gate 1 — unknown item", "8:15 AM"], ["Building A inspection completed by Guard Ramos", "7:50 AM"], ["Student 22-5678 submitted new item registration", "7:30 AM"]].map(([msg, t]) => (
-              <div key={t as string} className="px-4 py-2.5 flex justify-between gap-3">
-                <span className="text-xs text-foreground">{msg}</span>
-                <span className="text-xs text-muted-foreground flex-shrink-0">{t}</span>
-              </div>
-            ))}
-          </div>
+          {recentActivity.length === 0 ? (
+            <div className="p-10 text-center">
+              <p className="text-sm font-semibold text-foreground">
+                No recent activity.
+              </p>
+
+              <p className="text-xs text-muted-foreground mt-1">
+                QR scans and security incidents will
+                appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {recentActivity.map(
+                (activity) => (
+                  <div
+                    key={activity.id}
+                    className="px-4 py-3 flex gap-3"
+                  >
+                    <div className="mt-0.5">
+                      {activity.type ===
+                      "incident" ? (
+                        <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
+                          <AlertTriangle
+                            size={15}
+                            className="text-red-600"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center">
+                          <CheckCircle
+                            size={15}
+                            className="text-green-600"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-foreground">
+                        {activity.message}
+                      </p>
+
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        {formatActivityTime(
+                          activity.date
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          )}
         </Card>
       </div>
     </div>
@@ -2873,69 +6014,1814 @@ function AdminDashboard() {
 }
 
 function AdminRecords() {
+  const [records, setRecords] = useState<any[]>([]);
+  const [summary, setSummary] = useState({
+    total_records: 0,
+    this_month: 0,
+    flagged: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("All");
+
+  async function loadRecords() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getSystemRecords();
+
+      setRecords(data.records ?? []);
+
+      setSummary(
+        data.summary ?? {
+          total_records: 0,
+          this_month: 0,
+          flagged: 0,
+        }
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load system records:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load system records."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadRecords();
+  }, []);
+
+  function formatDate(dateString: string) {
+    if (!dateString) return "—";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString();
+  }
+
+  function formatTime(dateString: string) {
+    if (!dateString) return "—";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  const recordTypes = [
+    "All",
+    "Item Registration",
+    "QR Scan",
+    "Security Incident",
+    "Lost & Found",
+  ];
+
+  const filteredRecords = records.filter(
+    (record) => {
+      const matchesType =
+        typeFilter === "All" ||
+        record.record_type === typeFilter;
+
+      const query = search
+        .trim()
+        .toLowerCase();
+
+      if (!matchesType) {
+        return false;
+      }
+
+      if (!query) {
+        return true;
+      }
+
+      return [
+        record.record_type,
+        record.title,
+        record.description,
+        record.user_name,
+        record.user_id,
+        record.status,
+      ].some((value) =>
+        String(value ?? "")
+          .toLowerCase()
+          .includes(query)
+      );
+    }
+  );
+
+  function exportCSV() {
+    if (filteredRecords.length === 0) {
+      alert(
+        "There are no system records to export."
+      );
+      return;
+    }
+
+    const headers = [
+      "Date",
+      "Time",
+      "Record Type",
+      "Title",
+      "Description",
+      "User",
+      "User ID",
+      "Status",
+    ];
+
+    const rows = filteredRecords.map(
+      (record) => [
+        formatDate(record.date),
+        formatTime(record.date),
+        record.record_type ?? "",
+        record.title ?? "",
+        record.description ?? "",
+        record.user_name ?? "",
+        record.user_id ?? "",
+        record.status ?? "",
+      ]
+    );
+
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((value) => {
+            const text = String(
+              value ?? ""
+            ).replace(/"/g, '""');
+
+            return `"${text}"`;
+          })
+          .join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob(
+      [csvContent],
+      {
+        type: "text/csv;charset=utf-8;",
+      }
+    );
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+
+    link.download = `qrpass-system-records-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  }
+
+  function getStatusClasses(status: string) {
+    const value = String(
+      status ?? ""
+    ).toLowerCase();
+
+    if (
+      value === "verified" ||
+      value === "approved" ||
+      value === "claimed" ||
+      value === "resolved"
+    ) {
+      return "bg-green-100 text-green-700";
+    }
+
+    if (
+      value === "flagged"
+    ) {
+      return "bg-red-100 text-red-700";
+    }
+
+    if (
+      value === "pending"
+    ) {
+      return "bg-yellow-100 text-yellow-700";
+    }
+
+    if (
+      value === "found"
+    ) {
+      return "bg-blue-100 text-blue-700";
+    }
+
+    return "bg-gray-100 text-gray-700";
+  }
+
   return (
     <div className="space-y-5">
-      <PageHeader title="System Records" subtitle="Centralized records for all QRpass transactions." />
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <StatCard label="Total Records" value="5,284" icon={<Layers size={20} />} color="#003087" />
-        <StatCard label="This Month" value="642" icon={<FileText size={20} />} color="#f5c200" />
-        <StatCard label="Flagged" value="8" icon={<AlertTriangle size={20} />} color="#e8543a" />
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <PageHeader
+          title="System Records"
+          subtitle="Centralized records for all QRpass transactions."
+        />
+
+        <div className="flex gap-2">
+          <button
+            onClick={loadRecords}
+            disabled={loading}
+            className="px-3 py-2 border border-border rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+          >
+            {loading
+              ? "Refreshing..."
+              : "Refresh"}
+          </button>
+
+          <button
+            onClick={exportCSV}
+            className="px-3 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90"
+          >
+            Export CSV
+          </button>
+        </div>
       </div>
-      <Card title="Recent Records" action={<button className="text-xs text-primary flex items-center gap-1 font-medium"><Filter size={12} /> Filter</button>}>
+
+      {/* ERROR */}
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* SUMMARY */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatCard
+          label="Total Records"
+          value={String(
+            summary.total_records
+          )}
+          icon={<Layers size={20} />}
+          color="#003087"
+        />
+
+        <StatCard
+          label="This Month"
+          value={String(
+            summary.this_month
+          )}
+          icon={<FileText size={20} />}
+          color="#f5c200"
+        />
+
+        <StatCard
+          label="Flagged"
+          value={String(
+            summary.flagged
+          )}
+          icon={
+            <AlertTriangle
+              size={20}
+            />
+          }
+          color="#e8543a"
+        />
+      </div>
+
+      {/* SEARCH AND FILTER */}
+      <div className="bg-white border border-border rounded-lg p-4">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-3">
+          <input
+            type="text"
+            value={search}
+            onChange={(event) =>
+              setSearch(
+                event.target.value
+              )
+            }
+            placeholder="Search records, users, items, status..."
+            className="w-full px-3 py-2.5 border border-border rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+
+          <select
+            value={typeFilter}
+            onChange={(event) =>
+              setTypeFilter(
+                event.target.value
+              )
+            }
+            className="w-full px-3 py-2.5 border border-border rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+          >
+            {recordTypes.map(
+              (type) => (
+                <option
+                  key={type}
+                  value={type}
+                >
+                  {type}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+      </div>
+
+      {/* RECORDS TABLE */}
+      <div className="bg-white border border-border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-sm text-foreground">
+                System Transactions
+              </h2>
+
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Showing{" "}
+                {
+                  filteredRecords.length
+                }{" "}
+                record
+                {filteredRecords.length !==
+                1
+                  ? "s"
+                  : ""}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead><tr className="bg-muted/50">
-              {["Record ID", "Type", "Description", "Handled By", "Date", "Status"].map(h => <th key={h} className="text-left py-2 px-3 text-xs text-muted-foreground font-medium">{h}</th>)}
-            </tr></thead>
-            <tbody>
-              {[
-                ["REC-4521", "Registration", "Laptop Dell XPS approved — QR issued", "PCO", "Jun 10", "Approved"],
-                ["REC-4522", "Scan Incident", "Unregistered camera at Gate 1", "Security", "Jun 16", "Flagged"],
-                ["REC-4523", "Inspection", "Building A inspection completed", "Guard Ramos", "Jun 16", "Verified"],
-                ["REC-4524", "Registration", "DJI Drone rejected — policy violation", "PCO", "Jun 8", "Rejected"],
-              ].map(([id, type, desc, by, date, status]) => (
-                <tr key={id as string} className="border-t border-border hover:bg-muted/30 transition-colors">
-                  <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">{id}</td>
-                  <td className="py-2.5 px-3 text-xs text-muted-foreground">{type}</td>
-                  <td className="py-2.5 px-3 text-sm text-foreground max-w-xs truncate">{desc}</td>
-                  <td className="py-2.5 px-3 text-xs text-muted-foreground">{by}</td>
-                  <td className="py-2.5 px-3 text-xs text-muted-foreground">{date}, 2026</td>
-                  <td className="py-2.5 px-3"><StatusBadge status={status as string} /></td>
+          <table className="w-full min-w-[1100px]">
+            <thead>
+              <tr className="bg-muted/50">
+                {[
+                  "Date",
+                  "Time",
+                  "Type",
+                  "Record",
+                  "Description",
+                  "User",
+                  "Status",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="text-left py-3 px-3 text-xs text-muted-foreground font-semibold"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-border">
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    Loading system records...
+                  </td>
                 </tr>
-              ))}
+              ) : filteredRecords.length ===
+                0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center"
+                  >
+                    <p className="text-sm font-semibold text-foreground">
+                      No system records
+                      found.
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Try changing the
+                      search or filter.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredRecords.map(
+                  (record) => (
+                    <tr
+                      key={record.id}
+                      className="hover:bg-muted/30"
+                    >
+                      <td className="py-3 px-3 text-xs text-foreground whitespace-nowrap">
+                        {formatDate(
+                          record.date
+                        )}
+                      </td>
+
+                      <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                        {formatTime(
+                          record.date
+                        )}
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <span className="text-xs font-semibold text-primary">
+                          {record.record_type ??
+                            "Record"}
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <p className="text-xs font-semibold text-foreground">
+                          {record.title ??
+                            "—"}
+                        </p>
+
+                        {record.user_id && (
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {
+                              record.user_id
+                            }
+                          </p>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <p className="text-xs text-foreground max-w-[330px]">
+                          {record.description ??
+                            "—"}
+                        </p>
+                      </td>
+
+                      <td className="py-3 px-3 text-xs text-foreground">
+                        {record.user_name ??
+                          "—"}
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <span
+                          className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold ${getStatusClasses(
+                            record.status
+                          )}`}
+                        >
+                          {record.status ??
+                            "Unknown"}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                )
+              )}
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
 
 function AdminAnalytics() {
+  const [reportData, setReportData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function loadReports() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getReports();
+
+      setReportData(data);
+    } catch (err) {
+      console.error("Failed to load reports:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load report data."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  const summary = reportData?.summary ?? {
+    total_registered_items: 0,
+    active_qr_codes: 0,
+    pending_items: 0,
+    scans_today: 0,
+    scans_this_month: 0,
+    registrations_this_month: 0,
+    flagged_incidents: 0,
+    resolved_incidents: 0,
+    lost_found_available: 0,
+    lost_found_claimed: 0,
+  };
+
+  const itemTypes =
+    reportData?.item_types ?? [];
+
+  const dailyScans =
+    reportData?.daily_scans ?? [];
+
+  const monthlyRegistrations =
+    reportData?.monthly_registrations ?? [];
+
+  const recentRegistrations =
+    reportData?.recent_registrations ?? [];
+
+  const recentIncidents =
+    reportData?.recent_incidents ?? [];
+
+  function formatDate(dateString: string) {
+    if (!dateString) return "—";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString();
+  }
+
+  function formatTime(dateString: string) {
+    if (!dateString) return "—";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const maxItemType = Math.max(
+    ...itemTypes.map((item: any) =>
+      Number(item.total ?? 0)
+    ),
+    1
+  );
+
+  const maxDailyScans = Math.max(
+    ...dailyScans.map((item: any) =>
+      Number(item.total ?? 0)
+    ),
+    1
+  );
+
+  const maxMonthly = Math.max(
+    ...monthlyRegistrations.map((item: any) =>
+      Number(item.total ?? 0)
+    ),
+    1
+  );
+
+  // =========================================================
+  // DAILY QR SCAN PDF
+  // =========================================================
+
+  async function downloadDailyQrScanPDF() {
+    try {
+      const data = await getScanLogs();
+
+      const allLogs = data.logs ?? [];
+
+      const today = new Date();
+
+      const todayLogs = allLogs.filter(
+        (log: any) => {
+          if (!log.scanned_at) {
+            return false;
+          }
+
+          const scanDate = new Date(
+            log.scanned_at
+          );
+
+          return (
+            scanDate.getFullYear() ===
+              today.getFullYear() &&
+            scanDate.getMonth() ===
+              today.getMonth() &&
+            scanDate.getDate() ===
+              today.getDate()
+          );
+        }
+      );
+
+      if (todayLogs.length === 0) {
+        alert(
+          "There are no QR scan records for today."
+        );
+
+        return;
+      }
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+      });
+
+      const verifiedCount =
+        todayLogs.filter(
+          (log: any) =>
+            String(
+              log.result ?? ""
+            ).toLowerCase() === "verified"
+        ).length;
+
+      const inCount =
+        todayLogs.filter(
+          (log: any) =>
+            String(
+              log.direction ?? ""
+            ).toUpperCase() === "IN"
+        ).length;
+
+      const outCount =
+        todayLogs.filter(
+          (log: any) =>
+            String(
+              log.direction ?? ""
+            ).toUpperCase() === "OUT"
+        ).length;
+
+      doc.setFontSize(18);
+
+      doc.text(
+        "QRPass Daily QR Scan Summary",
+        14,
+        18
+      );
+
+      doc.setFontSize(10);
+
+      doc.text(
+        "University of Cebu - Main Campus",
+        14,
+        25
+      );
+
+      doc.text(
+        `Report Date: ${today.toLocaleDateString()}`,
+        14,
+        31
+      );
+
+      doc.text(
+        `Total QR Scans: ${todayLogs.length}`,
+        14,
+        37
+      );
+
+      doc.text(
+        `Verified Scans: ${verifiedCount}`,
+        14,
+        43
+      );
+
+      doc.text(
+        `Entry Scans: ${inCount}`,
+        75,
+        37
+      );
+
+      doc.text(
+        `Exit Scans: ${outCount}`,
+        75,
+        43
+      );
+
+      const tableRows =
+        todayLogs.map((log: any) => {
+          return [
+            formatDate(
+              log.scanned_at
+            ),
+
+            formatTime(
+              log.scanned_at
+            ),
+
+            log.item?.user?.name ??
+              "Unknown",
+
+            log.item?.user?.username ??
+              "—",
+
+            log.item?.item_name ??
+              "Unknown Item",
+
+            log.item?.serial_number ??
+              "—",
+
+            log.qr_code ?? "—",
+
+            log.gate ?? "—",
+
+            log.direction ?? "—",
+
+            log.result ?? "—",
+
+            log.scanner?.name ?? "—",
+          ];
+        });
+
+      autoTable(doc, {
+        startY: 50,
+
+        head: [
+          [
+            "Date",
+            "Time",
+            "Owner",
+            "Owner ID",
+            "Item",
+            "Serial No.",
+            "QR Code",
+            "Gate",
+            "Direction",
+            "Result",
+            "Scanned By",
+          ],
+        ],
+
+        body: tableRows,
+
+        styles: {
+          fontSize: 7,
+          cellPadding: 2,
+        },
+
+        headStyles: {
+          fillColor: [0, 48, 135],
+          textColor: [255, 255, 255],
+        },
+
+        alternateRowStyles: {
+          fillColor: [245, 247, 250],
+        },
+      });
+
+      const filenameDate = today
+        .toISOString()
+        .slice(0, 10);
+
+      doc.save(
+        `QRPass-Daily-QR-Scan-${filenameDate}.pdf`
+      );
+    } catch (err) {
+      console.error(
+        "Failed to generate daily QR scan PDF:",
+        err
+      );
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to generate Daily QR Scan PDF."
+      );
+    }
+  }
+
+  // =========================================================
+  // MONTHLY ITEM REGISTRATION PDF
+  // =========================================================
+
+  async function downloadMonthlyRegistrationPDF() {
+    try {
+      const data = await getAllItems();
+
+      const allItems = data.items ?? [];
+
+      const now = new Date();
+
+      const monthlyItems =
+        allItems.filter(
+          (item: any) => {
+            if (!item.created_at) {
+              return false;
+            }
+
+            const created =
+              new Date(
+                item.created_at
+              );
+
+            return (
+              created.getFullYear() ===
+                now.getFullYear() &&
+              created.getMonth() ===
+                now.getMonth()
+            );
+          }
+        );
+
+      if (
+        monthlyItems.length === 0
+      ) {
+        alert(
+          "There are no item registrations for this month."
+        );
+
+        return;
+      }
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+      });
+
+      const monthName =
+        now.toLocaleDateString(
+          "en-US",
+          {
+            month: "long",
+            year: "numeric",
+          }
+        );
+
+      const approvedCount =
+        monthlyItems.filter(
+          (item: any) =>
+            String(
+              item.status ?? ""
+            ).toLowerCase() === "approved"
+        ).length;
+
+      const pendingCount =
+        monthlyItems.filter(
+          (item: any) =>
+            String(
+              item.status ?? ""
+            ).toLowerCase() === "pending"
+        ).length;
+
+      doc.setFontSize(18);
+
+      doc.text(
+        "QRPass Monthly Item Registration Summary",
+        14,
+        18
+      );
+
+      doc.setFontSize(10);
+
+      doc.text(
+        "University of Cebu - Main Campus",
+        14,
+        25
+      );
+
+      doc.text(
+        `Reporting Period: ${monthName}`,
+        14,
+        31
+      );
+
+      doc.text(
+        `Total Registrations: ${monthlyItems.length}`,
+        14,
+        37
+      );
+
+      doc.text(
+        `Approved: ${approvedCount}`,
+        75,
+        37
+      );
+
+      doc.text(
+        `Pending: ${pendingCount}`,
+        120,
+        37
+      );
+
+      const tableRows =
+        monthlyItems.map(
+          (item: any) => {
+            return [
+              formatDate(
+                item.created_at
+              ),
+
+              item.user?.name ??
+                "Unknown",
+
+              item.user?.username ??
+                "—",
+
+              item.item_name ??
+                "—",
+
+              item.item_type ??
+                "—",
+
+              item.brand_model ??
+                "—",
+
+              item.serial_number ??
+                "—",
+
+              item.color ??
+                "—",
+
+              item.qr_code ??
+                "Not issued",
+
+              item.status ??
+                "—",
+            ];
+          }
+        );
+
+      autoTable(doc, {
+        startY: 45,
+
+        head: [
+          [
+            "Date",
+            "Owner",
+            "Owner ID",
+            "Item",
+            "Type",
+            "Brand / Model",
+            "Serial No.",
+            "Color",
+            "QR Code",
+            "Status",
+          ],
+        ],
+
+        body: tableRows,
+
+        styles: {
+          fontSize: 7,
+          cellPadding: 2,
+        },
+
+        headStyles: {
+          fillColor: [0, 48, 135],
+          textColor: [255, 255, 255],
+        },
+
+        alternateRowStyles: {
+          fillColor: [245, 247, 250],
+        },
+      });
+
+      const fileMonth =
+        `${now.getFullYear()}-${String(
+          now.getMonth() + 1
+        ).padStart(2, "0")}`;
+
+      doc.save(
+        `QRPass-Monthly-Item-Registration-${fileMonth}.pdf`
+      );
+    } catch (err) {
+      console.error(
+        "Failed to generate monthly registration PDF:",
+        err
+      );
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to generate Monthly Registration PDF."
+      );
+    }
+  }
+
+  // =========================================================
+  // SECURITY INCIDENT EXCEL
+  // =========================================================
+
+  async function downloadFlaggedIncidentsExcel() {
+    try {
+      const data =
+        await getSecurityIncidents();
+
+      const incidents =
+        data.incidents ?? [];
+
+      if (incidents.length === 0) {
+        alert(
+          "There are no security incident records to export."
+        );
+
+        return;
+      }
+
+      const flaggedCount =
+        incidents.filter(
+          (incident: any) =>
+            String(
+              incident.status ?? ""
+            ).toLowerCase() ===
+            "flagged"
+        ).length;
+
+      const resolvedCount =
+        incidents.filter(
+          (incident: any) =>
+            String(
+              incident.status ?? ""
+            ).toLowerCase() ===
+            "resolved"
+        ).length;
+
+      const incidentRows =
+        incidents.map(
+          (incident: any) => {
+            return {
+              Date: formatDate(
+                incident.reported_at
+              ),
+
+              Time: formatTime(
+                incident.reported_at
+              ),
+
+              "Incident Type":
+                incident.incident_type ??
+                "Security Incident",
+
+              "Scanned Code":
+                incident.scanned_code ??
+                "",
+
+              "Item Name":
+                incident.item
+                  ?.item_name ??
+                incident.item_name ??
+                "Unknown Item",
+
+              "Serial Number":
+                incident.item
+                  ?.serial_number ??
+                incident.serial_number ??
+                "",
+
+              Gate:
+                incident.gate ??
+                "",
+
+              "Reported By":
+                incident.reporter
+                  ?.name ??
+                "Security Personnel",
+
+              "Reporter ID":
+                incident.reporter
+                  ?.username ??
+                "",
+
+              Status:
+                incident.status ??
+                "Flagged",
+
+              Description:
+                incident.description ??
+                "",
+            };
+          }
+        );
+
+      const summaryRows = [
+        {
+          Metric:
+            "Total Security Incidents",
+
+          Value:
+            incidents.length,
+        },
+
+        {
+          Metric:
+            "Currently Flagged",
+
+          Value:
+            flaggedCount,
+        },
+
+        {
+          Metric:
+            "Resolved Incidents",
+
+          Value:
+            resolvedCount,
+        },
+
+        {
+          Metric:
+            "Report Generated",
+
+          Value:
+            new Date().toLocaleString(),
+        },
+      ];
+
+      const workbook =
+        XLSX.utils.book_new();
+
+      const summarySheet =
+        XLSX.utils.json_to_sheet(
+          summaryRows
+        );
+
+      const incidentSheet =
+        XLSX.utils.json_to_sheet(
+          incidentRows
+        );
+
+      summarySheet["!cols"] = [
+        { wch: 25 },
+        { wch: 25 },
+      ];
+
+      incidentSheet["!cols"] = [
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 22 },
+        { wch: 25 },
+        { wch: 25 },
+        { wch: 22 },
+        { wch: 15 },
+        { wch: 25 },
+        { wch: 20 },
+        { wch: 14 },
+        { wch: 45 },
+      ];
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        summarySheet,
+        "Summary"
+      );
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        incidentSheet,
+        "Security Incidents"
+      );
+
+      const today = new Date()
+        .toISOString()
+        .slice(0, 10);
+
+      XLSX.writeFile(
+        workbook,
+        `QRPass-Security-Incidents-${today}.xlsx`
+      );
+    } catch (err) {
+      console.error(
+        "Failed to generate security incident Excel report:",
+        err
+      );
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to generate Security Incident Excel report."
+      );
+    }
+  }
+
   return (
     <div className="space-y-5">
-      <PageHeader title="Reports & Analytics" subtitle="Generate and download system-wide reports." />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Reports This Month" value="32" icon={<BarChart2 size={20} />} color="#003087" />
-        <StatCard label="Registration Reports" value="14" icon={<FileText size={20} />} color="#f5c200" />
-        <StatCard label="Incident Reports" value="5" icon={<AlertTriangle size={20} />} color="#e8543a" />
-        <StatCard label="Inspection Reports" value="13" icon={<ClipboardList size={20} />} color="#00aeef" />
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <PageHeader
+          title="Reports & Analytics"
+          subtitle="Real-time QRpass statistics and downloadable system reports."
+        />
+
+        <button
+          onClick={loadReports}
+          disabled={loading}
+          className="px-3 py-2 border border-border rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+        >
+          {loading
+            ? "Refreshing..."
+            : "Refresh Reports"}
+        </button>
       </div>
-      <Card title="Available Reports">
-        <div className="divide-y divide-border">
-          {[["Monthly Item Registration Summary", "Jun 2026", "PDF"], ["QR Code Scan Activity Report", "Jun 2026", "Excel"], ["Gate Entry/Exit Log", "Jun 16, 2026", "PDF"], ["Flagged Items & Incidents Log", "Jun 2026", "Excel"], ["Lost & Found Summary", "Jun 2026", "PDF"]].map(([name, period, fmt]) => (
-            <div key={name as string} className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
-              <div>
-                <p className="text-sm text-foreground font-medium">{name}</p>
-                <p className="text-xs text-muted-foreground">{period}</p>
-              </div>
-              <button className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline">
-                <Download size={13} /> {fmt}
-              </button>
-            </div>
-          ))}
+
+      {/* DOWNLOADABLE REPORTS */}
+      <div className="bg-white border border-border rounded-lg p-4">
+        <div className="mb-4">
+          <h2 className="text-sm font-bold text-foreground">
+            Download Reports
+          </h2>
+
+          <p className="text-xs text-muted-foreground mt-1">
+            Generate reports using current QRPass database records.
+          </p>
         </div>
-      </Card>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={
+              downloadDailyQrScanPDF
+            }
+            className="px-4 py-2.5 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
+          >
+            <Download size={14} />
+
+            Daily QR Scan PDF
+          </button>
+
+          <button
+            onClick={
+              downloadMonthlyRegistrationPDF
+            }
+            className="px-4 py-2.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
+          >
+            <Download size={14} />
+
+            Monthly Registration PDF
+          </button>
+
+          <button
+            onClick={
+              downloadFlaggedIncidentsExcel
+            }
+            className="px-4 py-2.5 bg-green-600 text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
+          >
+            <Download size={14} />
+
+            Security Incidents Excel
+          </button>
+        </div>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* MAIN SUMMARY */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <StatCard
+          label="Registered Items"
+          value={String(
+            summary.total_registered_items
+          )}
+          icon={
+            <Package size={20} />
+          }
+          color="#003087"
+        />
+
+        <StatCard
+          label="Active QR"
+          value={String(
+            summary.active_qr_codes
+          )}
+          icon={
+            <QrCode size={20} />
+          }
+          color="#00aeef"
+        />
+
+        <StatCard
+          label="Pending"
+          value={String(
+            summary.pending_items
+          )}
+          icon={
+            <Clock size={20} />
+          }
+          color="#8b5cf6"
+        />
+
+        <StatCard
+          label="Scans Today"
+          value={String(
+            summary.scans_today
+          )}
+          icon={
+            <ScanLine size={20} />
+          }
+          color="#f5c200"
+        />
+
+        <StatCard
+          label="Flagged"
+          value={String(
+            summary.flagged_incidents
+          )}
+          icon={
+            <AlertTriangle
+              size={20}
+            />
+          }
+          color="#e8543a"
+        />
+
+        <StatCard
+          label="Resolved"
+          value={String(
+            summary.resolved_incidents
+          )}
+          icon={
+            <CheckCircle
+              size={20}
+            />
+          }
+          color="#2ecc71"
+        />
+      </div>
+
+      {/* SECONDARY SUMMARY */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          label="Scans This Month"
+          value={String(
+            summary.scans_this_month
+          )}
+          icon={
+            <BarChart2 size={20} />
+          }
+          color="#003087"
+        />
+
+        <StatCard
+          label="Registrations This Month"
+          value={String(
+            summary.registrations_this_month
+          )}
+          icon={
+            <FileText size={20} />
+          }
+          color="#00aeef"
+        />
+
+        <StatCard
+          label="Found Items"
+          value={String(
+            summary.lost_found_available
+          )}
+          icon={
+            <Search size={20} />
+          }
+          color="#f5c200"
+        />
+
+        <StatCard
+          label="Claimed Items"
+          value={String(
+            summary.lost_found_claimed
+          )}
+          icon={
+            <CheckCircle
+              size={20}
+            />
+          }
+          color="#2ecc71"
+        />
+      </div>
+
+      {/* ANALYTICS */}
+      <div className="grid lg:grid-cols-3 gap-5">
+        {/* ITEMS BY TYPE */}
+        <Card title="Items by Type">
+          <div className="p-4 space-y-4">
+            {itemTypes.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No item data available.
+              </p>
+            ) : (
+              itemTypes.map(
+                (
+                  item: any,
+                  index: number
+                ) => {
+                  const total =
+                    Number(
+                      item.total ?? 0
+                    );
+
+                  const percentage =
+                    (total /
+                      maxItemType) *
+                    100;
+
+                  const colors = [
+                    "#003087",
+                    "#00aeef",
+                    "#f5c200",
+                    "#2ecc71",
+                    "#8b5cf6",
+                    "#e8543a",
+                  ];
+
+                  return (
+                    <div
+                      key={
+                        item.item_type ??
+                        index
+                      }
+                    >
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="font-medium">
+                          {item.item_type ||
+                            "Other"}
+                        </span>
+
+                        <span className="text-muted-foreground">
+                          {total}
+                        </span>
+                      </div>
+
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${Math.max(
+                              percentage,
+                              3
+                            )}%`,
+
+                            backgroundColor:
+                              colors[
+                                index %
+                                  colors.length
+                              ],
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+              )
+            )}
+          </div>
+        </Card>
+
+        {/* LAST 7 DAYS */}
+        <Card title="QR Scans - Last 7 Days">
+          <div className="p-4 space-y-4">
+            {dailyScans.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No scan activity recorded.
+              </p>
+            ) : (
+              dailyScans.map(
+                (entry: any) => {
+                  const total =
+                    Number(
+                      entry.total ?? 0
+                    );
+
+                  return (
+                    <div
+                      key={
+                        entry.date
+                      }
+                    >
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>
+                          {formatDate(
+                            entry.date
+                          )}
+                        </span>
+
+                        <span className="font-semibold">
+                          {total}
+                        </span>
+                      </div>
+
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full"
+                          style={{
+                            width: `${Math.max(
+                              (total /
+                                maxDailyScans) *
+                                100,
+                              3
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+              )
+            )}
+          </div>
+        </Card>
+
+        {/* MONTHLY REGISTRATIONS */}
+        <Card title="Monthly Registrations">
+          <div className="p-4 space-y-4">
+            {monthlyRegistrations.length ===
+            0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No registration data available.
+              </p>
+            ) : (
+              monthlyRegistrations.map(
+                (entry: any) => {
+                  const total =
+                    Number(
+                      entry.total ?? 0
+                    );
+
+                  const month =
+                    monthNames[
+                      Number(
+                        entry.month
+                      ) - 1
+                    ] ??
+                    `Month ${entry.month}`;
+
+                  return (
+                    <div
+                      key={
+                        entry.month
+                      }
+                    >
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>
+                          {month}
+                        </span>
+
+                        <span className="font-semibold">
+                          {total}
+                        </span>
+                      </div>
+
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${Math.max(
+                              (total /
+                                maxMonthly) *
+                                100,
+                              3
+                            )}%`,
+
+                            backgroundColor:
+                              "#00aeef",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+              )
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* RECENT REGISTRATIONS */}
+      <div className="bg-white border border-border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
+          <h2 className="font-semibold text-sm">
+            Recent Item Registrations
+          </h2>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[850px]">
+            <thead>
+              <tr className="bg-muted/50">
+                {[
+                  "Date",
+                  "Student",
+                  "Item",
+                  "Type",
+                  "Serial Number",
+                  "Status",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="text-left px-3 py-3 text-xs text-muted-foreground font-semibold"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-border">
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="py-10 text-center text-sm text-muted-foreground"
+                  >
+                    Loading reports...
+                  </td>
+                </tr>
+              ) : recentRegistrations.length ===
+                0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="py-10 text-center text-sm text-muted-foreground"
+                  >
+                    No registration records found.
+                  </td>
+                </tr>
+              ) : (
+                recentRegistrations.map(
+                  (item: any) => (
+                    <tr key={item.id}>
+                      <td className="px-3 py-3 text-xs">
+                        {formatDate(
+                          item.created_at
+                        )}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        <div className="font-semibold">
+                          {item.user?.name ??
+                            "Unknown"}
+                        </div>
+
+                        <div className="text-muted-foreground">
+                          {item.user?.username ??
+                            ""}
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-3 text-xs font-semibold">
+                        {item.item_name}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        {item.item_type}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        {item.serial_number}
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                            String(
+                              item.status
+                            ).toLowerCase() ===
+                            "approved"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {item.status}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* SECURITY INCIDENTS */}
+      <div className="bg-white border border-border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
+          <h2 className="font-semibold text-sm">
+            Recent Security Incidents
+          </h2>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[850px]">
+            <thead>
+              <tr className="bg-muted/50">
+                {[
+                  "Date",
+                  "Incident",
+                  "Code",
+                  "Gate",
+                  "Reported By",
+                  "Status",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="text-left px-3 py-3 text-xs text-muted-foreground font-semibold"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-border">
+              {recentIncidents.length ===
+              0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="py-10 text-center text-sm text-muted-foreground"
+                  >
+                    No security incidents found.
+                  </td>
+                </tr>
+              ) : (
+                recentIncidents.map(
+                  (incident: any) => (
+                    <tr
+                      key={
+                        incident.id
+                      }
+                    >
+                      <td className="px-3 py-3 text-xs">
+                        {formatDate(
+                          incident.reported_at
+                        )}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs font-semibold">
+                        {incident.incident_type}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs font-mono">
+                        {incident.scanned_code ||
+                          "—"}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        {incident.gate}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        {incident.reporter?.name ??
+                          "Security Personnel"}
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                            String(
+                              incident.status
+                            ).toLowerCase() ===
+                            "resolved"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {incident.status}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
@@ -2959,140 +7845,1106 @@ function AdminNotifications() {
 // SYSADMIN PAGES
 // ══════════════════════════════════════════════════════════════════════════════
 function SysAdminUserAccounts() {
-  type UserEntry = { id: string; name: string; username: string; role: string; lastLogin: string; status: "Active" | "Disabled" };
-  const [users, setUsers] = useState<UserEntry[]>([
-    { id: "1", name: "Adrian N. Badon", username: "22-1234", role: "Student", lastLogin: "Jun 16, 9:02 AM", status: "Active" },
-    { id: "2", name: "Guard Ramos", username: "guard.ramos", role: "Security (CSU)", lastLogin: "Jun 16, 7:00 AM", status: "Active" },
-    { id: "3", name: "PCO De paz", username: "pco.depaz", role: "PCO Staff", lastLogin: "Jun 15, 4:30 PM", status: "Active" },
-    { id: "4", name: "Rodel Cuyos", username: "admin.cuyos", role: "Admin", lastLogin: "Jun 16, 8:45 AM", status: "Active" },
-  ]);
-  const [editUser, setEditUser] = useState<UserEntry | null>(null);
-  const [showAdd, setShowAdd] = useState(false);
-  const [newUser, setNewUser] = useState({ name: "", username: "", role: "Student" });
+  const [users, setUsers] = useState<any[]>([]);
+
+  const [summary, setSummary] = useState<any>({
+    total_users: 0,
+    active_users: 0,
+    inactive_users: 0,
+    students: 0,
+    security: 0,
+    pco: 0,
+    system_admins: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [search, setSearch] = useState("");
 
-  const filtered = users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.username.toLowerCase().includes(search.toLowerCase())
-  );
+  const [updatingId, setUpdatingId] =
+    useState<number | null>(null);
 
-  function handleToggle(id: string) {
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, status: u.status === "Active" ? "Disabled" : "Active" } : u));
+  const [showAddUser, setShowAddUser] =
+    useState(false);
+
+  const [creatingUser, setCreatingUser] =
+    useState(false);
+
+  const [savingEdit, setSavingEdit] =
+    useState(false);
+
+  const [editUser, setEditUser] =
+    useState<any | null>(null);
+
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    username: "",
+    role: "student",
+    password: "",
+  });
+
+  async function loadUsers() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getUsers();
+
+      setUsers(data.users ?? []);
+
+      setSummary(
+        data.summary ?? {
+          total_users: 0,
+          active_users: 0,
+          inactive_users: 0,
+          students: 0,
+          security: 0,
+          pco: 0,
+          system_admins: 0,
+        }
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load users:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load user accounts."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
-  function handleSaveEdit() {
-    if (!editUser) return;
-    setUsers(prev => prev.map(u => u.id === editUser.id ? editUser : u));
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  function getRoleLabel(role: string) {
+    switch (
+      String(role ?? "").toLowerCase()
+    ) {
+      case "student":
+        return "Student";
+
+      case "security":
+        return "Security Personnel (CSU)";
+
+      case "sao":
+        return "PCO Staff";
+
+      case "sysadmin":
+        return "System Administrator";
+
+      default:
+        return role || "Unknown";
+    }
+  }
+
+  function getStatusLabel(status: string) {
+    return String(
+      status ?? ""
+    ).toLowerCase() === "approved"
+      ? "Active"
+      : "Disabled";
+  }
+
+  function formatDate(dateString: string) {
+    if (!dateString) {
+      return "—";
+    }
+
+    const date =
+      new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString(
+      "en-US",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }
+    );
+  }
+
+  async function handleAddUser(
+    event: any
+  ) {
+    event.preventDefault();
+
+    setError("");
+    setSuccess("");
+
+    if (
+      !newUser.name.trim() ||
+      !newUser.email.trim() ||
+      !newUser.username.trim() ||
+      !newUser.password.trim()
+    ) {
+      setError(
+        "Please complete all required fields."
+      );
+
+      return;
+    }
+
+    if (newUser.password.length < 6) {
+      setError(
+        "Password must contain at least 6 characters."
+      );
+
+      return;
+    }
+
+    try {
+      setCreatingUser(true);
+
+      const data = await createUser({
+        name: newUser.name.trim(),
+
+        email: newUser.email.trim(),
+
+        username:
+          newUser.username.trim(),
+
+        role:
+          newUser.role as
+            | "student"
+            | "security"
+            | "sao"
+            | "sysadmin",
+
+        password: newUser.password,
+      });
+
+      setSuccess(
+        data.message ??
+          "User account created successfully."
+      );
+
+      setNewUser({
+        name: "",
+        email: "",
+        username: "",
+        role: "student",
+        password: "",
+      });
+
+      setShowAddUser(false);
+
+      await loadUsers();
+    } catch (err) {
+      console.error(
+        "Failed to create user:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to create user account."
+      );
+    } finally {
+      setCreatingUser(false);
+    }
+  }
+
+  function handleStartEdit(user: any) {
+    setError("");
+    setSuccess("");
+    setShowAddUser(false);
+
+    setEditUser({
+      id: user.id,
+      name: user.name ?? "",
+      email: user.email ?? "",
+      username: user.username ?? "",
+      role: user.role ?? "student",
+    });
+  }
+
+  function handleCancelEdit() {
     setEditUser(null);
+    setError("");
   }
-  function handleAddUser(e: React.FormEvent) {
-    e.preventDefault();
-    setUsers(prev => [...prev, { id: Date.now().toString(), name: newUser.name, username: newUser.username, role: newUser.role, lastLogin: "Never", status: "Active" }]);
-    setNewUser({ name: "", username: "", role: "Student" });
-    setShowAdd(false);
+
+  async function handleSaveEdit(
+    event: any
+  ) {
+    event.preventDefault();
+
+    if (!editUser) {
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+
+    if (
+      !editUser.name.trim() ||
+      !editUser.email.trim() ||
+      !editUser.username.trim()
+    ) {
+      setError(
+        "Name, email, and username are required."
+      );
+
+      return;
+    }
+
+    try {
+      setSavingEdit(true);
+
+      const data = await updateUser(
+        editUser.id,
+        {
+          name:
+            editUser.name.trim(),
+
+          email:
+            editUser.email.trim(),
+
+          username:
+            editUser.username.trim(),
+
+          role:
+            editUser.role as
+              | "student"
+              | "security"
+              | "sao"
+              | "sysadmin",
+        }
+      );
+
+      setSuccess(
+        data.message ??
+          "User account updated successfully."
+      );
+
+      setEditUser(null);
+
+      await loadUsers();
+    } catch (err) {
+      console.error(
+        "Failed to update user:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update user account."
+      );
+    } finally {
+      setSavingEdit(false);
+    }
   }
+
+  async function handleToggleStatus(
+    user: any
+  ) {
+    const currentStatus =
+      String(
+        user.status ?? ""
+      ).toLowerCase();
+
+    const newStatus =
+      currentStatus === "approved"
+        ? "inactive"
+        : "approved";
+
+    const action =
+      newStatus === "inactive"
+        ? "disable"
+        : "enable";
+
+    const confirmed =
+      window.confirm(
+        `Are you sure you want to ${action} the account of ${user.name}?`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setUpdatingId(user.id);
+
+      setError("");
+      setSuccess("");
+
+      const data =
+        await updateUserStatus(
+          user.id,
+          newStatus
+        );
+
+      setSuccess(
+        data.message ??
+          "User account updated successfully."
+      );
+
+      await loadUsers();
+    } catch (err) {
+      console.error(
+        "Failed to update user status:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update user status."
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  const filteredUsers =
+    users.filter((user: any) => {
+      const keyword =
+        search
+          .trim()
+          .toLowerCase();
+
+      if (!keyword) {
+        return true;
+      }
+
+      const searchableText = [
+        user.name,
+        user.username,
+        user.email,
+        getRoleLabel(user.role),
+        getStatusLabel(user.status),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(
+        keyword
+      );
+    });
+
+  const totalPersonnel =
+    Number(summary.security ?? 0) +
+    Number(summary.pco ?? 0) +
+    Number(summary.system_admins ?? 0);
 
   return (
     <div className="space-y-5">
-      <PageHeader title="User Accounts" subtitle="Manage all QRpass user accounts and role-based access." action={
-        <button onClick={() => setShowAdd(!showAdd)} className="flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-3 py-2 rounded-md hover:opacity-90">
-          <Plus size={13} /> Add User
-        </button>
-      } />
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <PageHeader
+          title="User Accounts"
+          subtitle="Manage QRpass user accounts and role-based access."
+        />
 
-      {showAdd && (
-        <Card title="Add New User">
-          <form onSubmit={handleAddUser} className="p-4 grid md:grid-cols-3 gap-4">
-            {[["Full Name", "name", "text", "e.g. Juan Dela Cruz"], ["Username / ID", "username", "text", "e.g. 22-5678"]].map(([label, key, type, ph]) => (
-              <div key={key as string}>
-                <label className="block text-xs font-semibold text-foreground mb-1">{label}</label>
-                <input type={type as string} placeholder={ph as string} value={(newUser as any)[key as string]}
-                  onChange={e => setNewUser(prev => ({ ...prev, [key as string]: e.target.value }))} required
-                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={loadUsers}
+            disabled={loading}
+            className="px-3 py-2 border border-border rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+          >
+            {loading
+              ? "Refreshing..."
+              : "Refresh Users"}
+          </button>
+
+          <button
+            onClick={() => {
+              setShowAddUser(
+                !showAddUser
+              );
+
+              setEditUser(null);
+              setError("");
+              setSuccess("");
+            }}
+            className="px-3 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-1.5"
+          >
+            <Plus size={14} />
+
+            {showAddUser
+              ? "Close Form"
+              : "Add User"}
+          </button>
+        </div>
+      </div>
+
+      {/* SUCCESS MESSAGE */}
+      {success && (
+        <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
+      {/* ERROR MESSAGE */}
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* ADD USER FORM */}
+      {showAddUser && (
+        <Card title="Add New User Account">
+          <form
+            onSubmit={handleAddUser}
+            className="p-4 space-y-4"
+          >
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Full Name *
+                </label>
+
+                <input
+                  type="text"
+                  value={newUser.name}
+                  onChange={(e) =>
+                    setNewUser(
+                      (current) => ({
+                        ...current,
+                        name:
+                          e.target.value,
+                      })
+                    )
+                  }
+                  placeholder="e.g. Juan Dela Cruz"
+                  required
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
               </div>
-            ))}
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">Role</label>
-              <select value={newUser.role} onChange={e => setNewUser(prev => ({ ...prev, role: e.target.value }))}
-                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30">
-                {["Student", "Security (CSU)", "PCO Staff", "Admin"].map(r => <option key={r}>{r}</option>)}
-              </select>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Email Address *
+                </label>
+
+                <input
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) =>
+                    setNewUser(
+                      (current) => ({
+                        ...current,
+                        email:
+                          e.target.value,
+                      })
+                    )
+                  }
+                  placeholder="e.g. student@uc.edu.ph"
+                  required
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Username / ID *
+                </label>
+
+                <input
+                  type="text"
+                  value={
+                    newUser.username
+                  }
+                  onChange={(e) =>
+                    setNewUser(
+                      (current) => ({
+                        ...current,
+                        username:
+                          e.target.value,
+                      })
+                    )
+                  }
+                  placeholder="e.g. 26-1234"
+                  required
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Role *
+                </label>
+
+                <select
+                  value={newUser.role}
+                  onChange={(e) =>
+                    setNewUser(
+                      (current) => ({
+                        ...current,
+                        role:
+                          e.target.value,
+                      })
+                    )
+                  }
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="student">
+                    Student
+                  </option>
+
+                  <option value="security">
+                    Security Personnel
+                    (CSU)
+                  </option>
+
+                  <option value="sao">
+                    PCO Staff
+                  </option>
+
+                  <option value="sysadmin">
+                    System Administrator
+                  </option>
+                </select>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold mb-1">
+                  Temporary Password *
+                </label>
+
+                <input
+                  type="password"
+                  value={
+                    newUser.password
+                  }
+                  onChange={(e) =>
+                    setNewUser(
+                      (current) => ({
+                        ...current,
+                        password:
+                          e.target.value,
+                      })
+                    )
+                  }
+                  placeholder="Minimum 6 characters"
+                  minLength={6}
+                  required
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  The user can use this
+                  password when logging
+                  into QRpass.
+                </p>
+              </div>
             </div>
-            <div className="md:col-span-3 flex gap-2 justify-end">
-              <button type="button" onClick={() => setShowAdd(false)} className="text-xs px-3 py-2 border border-border rounded-md text-muted-foreground hover:bg-muted">Cancel</button>
-              <button type="submit" className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold hover:opacity-90">Add User</button>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddUser(
+                    false
+                  );
+
+                  setNewUser({
+                    name: "",
+                    email: "",
+                    username: "",
+                    role: "student",
+                    password: "",
+                  });
+
+                  setError("");
+                }}
+                disabled={
+                  creatingUser
+                }
+                className="px-4 py-2 border border-border rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={
+                  creatingUser
+                }
+                className="px-4 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+              >
+                {creatingUser
+                  ? "Creating..."
+                  : "Create User Account"}
+              </button>
             </div>
           </form>
         </Card>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Total Users" value={String(users.length)} icon={<Users size={20} />} color="#003087" />
-        <StatCard label="Active" value={String(users.filter(u => u.status === "Active").length)} icon={<CheckCircle size={20} />} color="#2ecc71" />
-        <StatCard label="Disabled" value={String(users.filter(u => u.status === "Disabled").length)} icon={<X size={20} />} color="#e8543a" />
-        <StatCard label="Active Sessions" value="247" icon={<Eye size={20} />} color="#f5c200" />
+      {/* EDIT USER FORM */}
+      {editUser && (
+        <Card title="Edit User Account">
+          <form
+            onSubmit={handleSaveEdit}
+            className="p-4 space-y-4"
+          >
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* EDIT NAME */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Full Name *
+                </label>
+
+                <input
+                  type="text"
+                  value={editUser.name}
+                  onChange={(e) =>
+                    setEditUser({
+                      ...editUser,
+                      name:
+                        e.target.value,
+                    })
+                  }
+                  required
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+
+              {/* EDIT EMAIL */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Email Address *
+                </label>
+
+                <input
+                  type="email"
+                  value={editUser.email}
+                  onChange={(e) =>
+                    setEditUser({
+                      ...editUser,
+                      email:
+                        e.target.value,
+                    })
+                  }
+                  required
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+
+              {/* EDIT USERNAME */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Username / ID *
+                </label>
+
+                <input
+                  type="text"
+                  value={
+                    editUser.username
+                  }
+                  onChange={(e) =>
+                    setEditUser({
+                      ...editUser,
+                      username:
+                        e.target.value,
+                    })
+                  }
+                  required
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+
+              {/* EDIT ROLE */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Role *
+                </label>
+
+                <select
+                  value={editUser.role}
+                  onChange={(e) =>
+                    setEditUser({
+                      ...editUser,
+                      role:
+                        e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="student">
+                    Student
+                  </option>
+
+                  <option value="security">
+                    Security Personnel
+                    (CSU)
+                  </option>
+
+                  <option value="sao">
+                    PCO Staff
+                  </option>
+
+                  <option value="sysadmin">
+                    System Administrator
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-md px-3 py-2 text-xs text-amber-700">
+              Changing the role changes
+              which QRpass modules this
+              account is allowed to use.
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={
+                  handleCancelEdit
+                }
+                disabled={savingEdit}
+                className="px-4 py-2 border border-border rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={savingEdit}
+                className="px-4 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+              >
+                {savingEdit
+                  ? "Saving..."
+                  : "Save Changes"}
+              </button>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      {/* SUMMARY CARDS */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <StatCard
+          label="Total Users"
+          value={String(
+            summary.total_users ?? 0
+          )}
+          icon={<Users size={20} />}
+          color="#003087"
+        />
+
+        <StatCard
+          label="Students"
+          value={String(
+            summary.students ?? 0
+          )}
+          icon={<Users size={20} />}
+          color="#00aeef"
+        />
+
+        <StatCard
+          label="Staff / Personnel"
+          value={String(
+            totalPersonnel
+          )}
+          icon={<Users size={20} />}
+          color="#8b5cf6"
+        />
+
+        <StatCard
+          label="Active Accounts"
+          value={String(
+            summary.active_users ?? 0
+          )}
+          icon={
+            <CheckCircle size={20} />
+          }
+          color="#2ecc71"
+        />
+
+        <StatCard
+          label="Disabled"
+          value={String(
+            summary.inactive_users ?? 0
+          )}
+          icon={<X size={20} />}
+          color="#e8543a"
+        />
+
+        <StatCard
+          label="System Admins"
+          value={String(
+            summary.system_admins ?? 0
+          )}
+          icon={<Shield size={20} />}
+          color="#f5c200"
+        />
       </div>
 
-      <Card title="User List" action={
-        <div className="relative">
-          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            className="pl-7 pr-3 py-1.5 text-xs border border-border rounded-md bg-muted/50 w-48 focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Search users..." />
+      {/* ROLE BREAKDOWN */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white border border-border rounded-lg p-4">
+          <p className="text-xs text-muted-foreground">
+            Students
+          </p>
+
+          <p className="text-xl font-bold mt-1">
+            {summary.students ?? 0}
+          </p>
         </div>
-      }>
+
+        <div className="bg-white border border-border rounded-lg p-4">
+          <p className="text-xs text-muted-foreground">
+            Security Personnel
+          </p>
+
+          <p className="text-xl font-bold mt-1">
+            {summary.security ?? 0}
+          </p>
+        </div>
+
+        <div className="bg-white border border-border rounded-lg p-4">
+          <p className="text-xs text-muted-foreground">
+            PCO Staff
+          </p>
+
+          <p className="text-xl font-bold mt-1">
+            {summary.pco ?? 0}
+          </p>
+        </div>
+
+        <div className="bg-white border border-border rounded-lg p-4">
+          <p className="text-xs text-muted-foreground">
+            System Administrators
+          </p>
+
+          <p className="text-xl font-bold mt-1">
+            {summary.system_admins ??
+              0}
+          </p>
+        </div>
+      </div>
+
+      {/* USER LIST */}
+      <Card
+        title="User List"
+        action={
+          <div className="relative">
+            <Search
+              size={13}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+
+            <input
+              value={search}
+              onChange={(e) =>
+                setSearch(
+                  e.target.value
+                )
+              }
+              placeholder="Search users..."
+              className="pl-7 pr-3 py-1.5 text-xs border border-border rounded-md bg-muted/50 w-48 md:w-64 focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+        }
+      >
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead><tr className="bg-muted/50">
-              {["Name", "Username", "Role", "Last Login", "Status", "Actions"].map(h => <th key={h} className="text-left py-2 px-3 text-xs text-muted-foreground font-medium">{h}</th>)}
-            </tr></thead>
-            <tbody>
-              {filtered.map(u => (
-                <tr key={u.id} className="border-t border-border hover:bg-muted/30 transition-colors">
-                  {editUser?.id === u.id ? (
-                    <>
-                      <td className="py-1.5 px-3"><input value={editUser.name} onChange={e => setEditUser({ ...editUser, name: e.target.value })} className="w-full px-2 py-1 text-sm border border-primary/40 rounded focus:outline-none focus:ring-1 focus:ring-primary/30" /></td>
-                      <td className="py-1.5 px-3"><input value={editUser.username} onChange={e => setEditUser({ ...editUser, username: e.target.value })} className="w-full px-2 py-1 text-xs font-mono border border-primary/40 rounded focus:outline-none focus:ring-1 focus:ring-primary/30" /></td>
-                      <td className="py-1.5 px-3">
-                        <select value={editUser.role} onChange={e => setEditUser({ ...editUser, role: e.target.value })} className="w-full px-2 py-1 text-xs border border-primary/40 rounded focus:outline-none">
-                          {["Student", "Security (CSU)", "PCO Staff", "Admin"].map(r => <option key={r}>{r}</option>)}
-                        </select>
-                      </td>
-                      <td className="py-1.5 px-3 text-xs text-muted-foreground">{u.lastLogin}</td>
-                      <td className="py-1.5 px-3"><StatusBadge status={u.status} /></td>
-                      <td className="py-1.5 px-3">
-                        <div className="flex gap-1">
-                          <button onClick={handleSaveEdit} className="text-xs bg-primary text-white px-2 py-1 rounded hover:opacity-90">Save</button>
-                          <button onClick={() => setEditUser(null)} className="text-xs border border-border px-2 py-1 rounded hover:bg-muted">Cancel</button>
-                        </div>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="py-2.5 px-3 text-sm text-foreground font-medium">{u.name}</td>
-                      <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">{u.username}</td>
-                      <td className="py-2.5 px-3 text-xs text-muted-foreground">{u.role}</td>
-                      <td className="py-2.5 px-3 text-xs text-muted-foreground">{u.lastLogin}</td>
-                      <td className="py-2.5 px-3"><StatusBadge status={u.status} /></td>
-                      <td className="py-2.5 px-3">
-                        <div className="flex gap-1">
-                          <button onClick={() => setEditUser(u)} className="text-xs text-primary font-medium hover:underline">Edit</button>
-                          <span className="text-muted-foreground">·</span>
-                          <button onClick={() => handleToggle(u.id)} className={`text-xs font-medium hover:underline ${u.status === "Active" ? "text-red-500" : "text-green-600"}`}>
-                            {u.status === "Active" ? "Disable" : "Enable"}
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  )}
+          <table className="w-full min-w-[1000px]">
+            <thead>
+              <tr className="bg-muted/50">
+                {[
+                  "Name",
+                  "Username / ID",
+                  "Email",
+                  "Role",
+                  "Created",
+                  "Status",
+                  "Actions",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="text-left py-3 px-3 text-xs text-muted-foreground font-semibold"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-border">
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    Loading user
+                    accounts...
+                  </td>
                 </tr>
-              ))}
+              ) : filteredUsers.length ===
+                0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    No user accounts
+                    found.
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map(
+                  (user: any) => {
+                    const isActive =
+                      String(
+                        user.status ??
+                          ""
+                      ).toLowerCase() ===
+                      "approved";
+
+                    const isUpdating =
+                      updatingId ===
+                      user.id;
+
+                    return (
+                      <tr
+                        key={user.id}
+                        className="hover:bg-muted/30 transition-colors"
+                      >
+                        {/* NAME */}
+                        <td className="py-3 px-3">
+                          <div className="text-sm font-semibold">
+                            {user.name ??
+                              "Unknown User"}
+                          </div>
+
+                          <div className="text-[11px] text-muted-foreground">
+                            User ID:{" "}
+                            {user.id}
+                          </div>
+                        </td>
+
+                        {/* USERNAME */}
+                        <td className="py-3 px-3 text-xs font-mono text-muted-foreground">
+                          {user.username ??
+                            "—"}
+                        </td>
+
+                        {/* EMAIL */}
+                        <td className="py-3 px-3 text-xs text-muted-foreground">
+                          {user.email ??
+                            "—"}
+                        </td>
+
+                        {/* ROLE */}
+                        <td className="py-3 px-3">
+                          <span className="inline-flex px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-[11px] font-semibold">
+                            {getRoleLabel(
+                              user.role
+                            )}
+                          </span>
+                        </td>
+
+                        {/* CREATED */}
+                        <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDate(
+                            user.created_at
+                          )}
+                        </td>
+
+                        {/* STATUS */}
+                        <td className="py-3 px-3">
+                          <span
+                            className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                              isActive
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {isActive
+                              ? "Active"
+                              : "Disabled"}
+                          </span>
+                        </td>
+
+                        {/* ACTIONS */}
+                        <td className="py-3 px-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() =>
+                                handleStartEdit(
+                                  user
+                                )
+                              }
+                              className="text-xs text-primary font-semibold hover:underline"
+                            >
+                              Edit
+                            </button>
+
+                            <span className="text-muted-foreground">
+                              |
+                            </span>
+
+                            <button
+                              onClick={() =>
+                                handleToggleStatus(
+                                  user
+                                )
+                              }
+                              disabled={
+                                isUpdating
+                              }
+                              className={`text-xs font-semibold hover:underline disabled:opacity-50 ${
+                                isActive
+                                  ? "text-red-600"
+                                  : "text-green-600"
+                              }`}
+                            >
+                              {isUpdating
+                                ? "Updating..."
+                                : isActive
+                                ? "Disable"
+                                : "Enable"}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
+                )
+              )}
             </tbody>
           </table>
         </div>
+
+        {!loading &&
+          users.length > 0 && (
+            <div className="px-4 py-3 border-t border-border flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">
+                Showing{" "}
+                {filteredUsers.length}{" "}
+                of {users.length} user
+                accounts
+              </p>
+
+              <p className="text-[11px] text-muted-foreground">
+                Data loaded from QRpass
+                MySQL database
+              </p>
+            </div>
+          )}
       </Card>
     </div>
   );
 }
-
 function SysAdminSettings() {
   return (
     <div className="space-y-5">
@@ -3246,7 +9098,7 @@ const PAGES: Record<Role, React.ComponentType[]> = {
   student: [StudentRegisterItem, StudentMyQRCodes, StudentPermitStatus, StudentLostAndFound, StudentNotifications],
   security: [SecurityScanVerify, SecurityEntryExitLog, SecurityLostFound, SecurityReports, SecurityNotifications],
   sao: [PCOPermitRequests, PCOItemRegistry, PCOReports, PCONotifications],
-  sysadmin: [SysAdminUserAccounts, SysAdminSettings, SysAdminAuditLogs, SysAdminPerformance, SysAdminSecurityConfig],
+  sysadmin: [AdminDashboard,AdminRecords,AdminAnalytics,SysAdminUserAccounts,SysAdminSettings,SysAdminAuditLogs,SysAdminPerformance,SysAdminSecurityConfig,],
 };
 
 const NAV: Record<Role, { icon: React.ReactNode; label: string; badge?: number }[]> = {
@@ -3271,11 +9123,38 @@ const NAV: Record<Role, { icon: React.ReactNode; label: string; badge?: number }
     { icon: <Bell size={16} />, label: "Notifications", badge: 2 },
   ],
   sysadmin: [
-    { icon: <Users size={16} />, label: "User Accounts" },
-    { icon: <Settings size={16} />, label: "System Settings" },
-    { icon: <FileText size={16} />, label: "Audit Logs" },
-    { icon: <BarChart2 size={16} />, label: "Performance" },
-    { icon: <Shield size={16} />, label: "Security Config" },
+    {
+      icon: <BarChart2 size={16} />,
+      label: "Overview Dashboard",
+    },
+    {
+      icon: <Layers size={16} />,
+      label: "System Records",
+    },
+    {
+      icon: <FileText size={16} />,
+      label: "Reports & Analytics",
+    },
+    {
+      icon: <Users size={16} />,
+      label: "User Accounts",
+    },
+    {
+      icon: <Settings size={16} />,
+      label: "System Settings",
+    },
+    {
+      icon: <FileText size={16} />,
+      label: "Audit Logs",
+    },
+    {
+      icon: <BarChart2 size={16} />,
+      label: "Performance",
+    },
+    {
+      icon: <Shield size={16} />,
+      label: "Security Config",
+    },
   ],
 };
 
@@ -3979,14 +9858,91 @@ function Dashboard({ role, onLogout }: { role: Role; onLogout: () => void }) {
 
 // ── App root ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [view, setView] = useState<View>("login");
-  const [role, setRole] = useState<Role>("student");
+  const [view, setView] =
+    useState<View>("login");
+
+  const [role, setRole] =
+    useState<Role>("student");
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOGIN
+  |--------------------------------------------------------------------------
+  */
 
   function handleLogin(r: Role) {
     setRole(r);
     setView("dashboard");
   }
 
-  if (view === "dashboard") return <Dashboard role={role} onLogout={() => setView("login")} />;
-  return <LoginPage onLogin={handleLogin} />;
+  /*
+  |--------------------------------------------------------------------------
+  | REAL LOGOUT
+  |--------------------------------------------------------------------------
+  |
+  | 1. Ask Laravel to revoke the current Sanctum token.
+  | 2. Clear the token from the browser.
+  | 3. Return the user to the login page.
+  |
+  */
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } catch (error) {
+      console.error(
+        "Server logout failed:",
+        error
+      );
+    } finally {
+      /*
+      |--------------------------------------------------------------------------
+      | Clear Local Session
+      |--------------------------------------------------------------------------
+      */
+
+      localStorage.removeItem(
+        "token"
+      );
+
+      localStorage.removeItem(
+        "user"
+      );
+
+      localStorage.removeItem(
+        "role"
+      );
+
+      /*
+      |--------------------------------------------------------------------------
+      | Reset QRPass UI
+      |--------------------------------------------------------------------------
+      */
+
+      setRole("student");
+
+      setView("login");
+    }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | PAGE RENDERING
+  |--------------------------------------------------------------------------
+  */
+
+  if (view === "dashboard") {
+    return (
+      <Dashboard
+        role={role}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  return (
+    <LoginPage
+      onLogin={handleLogin}
+    />
+  );
 }
