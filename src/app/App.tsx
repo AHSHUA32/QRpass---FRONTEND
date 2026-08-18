@@ -159,14 +159,22 @@ function QRCodeDisplay({
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Role = "student" | "security" | "sao" | "sysadmin";
+<<<<<<< HEAD
+type Role = "student" | "security" | "pco" | "sysadmin";
+=======
+type Role = "student" | "security" | "pco" | "sysadmin";
+>>>>>>> c35ea7e (Standardize PCO role and update QRPass frontend)
 
 type View = "login" | "dashboard";
 
 const ROLES: { id: Role; label: string; color: string; textColor: string }[] = [
   { id: "student", label: "Student", color: "#003087", textColor: "#fff" },
   { id: "security", label: "Security Personnel (CSU)", color: "#f5c200", textColor: "#0d1b3e" },
-  { id: "sao", label: "PCO Staff", color: "#00aeef", textColor: "#fff" },
+<<<<<<< HEAD
+  { id: "pco", label: "PCO Staff", color: "#00aeef", textColor: "#fff" },
+=======
+  { id: "pco", label: "PCO Staff", color: "#00aeef", textColor: "#fff" },
+>>>>>>> c35ea7e (Standardize PCO role and update QRPass frontend)
   { id: "sysadmin", label: "System Administrator", color: "#e8edf5", textColor: "#0d1b3e" },
 ];
 
@@ -7935,7 +7943,11 @@ function SysAdminUserAccounts() {
       case "security":
         return "Security Personnel (CSU)";
 
-      case "sao":
+<<<<<<< HEAD
+      case "pco":
+=======
+      case "pco":
+>>>>>>> c35ea7e (Standardize PCO role and update QRPass frontend)
         return "PCO Staff";
 
       case "sysadmin":
@@ -8020,7 +8032,11 @@ function SysAdminUserAccounts() {
           newUser.role as
             | "student"
             | "security"
-            | "sao"
+<<<<<<< HEAD
+            | "pco"
+=======
+            | "pco"
+>>>>>>> c35ea7e (Standardize PCO role and update QRPass frontend)
             | "sysadmin",
 
         password: newUser.password,
@@ -8120,7 +8136,11 @@ function SysAdminUserAccounts() {
             editUser.role as
               | "student"
               | "security"
-              | "sao"
+<<<<<<< HEAD
+              | "pco"
+=======
+              | "pco"
+>>>>>>> c35ea7e (Standardize PCO role and update QRPass frontend)
               | "sysadmin",
         }
       );
@@ -8402,7 +8422,11 @@ function SysAdminUserAccounts() {
                     (CSU)
                   </option>
 
-                  <option value="sao">
+<<<<<<< HEAD
+                  <option value="pco">
+=======
+                  <option value="pco">
+>>>>>>> c35ea7e (Standardize PCO role and update QRPass frontend)
                     PCO Staff
                   </option>
 
@@ -8586,7 +8610,11 @@ function SysAdminUserAccounts() {
                     (CSU)
                   </option>
 
-                  <option value="sao">
+<<<<<<< HEAD
+                  <option value="pco">
+=======
+                  <option value="pco">
+>>>>>>> c35ea7e (Standardize PCO role and update QRPass frontend)
                     PCO Staff
                   </option>
 
@@ -9097,7 +9125,11 @@ function SysAdminSecurityConfig() {
 const PAGES: Record<Role, React.ComponentType[]> = {
   student: [StudentRegisterItem, StudentMyQRCodes, StudentPermitStatus, StudentLostAndFound, StudentNotifications],
   security: [SecurityScanVerify, SecurityEntryExitLog, SecurityLostFound, SecurityReports, SecurityNotifications],
-  sao: [PCOPermitRequests, PCOItemRegistry, PCOReports, PCONotifications],
+<<<<<<< HEAD
+  pco: [PCOPermitRequests, PCOItemRegistry, PCOReports, PCONotifications],
+=======
+  pco: [PCOPermitRequests, PCOItemRegistry, PCOReports, PCONotifications],
+>>>>>>> c35ea7e (Standardize PCO role and update QRPass frontend)
   sysadmin: [AdminDashboard,AdminRecords,AdminAnalytics,SysAdminUserAccounts,SysAdminSettings,SysAdminAuditLogs,SysAdminPerformance,SysAdminSecurityConfig,],
 };
 
@@ -9116,7 +9148,11 @@ const NAV: Record<Role, { icon: React.ReactNode; label: string; badge?: number }
     { icon: <BarChart2 size={16} />, label: "Reports" },
     { icon: <Bell size={16} />, label: "Notifications", badge: 4 },
   ],
-  sao: [
+<<<<<<< HEAD
+  pco: [
+=======
+  pco: [
+>>>>>>> c35ea7e (Standardize PCO role and update QRPass frontend)
     { icon: <FileText size={16} />, label: "Registration Requests", badge: 8 },
     { icon: <Layers size={16} />, label: "Item Registry" },
     { icon: <BarChart2 size={16} />, label: "Reports" },
@@ -9180,7 +9216,11 @@ const REG_FIELDS: Record<Role, { label: string; type: string; placeholder: strin
     { label: "Password", type: "password", placeholder: "Create a password" },
     { label: "Confirm Password", type: "password", placeholder: "Repeat password" },
   ],
-  sao: [
+<<<<<<< HEAD
+  pco: [
+=======
+  pco: [
+>>>>>>> c35ea7e (Standardize PCO role and update QRPass frontend)
     { label: "Full Name", type: "text", placeholder: "e.g. Maria Cruz" },
     { label: "Employee ID", type: "text", placeholder: "e.g. EMP-0045" },
     { label: "Email Address", type: "email", placeholder: "e.g. mcruz@uc.edu.ph" },
