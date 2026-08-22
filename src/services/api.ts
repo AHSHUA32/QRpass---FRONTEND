@@ -2,8 +2,7 @@ const API_URL = "http://localhost:8000/api";
 
 export async function login(
   username: string,
-  password: string,
-  role: string
+  password: string
 ) {
   const response = await fetch(`${API_URL}/login`, {
     method: "POST",
@@ -14,7 +13,6 @@ export async function login(
     body: JSON.stringify({
       username,
       password,
-      role,
     }),
   });
 
@@ -791,4 +789,103 @@ export async function markLostFoundRecovered(
   }
 
   return result;
+}
+// ============================================================================
+// PASSWORD RESET
+// ============================================================================
+
+export async function requestPasswordReset(
+  email: string
+) {
+  const response = await fetch(
+    `${API_URL}/forgot-password`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        email,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Unable to send verification code."
+    );
+  }
+
+  return data;
+}
+
+
+export async function verifyPasswordResetCode(
+  email: string,
+  code: string
+) {
+  const response = await fetch(
+    `${API_URL}/verify-reset-code`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        code,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Invalid verification code."
+    );
+  }
+
+  return data;
+}
+
+
+export async function resetPassword(
+  email: string,
+  code: string,
+  password: string
+) {
+  const response = await fetch(
+    `${API_URL}/reset-password`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        code,
+        password,
+        password_confirmation: password,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Unable to reset password."
+    );
+  }
+
+  return data;
 }

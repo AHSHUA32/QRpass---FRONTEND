@@ -1,127 +1,95 @@
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable";
-import { login, register, createItem, getItems, getPendingItems, approveItem, verifyItem, 
-         createScanLog, getScanLogs, getAllItems, getSecurityIncidents, createSecurityIncident, 
-         resolveSecurityIncident,getLostFoundItems, createLostFoundItem, claimLostFoundItem,markLostFoundRecovered,  
-         getNotifications, markNotificationRead, markAllNotificationsRead, getDashboard,
-         getSystemRecords, getReports, getUsers, updateUserStatus, createUser,updateUser, logout,  } from "../services/api";
+import {
+  login,
+  register,
+  createItem,
+  getItems,
+  getPendingItems,
+  approveItem,
+  verifyItem,
+  createScanLog,
+  getScanLogs,
+  getAllItems,
+  getSecurityIncidents,
+  createSecurityIncident,
+  resolveSecurityIncident,
+  getLostFoundItems,
+  createLostFoundItem,
+  claimLostFoundItem,
+  markLostFoundRecovered,
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  getDashboard,
+  getSystemRecords,
+  getReports,
+  getUsers,
+  updateUserStatus,
+  createUser,
+  updateUser,
+  logout,
+  requestPasswordReset,
+  verifyPasswordResetCode,
+  resetPassword,
+} from "../services/api";
 import { QRCodeSVG } from "qrcode.react";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import React, { useState, useEffect, useId } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Shield, LogOut, Bell, ClipboardList, Users, FileText, Map,
   Settings, BarChart2, ChevronRight, CheckCircle, Clock,
-  AlertTriangle, Eye, Menu, X, Lock, User, Plus, Search,
+  AlertTriangle, Eye, EyeOff, Menu, X, Lock, User, Plus, Search,
   Download, Filter, RefreshCw, QrCode, Package, ScanLine,
   BookOpen, AlertCircle, Layers, XCircle,
 } from "lucide-react";
 
-// ── QRpass Logo — shield-shaped QR code ──────────────────────────────────────
-function QRpassLogo({ size = 96, showText = false }: { size?: number; showText?: boolean }) {
-  const uid = useId().replace(/:/g, "");
-  const clipId = `qr-shield-${uid}`;
-
-  // 15×15 QR-like grid
-  const CELL = 8;
-  const COLS = 15;
-  const ROWS = 15;
-  const PAD = 3;
-  const W = COLS * CELL + PAD * 2;       // 123
-  const shieldBotY = Math.round(ROWS * CELL * 0.63) + PAD; // ~78
-  const tipY = ROWS * CELL + PAD - 2;    // 121
-
-  // Finder pattern 7×7
-  const FP = [
-    [1,1,1,1,1,1,1],[1,0,0,0,0,0,1],[1,0,1,1,1,0,1],
-    [1,0,1,1,1,0,1],[1,0,1,1,1,0,1],[1,0,0,0,0,0,1],[1,1,1,1,1,1,1],
-  ];
-  const grid: number[][] = Array.from({ length: ROWS }, () => Array(COLS).fill(-1));
-  for (let r = 0; r < 7; r++) for (let c = 0; c < 7; c++) {
-    grid[r][c]     = FP[r][c]; // top-left
-    grid[r][c + 8] = FP[r][c]; // top-right
-    grid[r + 8][c] = FP[r][c]; // bottom-left
+function QRpassLogo({
+  size = 96,
+  showText = false,
+}: {
+  size?: number;
+  showText?: boolean;
+}) {
+  if (showText) {
+    return (
+      <img
+        src="/qrpass-logo.png"
+        alt="QRpass"
+        style={{
+          width: size,
+          height: "auto",
+          display: "block",
+          objectFit: "contain",
+        }}
+      />
+    );
   }
-  // Timing strips
-  for (let i = 8; i < 13; i++) {
-    if (grid[6][i] < 0) grid[6][i] = i % 2 === 0 ? 1 : 0;
-    if (grid[i][6] < 0) grid[i][6] = i % 2 === 0 ? 1 : 0;
-  }
-  // Data cells — deterministic pseudo-random
-  let s = 0xdeadbeef;
-  const rnd = () => { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return (s >>> 0) / 0x100000000; };
-  for (let r = 0; r < ROWS; r++)
-    for (let c = 0; c < COLS; c++)
-      if (grid[r][c] < 0) grid[r][c] = rnd() > 0.42 ? 1 : 0;
-
-  const pts = `${PAD},${PAD} ${W-PAD},${PAD} ${W-PAD},${shieldBotY} ${W/2},${tipY} ${PAD},${shieldBotY}`;
-  const textH = showText ? 50 : 0;
-  const totalH = tipY + textH + (showText ? 0 : PAD);
 
   return (
-    <svg
-      width={size}
-      height={showText ? Math.round(size * totalH / W) : size}
-      viewBox={`0 0 ${W} ${totalH}`}
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+    <div
+      style={{
+        width: size,
+        height: size,
+        overflow: "hidden",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        flexShrink: 0,
+      }}
     >
-      <defs>
-        <clipPath id={clipId}>
-          <polygon points={pts} />
-        </clipPath>
-      </defs>
-
-      {/* Shield background */}
-      <polygon points={pts} fill="white" />
-
-      {/* QR cells clipped to shield */}
-      <g clipPath={`url(#${clipId})`}>
-        {grid.map((row, r) =>
-          row.map((v, c) =>
-            v === 1 ? (
-              <rect
-                key={`${r}-${c}`}
-                x={PAD + c * CELL + 0.8}
-                y={PAD + r * CELL + 0.8}
-                width={CELL - 1.6}
-                height={CELL - 1.6}
-                fill="#003087"
-              />
-            ) : null
-          )
-        )}
-      </g>
-
-      {/* Shield outline */}
-      <polygon points={pts} fill="none" stroke="#003087" strokeWidth="2.5" strokeLinejoin="round" />
-
-      {/* Yellow accent dot at tip */}
-      <circle cx={W / 2} cy={tipY} r="2.5" fill="#f5c200" />
-
-      {showText && (
-        <>
-          <text
-            x={W / 2} y={tipY + 24}
-            textAnchor="middle"
-            fontFamily="Barlow, sans-serif"
-            fontWeight="900"
-            fontSize="23"
-            fill="#003087"
-            letterSpacing="4"
-          >QRPASS</text>
-          <text
-            x={W / 2} y={tipY + 42}
-            textAnchor="middle"
-            fontFamily="Inter, sans-serif"
-            fontWeight="600"
-            fontSize="10"
-            fill="#5a6a8a"
-            letterSpacing="3"
-          >SINCE 2026</text>
-        </>
-      )}
-    </svg>
+      <img
+        src="/qrpass-logo.png"
+        alt=""
+        style={{
+          width: size * 1.55,
+          height: "auto",
+          display: "block",
+          transform: "translateY(-2px)",
+        }}
+      />
+    </div>
   );
 }
 
@@ -485,7 +453,6 @@ function StudentRegisterItem() {
                 <option value="Sports Equipment">
                   Sports Equipment
                 </option>
-                <option value="Tumbler">Tumbler</option>
                 <option value="Other Equipment">
                   Other Equipment
                 </option>
@@ -550,7 +517,65 @@ function StudentRegisterItem() {
                 className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
+{/* NON-COMPUTER GATE PASS DETAILS */}
+{form.item_type !== "Laptop" && (
+  <div className="md:col-span-2 border border-cyan-200 rounded-lg overflow-hidden bg-cyan-50/30">
+    <div className="bg-cyan-600 px-4 py-3">
+      <h3 className="text-sm font-semibold text-white">
+        Non-Computer Gate Pass Details
+      </h3>
 
+      <p className="text-xs text-white/80 mt-0.5">
+        Complete the details for non-computer items such as tumblers,
+        sports equipment, musical instruments, and other equipment.
+      </p>
+    </div>
+
+    <div className="p-4 grid md:grid-cols-2 gap-4">
+      {/* QUANTITY */}
+      <div>
+        <label className="block text-xs font-semibold text-foreground mb-1">
+          Quantity
+        </label>
+
+        <input
+          type="number"
+          min="1"
+          value={form.quantity}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              quantity: e.target.value,
+            })
+          }
+          required
+          className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
+      </div>
+
+      {/* COMPLETE DESCRIPTION */}
+      <div>
+        <label className="block text-xs font-semibold text-foreground mb-1">
+          Complete Item Description
+        </label>
+
+        <input
+          type="text"
+          value={form.complete_description}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              complete_description: e.target.value,
+            })
+          }
+          placeholder="e.g. Black Aquaflask 32oz with blue handle"
+          required
+          className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
+      </div>
+    </div>
+  </div>
+)}
             {/* COMPUTER SPECIFICATIONS */}
             {form.item_type === "Laptop" && (
               <div className="md:col-span-2 border border-blue-200 rounded-lg overflow-hidden bg-blue-50/30">
@@ -6985,7 +7010,7 @@ function AdminAnalytics() {
       doc.setFontSize(10);
 
       doc.text(
-        "University of Cebu - Main Campus",
+        "Campus Item Registration & Verification System",
         14,
         25
       );
@@ -9239,7 +9264,7 @@ function SysAdminSettings() {
       <div className="grid md:grid-cols-2 gap-5">
         <Card title="General Settings">
           <div className="p-4 space-y-4">
-            {[["System Name", "QRpass"], ["Institution", "University of Cebu – Main Campus"], ["Academic Year", "2025-2026"], ["Semester", "2nd Semester"]].map(([label, value]) => (
+            {[["System Name", "QRpass"], ["Institution", "Campus Item Registration & Verification System"], ["Academic Year", "2025-2026"], ["Semester", "2nd Semester"]].map(([label, value]) => (
               <div key={label as string}>
                 <label className="block text-xs font-semibold text-foreground mb-1">{label}</label>
                 <input defaultValue={value as string} className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30" />
@@ -9530,77 +9555,151 @@ type LoginMode = "login" | "register" | "forgot" | "verify" | "reset" | "reset-d
 
 function LoginPage({ onLogin }: { onLogin: (role: Role) => void }) {
   const [mode, setMode] = useState<LoginMode>("login");
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+
+  // Login state
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   // Registration state
   const [regRole, setRegRole] = useState<Role | null>(null);
   const [regFields, setRegFields] = useState<Record<string, string>>({});
   const [regSubmitted, setRegSubmitted] = useState(false);
+
   // Forgot password state
   const [forgotEmail, setForgotEmail] = useState("");
-  const [verifyCode, setVerifyCode] = useState("");
-  const [codeInputs, setCodeInputs] = useState(["", "", "", "", "", ""]);
+  const [codeInputs, setCodeInputs] = useState([
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ]);
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
   const [codeError, setCodeError] = useState(false);
-  // Simulated sent code (in real app this comes from backend)
-  const DEMO_CODE = "847261";
+
+  const [verifiedResetCode, setVerifiedResetCode] = useState("");
+
+  // ==========================================================================
+  // LOGIN
+  // ==========================================================================
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-  
-    if (!selectedRole) {
-      alert("Please select a role.");
-      return;
-    }
-  
+
+    setLoginError("");
+    setIsLoggingIn(true);
+
     try {
-      const data = await login(username, password, selectedRole);
-  
-      localStorage.setItem("token", data.token);
-  
-      onLogin(selectedRole);
+      const data = await login(
+        username.trim(),
+        password
+      );
+
+      localStorage.setItem(
+        "token",
+        data.token
+      );
+
+      const userRole =
+        data.user?.role as Role;
+
+      if (!userRole) {
+        throw new Error(
+          "User role was not returned by the server."
+        );
+      }
+
+      const validRoles: Role[] = [
+        "student",
+        "security",
+        "pco",
+        "sysadmin",
+      ];
+
+      if (!validRoles.includes(userRole)) {
+        throw new Error(
+          "This account has an invalid access role."
+        );
+      }
+
+      onLogin(userRole);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Login failed.");
+      setLoginError(
+        error instanceof Error
+          ? error.message
+          : "Unable to sign in. Please try again."
+      );
+    } finally {
+      setIsLoggingIn(false);
     }
   }
 
-  async function handleRegister(e: React.FormEvent) {
+  // ==========================================================================
+  // REGISTRATION
+  // ==========================================================================
+
+  async function handleRegister(
+    e: React.FormEvent
+  ) {
     e.preventDefault();
-  
-    if (!regRole) return;
-  
-    const name = regFields["Full Name"]?.trim();
-    const email = regFields["Email Address"]?.trim();
-  
-    const username =
+
+    if (!regRole) {
+      return;
+    }
+
+    const name =
+      regFields["Full Name"]?.trim();
+
+    const email =
+      regFields["Email Address"]?.trim();
+
+    const registrationUsername =
       regRole === "student"
         ? regFields["Student ID No."]?.trim()
         : regFields["Employee ID"]?.trim();
-  
-    const password = regFields["Password"] ?? "";
-    const confirmPassword = regFields["Confirm Password"] ?? "";
-  
-    if (!name || !email || !username || !password) {
-      alert("Please complete all required fields.");
+
+    const registrationPassword =
+      regFields["Password"] ?? "";
+
+    const confirmPassword =
+      regFields["Confirm Password"] ?? "";
+
+    if (
+      !name ||
+      !email ||
+      !registrationUsername ||
+      !registrationPassword
+    ) {
+      alert(
+        "Please complete all required fields."
+      );
       return;
     }
-  
-    if (password !== confirmPassword) {
-      alert("Passwords do not match.");
+
+    if (
+      registrationPassword !==
+      confirmPassword
+    ) {
+      alert(
+        "Passwords do not match."
+      );
       return;
     }
-  
+
     try {
       await register(
         name,
         email,
-        username,
-        password,
+        registrationUsername,
+        registrationPassword,
         regRole
       );
-  
+
       setRegSubmitted(true);
     } catch (error) {
       alert(
@@ -9611,337 +9710,479 @@ function LoginPage({ onLogin }: { onLogin: (role: Role) => void }) {
     }
   }
 
-  function handleForgotSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (forgotEmail) setMode("verify");
+  // ==========================================================================
+  // FORGOT PASSWORD
+  // ==========================================================================
+
+  async function handleForgotSubmit(
+  e: React.FormEvent
+) {
+  e.preventDefault();
+
+  try {
+    await requestPasswordReset(
+      forgotEmail.trim()
+    );
+
+    setCodeInputs([
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ]);
+
+    setCodeError(false);
+
+    setMode("verify");
+  } catch (error) {
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Unable to send verification code."
+    );
+  }
+}
+
+
+async function handleVerifySubmit(
+  e: React.FormEvent
+) {
+  e.preventDefault();
+
+  const enteredCode =
+    codeInputs.join("");
+
+  if (enteredCode.length !== 6) {
+    setCodeError(true);
+    return;
   }
 
-  function handleVerifySubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const entered = codeInputs.join("");
-    if (entered === DEMO_CODE) {
-      setCodeError(false);
-      setMode("reset");
-    } else {
-      setCodeError(true);
-    }
+  try {
+    await verifyPasswordResetCode(
+      forgotEmail.trim(),
+      enteredCode
+    );
+
+    setVerifiedResetCode(
+      enteredCode
+    );
+
+    setCodeError(false);
+
+    setMode("reset");
+  } catch (error) {
+    setCodeError(true);
+  }
+}
+
+
+async function handleResetSubmit(
+  e: React.FormEvent
+) {
+  e.preventDefault();
+
+  if (!newPass) {
+    return;
   }
 
-  function handleResetSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (newPass && newPass === confirmPass) setMode("reset-done");
+  if (newPass !== confirmPass) {
+    return;
   }
 
-  function switchMode(m: LoginMode) {
-    setMode(m);
+  try {
+    await resetPassword(
+      forgotEmail.trim(),
+      verifiedResetCode,
+      newPass
+    );
+
+    setMode("reset-done");
+  } catch (error) {
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Unable to reset password."
+    );
+  }
+}
+
+  // ==========================================================================
+  // SWITCH PAGE
+  // ==========================================================================
+
+  function switchMode(
+    newMode: LoginMode
+  ) {
+    setMode(newMode);
+
     setRegSubmitted(false);
     setRegRole(null);
     setRegFields({});
+
     setForgotEmail("");
-    setCodeInputs(["", "", "", "", "", ""]);
-    setVerifyCode("");
+
+    setCodeInputs([
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ]);
+
     setNewPass("");
     setConfirmPass("");
     setCodeError(false);
+
+    setLoginError("");
+    setShowPassword(false);
   }
 
-  const fields = regRole ? REG_FIELDS[regRole] : [];
+  const fields =
+    regRole
+      ? REG_FIELDS[regRole]
+      : [];
 
-  // Shared top-bar
+  // ==========================================================================
+  // SHARED TOP BAR
+  // ==========================================================================
+
   const TopBar = (
     <div className="bg-primary h-1.5 w-full" />
   );
+
+  // ==========================================================================
+  // SHARED NAVBAR
+  // ==========================================================================
+
   const NavBar = (
     <div className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-border shadow-sm">
       <div className="flex items-center gap-2.5">
-        <QRpassLogo size={36} />
+        <QRpassLogo size={90} showText />
+
         <div>
-          <p className="text-xs font-semibold text-primary" style={{ fontFamily: "Barlow, sans-serif" }}>QRpass</p>
-          <p className="text-xs text-muted-foreground">University of Cebu – Main Campus</p>
+          <p
+            className="text-xs font-semibold text-primary"
+            style={{
+              fontFamily:
+                "Barlow, sans-serif",
+            }}
+          >
+            QRpass
+          </p>
+
+          <p className="text-xs text-muted-foreground">
+            Campus Item Registration & Verification System
+          </p>
         </div>
       </div>
-      <div className="text-xs text-muted-foreground">V1.0 &nbsp;|&nbsp; <span className="text-primary font-medium cursor-pointer hover:underline">Help</span></div>
+
+      <div className="text-xs text-muted-foreground">
+        V1.0
+        &nbsp;|&nbsp;
+
+        <span className="text-primary font-medium cursor-pointer hover:underline">
+          Help
+        </span>
+      </div>
     </div>
   );
 
-  // ── Register view ─────────────────────────────────────────────────────────
-  if (mode === "register") {// ── Register view ─────────────────────────────────────────────────────────
-if (mode === "register") {
-  return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{
-        fontFamily: "Inter, sans-serif",
-        background: "#f4f6fa",
-      }}
-    >
-      {TopBar}
-      {NavBar}
+  // ==========================================================================
+  // BOTTOM UC COLOR STRIP
+  // ==========================================================================
 
-      <div className="flex-1 flex flex-col items-center px-4 py-8">
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-6">
-          <QRpassLogo size={72} showText />
-        </div>
+  const BottomColorStrip = (
+    <div className="flex h-2">
+      <div
+        className="flex-1"
+        style={{
+          backgroundColor: "#003087",
+        }}
+      />
 
-        <div className="w-full max-w-2xl bg-white rounded-xl border border-border shadow-md overflow-hidden">
-          {/* Header */}
-          <div className="bg-primary px-6 py-4">
-            <h2
-              className="text-white font-bold text-base"
-              style={{ fontFamily: "Barlow, sans-serif" }}
-            >
-              Create an Account
-            </h2>
+      <div
+        className="flex-1"
+        style={{
+          backgroundColor: "#f5c200",
+        }}
+      />
 
-            <p className="text-white/70 text-xs mt-0.5">
-              Fill in your details to register for QRpass access.
+      <div
+        className="flex-1"
+        style={{
+          backgroundColor: "#00aeef",
+        }}
+      />
+
+      <div
+        className="flex-1"
+        style={{
+          backgroundColor: "#f4f6fa",
+        }}
+      />
+    </div>
+  );
+
+  // ==========================================================================
+  // SHARED PAGE SHELL
+  // ==========================================================================
+
+  const PageShell = React.useMemo(
+  () =>
+    function AuthPageShell({
+      children,
+    }: {
+      children: React.ReactNode;
+    }) {
+      return (
+        <div
+          className="min-h-screen flex flex-col"
+          style={{
+            fontFamily: "Inter, sans-serif",
+            background: "#f4f6fa",
+          }}
+        >
+          {TopBar}
+
+          {NavBar}
+
+          <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
+            {children}
+
+            <p className="mt-8 text-xs text-muted-foreground text-center">
+              QRpass V1.0
+              <span className="mx-2">|</span>
+              QRpass V1.0
             </p>
           </div>
 
-          {!regSubmitted ? (
-            <div className="p-6">
-              {/* Step 1 */}
-              <div className="mb-5">
-                <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-3">
-                  Step 1 — Select your role
-                </p>
-
-                <RoleSelector
-                  selected={regRole}
-                  onSelect={(r) => {
-                    setRegRole(r);
-                    setRegFields({});
-                  }}
-                  excludeRoles={["sysadmin"]}
-                />
-              </div>
-
-              {/* Step 2 */}
-              {regRole && (
-                <form onSubmit={handleRegister}>
-                  <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-3">
-                    Step 2 —{" "}
-                    {ROLES.find((r) => r.id === regRole)?.label} Information
-                  </p>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {fields.map((f) => (
-                      <div key={f.label}>
-                        <label className="block text-xs font-semibold text-foreground mb-1">
-                          {f.label}
-                        </label>
-
-                        {f.type === "select" ? (
-                          <select
-                            value={regFields[f.label] ?? ""}
-                            onChange={(e) =>
-                              setRegFields((prev) => ({
-                                ...prev,
-                                [f.label]: e.target.value,
-                              }))
-                            }
-                            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                          >
-                            <option value="">Select…</option>
-
-                            {f.options?.map((o) => (
-                              <option key={o} value={o}>
-                                {o}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type={f.type}
-                            placeholder={f.placeholder}
-                            value={regFields[f.label] ?? ""}
-                            onChange={(e) =>
-                              setRegFields((prev) => ({
-                                ...prev,
-                                [f.label]: e.target.value,
-                              }))
-                            }
-                            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800">
-                    <strong>Note:</strong> Your account will be reviewed and
-                    activated by the System Administrator before you can log in.
-                  </div>
-
-                  <div className="flex gap-3 mt-5 justify-end">
-                    {/* BACK BUTTON */}
-                    <button
-                      type="button"
-                      onClick={() => switchMode("login")}
-                      className="text-xs px-4 py-2 border border-border rounded-md text-muted-foreground hover:bg-muted transition-colors"
-                    >
-                      ← Back to Login
-                    </button>
-
-                    <button
-                      type="submit"
-                      className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90 transition-opacity"
-                    >
-                      Submit Registration
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {/* No role selected yet */}
-              {!regRole && (
-                <div className="pt-2">
-                  <div className="text-center text-xs text-muted-foreground py-4">
-                    Select a role above to continue with registration.
-                  </div>
-
-                  {/* BACK BUTTON IS ALSO VISIBLE BEFORE SELECTING A ROLE */}
-                  <button
-                    type="button"
-                    onClick={() => switchMode("login")}
-                    className="w-full py-2.5 border border-border rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors"
-                  >
-                    ← Back to Login
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            /* Success state */
-            <div className="p-10 flex flex-col items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle
-                  size={32}
-                  className="text-green-500"
-                />
-              </div>
-
-              <div className="text-center">
-                <h3
-                  className="font-bold text-foreground text-base"
-                  style={{ fontFamily: "Barlow, sans-serif" }}
-                >
-                  Registration Submitted!
-                </h3>
-
-                <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-                  Your account request has been submitted. The System
-                  Administrator will review and activate your account. You will
-                  be notified via email.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => switchMode("login")}
-                className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90"
-              >
-                ← Back to Login
-              </button>
-            </div>
-          )}
+          {BottomColorStrip}
         </div>
+      );
+    },
+  []
+);
 
-        <p className="mt-6 text-xs text-muted-foreground">
-          &copy; Copyright 2026 – University of Cebu Main Campus
-        </p>
-      </div>
+  // ==========================================================================
+  // REGISTER PAGE
+  // ==========================================================================
 
-      <div className="flex h-2">
-        <div
-          className="flex-1"
-          style={{ backgroundColor: "#003087" }}
-        />
-
-        <div
-          className="flex-1"
-          style={{ backgroundColor: "#f5c200" }}
-        />
-
-        <div
-          className="flex-1"
-          style={{ backgroundColor: "#00aeef" }}
-        />
-
-        <div
-          className="flex-1"
-          style={{ backgroundColor: "#f4f6fa" }}
-        />
-      </div>
-    </div>
-  );
-}
+  if (mode === "register") {
     return (
-      <div className="min-h-screen flex flex-col" style={{ fontFamily: "Inter, sans-serif", background: "#f4f6fa" }}>
-        {TopBar}{NavBar}
+      <div
+        className="min-h-screen flex flex-col"
+        style={{
+          fontFamily:
+            "Inter, sans-serif",
+          background: "#f4f6fa",
+        }}
+      >
+        {TopBar}
+
+        {NavBar}
+
         <div className="flex-1 flex flex-col items-center px-4 py-8">
-          {/* Logo small */}
           <div className="flex flex-col items-center mb-6">
-            <QRpassLogo size={72} showText />
+            <QRpassLogo
+              size={72}
+              showText
+            />
           </div>
 
           <div className="w-full max-w-2xl bg-white rounded-xl border border-border shadow-md overflow-hidden">
-            {/* Header */}
+
+            {/* HEADER */}
             <div className="bg-primary px-6 py-4">
-              <h2 className="text-white font-bold text-base" style={{ fontFamily: "Barlow, sans-serif" }}>Create an Account</h2>
-              <p className="text-white/70 text-xs mt-0.5">Fill in your details to register for QRpass access.</p>
+              <h2
+                className="text-white font-bold text-base"
+                style={{
+                  fontFamily:
+                    "Barlow, sans-serif",
+                }}
+              >
+                Create an Account
+              </h2>
+
+              <p className="text-white/70 text-xs mt-0.5">
+                Fill in your details to
+                register for QRpass access.
+              </p>
             </div>
 
             {!regSubmitted ? (
               <div className="p-6">
-                {/* Step 1: Role */}
+
+                {/* ROLE */}
                 <div className="mb-5">
-                  <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-3">Step 1 — Select your role</p>
-                  <RoleSelector selected={regRole} onSelect={r => { setRegRole(r); setRegFields({}); }} excludeRoles={["sysadmin"]} />
+                  <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-3">
+                    Step 1 — Select your role
+                  </p>
+
+                  <RoleSelector
+                    selected={regRole}
+                    onSelect={(role) => {
+                      setRegRole(role);
+                      setRegFields({});
+                    }}
+                    excludeRoles={[
+                      "sysadmin",
+                    ]}
+                  />
                 </div>
 
-                {/* Step 2: Fields */}
+                {/* REGISTRATION FORM */}
                 {regRole && (
-                  <form onSubmit={handleRegister}>
+                  <form
+                    onSubmit={
+                      handleRegister
+                    }
+                  >
                     <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-3">
-                      Step 2 — {ROLES.find(r => r.id === regRole)?.label} Information
+                      Step 2 —{" "}
+
+                      {
+                        ROLES.find(
+                          (role) =>
+                            role.id ===
+                            regRole
+                        )?.label
+                      }{" "}
+
+                      Information
                     </p>
+
                     <div className="grid md:grid-cols-2 gap-4">
-                      {fields.map((f) => (
-                        <div key={f.label} className={f.type === "password" ? "" : ""}>
-                          <label className="block text-xs font-semibold text-foreground mb-1">{f.label}</label>
-                          {f.type === "select" ? (
-                            <select
-                              value={regFields[f.label] ?? ""}
-                              onChange={e => setRegFields(prev => ({ ...prev, [f.label]: e.target.value }))}
-                              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                            >
-                              <option value="">Select…</option>
-                              {f.options?.map(o => <option key={o} value={o}>{o}</option>)}
-                            </select>
-                          ) : (
-                            <input
-                              type={f.type}
-                              placeholder={f.placeholder}
-                              value={regFields[f.label] ?? ""}
-                              onChange={e => setRegFields(prev => ({ ...prev, [f.label]: e.target.value }))}
-                              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                            />
-                          )}
-                        </div>
-                      ))}
+                      {fields.map(
+                        (field) => (
+                          <div
+                            key={
+                              field.label
+                            }
+                          >
+                            <label className="block text-xs font-semibold text-foreground mb-1">
+                              {
+                                field.label
+                              }
+                            </label>
+
+                            {field.type ===
+                            "select" ? (
+                              <select
+                                value={
+                                  regFields[
+                                    field
+                                      .label
+                                  ] ?? ""
+                                }
+                                onChange={(
+                                  e
+                                ) =>
+                                  setRegFields(
+                                    (
+                                      previous
+                                    ) => ({
+                                      ...previous,
+
+                                      [field.label]:
+                                        e
+                                          .target
+                                          .value,
+                                    })
+                                  )
+                                }
+                                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                              >
+                                <option value="">
+                                  Select…
+                                </option>
+
+                                {field.options?.map(
+                                  (
+                                    option
+                                  ) => (
+                                    <option
+                                      key={
+                                        option
+                                      }
+                                      value={
+                                        option
+                                      }
+                                    >
+                                      {
+                                        option
+                                      }
+                                    </option>
+                                  )
+                                )}
+                              </select>
+                            ) : (
+                              <input
+                                type={
+                                  field.type
+                                }
+                                placeholder={
+                                  field.placeholder
+                                }
+                                value={
+                                  regFields[
+                                    field
+                                      .label
+                                  ] ?? ""
+                                }
+                                onChange={(
+                                  e
+                                ) =>
+                                  setRegFields(
+                                    (
+                                      previous
+                                    ) => ({
+                                      ...previous,
+
+                                      [field.label]:
+                                        e
+                                          .target
+                                          .value,
+                                    })
+                                  )
+                                }
+                                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                              />
+                            )}
+                          </div>
+                        )
+                      )}
                     </div>
+
                     <div className="mt-5 bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800">
-                      <strong>Note:</strong> Your account will be reviewed and activated by the System Administrator before you can log in.
+                      <strong>
+                        Note:
+                      </strong>{" "}
+                      Complete the required
+                      account information
+                      before submitting your
+                      registration.
                     </div>
+
                     <div className="flex gap-3 mt-5 justify-end">
-                      <button type="button" onClick={() => switchMode("login")}
-                        className="text-xs px-4 py-2 border border-border rounded-md text-muted-foreground hover:bg-muted transition-colors">
-                        Back to Login
+                      <button
+                        type="button"
+                        onClick={() =>
+                          switchMode(
+                            "login"
+                          )
+                        }
+                        className="text-xs px-4 py-2 border border-border rounded-md text-muted-foreground hover:bg-muted transition-colors"
+                      >
+                        ← Back to Login
                       </button>
-                      <button type="submit"
-                        className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90 transition-opacity">
+
+                      <button
+                        type="submit"
+                        className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90 transition-opacity"
+                      >
                         Submit Registration
                       </button>
                     </div>
@@ -9949,269 +10190,841 @@ if (mode === "register") {
                 )}
 
                 {!regRole && (
-                  <div className="text-center text-xs text-muted-foreground py-4">
-                    Select a role above to continue with registration.
+                  <div className="pt-2">
+                    <div className="text-center text-xs text-muted-foreground py-4">
+                      Select a role above to
+                      continue with
+                      registration.
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        switchMode(
+                          "login"
+                        )
+                      }
+                      className="w-full py-2.5 border border-border rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      ← Back to Login
+                    </button>
                   </div>
                 )}
               </div>
             ) : (
-              /* Success state */
               <div className="p-10 flex flex-col items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                  <CheckCircle size={32} className="text-green-500" />
+                  <CheckCircle
+                    size={32}
+                    className="text-green-500"
+                  />
                 </div>
+
                 <div className="text-center">
-                  <h3 className="font-bold text-foreground text-base" style={{ fontFamily: "Barlow, sans-serif" }}>Registration Submitted!</h3>
+                  <h3
+                    className="font-bold text-foreground text-base"
+                    style={{
+                      fontFamily:
+                        "Barlow, sans-serif",
+                    }}
+                  >
+                    Registration
+                    Submitted!
+                  </h3>
+
                   <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-                    Your account request has been submitted. The System Administrator will review and activate your account. You will be notified via email.
+                    Your account has been
+                    registered successfully.
+                    You may return to the
+                    login page.
                   </p>
                 </div>
-                <button onClick={() => switchMode("login")}
-                  className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90">
-                  Back to Login
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    switchMode(
+                      "login"
+                    )
+                  }
+                  className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90"
+                >
+                  ← Back to Login
                 </button>
               </div>
             )}
           </div>
-          <p className="mt-6 text-xs text-muted-foreground">&copy; Copyright 2026 – University of Cebu Main Campus</p>
+
+          <p className="mt-6 text-xs text-muted-foreground text-center">
+           QRpass V1.0
+
+            <span className="mx-2">
+              |
+            </span>
+
+            QRpass V1.0
+          </p>
         </div>
-        <div className="flex h-2">
-          <div className="flex-1" style={{ backgroundColor: "#003087" }} />
-          <div className="flex-1" style={{ backgroundColor: "#f5c200" }} />
-          <div className="flex-1" style={{ backgroundColor: "#00aeef" }} />
-          <div className="flex-1" style={{ backgroundColor: "#f4f6fa" }} />
-        </div>
+
+        {BottomColorStrip}
       </div>
     );
   }
 
-  // ── Shared page shell ─────────────────────────────────────────────────────
-  const PageShell = ({ children }: { children: React.ReactNode }) => (
-    <div className="min-h-screen flex flex-col" style={{ fontFamily: "Inter, sans-serif", background: "#f4f6fa" }}>
-      {TopBar}{NavBar}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
-        {children}
-        <p className="mt-8 text-xs text-muted-foreground">&copy; Copyright 2026 – University of Cebu Main Campus</p>
-      </div>
-      <div className="flex h-2">
-        <div className="flex-1" style={{ backgroundColor: "#003087" }} />
-        <div className="flex-1" style={{ backgroundColor: "#f5c200" }} />
-        <div className="flex-1" style={{ backgroundColor: "#00aeef" }} />
-        <div className="flex-1" style={{ backgroundColor: "#f4f6fa" }} />
-      </div>
-    </div>
-  );
+  // ==========================================================================
+  // FORGOT PASSWORD PAGE
+  // ==========================================================================
 
-  // ── Forgot — enter email ──────────────────────────────────────────────────
-  if (mode === "forgot") return (
-    <PageShell>
-      <div className="flex flex-col items-center mb-6"><QRpassLogo size={72} showText /></div>
-      <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md overflow-hidden">
-        <div className="bg-primary px-6 py-4">
-          <h2 className="text-white font-bold text-base" style={{ fontFamily: "Barlow, sans-serif" }}>Forgot Password</h2>
-          <p className="text-white/70 text-xs mt-0.5">Enter your registered Gmail address to receive a verification code.</p>
+  if (mode === "forgot") {
+    return (
+      <PageShell>
+        <div className="flex flex-col items-center mb-6">
+          <QRpassLogo
+            size={72}
+            showText
+          />
         </div>
-        <form onSubmit={handleForgotSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">Gmail Address</label>
-            <div className="relative">
-              <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
-                placeholder="e.g. juan@gmail.com" required
-                className="w-full pl-9 pr-3 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
-            </div>
-          </div>
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800">
-            A 6-digit verification code will be sent to your Gmail address. Check your inbox and spam folder.
-          </div>
-          <button type="submit"
-            className="w-full py-2.5 rounded-md font-semibold text-sm"
-            style={{ backgroundColor: "#003087", color: "#fff" }}>
-            Send Verification Code
-          </button>
-          <button type="button" onClick={() => switchMode("login")}
-            className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
-            ← Back to Login
-          </button>
-        </form>
-      </div>
-    </PageShell>
-  );
 
-  // ── Verify — enter 6-digit code ───────────────────────────────────────────
-  if (mode === "verify") return (
-    <PageShell>
-      <div className="flex flex-col items-center mb-6"><QRpassLogo size={72} showText /></div>
-      <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md overflow-hidden">
-        <div className="bg-primary px-6 py-4">
-          <h2 className="text-white font-bold text-base" style={{ fontFamily: "Barlow, sans-serif" }}>Enter Verification Code</h2>
-          <p className="text-white/70 text-xs mt-0.5">A 6-digit code was sent to <strong>{forgotEmail}</strong></p>
-        </div>
-        <form onSubmit={handleVerifySubmit} className="p-6 space-y-5">
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-3 uppercase tracking-wide text-center">6-Digit Code</label>
-            <div className="flex gap-2 justify-center">
-              {codeInputs.map((val, i) => (
-                <input
-                  key={i}
-                  id={`code-${i}`}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={val}
-                  onChange={e => {
-                    const v = e.target.value.replace(/\D/, "");
-                    const next = [...codeInputs];
-                    next[i] = v;
-                    setCodeInputs(next);
-                    if (v && i < 5) (document.getElementById(`code-${i + 1}`) as HTMLInputElement)?.focus();
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === "Backspace" && !codeInputs[i] && i > 0)
-                      (document.getElementById(`code-${i - 1}`) as HTMLInputElement)?.focus();
-                  }}
-                  className={`w-10 h-12 text-center text-lg font-bold rounded-md border-2 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${codeError ? "border-red-400 bg-red-50" : "border-border bg-muted/50 focus:border-primary"}`}
-                />
-              ))}
-            </div>
-            {codeError && <p className="text-center text-xs text-red-500 mt-2">Incorrect code. Please try again. (Demo: {DEMO_CODE})</p>}
-          </div>
-          <button type="submit"
-            className="w-full py-2.5 rounded-md font-semibold text-sm"
-            style={{ backgroundColor: "#003087", color: "#fff" }}>
-            Verify Code
-          </button>
-          <div className="text-center space-y-1">
-            <p className="text-xs text-muted-foreground">
-              Didn{"'"}t receive a code?{" "}
-              <button type="button" onClick={() => setCodeInputs(["", "", "", "", "", ""])}
-                className="text-primary font-medium hover:underline">Resend</button>
+        <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md overflow-hidden">
+          <div className="bg-primary px-6 py-4">
+            <h2
+              className="text-white font-bold text-base"
+              style={{
+                fontFamily:
+                  "Barlow, sans-serif",
+              }}
+            >
+              Forgot Password
+            </h2>
+
+            <p className="text-white/70 text-xs mt-0.5">
+              Enter your registered email
+              address to receive a
+              verification code.
             </p>
-            <button type="button" onClick={() => switchMode("forgot")}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Change email</button>
           </div>
-        </form>
-      </div>
-    </PageShell>
-  );
 
-  // ── Reset — set new password ───────────────────────────────────────────────
-  if (mode === "reset") return (
-    <PageShell>
-      <div className="flex flex-col items-center mb-6"><QRpassLogo size={72} showText /></div>
-      <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md overflow-hidden">
-        <div className="bg-primary px-6 py-4">
-          <h2 className="text-white font-bold text-base" style={{ fontFamily: "Barlow, sans-serif" }}>Set New Password</h2>
-          <p className="text-white/70 text-xs mt-0.5">Choose a strong new password for your account.</p>
-        </div>
-        <form onSubmit={handleResetSubmit} className="p-6 space-y-4">
-        {([["New Password", newPass, setNewPass], ["Confirm New Password", confirmPass, setConfirmPass]] as const).map(([label, val, setter]) => (            <div key={label as string}>
-              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">{label}</label>
+          <form
+            onSubmit={
+              handleForgotSubmit
+            }
+            className="p-6 space-y-4"
+          >
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                Email Address
+              </label>
+
               <div className="relative">
-                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input type="password" value={val as string} onChange={e => (setter as (v: string) => void)(e.target.value)}
-                  placeholder="Enter password" required
-                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                <User
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+
+                <input
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) =>
+                    setForgotEmail(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Enter your registered email"
+                  required
+                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                />
               </div>
             </div>
-          ))}
-          {confirmPass && newPass !== confirmPass && (
-            <p className="text-xs text-red-500">Passwords do not match.</p>
-          )}
-          <button type="submit" disabled={!newPass || newPass !== confirmPass}
-            className="w-full py-2.5 rounded-md font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ backgroundColor: "#003087", color: "#fff" }}>
-            Change Password
+
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800">
+              A 6-digit verification code
+              will be sent to your
+              registered email address.
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-md font-semibold text-sm"
+              style={{
+                backgroundColor:
+                  "#003087",
+                color: "#fff",
+              }}
+            >
+              Send Verification Code
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                switchMode("login")
+              }
+              className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Back to Login
+            </button>
+          </form>
+        </div>
+      </PageShell>
+    );
+  }
+
+  // ==========================================================================
+  // VERIFY CODE PAGE
+  // ==========================================================================
+
+  if (mode === "verify") {
+    return (
+      <PageShell>
+        <div className="flex flex-col items-center mb-6">
+          <QRpassLogo
+            size={72}
+            showText
+          />
+        </div>
+
+        <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md overflow-hidden">
+
+          <div className="bg-primary px-6 py-4">
+            <h2
+              className="text-white font-bold text-base"
+              style={{
+                fontFamily:
+                  "Barlow, sans-serif",
+              }}
+            >
+              Enter Verification Code
+            </h2>
+
+            <p className="text-white/70 text-xs mt-0.5">
+              A 6-digit code was sent to{" "}
+
+              <strong>
+                {forgotEmail}
+              </strong>
+            </p>
+          </div>
+
+          <form
+            onSubmit={
+              handleVerifySubmit
+            }
+            className="p-6 space-y-5"
+          >
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-3 uppercase tracking-wide text-center">
+                6-Digit Code
+              </label>
+
+              <div className="flex gap-2 justify-center">
+                {codeInputs.map((value, index) => (
+  <input
+    key={index}
+    id={`code-${index}`}
+    type="text"
+    inputMode="numeric"
+    maxLength={1}
+    value={value}
+
+    onChange={(e) => {
+  const input =
+    e.target.value.replace(
+      /\D/,
+      ""
+    );
+
+  const form =
+    e.currentTarget.form;
+
+  const next = [
+    ...codeInputs,
+  ];
+
+  next[index] =
+    input;
+
+  setCodeInputs(next);
+  setCodeError(false);
+
+  // Move to next box
+  if (
+    input &&
+    index < 5
+  ) {
+    (
+      document.getElementById(
+        `code-${index + 1}`
+      ) as HTMLInputElement
+    )?.focus();
+  }
+
+  // Automatically verify after the 6th digit
+  if (
+    input &&
+    index === 5 &&
+    next.every(
+      (digit) => digit !== ""
+    )
+  ) {
+    setTimeout(() => {
+      form?.requestSubmit();
+    }, 0);
+  }
+}}
+
+    onKeyDown={(e) => {
+      // ENTER = Verify Code
+      if (e.key === "Enter") {
+        e.preventDefault();
+
+        e.currentTarget.form?.requestSubmit();
+
+        return;
+      }
+
+      // BACKSPACE = previous box
+      if (
+        e.key === "Backspace" &&
+        !codeInputs[index] &&
+        index > 0
+      ) {
+        (
+          document.getElementById(
+            `code-${index - 1}`
+          ) as HTMLInputElement
+        )?.focus();
+      }
+    }}
+
+    className={`w-10 h-12 text-center text-lg font-bold rounded-md border-2 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${
+      codeError
+        ? "border-red-400 bg-red-50"
+        : "border-border bg-muted/50 focus:border-primary"
+    }`}
+  />
+))}
+              </div>
+
+              {codeError && (
+                <p className="text-center text-xs text-red-500 mt-2">
+                  Incorrect code. Please
+                  try again.
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-md font-semibold text-sm"
+              style={{
+                backgroundColor:
+                  "#003087",
+                color: "#fff",
+              }}
+            >
+              Verify Code
+            </button>
+
+            <div className="text-center space-y-1">
+              <p className="text-xs text-muted-foreground">
+                Didn{"'"}t receive a
+                code?{" "}
+
+                <button
+  type="button"
+  onClick={async () => {
+    try {
+      await requestPasswordReset(
+        forgotEmail.trim()
+      );
+
+      setCodeInputs([
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+      ]);
+
+      setCodeError(false);
+
+      (
+        document.getElementById(
+          "code-0"
+        ) as HTMLInputElement
+      )?.focus();
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to resend verification code."
+      );
+    }
+  }}
+  className="text-primary font-medium hover:underline"
+>
+  Resend
+</button>
+              </p>
+
+              <button
+                type="button"
+                onClick={() =>
+                  switchMode(
+                    "forgot"
+                  )
+                }
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ← Change email
+              </button>
+            </div>
+          </form>
+        </div>
+      </PageShell>
+    );
+  }
+
+  // ==========================================================================
+  // RESET PASSWORD PAGE
+  // ==========================================================================
+
+  if (mode === "reset") {
+    return (
+      <PageShell>
+        <div className="flex flex-col items-center mb-6">
+          <QRpassLogo
+            size={72}
+            showText
+          />
+        </div>
+
+        <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md overflow-hidden">
+          <div className="bg-primary px-6 py-4">
+            <h2
+              className="text-white font-bold text-base"
+              style={{
+                fontFamily:
+                  "Barlow, sans-serif",
+              }}
+            >
+              Set New Password
+            </h2>
+
+            <p className="text-white/70 text-xs mt-0.5">
+              Choose a strong new password
+              for your account.
+            </p>
+          </div>
+
+          <form
+            onSubmit={
+              handleResetSubmit
+            }
+            className="p-6 space-y-4"
+          >
+            {/* NEW PASSWORD */}
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                New Password
+              </label>
+
+              <div className="relative">
+                <Lock
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+
+                <input
+                  type="password"
+                  value={newPass}
+                  onChange={(e) =>
+                    setNewPass(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Enter new password"
+                  required
+                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* CONFIRM */}
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                Confirm New Password
+              </label>
+
+              <div className="relative">
+                <Lock
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+
+                <input
+                  type="password"
+                  value={confirmPass}
+                  onChange={(e) =>
+                    setConfirmPass(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Confirm new password"
+                  required
+                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                />
+              </div>
+            </div>
+
+            {confirmPass &&
+              newPass !==
+                confirmPass && (
+                <p className="text-xs text-red-500">
+                  Passwords do not match.
+                </p>
+              )}
+
+            <button
+              type="submit"
+              disabled={
+                !newPass ||
+                newPass !== confirmPass
+              }
+              className="w-full py-2.5 rounded-md font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor:
+                  "#003087",
+                color: "#fff",
+              }}
+            >
+              Change Password
+            </button>
+          </form>
+        </div>
+      </PageShell>
+    );
+  }
+
+  // ==========================================================================
+  // RESET COMPLETE PAGE
+  // ==========================================================================
+
+  if (mode === "reset-done") {
+    return (
+      <PageShell>
+        <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md p-10 flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+            <CheckCircle
+              size={32}
+              className="text-green-500"
+            />
+          </div>
+
+          <div className="text-center">
+            <h3
+              className="font-bold text-foreground text-base"
+              style={{
+                fontFamily:
+                  "Barlow, sans-serif",
+              }}
+            >
+              Password Changed!
+            </h3>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Your password has been
+              updated successfully. You
+              can now log in using your
+              new password.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              switchMode("login")
+            }
+            className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90"
+          >
+            Back to Login
           </button>
-        </form>
-      </div>
-    </PageShell>
-  );
-
-  // ── Reset done ────────────────────────────────────────────────────────────
-  if (mode === "reset-done") return (
-    <PageShell>
-      <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md p-10 flex flex-col items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-          <CheckCircle size={32} className="text-green-500" />
         </div>
-        <div className="text-center">
-          <h3 className="font-bold text-foreground text-base" style={{ fontFamily: "Barlow, sans-serif" }}>Password Changed!</h3>
-          <p className="text-xs text-muted-foreground mt-1">Your password has been updated successfully. You can now log in with your new password.</p>
-        </div>
-        <button onClick={() => switchMode("login")}
-          className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90">
-          Back to Login
-        </button>
-      </div>
-    </PageShell>
-  );
+      </PageShell>
+    );
+  }
 
-  // ── Login view ────────────────────────────────────────────────────────────
+  // ==========================================================================
+  // LOGIN PAGE
+  // ==========================================================================
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ fontFamily: "Inter, sans-serif", background: "#f4f6fa" }}>
-      {TopBar}{NavBar}
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        fontFamily:
+          "Inter, sans-serif",
+        background: "#f4f6fa",
+      }}
+    >
+      {TopBar}
+
+      {NavBar}
 
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
-        {/* Full logo with text */}
+
+        {/* QRPass LOGO */}
         <div className="flex flex-col items-center mb-8">
-          <QRpassLogo size={120} showText />
+          <QRpassLogo
+            size={120}
+            showText
+          />
+
           <p className="text-sm text-muted-foreground mt-3 text-center max-w-sm">
-            Enhancing Campus Security Through QR-Based Item Registration & Verification
+            Enhancing Campus Security
+            Through QR-Based Item
+            Registration & Verification
           </p>
         </div>
 
-        <div className="w-full max-w-xl mb-5">
-          <p className="text-center text-sm font-semibold text-foreground mb-3">Select your role to continue:</p>
-          <RoleSelector selected={selectedRole} onSelect={setSelectedRole} />
-        </div>
-
+        {/* LOGIN CARD */}
         <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md p-6">
-          <form onSubmit={handleLogin} className="space-y-4">
+
+          <form
+            onSubmit={handleLogin}
+            className="space-y-4"
+          >
+
+            {/* LOGIN HEADING */}
+            <div className="text-center mb-5">
+              <h2
+                className="text-xl font-bold text-foreground"
+                style={{
+                  fontFamily:
+                    "Barlow, sans-serif",
+                }}
+              >
+                Sign in
+              </h2>
+
+              <p className="text-xs text-muted-foreground mt-1">
+                Use your institutional account to continue.
+              </p>
+
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Your account access level
+                is identified
+                automatically.
+              </p>
+            </div>
+
+            {/* USERNAME */}
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">USERNAME</label>
+              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                Username / ID Number
+              </label>
+
               <div className="relative">
-                <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter your username"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                <User
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(
+                      e.target.value
+                    );
+
+                    if (loginError) {
+                      setLoginError("");
+                    }
+                  }}
+                  placeholder="Enter Student ID or Employee ID"
+                  required
+                  autoComplete="username"
+                  disabled={isLoggingIn}
+                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-60"
+                />
               </div>
             </div>
+
+            {/* PASSWORD */}
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">Password</label>
+              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                Password
+              </label>
+
               <div className="relative">
-                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                <Lock
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+
+                <input
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(
+                      e.target.value
+                    );
+
+                    if (loginError) {
+                      setLoginError("");
+                    }
+                  }}
+                  placeholder="Enter your password"
+                  required
+                  autoComplete="current-password"
+                  disabled={isLoggingIn}
+                  className="w-full pl-9 pr-10 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-60"
+                />
+
+                {/* SHOW / HIDE PASSWORD */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPassword(
+                      (current) =>
+                        !current
+                    )
+                  }
+                  disabled={isLoggingIn}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                  aria-label={
+                    showPassword
+                      ? "Hide password"
+                      : "Show password"
+                  }
+                  title={
+                    showPassword
+                      ? "Hide password"
+                      : "Show password"
+                  }
+                >
+                  {showPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
+                </button>
               </div>
             </div>
+
+            {/* FORGOT PASSWORD */}
             <div className="text-right">
-              <button type="button" onClick={() => switchMode("forgot")}
-                className="text-xs text-primary font-medium hover:underline">
+              <button
+                type="button"
+                onClick={() =>
+                  switchMode(
+                    "forgot"
+                  )
+                }
+                disabled={isLoggingIn}
+                className="text-xs text-primary font-medium hover:underline disabled:opacity-50"
+              >
                 Forgot Password?
               </button>
             </div>
-            <button type="submit" disabled={!selectedRole}
-              className="w-full py-2.5 rounded-md font-semibold text-sm transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "#003087", color: "#fff" }}>
-              {selectedRole ? `Log in as ${ROLES.find(r => r.id === selectedRole)?.label}` : "Select a role above"}
+
+            {/* LOGIN ERROR */}
+            {loginError && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5"
+              >
+                <AlertCircle
+                  size={15}
+                  className="mt-0.5 flex-shrink-0 text-red-600"
+                />
+
+                <p className="text-xs leading-relaxed text-red-700">
+                  {loginError}
+                </p>
+              </div>
+            )}
+
+            {/* LOGIN BUTTON */}
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              className="w-full py-2.5 rounded-md font-semibold text-sm transition-all duration-150 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              style={{
+                backgroundColor:
+                  "#003087",
+                color: "#fff",
+              }}
+            >
+              {isLoggingIn ? (
+                <>
+                  <RefreshCw
+                    size={15}
+                    className="animate-spin"
+                  />
+
+                  Signing in...
+                </>
+              ) : (
+                "Log In"
+              )}
             </button>
+
+            {/* SECURITY NOTICE */}
+            <div className="bg-blue-50 border border-blue-100 rounded-md px-3 py-2.5">
+              <div className="flex items-start gap-2">
+                <Shield
+                  size={14}
+                  className="text-primary mt-0.5 flex-shrink-0"
+                />
+
+                <p className="text-[10px] leading-relaxed text-blue-800">
+                  Authorized institutional users only. System activity may be recorded for security and auditing purposes.
+                </p>
+              </div>
+            </div>
           </form>
+
+          {/* REGISTER */}
           <div className="mt-4 pt-4 border-t border-border text-center">
             <p className="text-xs text-muted-foreground">
-              Don{"'"}t have an account?{" "}
-              <button onClick={() => switchMode("register")} className="text-primary font-semibold hover:underline">Register here</button>
+              Don{"'"}t have an
+              account?{" "}
+
+              <button
+                type="button"
+                onClick={() =>
+                  switchMode(
+                    "register"
+                  )
+                }
+                className="text-primary font-semibold hover:underline"
+              >
+                Register here
+              </button>
             </p>
           </div>
         </div>
-        <p className="mt-8 text-xs text-muted-foreground">&copy; Copyright 2026 – University of Cebu Main Campus</p>
+
+        {/* FOOTER */}
+        <p className="mt-8 text-xs text-muted-foreground text-center">
+          © 2026 QRpass System
+
+          <span className="mx-2">
+            |
+          </span>
+
+          QRpass V1.0
+        </p>
       </div>
 
-      <div className="flex h-2">
-        <div className="flex-1" style={{ backgroundColor: "#003087" }} />
-        <div className="flex-1" style={{ backgroundColor: "#f5c200" }} />
-        <div className="flex-1" style={{ backgroundColor: "#00aeef" }} />
-        <div className="flex-1" style={{ backgroundColor: "#f4f6fa" }} />
-      </div>
+      {BottomColorStrip}
     </div>
   );
 }
@@ -10250,7 +11063,7 @@ function Dashboard({ role, onLogout }: { role: Role; onLogout: () => void }) {
           {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
         <div className="flex items-center gap-1.5">
-          <QRpassLogo size={28} />
+          <QRpassLogo size={70} showText />
           <span className="font-bold text-sm tracking-wide" style={{ fontFamily: "Barlow, sans-serif" }}>QRpass</span>
           <span className="hidden md:inline text-white/50 text-xs">V1.0</span>
         </div>
