@@ -923,3 +923,132 @@ export async function resetPassword(
 
   return data;
 }
+// ============================================================
+// ACCOUNT SETTINGS
+// ============================================================
+
+export async function getAccount() {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(`${API_URL}/account`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to load account.");
+  }
+
+  return data;
+}
+
+export async function updateAccountProfile(payload: {
+  name: string;
+  email?: string;
+}) {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(`${API_URL}/account/profile`, {
+    method: "PUT",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw {
+      message: data.message || "Failed to update account.",
+      errors: data.errors || {},
+    };
+  }
+
+  return data;
+}
+
+export async function updateAccountPassword(payload: {
+  current_password: string;
+  password: string;
+  password_confirmation: string;
+}) {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(`${API_URL}/account/password`, {
+    method: "PUT",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw {
+      message: data.message || "Failed to change password.",
+      errors: data.errors || {},
+    };
+  }
+
+  return data;
+}
+
+export async function uploadAccountProfilePhoto(file: File) {
+  const token = localStorage.getItem("token");
+
+  const formData = new FormData();
+  formData.append("profile_photo", file);
+
+  const response = await fetch(`${API_URL}/account/profile-photo`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw {
+      message: data.message || "Failed to upload profile photo.",
+      errors: data.errors || {},
+    };
+  }
+
+  return data;
+}
+
+export async function removeAccountProfilePhoto() {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(`${API_URL}/account/profile-photo`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to remove profile photo."
+    );
+  }
+
+  return data;
+}

@@ -1,4 +1,4 @@
-﻿import * as XLSX from "xlsx";
+import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable";
 import {
@@ -33,11 +33,6 @@ import {
   requestPasswordReset,
   verifyPasswordResetCode,
   resetPassword,
-  getAccount,
-  updateAccountProfile,
-  uploadAccountProfilePhoto,
-  removeAccountProfilePhoto,
-  updateAccountPassword,
 } from "../services/api";
 import { QRCodeSVG } from "qrcode.react";
 import { Html5QrcodeScanner } from "html5-qrcode";
@@ -101,7 +96,7 @@ function QRCodeDisplay({
       size={size}
       level="M"
       bgColor="#ffffff"
-      fgColor="#1a3a7b"
+      fgColor="#003087"
       marginSize={4}
       title={`QR Code ${value}`}
     />
@@ -115,55 +110,22 @@ type Role = "student" | "security" | "pco" | "sysadmin";
 type View = "login" | "dashboard";
 
 const ROLES: { id: Role; label: string; color: string; textColor: string }[] = [
-  { id: "student", label: "Student", color: "#1a3a7b", textColor: "#fff" },
-  { id: "security", label: "Security Personnel (CSU)", color: "#2f5fd6", textColor: "#fff" },
-  { id: "pco", label: "PCO Staff", color: "#557bdc", textColor: "#fff" },
-  { id: "sysadmin", label: "System Administrator", color: "#eef2fc", textColor: "#111827" },
+  { id: "student", label: "Student", color: "#003087", textColor: "#fff" },
+  { id: "security", label: "Security Personnel (CSU)", color: "#f5c200", textColor: "#0d1b3e" },
+  { id: "pco", label: "PCO Staff", color: "#00aeef", textColor: "#fff" },
+  { id: "sysadmin", label: "System Administrator", color: "#e8edf5", textColor: "#0d1b3e" },
 ];
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
-function StatCard({
-  label,
-  value,
-  icon,
-  color,
-}: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-  color: string;
-}) {
+function StatCard({ label, value, icon, color }: { label: string; value: string; icon: React.ReactNode; color: string }) {
   return (
-    <div
-      className="bg-white border border-[#dce3ee] flex items-center gap-4 p-4"
-      style={{
-        borderRadius: "14px",
-        boxShadow: "0 6px 18px rgba(16, 26, 51, 0.08)",
-      }}
-    >
-      <div
-        className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{
-          backgroundColor: `${color}14`,
-          color,
-        }}
-      >
+    <div className="bg-card rounded-lg p-4 border border-border flex items-center gap-4 shadow-sm">
+      <div className="rounded-md p-3 flex-shrink-0" style={{ backgroundColor: color + "20", color }}>
         {icon}
       </div>
-
-      <div className="min-w-0">
-        <p className="text-[11px] text-[#64748b] font-semibold uppercase tracking-wide">
-          {label}
-        </p>
-
-        <p
-          className="text-2xl font-bold text-[#111827] mt-0.5"
-          style={{
-            fontFamily: "Barlow, sans-serif",
-          }}
-        >
-          {value}
-        </p>
+      <div>
+        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
+        <p className="text-2xl font-bold text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -188,165 +150,42 @@ function NotifItem({ type, message, time }: { type: "success" | "warning" | "inf
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<
-    string,
-    {
-      background: string;
-      color: string;
-      border: string;
-    }
-  > = {
-    Approved: {
-      background: "#ecfdf3",
-      color: "#15803d",
-      border: "#bbf7d0",
-    },
-
-    Active: {
-      background: "#ecfdf3",
-      color: "#15803d",
-      border: "#bbf7d0",
-    },
-
-    Registered: {
-      background: "#ecfdf3",
-      color: "#15803d",
-      border: "#bbf7d0",
-    },
-
-    Verified: {
-      background: "#ecfdf3",
-      color: "#15803d",
-      border: "#bbf7d0",
-    },
-
-    Pending: {
-      background: "#fff8e6",
-      color: "#b7791f",
-      border: "#fde68a",
-    },
-
-    Rejected: {
-      background: "#fff1f2",
-      color: "#dc2626",
-      border: "#fecdd3",
-    },
-
-    Expired: {
-      background: "#f3f4f6",
-      color: "#6b7280",
-      border: "#e5e7eb",
-    },
-
-    Flagged: {
-      background: "#fff7ed",
-      color: "#c2410c",
-      border: "#fed7aa",
-    },
-
-    Recovered: {
-      background: "#eef2fc",
-      color: "#2f5fd6",
-      border: "#d7e0f3",
-    },
-
-    Lost: {
-      background: "#fff1f2",
-      color: "#dc2626",
-      border: "#fecdd3",
-    },
-
-    Found: {
-      background: "#ecfeff",
-      color: "#0f766e",
-      border: "#a5f3fc",
-    },
+  const map: Record<string, string> = {
+    Approved: "bg-green-100 text-green-700",
+    Active: "bg-green-100 text-green-700",
+    Registered: "bg-green-100 text-green-700",
+    Verified: "bg-green-100 text-green-700",
+    Pending: "bg-yellow-100 text-yellow-700",
+    Rejected: "bg-red-100 text-red-600",
+    Expired: "bg-gray-100 text-gray-500",
+    Flagged: "bg-orange-100 text-orange-600",
+    Recovered: "bg-blue-100 text-blue-600",
+    Lost: "bg-red-100 text-red-600",
+    Found: "bg-teal-100 text-teal-700",
   };
-
-  const style =
-    map[status] ?? {
-      background: "#f3f5f9",
-      color: "#64748b",
-      border: "#dce3ee",
-    };
-
-  return (
-    <span
-      className="inline-flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full border"
-      style={{
-        backgroundColor: style.background,
-        color: style.color,
-        borderColor: style.border,
-      }}
-    >
-      {status}
-    </span>
-  );
+  return <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${map[status] ?? "bg-gray-100 text-gray-600"}`}>{status}</span>;
 }
 
-function Card({
-  title,
-  action,
-  children,
-}: {
-  title: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
+function Card({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div
-      className="bg-white border border-[#dce3ee] overflow-hidden"
-      style={{
-        borderRadius: "14px",
-        boxShadow: "0 8px 24px rgba(16, 26, 51, 0.10)",
-      }}
-    >
-      <div className="px-4 py-3 border-b border-[#dce3ee] bg-white flex items-center justify-between">
-        <h3 className="font-semibold text-sm text-[#111827]">
-          {title}
-        </h3>
-
+    <div className="bg-card rounded-lg border border-border shadow-sm">
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+        <h3 className="font-semibold text-sm text-foreground">{title}</h3>
         {action}
       </div>
-
       {children}
     </div>
   );
 }
 
-function PageHeader({
-  title,
-  subtitle,
-  action,
-}: {
-  title: string;
-  subtitle?: string;
-  action?: React.ReactNode;
-}) {
+function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between mb-5 gap-4">
-      <div className="min-w-0">
-        <h2
-          className="text-xl font-bold text-[#111827] tracking-tight"
-          style={{
-            fontFamily: "Barlow, sans-serif",
-          }}
-        >
-          {title}
-        </h2>
-
-        {subtitle && (
-          <p className="text-xs text-[#64748b] mt-1 leading-relaxed">
-            {subtitle}
-          </p>
-        )}
+    <div className="flex items-start justify-between mb-5">
+      <div>
+        <h2 className="text-lg font-bold text-foreground" style={{ fontFamily: "Barlow, sans-serif" }}>{title}</h2>
+        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
-
-      {action && (
-        <div className="flex-shrink-0">
-          {action}
-        </div>
-      )}
+      {action}
     </div>
   );
 }
@@ -499,7 +338,7 @@ function StudentRegisterItem() {
                 }
                 placeholder="e.g. Basketball, Laptop, Camera"
                 required
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
 
@@ -519,7 +358,7 @@ function StudentRegisterItem() {
                   })
                 }
                 placeholder="e.g. Dell XPS 15 9530"
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
 
@@ -539,7 +378,7 @@ function StudentRegisterItem() {
                   })
                 }
                 placeholder="e.g. SN-00000 — leave blank if none"
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
 
@@ -559,7 +398,7 @@ function StudentRegisterItem() {
                   })
                 }
                 placeholder="e.g. Silver"
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
 
@@ -577,7 +416,7 @@ function StudentRegisterItem() {
                     item_type: e.target.value,
                   })
                 }
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
                 <option value="Laptop">Laptop / Computer</option>
                 <option value="Mobile Phone">Mobile Phone</option>
@@ -614,7 +453,7 @@ function StudentRegisterItem() {
                   })
                 }
                 placeholder="e.g. Academic use, thesis documentation"
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
 
@@ -634,7 +473,7 @@ function StudentRegisterItem() {
                   })
                 }
                 placeholder="e.g. Charger, mouse, laptop bag"
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
 
@@ -653,7 +492,7 @@ function StudentRegisterItem() {
                   valid_until: e.target.value,
                 })
               }
-              className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
             </div>
 {/* NON-COMPUTER GATE PASS DETAILS */}
@@ -688,7 +527,7 @@ function StudentRegisterItem() {
             })
           }
           required
-          className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+          className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
 
@@ -709,7 +548,7 @@ function StudentRegisterItem() {
           }
           placeholder="Describe the item, identifying features, size, markings, or other useful details"
           required
-          className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+          className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
     </div>
@@ -746,7 +585,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. Laptop, Desktop, Gaming Laptop"
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                      className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
 
@@ -766,7 +605,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. Intel Core i5 / Ryzen 5"
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                      className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
 
@@ -786,7 +625,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. ASUS B550M / Built-in"
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                      className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
 
@@ -806,7 +645,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. 16 GB DDR4"
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                      className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
 
@@ -826,7 +665,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. 512 GB SSD"
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                      className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
 
@@ -846,7 +685,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. Built-in 15.6 inch"
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                      className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
 
@@ -866,7 +705,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. Black chassis / Built-in"
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                      className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
 
@@ -886,7 +725,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. None / DVD-RW"
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                      className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
 
@@ -906,7 +745,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. Windows 11 Pro"
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                      className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
                 </div>
@@ -924,7 +763,7 @@ function StudentRegisterItem() {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="text-xs px-3 py-2 border border-[#cfd8e6] rounded-md text-muted-foreground hover:bg-muted"
+                className="text-xs px-3 py-2 border border-border rounded-md text-muted-foreground hover:bg-muted"
               >
                 Cancel
               </button>
@@ -959,7 +798,7 @@ function StudentRegisterItem() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-[#fafbfc]">
+              <tr className="bg-muted/50">
                 {[
                   "Item ID",
                   "Item",
@@ -1006,7 +845,7 @@ function StudentRegisterItem() {
                   return (
                     <tr
                       key={item.id}
-                      className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
+                      className="border-t border-border hover:bg-muted/30 transition-colors"
                     >
                       <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
                         ITEM-{String(item.id).padStart(3, "0")}
@@ -1115,7 +954,7 @@ function StudentMyQRCodes() {
               style={{
                 borderColor:
                   selected?.id === item.id
-                    ? "#1a3a7b"
+                    ? "#003087"
                     : "var(--border)",
               }}
             >
@@ -1182,7 +1021,7 @@ function StudentMyQRCodes() {
               </div>
 
               {selected?.id === item.id && (
-                <div className="border-t border-[#cfd8e6] px-4 py-3 bg-muted/30">
+                <div className="border-t border-border px-4 py-3 bg-muted/30">
                   <p className="text-xs text-muted-foreground">
                     QR ID:
                     <span className="font-mono text-primary ml-2">
@@ -1292,14 +1131,14 @@ function StudentPermitStatus() {
           label="Total Requests"
           value={String(items.length)}
           icon={<Package size={20} />}
-          color="#1a3a7b"
+          color="#003087"
         />
 
         <StatCard
           label="Pending"
           value={String(pendingCount)}
           icon={<Clock size={20} />}
-          color="#2f5fd6"
+          color="#f5c200"
         />
 
         <StatCard
@@ -1316,7 +1155,7 @@ function StudentPermitStatus() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-[#fafbfc]">
+              <tr className="bg-muted/50">
                 {[
                   "Item",
                   "Type",
@@ -1359,7 +1198,7 @@ function StudentPermitStatus() {
                 items.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-t border-[#cfd8e6] hover:bg-[#eef2fc]"
+                    className="border-t border-border hover:bg-muted/30"
                   >
                     <td className="py-3 px-3 text-sm font-medium">
                       {item.item_name}
@@ -1649,14 +1488,14 @@ function StudentLostAndFound() {
           label="Total Reports"
           value={String(items.length)}
           icon={<BookOpen size={20} />}
-          color="#1a3a7b"
+          color="#003087"
         />
 
         <StatCard
           label="Found Items"
           value={String(foundCount)}
           icon={<Package size={20} />}
-          color="#557bdc"
+          color="#00aeef"
         />
 
         <StatCard
@@ -1686,7 +1525,7 @@ function StudentLostAndFound() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search item, report type, category, location..."
-            className="w-full rounded-lg border border-[#cfd8e6] bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
 
@@ -1694,14 +1533,14 @@ function StudentLostAndFound() {
           type="button"
           onClick={loadItems}
           disabled={loading}
-          className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
       {loading && (
-        <div className="rounded-lg border border-[#cfd8e6] bg-card p-10 text-center">
+        <div className="rounded-lg border border-border bg-card p-10 text-center">
           <p className="text-sm text-muted-foreground">
             Loading Lost & Found registry...
           </p>
@@ -1709,7 +1548,7 @@ function StudentLostAndFound() {
       )}
 
       {!loading && filteredItems.length === 0 && (
-        <div className="rounded-lg border border-[#cfd8e6] bg-card p-10 text-center">
+        <div className="rounded-lg border border-border bg-card p-10 text-center">
           <BookOpen
             size={32}
             className="mx-auto mb-3 text-muted-foreground"
@@ -1746,7 +1585,7 @@ function StudentLostAndFound() {
           return (
             <div
               key={item.id}
-              className="rounded-lg border border-[#cfd8e6] bg-card shadow-sm"
+              className="rounded-lg border border-border bg-card shadow-sm"
             >
               <div className="p-4">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -2498,7 +2337,7 @@ function SecurityScanVerify() {
       />
 
       {/* SCANNER */}
-      <div className="bg-card rounded-lg border border-[#cfd8e6] p-5 shadow-sm">
+      <div className="bg-card rounded-lg border border-border p-5 shadow-sm">
         <div className="flex flex-col items-center gap-4">
           {/* GATE SELECTION */}
           <div className="w-full max-w-md">
@@ -2511,7 +2350,7 @@ function SecurityScanVerify() {
               onChange={(e) =>
                 setGate(e.target.value)
               }
-              className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
               <option value="Gate 1">
                 Gate 1
@@ -2558,7 +2397,7 @@ function SecurityScanVerify() {
                   }
                 }}
                 placeholder="QR ID or serial number..."
-                className="w-full pl-8 pr-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
 
@@ -2760,13 +2599,13 @@ function SecurityScanVerify() {
               </div>
 
               {/* ENTRY / EXIT */}
-              <div className="mt-5 pt-4 border-t border-[#cfd8e6]">
+              <div className="mt-5 pt-4 border-t border-border">
                 <p className="text-xs font-semibold text-foreground mb-2">
                   Entry / Exit Log
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs border border-[#cfd8e6] rounded-md px-3 py-2 bg-muted/30">
+                  <span className="text-xs border border-border rounded-md px-3 py-2 bg-muted/30">
                     {gate}
                   </span>
 
@@ -2817,7 +2656,7 @@ function SecurityScanVerify() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-[#fafbfc]">
+              <tr className="bg-muted/50">
                 {[
                   "Time",
                   "QR ID",
@@ -2860,7 +2699,7 @@ function SecurityScanVerify() {
                 recentLogs.map((log) => (
                   <tr
                     key={log.id}
-                    className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
+                    className="border-t border-border hover:bg-muted/30 transition-colors"
                   >
                     <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(
@@ -3498,1070 +3337,45 @@ function SecurityEntryExitLog() {
 }
 
 function SecurityReports() {
-  const [logs, setLogs] = useState<any[]>([]);
-  const [incidents, setIncidents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  // =========================================================
-  // LOAD REAL SECURITY REPORT DATA
-  // =========================================================
-
-  async function loadSecurityReports() {
-    try {
-      setLoading(true);
-      setError("");
-
-      const [scanResponse, incidentResponse] =
-        await Promise.all([
-          getScanLogs(),
-          getSecurityIncidents(),
-        ]);
-
-      setLogs(
-        Array.isArray(scanResponse?.logs)
-          ? scanResponse.logs
-          : []
-      );
-
-      setIncidents(
-        Array.isArray(incidentResponse?.incidents)
-          ? incidentResponse.incidents
-          : []
-      );
-    } catch (err) {
-      console.error(
-        "Failed to load security report data:",
-        err
-      );
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load security reports."
-      );
-
-      setLogs([]);
-      setIncidents([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadSecurityReports();
-  }, []);
-
-  // =========================================================
-  // DATE HELPERS
-  // =========================================================
-
-  function parseDate(
-    dateString?: string | null
-  ) {
-    if (!dateString) {
-      return null;
-    }
-
-    const date = new Date(dateString);
-
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
-
-    return date;
-  }
-
-  function isCurrentMonth(
-    dateString?: string | null
-  ) {
-    const date = parseDate(dateString);
-
-    if (!date) {
-      return false;
-    }
-
-    const now = new Date();
-
-    return (
-      date.getFullYear() === now.getFullYear() &&
-      date.getMonth() === now.getMonth()
-    );
-  }
-
-  function isToday(
-    dateString?: string | null
-  ) {
-    const date = parseDate(dateString);
-
-    if (!date) {
-      return false;
-    }
-
-    const today = new Date();
-
-    return (
-      date.getFullYear() === today.getFullYear() &&
-      date.getMonth() === today.getMonth() &&
-      date.getDate() === today.getDate()
-    );
-  }
-
-  function getCurrentWeekRange() {
-    const now = new Date();
-    const day = now.getDay();
-
-    // Monday is the first day of the reporting week.
-    const differenceToMonday =
-      day === 0 ? -6 : 1 - day;
-
-    const start = new Date(now);
-
-    start.setDate(
-      now.getDate() + differenceToMonday
-    );
-
-    start.setHours(0, 0, 0, 0);
-
-    const end = new Date(start);
-
-    end.setDate(start.getDate() + 6);
-    end.setHours(23, 59, 59, 999);
-
-    return {
-      start,
-      end,
-    };
-  }
-
-  function isCurrentWeek(
-    dateString?: string | null
-  ) {
-    const date = parseDate(dateString);
-
-    if (!date) {
-      return false;
-    }
-
-    const { start, end } =
-      getCurrentWeekRange();
-
-    return date >= start && date <= end;
-  }
-
-  function formatDate(
-    dateString?: string | null
-  ) {
-    const date = parseDate(dateString);
-
-    if (!date) {
-      return "—";
-    }
-
-    return date.toLocaleDateString(
-      "en-PH"
-    );
-  }
-
-  function formatTime(
-    dateString?: string | null
-  ) {
-    const date = parseDate(dateString);
-
-    if (!date) {
-      return "—";
-    }
-
-    return date.toLocaleTimeString(
-      "en-PH",
-      {
-        hour: "2-digit",
-        minute: "2-digit",
-      }
-    );
-  }
-
-  const currentMonth =
-    new Date().toLocaleDateString(
-      "en-US",
-      {
-        month: "long",
-        year: "numeric",
-      }
-    );
-
-  const {
-    start: weekStart,
-    end: weekEnd,
-  } = getCurrentWeekRange();
-
-  const currentWeekLabel =
-    `${weekStart.toLocaleDateString(
-      "en-PH",
-      {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }
-    )} - ${weekEnd.toLocaleDateString(
-      "en-PH",
-      {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }
-    )}`;
-
-  // =========================================================
-  // REAL STATISTICS
-  // =========================================================
-
-  const inspectionsDone = logs.filter(
-    (log) =>
-      String(
-        log.result ?? ""
-      ).toLowerCase() === "verified"
-  ).length;
-
-  const qrScansThisMonth =
-    logs.filter((log) =>
-      isCurrentMonth(log.scanned_at)
-    ).length;
-
-  const flaggedItems =
-    incidents.filter(
-      (incident) =>
-        String(
-          incident.status ?? ""
-        ).toLowerCase() === "flagged"
-    ).length;
-
-  const incidentsResolved =
-    incidents.filter(
-      (incident) =>
-        String(
-          incident.status ?? ""
-        ).toLowerCase() === "resolved"
-    ).length;
-
-  // =========================================================
-  // DAILY QR SCAN SUMMARY PDF
-  // =========================================================
-
-  function downloadDailyQrScanPDF() {
-    try {
-      const todayLogs =
-        logs.filter((log) =>
-          isToday(log.scanned_at)
-        );
-
-      if (todayLogs.length === 0) {
-        alert(
-          "There are no QR scan records for today."
-        );
-        return;
-      }
-
-      const verifiedCount =
-        todayLogs.filter(
-          (log) =>
-            String(
-              log.result ?? ""
-            ).toLowerCase() ===
-            "verified"
-        ).length;
-
-      const entryCount =
-        todayLogs.filter(
-          (log) =>
-            String(
-              log.direction ?? ""
-            ).toUpperCase() ===
-            "IN"
-        ).length;
-
-      const exitCount =
-        todayLogs.filter(
-          (log) =>
-            String(
-              log.direction ?? ""
-            ).toUpperCase() ===
-            "OUT"
-        ).length;
-
-      const doc = new jsPDF({
-        orientation: "landscape",
-      });
-
-      doc.setFontSize(18);
-      doc.text(
-        "QRPass Daily QR Scan Summary",
-        14,
-        18
-      );
-
-      doc.setFontSize(10);
-      doc.text(
-        "University of Cebu - Main Campus",
-        14,
-        25
-      );
-
-      doc.text(
-        `Report Date: ${new Date().toLocaleDateString(
-          "en-PH"
-        )}`,
-        14,
-        31
-      );
-
-      doc.text(
-        `Total QR Scans: ${todayLogs.length}`,
-        14,
-        38
-      );
-
-      doc.text(
-        `Verified Scans: ${verifiedCount}`,
-        14,
-        44
-      );
-
-      doc.text(
-        `Entry Scans: ${entryCount}`,
-        75,
-        38
-      );
-
-      doc.text(
-        `Exit Scans: ${exitCount}`,
-        75,
-        44
-      );
-
-      const rows =
-        todayLogs.map((log) => [
-          formatDate(log.scanned_at),
-          formatTime(log.scanned_at),
-          log.item?.user?.name ??
-            "Unknown",
-          log.item?.user?.username ??
-            "—",
-          log.item?.item_name ??
-            "Unknown Item",
-          log.item?.serial_number ??
-            "—",
-          log.qr_code ?? "—",
-          log.gate ?? "—",
-          log.direction ?? "—",
-          log.result ?? "—",
-          log.scanner?.name ?? "—",
-        ]);
-
-      autoTable(doc, {
-        startY: 51,
-
-        head: [
-          [
-            "Date",
-            "Time",
-            "Owner",
-            "Owner ID",
-            "Item",
-            "Serial No.",
-            "QR ID",
-            "Gate",
-            "Direction",
-            "Result",
-            "Scanned By",
-          ],
-        ],
-
-        body: rows,
-
-        styles: {
-          fontSize: 7,
-          cellPadding: 2,
-        },
-
-        headStyles: {
-          fillColor: [26, 58, 123],
-          textColor: [255, 255, 255],
-        },
-
-        alternateRowStyles: {
-          fillColor: [245, 247, 250],
-        },
-      });
-
-      const fileDate =
-        new Date()
-          .toISOString()
-          .slice(0, 10);
-
-      doc.save(
-        `QRPass-Daily-QR-Scan-${fileDate}.pdf`
-      );
-    } catch (err) {
-      console.error(
-        "Failed to generate Daily QR Scan Summary:",
-        err
-      );
-
-      alert(
-        err instanceof Error
-          ? err.message
-          : "Failed to generate Daily QR Scan Summary."
-      );
-    }
-  }
-
-  // =========================================================
-  // WEEKLY INSPECTION LOG PDF
-  // =========================================================
-
-  function downloadWeeklyInspectionPDF() {
-    try {
-      const weeklyLogs =
-        logs.filter((log) =>
-          isCurrentWeek(log.scanned_at)
-        );
-
-      if (weeklyLogs.length === 0) {
-        alert(
-          "There are no inspection records for the current week."
-        );
-        return;
-      }
-
-      const verifiedCount =
-        weeklyLogs.filter(
-          (log) =>
-            String(
-              log.result ?? ""
-            ).toLowerCase() ===
-            "verified"
-        ).length;
-
-      const entryCount =
-        weeklyLogs.filter(
-          (log) =>
-            String(
-              log.direction ?? ""
-            ).toUpperCase() ===
-            "IN"
-        ).length;
-
-      const exitCount =
-        weeklyLogs.filter(
-          (log) =>
-            String(
-              log.direction ?? ""
-            ).toUpperCase() ===
-            "OUT"
-        ).length;
-
-      const uniqueItems =
-        new Set(
-          weeklyLogs
-            .map(
-              (log) =>
-                log.item?.id ??
-                log.qr_code ??
-                null
-            )
-            .filter(Boolean)
-        ).size;
-
-      const uniqueOwners =
-        new Set(
-          weeklyLogs
-            .map(
-              (log) =>
-                log.item?.user?.id ??
-                log.item?.user?.username ??
-                null
-            )
-            .filter(Boolean)
-        ).size;
-
-      const doc = new jsPDF({
-        orientation: "landscape",
-      });
-
-      doc.setFontSize(18);
-      doc.text(
-        "QRPass Weekly Inspection Log",
-        14,
-        18
-      );
-
-      doc.setFontSize(10);
-      doc.text(
-        "University of Cebu - Main Campus",
-        14,
-        25
-      );
-
-      doc.text(
-        `Reporting Period: ${currentWeekLabel}`,
-        14,
-        31
-      );
-
-      doc.text(
-        `Total Inspections / Scans: ${weeklyLogs.length}`,
-        14,
-        38
-      );
-
-      doc.text(
-        `Verified: ${verifiedCount}`,
-        14,
-        44
-      );
-
-      doc.text(
-        `Unique Items: ${uniqueItems}`,
-        75,
-        38
-      );
-
-      doc.text(
-        `Unique Owners: ${uniqueOwners}`,
-        75,
-        44
-      );
-
-      doc.text(
-        `Entries: ${entryCount}`,
-        130,
-        38
-      );
-
-      doc.text(
-        `Exits: ${exitCount}`,
-        130,
-        44
-      );
-
-      const rows =
-        weeklyLogs.map((log) => [
-          formatDate(log.scanned_at),
-          formatTime(log.scanned_at),
-          log.item?.user?.name ??
-            "Unknown",
-          log.item?.user?.username ??
-            "—",
-          log.item?.item_name ??
-            "Unknown Item",
-          log.item?.item_type ??
-            "—",
-          log.item?.serial_number ??
-            "—",
-          log.qr_code ?? "—",
-          log.gate ?? "—",
-          log.direction ?? "—",
-          log.result ?? "—",
-          log.scanner?.name ?? "—",
-        ]);
-
-      autoTable(doc, {
-        startY: 51,
-
-        head: [
-          [
-            "Date",
-            "Time",
-            "Owner",
-            "Owner ID",
-            "Item",
-            "Type",
-            "Serial No.",
-            "QR ID",
-            "Gate",
-            "Direction",
-            "Result",
-            "Inspected By",
-          ],
-        ],
-
-        body: rows,
-
-        styles: {
-          fontSize: 6.5,
-          cellPadding: 2,
-        },
-
-        headStyles: {
-          fillColor: [26, 58, 123],
-          textColor: [255, 255, 255],
-        },
-
-        alternateRowStyles: {
-          fillColor: [245, 247, 250],
-        },
-      });
-
-      const startDate =
-        weekStart
-          .toISOString()
-          .slice(0, 10);
-
-      const endDate =
-        weekEnd
-          .toISOString()
-          .slice(0, 10);
-
-      doc.save(
-        `QRPass-Weekly-Inspection-${startDate}-to-${endDate}.pdf`
-      );
-    } catch (err) {
-      console.error(
-        "Failed to generate Weekly Inspection Log:",
-        err
-      );
-
-      alert(
-        err instanceof Error
-          ? err.message
-          : "Failed to generate Weekly Inspection Log."
-      );
-    }
-  }
-
-  // =========================================================
-  // MONTHLY ITEM REGISTRATION SUMMARY PDF
-  // =========================================================
-
-  async function downloadMonthlyRegistrationPDF() {
-    try {
-      const response =
-        await getAllItems();
-
-      const allItems =
-        Array.isArray(
-          response?.items
-        )
-          ? response.items
-          : [];
-
-      const now = new Date();
-
-      const monthlyItems =
-        allItems.filter((item: any) => {
-          const created =
-            parseDate(
-              item.created_at
-            );
-
-          if (!created) {
-            return false;
-          }
-
-          return (
-            created.getFullYear() ===
-              now.getFullYear() &&
-            created.getMonth() ===
-              now.getMonth()
-          );
-        });
-
-      if (
-        monthlyItems.length === 0
-      ) {
-        alert(
-          "There are no item registrations for this month."
-        );
-        return;
-      }
-
-      const approvedCount =
-        monthlyItems.filter(
-        (item: any) =>
-            String(
-              item.status ?? ""
-            ).toLowerCase() ===
-            "approved"
-        ).length;
-
-      const pendingCount =
-        monthlyItems.filter(
-          (item: any) =>
-            String(
-              item.status ?? ""
-            ).toLowerCase() ===
-            "pending"
-        ).length;
-
-      const qrIssuedCount =
-        monthlyItems.filter(
-          (item: any) =>
-            String(
-              item.status ?? ""
-            ).toLowerCase() ===
-              "approved" &&
-            Boolean(item.qr_code)
-        ).length;
-
-      const monthName =
-        now.toLocaleDateString(
-          "en-US",
-          {
-            month: "long",
-            year: "numeric",
-          }
-        );
-
-      const doc = new jsPDF({
-        orientation: "landscape",
-      });
-
-      doc.setFontSize(18);
-      doc.text(
-        "QRPass Monthly Item Registration Summary",
-        14,
-        18
-      );
-
-      doc.setFontSize(10);
-      doc.text(
-        "University of Cebu - Main Campus",
-        14,
-        25
-      );
-
-      doc.text(
-        `Reporting Period: ${monthName}`,
-        14,
-        31
-      );
-
-      doc.text(
-        `Total Registrations: ${monthlyItems.length}`,
-        14,
-        38
-      );
-
-      doc.text(
-        `Approved: ${approvedCount}`,
-        14,
-        44
-      );
-
-      doc.text(
-        `Pending: ${pendingCount}`,
-        75,
-        38
-      );
-
-      doc.text(
-        `QR Codes Issued: ${qrIssuedCount}`,
-        75,
-        44
-      );
-
-      const rows =
-        monthlyItems.map(
-          (item: any) => [
-            formatDate(
-              item.created_at
-            ),
-            item.user?.name ??
-              "Unknown",
-            item.user?.username ??
-              "—",
-            item.item_name ??
-              "—",
-            item.item_type ??
-              "—",
-            item.brand_model ??
-              "—",
-            item.serial_number ??
-              "—",
-            item.color ??
-              "—",
-            item.purpose ??
-              "—",
-            item.qr_code ??
-              "Not issued",
-            item.status
-              ? String(
-                  item.status
-                )
-                  .charAt(0)
-                  .toUpperCase() +
-                String(
-                  item.status
-                ).slice(1)
-              : "Unknown",
-          ]
-        );
-
-      autoTable(doc, {
-        startY: 51,
-
-        head: [
-          [
-            "Date",
-            "Owner",
-            "Owner ID",
-            "Item",
-            "Type",
-            "Brand / Model",
-            "Serial No.",
-            "Color",
-            "Purpose",
-            "QR ID",
-            "Status",
-          ],
-        ],
-
-        body: rows,
-
-        styles: {
-          fontSize: 6.5,
-          cellPadding: 2,
-        },
-
-        headStyles: {
-          fillColor: [26, 58, 123],
-          textColor: [255, 255, 255],
-        },
-
-        alternateRowStyles: {
-          fillColor: [245, 247, 250],
-        },
-      });
-
-      const fileMonth =
-        `${now.getFullYear()}-${String(
-          now.getMonth() + 1
-        ).padStart(2, "0")}`;
-
-      doc.save(
-        `QRPass-Monthly-Item-Registration-${fileMonth}.pdf`
-      );
-    } catch (err) {
-      console.error(
-        "Failed to generate Monthly Item Registration Summary:",
-        err
-      );
-
-      alert(
-        err instanceof Error
-          ? err.message
-          : "Failed to generate Monthly Item Registration Summary."
-      );
-    }
-  }
-
-  // =========================================================
-  // REPORT DOWNLOAD HANDLER
-  // =========================================================
-
-  function handleReportDownload(
-    reportName: string
-  ) {
-    if (
-      reportName ===
-      "Daily QR Scan Summary"
-    ) {
-      downloadDailyQrScanPDF();
-      return;
-    }
-
-    if (
-      reportName ===
-      "Weekly Inspection Log"
-    ) {
-      downloadWeeklyInspectionPDF();
-      return;
-    }
-
-    if (
-      reportName ===
-      "Monthly Item Registration Summary"
-    ) {
-      void downloadMonthlyRegistrationPDF();
-      return;
-    }
-  }
-
-  // =========================================================
-  // REPORT LIST
-  // =========================================================
-
-  const reports = [
-    {
-      name:
-        "Daily QR Scan Summary",
-      period:
-        new Date().toLocaleDateString(
-          "en-PH"
-        ),
-      format: "PDF",
-    },
-
-    {
-      name:
-        "Weekly Inspection Log",
-      period:
-        currentWeekLabel,
-      format: "PDF",
-    },
-  ];
-
-  // =========================================================
-  // UI
-  // =========================================================
-
   return (
     <div className="space-y-5">
-      <PageHeader
-        title="Reports"
-        subtitle="Security inspection and QR verification reports."
-        action={
-          <button
-            type="button"
-            onClick={
-              loadSecurityReports
-            }
-            disabled={loading}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
-          >
-            <RefreshCw
-              size={12}
-            />
-
-            {loading
-              ? "Refreshing..."
-              : "Refresh"}
-          </button>
-        }
-      />
-
-      {error && (
-        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
+      <PageHeader title="Reports" subtitle="Security inspection and QR verification reports." />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard
-          label="Inspections Done"
-          value={
-            loading
-              ? "..."
-              : String(
-                  inspectionsDone
-                )
-          }
-          icon={
-            <ClipboardList
-              size={20}
-            />
-          }
-          color="#1a3a7b"
-        />
-
-        <StatCard
-          label="QR Scans This Month"
-          value={
-            loading
-              ? "..."
-              : String(
-                  qrScansThisMonth
-                )
-          }
-          icon={
-            <ScanLine
-              size={20}
-            />
-          }
-          color="#557bdc"
-        />
-
-        <StatCard
-          label="Flagged Items"
-          value={
-            loading
-              ? "..."
-              : String(
-                  flaggedItems
-                )
-          }
-          icon={
-            <AlertTriangle
-              size={20}
-            />
-          }
-          color="#e8543a"
-        />
-
-        <StatCard
-          label="Incidents Resolved"
-          value={
-            loading
-              ? "..."
-              : String(
-                  incidentsResolved
-                )
-          }
-          icon={
-            <CheckCircle
-              size={20}
-            />
-          }
-          color="#2ecc71"
-        />
+        <StatCard label="Inspections Done" value="48" icon={<ClipboardList size={20} />} color="#003087" />
+        <StatCard label="QR Scans This Month" value="6,240" icon={<ScanLine size={20} />} color="#00aeef" />
+        <StatCard label="Flagged Items" value="12" icon={<AlertTriangle size={20} />} color="#e8543a" />
+        <StatCard label="Incidents Resolved" value="10" icon={<CheckCircle size={20} />} color="#2ecc71" />
       </div>
-
       <Card title="Available Reports">
         <div className="divide-y divide-border">
-          {reports.map(
-            (report) => (
-              <div
-                key={
-                  report.name
-                }
-                className="flex items-center justify-between px-4 py-3 hover:bg-[#eef2fc] transition-colors"
-              >
-                <div>
-                  <p className="text-sm text-foreground font-medium">
-                    {
-                      report.name
-                    }
-                  </p>
-
-                  <p className="text-xs text-muted-foreground">
-                    {
-                      report.period
-                    }
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleReportDownload(
-                      report.name
-                    )
-                  }
-                  disabled={loading}
-                  className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Download
-                    size={13}
-                  />
-
-                  {
-                    report.format
-                  }
-                </button>
+          {[["Daily QR Scan Summary", "Jun 16, 2026", "PDF"], ["Weekly Inspection Log", "Jun 10–16, 2026", "PDF"], ["Flagged Items Report", "Jun 2026", "Excel"], ["Entry/Exit Summary", "Jun 2026", "Excel"]].map(([name, period, fmt]) => (
+            <div key={name as string} className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
+              <div>
+                <p className="text-sm text-foreground font-medium">{name}</p>
+                <p className="text-xs text-muted-foreground">{period}</p>
               </div>
-            )
-          )}
+              <button className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline">
+                <Download size={13} /> {fmt}
+              </button>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function SecurityNotifications() {
+  const liveNotifs = useNotifs("security");
+  return (
+    <div className="space-y-5">
+      <PageHeader title="Notifications" subtitle="Security alerts and QRpass system updates." />
+      <Card title="All Alerts">
+        <div className="p-3 space-y-2">
+          {liveNotifs.map(n => <NotifItem key={n.id} type={n.type} message={n.message} time={n.time} />)}
+          <NotifItem type="warning" message="Unregistered camera (Nikon D5600) detected at Gate 1 — no QR code presented." time="Jun 16, 2026 – 8:15 AM" />
+          <NotifItem type="warning" message="QR scan failed for item SN-UNKNOWN at Gate 2 — item not found in registry." time="Jun 16, 2026 – 9:30 AM" />
+          <NotifItem type="success" message="Campus inspection of Building A completed. 47/47 items verified." time="Jun 16, 2026 – 7:50 AM" />
         </div>
       </Card>
     </div>
@@ -5087,14 +3901,14 @@ function SecurityLostFound() {
           label="Total Reports"
           value={String(items.length)}
           icon={<BookOpen size={20} />}
-          color="#1a3a7b"
+          color="#003087"
         />
 
         <StatCard
           label="Found"
           value={String(foundCount)}
           icon={<Package size={20} />}
-          color="#557bdc"
+          color="#00aeef"
         />
 
         <StatCard
@@ -5108,7 +3922,7 @@ function SecurityLostFound() {
           label="Pending Claims"
           value={String(claimedCount)}
           icon={<Clock size={20} />}
-          color="#2f5fd6"
+          color="#f5c200"
         />
 
         <StatCard
@@ -5119,7 +3933,7 @@ function SecurityLostFound() {
         />
       </div>
 
-      <div className="flex flex-wrap gap-2 border-b border-[#cfd8e6] pb-3">
+      <div className="flex flex-wrap gap-2 border-b border-border pb-3">
         <button
           type="button"
           onClick={() => {
@@ -5166,7 +3980,7 @@ function SecurityLostFound() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search report, item, owner/finder, claimant, location..."
-                className="w-full rounded-lg border border-[#cfd8e6] bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -5174,20 +3988,20 @@ function SecurityLostFound() {
               type="button"
               onClick={loadItems}
               disabled={loading}
-              className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? "Refreshing..." : "Refresh"}
             </button>
           </div>
 
           {loading && (
-            <div className="rounded-lg border border-[#cfd8e6] bg-card p-10 text-center text-sm text-muted-foreground">
+            <div className="rounded-lg border border-border bg-card p-10 text-center text-sm text-muted-foreground">
               Loading Lost & Found records...
             </div>
           )}
 
           {!loading && filteredItems.length === 0 && (
-            <div className="rounded-lg border border-[#cfd8e6] bg-card p-10 text-center">
+            <div className="rounded-lg border border-border bg-card p-10 text-center">
               <BookOpen
                 size={32}
                 className="mx-auto mb-3 text-muted-foreground"
@@ -5224,7 +4038,7 @@ function SecurityLostFound() {
               return (
                 <div
                   key={item.id}
-                  className="rounded-lg border border-[#cfd8e6] bg-card shadow-sm"
+                  className="rounded-lg border border-border bg-card shadow-sm"
                 >
                   <div className="p-4">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -5485,8 +4299,8 @@ function SecurityLostFound() {
       )}
 
       {tab === "report" && (
-        <div className="rounded-lg border border-[#cfd8e6] bg-card shadow-sm">
-          <div className="border-b border-[#cfd8e6] px-4 py-4">
+        <div className="rounded-lg border border-border bg-card shadow-sm">
+          <div className="border-b border-border px-4 py-4">
             <h3 className="font-semibold text-foreground">
               {reportMode === "found"
                 ? "Report Found Item"
@@ -5504,7 +4318,7 @@ function SecurityLostFound() {
             onSubmit={handleSubmit}
             className="space-y-5 p-4"
           >
-            <div className="rounded-lg border border-[#cfd8e6] bg-muted/30 p-4">
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
               <label className="mb-1 block text-xs font-medium text-foreground">
                 Report Type *
               </label>
@@ -5517,7 +4331,7 @@ function SecurityLostFound() {
                   setError("");
                   setSuccess("");
                 }}
-                className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <option value="found">Found Item</option>
                 <option value="lost">Lost Item</option>
@@ -5592,7 +4406,7 @@ function SecurityLostFound() {
                   onChange={handleFormChange}
                   required
                   placeholder="Example: Laptop"
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -5604,7 +4418,7 @@ function SecurityLostFound() {
                   name="category"
                   value={form.category}
                   onChange={handleFormChange}
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="">Select category</option>
                   <option value="Laptop">Laptop</option>
@@ -5630,7 +4444,7 @@ function SecurityLostFound() {
                   value={form.brand_model}
                   onChange={handleFormChange}
                   placeholder="Example: Acer Aspire 5"
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -5644,7 +4458,7 @@ function SecurityLostFound() {
                   value={form.color}
                   onChange={handleFormChange}
                   placeholder="Example: Black"
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
@@ -5675,7 +4489,7 @@ function SecurityLostFound() {
                       ? "Example: 4th Floor Computer Laboratory"
                       : "Example: Library, 2nd Floor"
                   }
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -5699,7 +4513,7 @@ function SecurityLostFound() {
                   }
                   onChange={handleFormChange}
                   required
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
@@ -5714,7 +4528,7 @@ function SecurityLostFound() {
                 onChange={handleFormChange}
                 rows={4}
                 placeholder="Describe identifying features, case, stickers, scratches, accessories, or other useful details."
-                className="w-full resize-none rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -5745,7 +4559,7 @@ function SecurityLostFound() {
                   setTab("registry");
                   setError("");
                 }}
-                className="rounded-lg border border-[#cfd8e6] bg-background px-5 py-2 text-sm font-medium hover:bg-muted"
+                className="rounded-lg border border-border bg-background px-5 py-2 text-sm font-medium hover:bg-muted"
               >
                 Cancel
               </button>
@@ -5768,8 +4582,8 @@ function SecurityLostFound() {
 
       {recoveringItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-xl border border-[#cfd8e6] bg-card shadow-xl">
-            <div className="border-b border-[#cfd8e6] px-5 py-4">
+          <div className="w-full max-w-lg rounded-xl border border-border bg-card shadow-xl">
+            <div className="border-b border-border px-5 py-4">
               <h3 className="font-semibold text-foreground">
                 Record Lost Item Recovery
               </h3>
@@ -5812,7 +4626,7 @@ function SecurityLostFound() {
                   }
                   placeholder="Example: 26-9999"
                   required
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -5831,7 +4645,7 @@ function SecurityLostFound() {
                   }
                   placeholder="Example: Security Office / Library"
                   required
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -5849,7 +4663,7 @@ function SecurityLostFound() {
                     }))
                   }
                   required
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -5861,7 +4675,7 @@ function SecurityLostFound() {
                     setError("");
                   }}
                   disabled={recoveringId !== null}
-                  className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+                  className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -5969,21 +4783,21 @@ function PCOPermitRequests() {
           label="Pending Review"
           value={String(pending.length)}
           icon={<Clock size={20} />}
-          color="#2f5fd6"
+          color="#f5c200"
         />
 
         <StatCard
           label="Approved This Session"
           value={String(approved.length)}
           icon={<CheckCircle size={20} />}
-          color="#1a3a7b"
+          color="#003087"
         />
 
         <StatCard
           label="QR Codes Issued"
           value={String(approved.length)}
           icon={<QrCode size={20} />}
-          color="#557bdc"
+          color="#00aeef"
         />
       </div>
 
@@ -5998,7 +4812,7 @@ function PCOPermitRequests() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-[#fafbfc]">
+              <tr className="bg-muted/50">
                 {[
                   "Ref #",
                   "Student",
@@ -6042,7 +4856,7 @@ function PCOPermitRequests() {
                 pending.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
+                    className="border-t border-border hover:bg-muted/30 transition-colors"
                   >
                     <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
                       REQ-{String(item.id).padStart(3, "0")}
@@ -6102,7 +4916,7 @@ function PCOPermitRequests() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-[#fafbfc]">
+                <tr className="bg-muted/50">
                   {[
                     "Ref #",
                     "Student",
@@ -6126,7 +4940,7 @@ function PCOPermitRequests() {
                 {approved.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-t border-[#cfd8e6]"
+                    className="border-t border-border"
                   >
                     <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
                       REQ-{String(item.id).padStart(3, "0")}
@@ -6219,107 +5033,96 @@ function PCOItemRegistry() {
 
   // EXPORT FULL ITEM REGISTRY
   function handleExportRegistry() {
-  if (items.length === 0) {
-    alert("There are no item records to export.");
-    return;
-  }
-
-  const headers = [
-    "Owner",
-    "Owner ID",
-    "Item",
-    "Type",
-    "Brand / Model",
-    "Serial Number",
-    "Color",
-    "Purpose",
-    "QR ID",
-    "QR Expiration",
-    "Date Registered",
-    "Status",
-  ];
-
-  function escapeCSV(value: any) {
-    const text = String(value ?? "");
-
-    return `"${text.replace(/"/g, '""')}"`;
-  }
-
-  const rows = items.map((item) => [
-    item.user?.name ?? "Unknown",
-    item.user?.username ?? "—",
-    item.item_name ?? "—",
-    item.item_type ?? "—",
-    item.brand_model ?? "—",
-    item.serial_number ?? "—",
-    item.color ?? "—",
-    item.purpose ?? "—",
-    item.qr_code ?? "Not issued",
-
-    item.qr_expires_at
-      ? new Date(
-          item.qr_expires_at
-        ).toLocaleString("en-PH", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-        })
-      : "No expiration",
-
-    item.created_at
-      ? new Date(
-          item.created_at
-        ).toLocaleDateString("en-PH", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })
-      : "—",
-
-    item.registry_status ??
-      item.status ??
-      "Unknown",
-  ]);
-
-  const csvContent = [
-    headers.map(escapeCSV).join(","),
-    ...rows.map((row) =>
-      row.map(escapeCSV).join(",")
-    ),
-  ].join("\n");
-
-  const blob = new Blob(
-    ["\uFEFF" + csvContent],
-    {
-      type: "text/csv;charset=utf-8;",
+    if (items.length === 0) {
+      alert("There are no item records to export.");
+      return;
     }
-  );
 
-  const url =
-    URL.createObjectURL(blob);
+    const headers = [
+      "Owner",
+      "Owner ID",
+      "Item",
+      "Type",
+      "Brand / Model",
+      "Serial Number",
+      "Color",
+      "Purpose",
+      "QR ID",
+      "Date Registered",
+      "Status",
+    ];
 
-  const link =
-    document.createElement("a");
+    function escapeCSV(value: any) {
+      const text = String(value ?? "");
 
-  const fileDate = new Date()
-    .toISOString()
-    .split("T")[0];
+      return `"${text.replace(/"/g, '""')}"`;
+    }
 
-  link.href = url;
+    const rows = items.map((item) => [
+      item.user?.name ?? "Unknown",
+      item.user?.username ?? "—",
+      item.item_name ?? "—",
+      item.item_type ?? "—",
+      item.brand_model ?? "—",
+      item.serial_number ?? "—",
+      item.color ?? "—",
+      item.purpose ?? "—",
+      item.qr_code ?? "Not issued",
+    
+      item.qr_expires_at
+        ? new Date(item.qr_expires_at).toLocaleString("en-PH", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          })
+        : "No expiration",
+    
+      new Date(item.created_at).toLocaleDateString("en-PH", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }),
+    
+      item.registry_status ?? "Unknown",
+    ]);
 
-  link.download =
-    `QRPass-Item-Registry-${fileDate}.csv`;
+    const csvContent = [
+      headers.map(escapeCSV).join(","),
+      ...rows.map((row) =>
+        row.map(escapeCSV).join(",")
+      ),
+    ].join("\n");
 
-  document.body.appendChild(link);
+    const blob = new Blob(
+      ["\uFEFF" + csvContent],
+      {
+        type: "text/csv;charset=utf-8;",
+      }
+    );
 
-  link.click();
+    const url = URL.createObjectURL(blob);
 
-  document.body.removeChild(link);
+    const link = document.createElement("a");
 
-  URL.revokeObjectURL(url);
-}
+    const fileDate = new Date()
+      .toISOString()
+      .split("T")[0];
+
+    link.href = url;
+
+    link.download =
+      `QRPass-Item-Registry-${fileDate}.csv`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <div className="space-y-5">
@@ -6347,7 +5150,7 @@ function PCOItemRegistry() {
     label="Total Registered"
     value={String(items.length)}
     icon={<Package size={20} />}
-    color="#1a3a7b"
+    color="#003087"
   />
 
   <StatCard
@@ -6361,7 +5164,7 @@ function PCOItemRegistry() {
     label="Expired"
     value={String(expiredCount)}
     icon={<Clock size={20} />}
-    color="#2f5fd6"
+    color="#f5c200"
   />
 
   <StatCard
@@ -6400,7 +5203,7 @@ function PCOItemRegistry() {
                 setSearch(e.target.value)
               }
               placeholder="Search item, owner, serial number, or QR ID..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-muted/30 focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-md bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
         </div>
@@ -6417,7 +5220,7 @@ function PCOItemRegistry() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-[#fafbfc]">
+              <tr className="bg-muted/50">
                 {[
                   "Owner",
                   "Owner ID",
@@ -6464,7 +5267,7 @@ function PCOItemRegistry() {
                 filteredItems.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
+                    className="border-t border-border hover:bg-muted/30 transition-colors"
                   >
                     {/* OWNER */}
                     <td className="py-3 px-3 text-sm font-medium whitespace-nowrap">
@@ -7197,6 +6000,13 @@ function PCOItemRegistry() {
                         function handleReportDownload(
                           reportName: string
                         ) {
+                          if (
+                            reportName ===
+                            "Monthly Item Registration Summary"
+                          ) {
+                            handleMonthlyRegistrationPDF();
+                            return;
+                          }
                       
                           if (
                             reportName ===
@@ -7313,7 +6123,7 @@ function PCOItemRegistry() {
                                     size={20}
                                   />
                                 }
-                                color="#1a3a7b"
+                                color="#003087"
                               />
                       
                               <StatCard
@@ -7347,7 +6157,7 @@ function PCOItemRegistry() {
                                     size={20}
                                   />
                                 }
-                                color="#557bdc"
+                                color="#00aeef"
                               />
                       
                               <StatCard
@@ -7364,7 +6174,7 @@ function PCOItemRegistry() {
                                     size={20}
                                   />
                                 }
-                                color="#2f5fd6"
+                                color="#f5c200"
                               />
                             </div>
                       
@@ -7377,7 +6187,7 @@ function PCOItemRegistry() {
                                       key={
                                         report.name
                                       }
-                                      className="flex items-center justify-between px-4 py-3 hover:bg-[#eef2fc] transition-colors"
+                                      className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
                                     >
                                       <div>
                                         <p className="text-sm text-foreground font-medium">
@@ -7592,7 +6402,7 @@ function PCONotifications() {
       default:
         return {
           background:
-            "bg-muted/30 border-[#cfd8e6]",
+            "bg-muted/30 border-border",
           iconBackground:
             "bg-muted text-muted-foreground",
         };
@@ -7615,7 +6425,7 @@ function PCONotifications() {
           <button
             onClick={loadNotifications}
             disabled={loading}
-            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+            className="px-3 py-2 border border-border rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
           >
             {loading
               ? "Refreshing..."
@@ -7654,7 +6464,7 @@ function PCONotifications() {
           icon={
             <FileText size={20} />
           }
-          color="#1a3a7b"
+          color="#003087"
         />
 
         <StatCard
@@ -7663,7 +6473,7 @@ function PCONotifications() {
           icon={
             <AlertTriangle size={20} />
           }
-          color="#2f5fd6"
+          color="#f5c200"
         />
 
         <StatCard
@@ -7722,7 +6532,7 @@ function PCONotifications() {
                       }
                       className={`border rounded-lg p-4 transition-colors ${
                         isRead
-                          ? "bg-white border-[#cfd8e6]"
+                          ? "bg-white border-border"
                           : styles.background
                       }`}
                     >
@@ -7958,12 +6768,13 @@ function AdminDashboard() {
           subtitle="System-wide summary of QRpass operations."
         />
 
-        <div className="bg-white border border-[#cfd8e6] rounded-lg p-10 text-center text-sm text-muted-foreground">
+        <div className="bg-white border border-border rounded-lg p-10 text-center text-sm text-muted-foreground">
           Loading dashboard data...
         </div>
       </div>
     );
   }
+
   return (
     <div className="space-y-5">
       {/* HEADER */}
@@ -7976,7 +6787,7 @@ function AdminDashboard() {
         <button
           onClick={loadDashboard}
           disabled={loading}
-          className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
+          className="px-3 py-2 border border-border rounded-md text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
         >
           {loading
             ? "Refreshing..."
@@ -7997,21 +6808,21 @@ function AdminDashboard() {
           label="Total Items"
           value={String(stats.total_items)}
           icon={<Package size={20} />}
-          color="#1a3a7b"
+          color="#003087"
         />
 
         <StatCard
           label="Active QR"
           value={String(stats.active_qr_codes)}
           icon={<QrCode size={20} />}
-          color="#557bdc"
+          color="#00aeef"
         />
 
         <StatCard
           label="Scans Today"
           value={String(stats.scans_today)}
           icon={<ScanLine size={20} />}
-          color="#2f5fd6"
+          color="#f5c200"
         />
 
         <StatCard
@@ -8027,7 +6838,7 @@ function AdminDashboard() {
             stats.pending_registrations
           )}
           icon={<Clock size={20} />}
-          color="#6b8ee6"
+          color="#8b5cf6"
         />
 
         <StatCard
@@ -8067,11 +6878,11 @@ function AdminDashboard() {
                       100;
 
                     const colors = [
-                      "#1a3a7b",
-                      "#557bdc",
-                      "#2f5fd6",
+                      "#003087",
+                      "#00aeef",
+                      "#f5c200",
                       "#2ecc71",
-                      "#6b8ee6",
+                      "#8b5cf6",
                       "#e8543a",
                     ];
 
@@ -8422,7 +7233,7 @@ function AdminRecords() {
           <button
             onClick={loadRecords}
             disabled={loading}
-            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+            className="px-3 py-2 border border-border rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
           >
             {loading
               ? "Refreshing..."
@@ -8453,7 +7264,7 @@ function AdminRecords() {
             summary.total_records
           )}
           icon={<Layers size={20} />}
-          color="#1a3a7b"
+          color="#003087"
         />
 
         <StatCard
@@ -8462,7 +7273,7 @@ function AdminRecords() {
             summary.this_month
           )}
           icon={<FileText size={20} />}
-          color="#2f5fd6"
+          color="#f5c200"
         />
 
         <StatCard
@@ -8480,7 +7291,7 @@ function AdminRecords() {
       </div>
 
       {/* SEARCH AND FILTER */}
-      <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+      <div className="bg-white border border-border rounded-lg p-4">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-3">
           <input
             type="text"
@@ -8491,7 +7302,7 @@ function AdminRecords() {
               )
             }
             placeholder="Search records, users, items, status..."
-            className="w-full px-3 py-2.5 border border-[#cfd8e6] rounded-md text-sm bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+            className="w-full px-3 py-2.5 border border-border rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
 
           <select
@@ -8501,7 +7312,7 @@ function AdminRecords() {
                 event.target.value
               )
             }
-            className="w-full px-3 py-2.5 border border-[#cfd8e6] rounded-md text-sm bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+            className="w-full px-3 py-2.5 border border-border rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
             {recordTypes.map(
               (type) => (
@@ -8518,8 +7329,8 @@ function AdminRecords() {
       </div>
 
       {/* RECORDS TABLE */}
-      <div className="bg-white border border-[#cfd8e6] rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#cfd8e6]">
+      <div className="bg-white border border-border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-semibold text-sm text-foreground">
@@ -8544,7 +7355,7 @@ function AdminRecords() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1100px]">
             <thead>
-              <tr className="bg-[#fafbfc]">
+              <tr className="bg-muted/50">
                 {[
                   "Date",
                   "Time",
@@ -8597,7 +7408,7 @@ function AdminRecords() {
                   (record) => (
                     <tr
                       key={record.id}
-                      className="hover:bg-[#eef2fc]"
+                      className="hover:bg-muted/30"
                     >
                       <td className="py-3 px-3 text-xs text-foreground whitespace-nowrap">
                         {formatDate(
@@ -8666,219 +7477,7 @@ function AdminRecords() {
     </div>
   );
 }
-// =========================================================
-// QR CODE SCAN ACTIVITY EXCEL
-// =========================================================
 
-async function downloadQrScanActivityExcel() {
-  try {
-    const data = await getScanLogs();
-
-    const logs = data.logs ?? [];
-
-    if (logs.length === 0) {
-      alert(
-        "There are no QR scan records to export."
-      );
-
-      return;
-    }
-
-    const verifiedCount = logs.filter(
-      (log: any) =>
-        String(
-          log.result ?? ""
-        ).toLowerCase() ===
-        "verified"
-    ).length;
-
-    const entryCount = logs.filter(
-      (log: any) =>
-        String(
-          log.direction ?? ""
-        ).toUpperCase() === "IN"
-    ).length;
-
-    const exitCount = logs.filter(
-      (log: any) =>
-        String(
-          log.direction ?? ""
-        ).toUpperCase() === "OUT"
-    ).length;
-
-    // =====================================================
-    // SUMMARY SHEET
-    // =====================================================
-
-    const summaryRows = [
-      {
-        Metric: "Total QR Scans",
-        Value: logs.length,
-      },
-
-      {
-        Metric: "Verified Scans",
-        Value: verifiedCount,
-      },
-
-      {
-        Metric: "Entry Scans",
-        Value: entryCount,
-      },
-
-      {
-        Metric: "Exit Scans",
-        Value: exitCount,
-      },
-
-      {
-        Metric: "Report Generated",
-        Value:
-          new Date().toLocaleString(
-            "en-PH"
-          ),
-      },
-    ];
-
-    // =====================================================
-    // SCAN ACTIVITY SHEET
-    // =====================================================
-
-    const scanRows = logs.map(
-      (log: any) => ({
-        Date: log.scanned_at
-          ? new Date(
-              log.scanned_at
-            ).toLocaleDateString(
-              "en-PH"
-            )
-          : "—",
-
-        Time: log.scanned_at
-          ? new Date(
-              log.scanned_at
-            ).toLocaleTimeString(
-              "en-PH",
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-              }
-            )
-          : "—",
-
-        "QR ID":
-          log.qr_code ?? "—",
-
-        Item:
-          log.item?.item_name ??
-          "Unknown Item",
-
-        Type:
-          log.item?.item_type ??
-          "—",
-
-        "Serial Number":
-          log.item?.serial_number ??
-          "—",
-
-        Owner:
-          log.item?.user?.name ??
-          "Unknown",
-
-        "Owner ID":
-          log.item?.user?.username ??
-          "—",
-
-        Gate:
-          log.gate ?? "—",
-
-        Direction:
-          log.direction ?? "—",
-
-        Result:
-          log.result ?? "—",
-
-        "Scanned By":
-          log.scanner?.name ??
-          "—",
-
-        "Scanner ID":
-          log.scanner?.username ??
-          "—",
-      })
-    );
-
-    // =====================================================
-    // CREATE EXCEL WORKBOOK
-    // =====================================================
-
-    const workbook =
-      XLSX.utils.book_new();
-
-    const summarySheet =
-      XLSX.utils.json_to_sheet(
-        summaryRows
-      );
-
-    const scanSheet =
-      XLSX.utils.json_to_sheet(
-        scanRows
-      );
-
-    summarySheet["!cols"] = [
-      { wch: 25 },
-      { wch: 25 },
-    ];
-
-    scanSheet["!cols"] = [
-      { wch: 14 }, // Date
-      { wch: 12 }, // Time
-      { wch: 25 }, // QR ID
-      { wch: 25 }, // Item
-      { wch: 20 }, // Type
-      { wch: 20 }, // Serial
-      { wch: 25 }, // Owner
-      { wch: 18 }, // Owner ID
-      { wch: 15 }, // Gate
-      { wch: 12 }, // Direction
-      { wch: 15 }, // Result
-      { wch: 25 }, // Scanned By
-      { wch: 18 }, // Scanner ID
-    ];
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      summarySheet,
-      "Summary"
-    );
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      scanSheet,
-      "QR Scan Activity"
-    );
-
-    const today = new Date()
-      .toISOString()
-      .slice(0, 10);
-
-    XLSX.writeFile(
-      workbook,
-      `QRPass-QR-Scan-Activity-${today}.xlsx`
-    );
-  } catch (err) {
-    console.error(
-      "Failed to generate QR Scan Activity Excel:",
-      err
-    );
-
-    alert(
-      err instanceof Error
-        ? err.message
-        : "Failed to generate QR Scan Activity Excel report."
-    );
-  }
-}
 function AdminAnalytics() {
   const [reportData, setReportData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -9621,7 +8220,7 @@ function AdminAnalytics() {
         <button
           onClick={loadReports}
           disabled={loading}
-          className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+          className="px-3 py-2 border border-border rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
         >
           {loading
             ? "Refreshing..."
@@ -9629,10 +8228,8 @@ function AdminAnalytics() {
         </button>
       </div>
 
-      {/* =====================================================
-          DOWNLOADABLE REPORTS
-      ====================================================== */}
-      <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+      {/* DOWNLOADABLE REPORTS */}
+      <div className="bg-white border border-border rounded-lg p-4">
         <div className="mb-4">
           <h2 className="text-sm font-bold text-foreground">
             Download Reports
@@ -9643,40 +8240,37 @@ function AdminAnalytics() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
-            type="button"
-            onClick={downloadQrScanActivityExcel}
+            onClick={
+              downloadDailyQrScanPDF
+            }
             className="px-4 py-2.5 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
           >
             <Download size={14} />
-            QR Scan Activity Excel
-          </button>
 
-          <button
-            type="button"
-            onClick={downloadDailyQrScanPDF}
-            className="px-4 py-2.5 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
-          >
-            <Download size={14} />
             Daily QR Scan PDF
           </button>
 
           <button
-            type="button"
-            onClick={downloadMonthlyRegistrationPDF}
+            onClick={
+              downloadMonthlyRegistrationPDF
+            }
             className="px-4 py-2.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
           >
             <Download size={14} />
+
             Monthly Registration PDF
           </button>
 
           <button
-            type="button"
-            onClick={downloadFlaggedIncidentsExcel}
+            onClick={
+              downloadFlaggedIncidentsExcel
+            }
             className="px-4 py-2.5 bg-green-600 text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
           >
             <Download size={14} />
+
             Security Incidents Excel
           </button>
         </div>
@@ -9699,7 +8293,7 @@ function AdminAnalytics() {
           icon={
             <Package size={20} />
           }
-          color="#1a3a7b"
+          color="#003087"
         />
 
         <StatCard
@@ -9710,7 +8304,7 @@ function AdminAnalytics() {
           icon={
             <QrCode size={20} />
           }
-          color="#557bdc"
+          color="#00aeef"
         />
 
         <StatCard
@@ -9721,7 +8315,7 @@ function AdminAnalytics() {
           icon={
             <Clock size={20} />
           }
-          color="#6b8ee6"
+          color="#8b5cf6"
         />
 
         <StatCard
@@ -9732,7 +8326,7 @@ function AdminAnalytics() {
           icon={
             <ScanLine size={20} />
           }
-          color="#2f5fd6"
+          color="#f5c200"
         />
 
         <StatCard
@@ -9772,7 +8366,7 @@ function AdminAnalytics() {
           icon={
             <BarChart2 size={20} />
           }
-          color="#1a3a7b"
+          color="#003087"
         />
 
         <StatCard
@@ -9783,7 +8377,7 @@ function AdminAnalytics() {
           icon={
             <FileText size={20} />
           }
-          color="#557bdc"
+          color="#00aeef"
         />
 
         <StatCard
@@ -9794,7 +8388,7 @@ function AdminAnalytics() {
           icon={
             <Search size={20} />
           }
-          color="#2f5fd6"
+          color="#f5c200"
         />
 
         <StatCard
@@ -9837,11 +8431,11 @@ function AdminAnalytics() {
                     100;
 
                   const colors = [
-                    "#1a3a7b",
-                    "#557bdc",
-                    "#2f5fd6",
+                    "#003087",
+                    "#00aeef",
+                    "#f5c200",
                     "#2ecc71",
-                    "#6b8ee6",
+                    "#8b5cf6",
                     "#e8543a",
                   ];
 
@@ -9994,7 +8588,7 @@ function AdminAnalytics() {
                             )}%`,
 
                             backgroundColor:
-                              "#557bdc",
+                              "#00aeef",
                           }}
                         />
                       </div>
@@ -10008,8 +8602,8 @@ function AdminAnalytics() {
       </div>
 
       {/* RECENT REGISTRATIONS */}
-      <div className="bg-white border border-[#cfd8e6] rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#cfd8e6]">
+      <div className="bg-white border border-border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
           <h2 className="font-semibold text-sm">
             Recent Item Registrations
           </h2>
@@ -10018,7 +8612,7 @@ function AdminAnalytics() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[850px]">
             <thead>
-              <tr className="bg-[#fafbfc]">
+              <tr className="bg-muted/50">
                 {[
                   "Date",
                   "Student",
@@ -10115,8 +8709,8 @@ function AdminAnalytics() {
       </div>
 
       {/* SECURITY INCIDENTS */}
-      <div className="bg-white border border-[#cfd8e6] rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#cfd8e6]">
+      <div className="bg-white border border-border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
           <h2 className="font-semibold text-sm">
             Recent Security Incidents
           </h2>
@@ -10125,7 +8719,7 @@ function AdminAnalytics() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[850px]">
             <thead>
-              <tr className="bg-[#fafbfc]">
+              <tr className="bg-muted/50">
                 {[
                   "Date",
                   "Incident",
@@ -10641,7 +9235,7 @@ function SysAdminUserAccounts() {
           <button
             onClick={loadUsers}
             disabled={loading}
-            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+            className="px-3 py-2 border border-border rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
           >
             {loading
               ? "Refreshing..."
@@ -10710,7 +9304,7 @@ function SysAdminUserAccounts() {
                   }
                   placeholder="e.g. Juan Dela Cruz"
                   required
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
 
@@ -10733,7 +9327,7 @@ function SysAdminUserAccounts() {
                   }
                   placeholder="e.g. student@uc.edu.ph"
                   required
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
 
@@ -10758,7 +9352,7 @@ function SysAdminUserAccounts() {
                   }
                   placeholder="e.g. 26-1234"
                   required
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
 
@@ -10778,7 +9372,7 @@ function SysAdminUserAccounts() {
                       })
                     )
                   }
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 >
                   <option value="student">
                     Student
@@ -10821,7 +9415,7 @@ function SysAdminUserAccounts() {
                   placeholder="Minimum 6 characters"
                   minLength={6}
                   required
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
 
                 <p className="text-[11px] text-muted-foreground mt-1">
@@ -10853,7 +9447,7 @@ function SysAdminUserAccounts() {
                 disabled={
                   creatingUser
                 }
-                className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+                className="px-4 py-2 border border-border rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -10899,7 +9493,7 @@ function SysAdminUserAccounts() {
                     })
                   }
                   required
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
 
@@ -10920,7 +9514,7 @@ function SysAdminUserAccounts() {
                     })
                   }
                   required
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
 
@@ -10943,7 +9537,7 @@ function SysAdminUserAccounts() {
                     })
                   }
                   required
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
 
@@ -10962,7 +9556,7 @@ function SysAdminUserAccounts() {
                         e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 >
                   <option value="student">
                     Student
@@ -10997,7 +9591,7 @@ function SysAdminUserAccounts() {
                   handleCancelEdit
                 }
                 disabled={savingEdit}
-                className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+                className="px-4 py-2 border border-border rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -11024,7 +9618,7 @@ function SysAdminUserAccounts() {
             summary.total_users ?? 0
           )}
           icon={<Users size={20} />}
-          color="#1a3a7b"
+          color="#003087"
         />
 
         <StatCard
@@ -11033,7 +9627,7 @@ function SysAdminUserAccounts() {
             summary.students ?? 0
           )}
           icon={<Users size={20} />}
-          color="#557bdc"
+          color="#00aeef"
         />
 
         <StatCard
@@ -11042,7 +9636,7 @@ function SysAdminUserAccounts() {
             totalPersonnel
           )}
           icon={<Users size={20} />}
-          color="#6b8ee6"
+          color="#8b5cf6"
         />
 
         <StatCard
@@ -11071,13 +9665,13 @@ function SysAdminUserAccounts() {
             summary.system_admins ?? 0
           )}
           icon={<Shield size={20} />}
-          color="#2f5fd6"
+          color="#f5c200"
         />
       </div>
 
       {/* ROLE BREAKDOWN */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+        <div className="bg-white border border-border rounded-lg p-4">
           <p className="text-xs text-muted-foreground">
             Students
           </p>
@@ -11087,7 +9681,7 @@ function SysAdminUserAccounts() {
           </p>
         </div>
 
-        <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+        <div className="bg-white border border-border rounded-lg p-4">
           <p className="text-xs text-muted-foreground">
             Security Personnel
           </p>
@@ -11097,7 +9691,7 @@ function SysAdminUserAccounts() {
           </p>
         </div>
 
-        <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+        <div className="bg-white border border-border rounded-lg p-4">
           <p className="text-xs text-muted-foreground">
             PCO Staff
           </p>
@@ -11107,7 +9701,7 @@ function SysAdminUserAccounts() {
           </p>
         </div>
 
-        <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+        <div className="bg-white border border-border rounded-lg p-4">
           <p className="text-xs text-muted-foreground">
             System Administrators
           </p>
@@ -11137,7 +9731,7 @@ function SysAdminUserAccounts() {
                 )
               }
               placeholder="Search users..."
-              className="pl-7 pr-3 py-1.5 text-xs border border-[#cfd8e6] rounded-md bg-[#fafbfc] w-48 md:w-64 focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              className="pl-7 pr-3 py-1.5 text-xs border border-border rounded-md bg-muted/50 w-48 md:w-64 focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
         }
@@ -11145,7 +9739,7 @@ function SysAdminUserAccounts() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px]">
             <thead>
-              <tr className="bg-[#fafbfc]">
+              <tr className="bg-muted/50">
                 {[
                   "Name",
                   "Username / ID",
@@ -11204,7 +9798,7 @@ function SysAdminUserAccounts() {
                     return (
                       <tr
                         key={user.id}
-                        className="hover:bg-[#eef2fc] transition-colors"
+                        className="hover:bg-muted/30 transition-colors"
                       >
                         {/* NAME */}
                         <td className="py-3 px-3">
@@ -11314,7 +9908,7 @@ function SysAdminUserAccounts() {
 
         {!loading &&
           users.length > 0 && (
-            <div className="px-4 py-3 border-t border-[#cfd8e6] flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+            <div className="px-4 py-3 border-t border-border flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
               <p className="text-xs text-muted-foreground">
                 Showing{" "}
                 {filteredUsers.length}{" "}
@@ -11342,7 +9936,7 @@ function SysAdminSettings() {
             {[["System Name", "QRpass"], ["Institution", "University of Cebu – Main Campus"], ["Academic Year", "2025-2026"], ["Semester", "2nd Semester"]].map(([label, value]) => (
               <div key={label as string}>
                 <label className="block text-xs font-semibold text-foreground mb-1">{label}</label>
-                <input defaultValue={value as string} className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15" />
+                <input defaultValue={value as string} className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30" />
               </div>
             ))}
             <button className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold hover:opacity-90">Save Settings</button>
@@ -11353,10 +9947,10 @@ function SysAdminSettings() {
             {[["Session Timeout (minutes)", "30"], ["Max Login Attempts", "5"], ["QR Code Validity (months)", "6"]].map(([label, value]) => (
               <div key={label as string}>
                 <label className="block text-xs font-semibold text-foreground mb-1">{label}</label>
-                <input defaultValue={value as string} type="number" className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15" />
+                <input defaultValue={value as string} type="number" className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30" />
               </div>
             ))}
-            <div className="flex items-center justify-between p-3 border border-[#cfd8e6] rounded-md">
+            <div className="flex items-center justify-between p-3 border border-border rounded-md">
               <span className="text-sm text-foreground">Enable Two-Factor Auth</span>
               <div className="w-10 h-5 bg-primary rounded-full relative cursor-pointer">
                 <div className="w-4 h-4 bg-white rounded-full absolute right-0.5 top-0.5" />
@@ -11375,9 +9969,9 @@ function SysAdminAuditLogs() {
     <div className="space-y-5">
       <PageHeader title="Audit Logs" subtitle="Complete record of all system activity, QR scans, and user actions." />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Logs Today" value="1,024" icon={<FileText size={20} />} color="#1a3a7b" />
-        <StatCard label="QR Scan Events" value="214" icon={<ScanLine size={20} />} color="#557bdc" />
-        <StatCard label="Data Changes" value="382" icon={<RefreshCw size={20} />} color="#2f5fd6" />
+        <StatCard label="Logs Today" value="1,024" icon={<FileText size={20} />} color="#003087" />
+        <StatCard label="QR Scan Events" value="214" icon={<ScanLine size={20} />} color="#00aeef" />
+        <StatCard label="Data Changes" value="382" icon={<RefreshCw size={20} />} color="#f5c200" />
         <StatCard label="Errors" value="3" icon={<AlertTriangle size={20} />} color="#e8543a" />
       </div>
       <Card title="Recent Audit Log" action={
@@ -11394,7 +9988,7 @@ function SysAdminAuditLogs() {
             ["22-1234", "Submitted item registration for iPad Pro 12.9", "7:30 AM", "info"],
             ["Admin Lim", "Updated QR code validity period to 6 months", "9:00 AM", "info"],
           ].map(([u, a, t, type]) => (
-            <div key={`${u}-${t}`} className="px-4 py-2.5 flex gap-3 hover:bg-[#eef2fc] transition-colors">
+            <div key={`${u}-${t}`} className="px-4 py-2.5 flex gap-3 hover:bg-muted/30 transition-colors">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${type === "warning" ? "bg-yellow-100" : type === "success" ? "bg-green-100" : "bg-primary/10"}`}>
                 <User size={12} className={type === "warning" ? "text-yellow-600" : type === "success" ? "text-green-600" : "text-primary"} />
               </div>
@@ -11419,8 +10013,8 @@ function SysAdminPerformance() {
       <PageHeader title="Performance" subtitle="System health, uptime, and QRpass resource usage." />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Uptime" value="99.9%" icon={<CheckCircle size={20} />} color="#2ecc71" />
-        <StatCard label="Active Sessions" value="247" icon={<Eye size={20} />} color="#1a3a7b" />
-        <StatCard label="Avg QR Response" value="82ms" icon={<Clock size={20} />} color="#2f5fd6" />
+        <StatCard label="Active Sessions" value="247" icon={<Eye size={20} />} color="#003087" />
+        <StatCard label="Avg QR Response" value="82ms" icon={<Clock size={20} />} color="#f5c200" />
         <StatCard label="Errors Today" value="3" icon={<AlertTriangle size={20} />} color="#e8543a" />
       </div>
       <Card title="System Status">
@@ -11450,7 +10044,7 @@ function SysAdminSecurityConfig() {
       <Card title="Role Permissions">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead><tr className="bg-[#fafbfc]">
+            <thead><tr className="bg-muted/50">
               <th className="text-left py-2 px-3 text-xs text-muted-foreground font-medium">Role</th>
               {["Register Items", "View QR Codes", "Approve Requests", "Scan & Verify", "View Reports", "Manage Users"].map(p => (
                 <th key={p} className="text-center py-2 px-3 text-xs text-muted-foreground font-medium">{p}</th>
@@ -11463,7 +10057,7 @@ function SysAdminSecurityConfig() {
                 ["PCO Staff", [false, true, true, false, true, false]],
                 ["System Administrator", [true, true, true, true, true, true]],
               ].map(([role, perms]) => (
-                <tr key={role as string} className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors">
+                <tr key={role as string} className="border-t border-border hover:bg-muted/30 transition-colors">
                   <td className="py-2.5 px-3 text-sm text-foreground font-medium">{role}</td>
                   {(perms as boolean[]).map((p, i) => (
                     <td key={i} className="py-2.5 px-3 text-center">
@@ -11658,8 +10252,8 @@ function RoleSelector({ selected, onSelect, excludeRoles = [] }: { selected: Rol
 
   const btnStyle = (r: typeof visible[0]) => ({
     backgroundColor: selected === r.id ? r.color : "white",
-    color: selected === r.id ? r.textColor : "#111827",
-    borderColor: selected === r.id ? r.color : "#dce3ee",
+    color: selected === r.id ? r.textColor : "#0d1b3e",
+    borderColor: selected === r.id ? r.color : "#d0d8e8",
     boxShadow: selected === r.id ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
   });
 
@@ -12009,7 +10603,7 @@ async function handleResetSubmit(
   // ==========================================================================
 
   const NavBar = (
-    <div className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-[#cfd8e6] shadow-sm">
+    <div className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-border shadow-sm">
       <div className="flex items-center gap-2.5">
         <QRpassLogo size={90} showText />
 
@@ -12050,28 +10644,28 @@ async function handleResetSubmit(
       <div
         className="flex-1"
         style={{
-          backgroundColor: "#1a3a7b",
+          backgroundColor: "#003087",
         }}
       />
 
       <div
         className="flex-1"
         style={{
-          backgroundColor: "#2f5fd6",
+          backgroundColor: "#f5c200",
         }}
       />
 
       <div
         className="flex-1"
         style={{
-          backgroundColor: "#557bdc",
+          backgroundColor: "#00aeef",
         }}
       />
 
       <div
         className="flex-1"
         style={{
-          backgroundColor: "#f6f8fb",
+          backgroundColor: "#f4f6fa",
         }}
       />
     </div>
@@ -12093,7 +10687,7 @@ async function handleResetSubmit(
           className="min-h-screen flex flex-col"
           style={{
             fontFamily: "Inter, sans-serif",
-            background: "#f6f8fb",
+            background: "#f4f6fa",
           }}
         >
           {TopBar}
@@ -12128,7 +10722,7 @@ async function handleResetSubmit(
         style={{
           fontFamily:
             "Inter, sans-serif",
-          background: "#f6f8fb",
+          background: "#f4f6fa",
         }}
       >
         {TopBar}
@@ -12143,7 +10737,7 @@ async function handleResetSubmit(
             />
           </div>
 
-          <div className="w-full max-w-2xl bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+          <div className="w-full max-w-2xl bg-white rounded-xl border border-border shadow-md overflow-hidden">
 
             {/* HEADER */}
             <div className="bg-primary px-6 py-4">
@@ -12244,7 +10838,7 @@ async function handleResetSubmit(
                                     })
                                   )
                                 }
-                                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                               >
                                 <option value="">
                                   Select…
@@ -12299,7 +10893,7 @@ async function handleResetSubmit(
                                     })
                                   )
                                 }
-                                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                               />
                             )}
                           </div>
@@ -12325,7 +10919,7 @@ async function handleResetSubmit(
                             "login"
                           )
                         }
-                        className="text-xs px-4 py-2 border border-[#cfd8e6] rounded-md text-muted-foreground hover:bg-muted transition-colors"
+                        className="text-xs px-4 py-2 border border-border rounded-md text-muted-foreground hover:bg-muted transition-colors"
                       >
                         ← Back to Login
                       </button>
@@ -12355,7 +10949,7 @@ async function handleResetSubmit(
                           "login"
                         )
                       }
-                      className="w-full py-2.5 border border-[#cfd8e6] rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                      className="w-full py-2.5 border border-border rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors"
                     >
                       ← Back to Login
                     </button>
@@ -12436,7 +11030,7 @@ async function handleResetSubmit(
           />
         </div>
 
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+        <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md overflow-hidden">
           <div className="bg-primary px-6 py-4">
             <h2
               className="text-white font-bold text-base"
@@ -12482,7 +11076,7 @@ async function handleResetSubmit(
                   }
                   placeholder="Enter your registered email"
                   required
-                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
                 />
               </div>
             </div>
@@ -12498,7 +11092,7 @@ async function handleResetSubmit(
               className="w-full py-2.5 rounded-md font-semibold text-sm"
               style={{
                 backgroundColor:
-                  "#1a3a7b",
+                  "#003087",
                 color: "#fff",
               }}
             >
@@ -12534,7 +11128,7 @@ async function handleResetSubmit(
           />
         </div>
 
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+        <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md overflow-hidden">
 
           <div className="bg-primary px-6 py-4">
             <h2
@@ -12647,10 +11241,10 @@ async function handleResetSubmit(
       }
     }}
 
-    className={`w-10 h-12 text-center text-lg font-bold rounded-md border-2 focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 transition-colors ${
+    className={`w-10 h-12 text-center text-lg font-bold rounded-md border-2 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${
       codeError
         ? "border-red-400 bg-red-50"
-        : "border-[#cfd8e6] bg-[#fafbfc] focus:border-primary"
+        : "border-border bg-muted/50 focus:border-primary"
     }`}
   />
 ))}
@@ -12669,7 +11263,7 @@ async function handleResetSubmit(
               className="w-full py-2.5 rounded-md font-semibold text-sm"
               style={{
                 backgroundColor:
-                  "#1a3a7b",
+                  "#003087",
                 color: "#fff",
               }}
             >
@@ -12751,7 +11345,7 @@ async function handleResetSubmit(
           />
         </div>
 
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+        <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md overflow-hidden">
           <div className="bg-primary px-6 py-4">
             <h2
               className="text-white font-bold text-base"
@@ -12797,7 +11391,7 @@ async function handleResetSubmit(
                   }
                   placeholder="Enter new password"
                   required
-                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
                 />
               </div>
             </div>
@@ -12824,7 +11418,7 @@ async function handleResetSubmit(
                   }
                   placeholder="Confirm new password"
                   required
-                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
                 />
               </div>
             </div>
@@ -12846,7 +11440,7 @@ async function handleResetSubmit(
               className="w-full py-2.5 rounded-md font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
                 backgroundColor:
-                  "#1a3a7b",
+                  "#003087",
                 color: "#fff",
               }}
             >
@@ -12865,7 +11459,7 @@ async function handleResetSubmit(
   if (mode === "reset-done") {
     return (
       <PageShell>
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md p-10 flex flex-col items-center gap-4">
+        <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md p-10 flex flex-col items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
             <CheckCircle
               size={32}
@@ -12916,7 +11510,7 @@ async function handleResetSubmit(
       style={{
         fontFamily:
           "Inter, sans-serif",
-        background: "#f6f8fb",
+        background: "#f4f6fa",
       }}
     >
       {TopBar}
@@ -12940,7 +11534,7 @@ async function handleResetSubmit(
         </div>
 
         {/* LOGIN CARD */}
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md p-6">
+        <div className="w-full max-w-sm bg-white rounded-xl border border-border shadow-md p-6">
 
           <form
             onSubmit={handleLogin}
@@ -12998,7 +11592,7 @@ async function handleResetSubmit(
                   required
                   autoComplete="username"
                   disabled={isLoggingIn}
-                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors disabled:opacity-60"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-60"
                 />
               </div>
             </div>
@@ -13035,7 +11629,7 @@ async function handleResetSubmit(
                   required
                   autoComplete="current-password"
                   disabled={isLoggingIn}
-                  className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors disabled:opacity-60"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-md border border-border text-sm bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-60"
                 />
 
                 {/* SHOW / HIDE PASSWORD */}
@@ -13109,7 +11703,7 @@ async function handleResetSubmit(
               className="w-full py-2.5 rounded-md font-semibold text-sm transition-all duration-150 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               style={{
                 backgroundColor:
-                  "#1a3a7b",
+                  "#003087",
                 color: "#fff",
               }}
             >
@@ -13143,7 +11737,7 @@ async function handleResetSubmit(
           </form>
 
           {/* REGISTER */}
-          <div className="mt-4 pt-4 border-t border-[#cfd8e6] text-center">
+          <div className="mt-4 pt-4 border-t border-border text-center">
             <p className="text-xs text-muted-foreground">
               Don{"'"}t have an
               account?{" "}
@@ -13211,41 +11805,6 @@ function Dashboard({
   const [accountOpen, setAccountOpen] =
     useState(false);
 
-  const [accountSettingsOpen, setAccountSettingsOpen] =
-    useState(false);
-
-    const [changePasswordOpen, setChangePasswordOpen] =
-  useState(false);
-
-  const [currentPassword, setCurrentPassword] =
-    useState("");
-
-  const [newPassword, setNewPassword] =
-    useState("");
-
-  const [confirmPassword, setConfirmPassword] =
-    useState("");
-
-  const [changingPassword, setChangingPassword] =
-    useState(false);
-
-  const [passwordMessage, setPasswordMessage] =
-    useState("");
-
-  const [profileName, setProfileName] =
-    useState("");
-
-  const [profileEmail, setProfileEmail] =
-    useState("");
-
-  const [savingProfile, setSavingProfile] =
-    useState(false);
-
-  const [profileMessage, setProfileMessage] =
-    useState("");
-
-    const [uploadingProfilePhoto, setUploadingProfilePhoto] =
-  useState(false);
   // =========================================================
   // NOTIFICATIONS
   // =========================================================
@@ -13273,7 +11832,7 @@ function Dashboard({
   // CURRENT USER
   // =========================================================
 
-  const [currentUser, setCurrentUser] = useState<any>(() => {
+  const [currentUser] = useState<any>(() => {
     try {
       const savedUser =
         localStorage.getItem("user");
@@ -13285,251 +11844,6 @@ function Dashboard({
       return null;
     }
   });
-
-  // =========================================================
-// LOAD LATEST ACCOUNT DATA
-// =========================================================
-
-useEffect(() => {
-  let cancelled = false;
-
-  const loadAccountData = async () => {
-    try {
-      const data = await getAccount();
-
-      if (cancelled) {
-        return;
-      }
-
-      if (data?.user) {
-        setCurrentUser(data.user);
-
-        localStorage.setItem(
-          "user",
-          JSON.stringify(data.user)
-        );
-      }
-    } catch (error) {
-      console.error(
-        "Failed to load account information:",
-        error
-      );
-    }
-  };
-
-  loadAccountData();
-
-  return () => {
-    cancelled = true;
-  };
-}, [role]);
-
-  // Keep the editable profile fields in sync with the
-  // current user loaded from the backend.
-  useEffect(() => {
-    if (accountSettingsOpen && currentUser) {
-      setProfileName(currentUser.name ?? "");
-      setProfileEmail(currentUser.email ?? "");
-      setProfileMessage("");
-    }
-  }, [accountSettingsOpen, currentUser]);
-const handleProfilePhotoUpload = async (
-  event: React.ChangeEvent<HTMLInputElement>
-) => {
-  const file = event.target.files?.[0];
-
-  if (!file) {
-    return;
-  }
-
-  try {
-    setUploadingProfilePhoto(true);
-    setProfileMessage("");
-
-    const data =
-      await uploadAccountProfilePhoto(file);
-
-    const updatedUser = {
-      ...currentUser,
-      profile_photo: data.profile_photo,
-      profile_photo_url: data.profile_photo_url,
-    };
-
-    setCurrentUser(updatedUser);
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(updatedUser)
-    );
-
-    setProfileMessage(
-      data.message ||
-        "Profile photo updated successfully."
-    );
-  } catch (error: any) {
-    setProfileMessage(
-      error?.errors?.profile_photo?.[0] ||
-        error?.message ||
-        "Failed to upload profile photo."
-    );
-  } finally {
-    setUploadingProfilePhoto(false);
-
-    // Allows selecting the same image again later.
-    event.target.value = "";
-  }
-};
-
-const handleRemoveProfilePhoto = async () => {
-  if (!currentUser?.profile_photo_url) {
-    return;
-  }
-
-  const confirmed = window.confirm(
-    "Remove your current profile photo?"
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-    setUploadingProfilePhoto(true);
-    setProfileMessage("");
-
-    const data = await removeAccountProfilePhoto();
-
-    const updatedUser =
-      data?.user ?? {
-        ...currentUser,
-        profile_photo:
-          data?.profile_photo ?? null,
-        profile_photo_url:
-          data?.profile_photo_url ?? null,
-      };
-
-    setCurrentUser(updatedUser);
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(updatedUser)
-    );
-
-    setProfileMessage(
-      data?.message ||
-        "Profile photo removed successfully."
-    );
-  } catch (error: any) {
-    setProfileMessage(
-      error?.message ||
-        "Failed to remove profile photo."
-    );
-  } finally {
-    setUploadingProfilePhoto(false);
-  }
-};
-
-
-// =========================================================
-// CHANGE PASSWORD
-// =========================================================
-
-const handleChangePassword = async () => {
-  if (!currentPassword.trim()) {
-    setPasswordMessage(
-      "Please enter your current password."
-    );
-    return;
-  }
-
-  if (newPassword.length < 8) {
-    setPasswordMessage(
-      "New password must be at least 8 characters."
-    );
-    return;
-  }
-
-  if (newPassword !== confirmPassword) {
-    setPasswordMessage(
-      "New password and confirmation do not match."
-    );
-    return;
-  }
-
-  try {
-    setChangingPassword(true);
-    setPasswordMessage("");
-
-    const data = await updateAccountPassword({
-      current_password: currentPassword,
-      password: newPassword,
-      password_confirmation: confirmPassword,
-    });
-
-    setPasswordMessage(
-      data.message ||
-        "Password changed successfully."
-    );
-
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-
-    setTimeout(() => {
-      setChangePasswordOpen(false);
-      setPasswordMessage("");
-    }, 1200);
-  } catch (error: any) {
-    setPasswordMessage(
-      error?.errors?.current_password?.[0] ||
-        error?.errors?.password?.[0] ||
-        error?.message ||
-        "Failed to change password."
-    );
-  } finally {
-    setChangingPassword(false);
-  }
-};
-
-
-const handleSaveAccountProfile = async () => {
-  try {
-    setSavingProfile(true);
-    setProfileMessage("");
-
-    const data = await updateAccountProfile({
-      name: profileName.trim(),
-      email: profileEmail.trim(),
-    });
-
-    if (data.user) {
-      setCurrentUser(data.user);
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
-    }
-
-    setProfileMessage(
-      data.message ||
-        "Account information updated successfully."
-    );
-
-    // SUCCESS POPUP
-    window.alert("Saved Changes");
-
-  } catch (error: any) {
-    setProfileMessage(
-      error?.errors?.email?.[0] ||
-        error?.errors?.name?.[0] ||
-        error?.message ||
-        "Failed to update account."
-    );
-  } finally {
-    setSavingProfile(false);
-  }
-};
 
   const roleInfo =
     ROLES.find((r) => r.id === role)!;
@@ -13842,7 +12156,7 @@ const handleSaveAccountProfile = async () => {
 
     return {
       card:
-        "bg-muted/30 border-[#cfd8e6]",
+        "bg-muted/30 border-border",
       icon:
         "bg-muted text-muted-foreground",
       badge:
@@ -13977,23 +12291,24 @@ const handleSaveAccountProfile = async () => {
     <div
       className="min-h-screen flex flex-col"
       style={{
-      fontFamily: "Inter, sans-serif",
-      background:
-      "linear-gradient(180deg, #f8fafc 0%, #f4f7fb 100%)",
-}}
+        fontFamily:
+          "Inter, sans-serif",
+        background:
+          "#f4f6fa",
+      }}
     >
       {/* =====================================================
           HEADER
       ====================================================== */}
 
-      <header className="bg-white text-foreground h-12 flex items-center px-3 gap-2 z-50 shadow-sm border-b border-[#cfd8e6] flex-shrink-0 sticky top-0">
+      <header className="bg-primary text-white h-12 flex items-center px-3 gap-2 z-50 shadow-md flex-shrink-0 sticky top-0">
         <button
           onClick={() =>
             setSidebarOpen(
               !sidebarOpen
             )
           }
-          className="text-[#1a3a7b] hover:text-[#2f5fd6] hover:bg-[#eef2fc] rounded-md transition-colors p-1"
+          className="text-white/80 hover:text-white transition-colors p-1"
         >
           {sidebarOpen ? (
             <X size={18} />
@@ -14018,7 +12333,7 @@ const handleSaveAccountProfile = async () => {
             QRpass
           </span>
 
-          <span className="hidden md:inline text-muted-foreground text-xs">
+          <span className="hidden md:inline text-white/50 text-xs">
             V1.0
           </span>
         </div>
@@ -14042,13 +12357,13 @@ const handleSaveAccountProfile = async () => {
                 handleNotificationToggle
               }
               title="Notifications"
-              className="relative text-[#1a3a7b] hover:text-[#2f5fd6] hover:bg-[#eef2fc] rounded-lg transition-all p-1.5"
+              className="relative text-white/80 hover:text-white hover:bg-white/10 rounded-md transition-colors p-1.5"
             >
               <Bell size={18} />
 
               {unreadNotificationCount >
                 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-secondary text-secondary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
                   {unreadNotificationCount >
                   99
                     ? "99+"
@@ -14060,124 +12375,118 @@ const handleSaveAccountProfile = async () => {
             {/* NOTIFICATION DROPDOWN */}
 
             {notificationOpen && (
-              <div
-              className="absolute right-0 top-10 w-[430px] max-w-[94vw] bg-white text-foreground border border-[#dce3ee] rounded-xl overflow-hidden z-[100]"
-              style={{
-                boxShadow: "0 16px 40px rgba(16, 26, 51, 0.16)",
-              }}
->
+              <div className="absolute right-0 top-10 w-[430px] max-w-[94vw] bg-white text-foreground border border-border rounded-lg shadow-xl overflow-hidden z-[100]">
 
                 {/* HEADER */}
-                  <div className="px-4 py-3 border-b border-[#e5eaf2] bg-[#fbfcfe]">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-[#111827]">
-                          Notifications
-                        </p>
 
-                        <p className="text-[11px] text-[#64748b] mt-0.5">
-                          {unreadNotificationCount} unread{" "}
-                          {unreadNotificationCount === 1
-                            ? "notification"
-                            : "notifications"}
-                        </p>
-                      </div>
+                <div className="px-4 py-3 border-b border-border">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">
+                        Notifications
+                      </p>
 
-                      {unreadNotificationCount > 0 && (
-                        <button
-                          type="button"
-                          onClick={handleHeaderMarkAllRead}
-                          disabled={markingAllNotifications}
-                          className="text-[11px] text-[#1a3a7b] font-semibold px-2 py-1 rounded-md hover:bg-[#eef2fc] transition-colors disabled:opacity-50 whitespace-nowrap"
-                        >
-                          {markingAllNotifications
-                            ? "Saving..."
-                            : "Mark all as read"}
-                        </button>
-                      )}
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {unreadNotificationCount} unread{" "}
+                        {unreadNotificationCount === 1
+                          ? "notification"
+                          : "notifications"}
+                      </p>
                     </div>
 
-                    {/* COUNTS / FILTERS */}
-                    <div className="grid grid-cols-3 gap-2 mt-3">
+                    {unreadNotificationCount > 0 && (
                       <button
                         type="button"
-                        onClick={() =>
-                          setNotificationFilter("all")
+                        onClick={
+                          handleHeaderMarkAllRead
                         }
-                        className={`rounded-lg border px-3 py-2 text-left transition-all ${
-                          notificationFilter === "all"
-                            ? "border-[#2f5fd6] bg-[#eef2fc] shadow-sm"
-                            : "border-[#dce3ee] bg-white hover:bg-[#f6f8fb] hover:border-[#c7d2e5]"
-                        }`}
-                      >
-                        <p className="text-[10px] uppercase tracking-wide text-[#64748b] font-semibold">
-                          All
-                        </p>
-
-                        <p
-                          className={`text-sm font-bold mt-0.5 ${
-                            notificationFilter === "all"
-                              ? "text-[#1a3a7b]"
-                              : "text-[#111827]"
-                          }`}
-                        >
-                          {headerNotifications.length}
-                        </p>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setNotificationFilter("unread")
+                        disabled={
+                          markingAllNotifications
                         }
-                        className={`rounded-lg border px-3 py-2 text-left transition-all ${
-                          notificationFilter === "unread"
-                            ? "border-[#2f5fd6] bg-[#eef2fc] shadow-sm"
-                            : "border-[#dce3ee] bg-white hover:bg-[#f6f8fb] hover:border-[#c7d2e5]"
-                        }`}
+                        className="text-xs text-primary font-semibold hover:underline disabled:opacity-50 whitespace-nowrap"
                       >
-                        <p className="text-[10px] uppercase tracking-wide text-[#64748b] font-semibold">
-                          Unread
-                        </p>
-
-                        <p
-                          className={`text-sm font-bold mt-0.5 ${
-                            notificationFilter === "unread"
-                              ? "text-[#1a3a7b]"
-                              : "text-[#111827]"
-                          }`}
-                        >
-                          {unreadNotificationCount}
-                        </p>
+                        {markingAllNotifications
+                          ? "Saving..."
+                          : "Mark all as read"}
                       </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setNotificationFilter("read")
-                        }
-                        className={`rounded-lg border px-3 py-2 text-left transition-all ${
-                          notificationFilter === "read"
-                            ? "border-[#2f5fd6] bg-[#eef2fc] shadow-sm"
-                            : "border-[#dce3ee] bg-white hover:bg-[#f6f8fb] hover:border-[#c7d2e5]"
-                        }`}
-                      >
-                        <p className="text-[10px] uppercase tracking-wide text-[#64748b] font-semibold">
-                          Read
-                        </p>
-
-                        <p
-                          className={`text-sm font-bold mt-0.5 ${
-                            notificationFilter === "read"
-                              ? "text-[#1a3a7b]"
-                              : "text-[#111827]"
-                          }`}
-                        >
-                          {readNotificationCount}
-                        </p>
-                      </button>
-                    </div>
+                    )}
                   </div>
+
+                  {/* COUNTS / FILTERS */}
+
+                  <div className="grid grid-cols-3 gap-2 mt-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNotificationFilter(
+                          "all"
+                        )
+                      }
+                      className={`rounded-md border px-2 py-2 text-left transition-colors ${
+                        notificationFilter ===
+                        "all"
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-white hover:bg-muted/30"
+                      }`}
+                    >
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        All
+                      </p>
+
+                      <p className="text-sm font-bold mt-0.5">
+                        {
+                          headerNotifications.length
+                        }
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNotificationFilter(
+                          "unread"
+                        )
+                      }
+                      className={`rounded-md border px-2 py-2 text-left transition-colors ${
+                        notificationFilter ===
+                        "unread"
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-white hover:bg-muted/30"
+                      }`}
+                    >
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        Unread
+                      </p>
+
+                      <p className="text-sm font-bold mt-0.5">
+                        {unreadNotificationCount}
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNotificationFilter(
+                          "read"
+                        )
+                      }
+                      className={`rounded-md border px-2 py-2 text-left transition-colors ${
+                        notificationFilter ===
+                        "read"
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-white hover:bg-muted/30"
+                      }`}
+                    >
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        Read
+                      </p>
+
+                      <p className="text-sm font-bold mt-0.5">
+                        {readNotificationCount}
+                      </p>
+                    </button>
+                  </div>
+                </div>
 
                 {/* NOTIFICATION LIST */}
 
@@ -14236,20 +12545,20 @@ const handleSaveAccountProfile = async () => {
 
                         return (
                           <div
-                                key={notification.id}
-                                className={`rounded-xl border p-3 transition-all ${
-                                  notification.is_read
-                                    ? "bg-white border-[#e5eaf2]"
-                                    : `${style.card} shadow-sm`
-                                }`}
-                              >
+                            key={notification.id}
+                            className={`rounded-lg border p-3 ${
+                              notification.is_read
+                                ? "bg-white border-border"
+                                : style.card
+                            }`}
+                          >
                             <div className="flex gap-3">
                               {/* ICON */}
 
                               <div
-                                className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
                                   notification.is_read
-                                    ? "bg-[#f3f5f9] text-[#94a3b8]"
+                                    ? "bg-gray-100 text-gray-500"
                                     : style.icon
                                 }`}
                               >
@@ -14269,7 +12578,7 @@ const handleSaveAccountProfile = async () => {
                                   </p>
 
                                   {!notification.is_read && (
-                                    <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[#2f5fd6] text-white flex-shrink-0">
+                                    <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-white flex-shrink-0">
                                       New
                                     </span>
                                   )}
@@ -14347,38 +12656,40 @@ const handleSaveAccountProfile = async () => {
 
                 {/* NOTIFICATION FOOTER */}
 
-                    <div className="px-4 py-2.5 bg-[#fbfcfe] border-t border-[#e5eaf2] flex items-center justify-between gap-3">
-                      <span className="text-[10px] text-[#64748b]">
-                        Showing{" "}
-                        <span className="font-semibold text-[#111827]">
-                          {filteredHeaderNotifications.length}
-                        </span>{" "}
-                        of{" "}
-                        <span className="font-semibold text-[#111827]">
-                          {headerNotifications.length}
-                        </span>
-                      </span>
+                <div className="px-4 py-2.5 bg-muted/30 border-t border-border flex items-center justify-between gap-3">
+                  <span className="text-[10px] text-muted-foreground">
+                    Showing{" "}
+                    {
+                      filteredHeaderNotifications.length
+                    }{" "}
+                    of{" "}
+                    {headerNotifications.length}
+                  </span>
 
-                      <button
-                        type="button"
-                        onClick={loadHeaderNotifications}
-                        disabled={notificationsLoading}
-                        className="text-[10px] flex items-center gap-1.5 px-2 py-1 rounded-md text-[#1a3a7b] font-semibold hover:bg-[#eef2fc] transition-colors disabled:opacity-50"
-                      >
-                        <RefreshCw
-                          size={11}
-                          className={
-                            notificationsLoading
-                              ? "animate-spin"
-                              : ""
-                          }
-                        />
+                  <button
+                    type="button"
+                    onClick={
+                      loadHeaderNotifications
+                    }
+                    disabled={
+                      notificationsLoading
+                    }
+                    className="text-[10px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50"
+                  >
+                    <RefreshCw
+                      size={10}
+                      className={
+                        notificationsLoading
+                          ? "animate-spin"
+                          : ""
+                      }
+                    />
 
-                        {notificationsLoading
-                          ? "Refreshing..."
-                          : "Refresh"}
-                      </button>
-                    </div>
+                    {notificationsLoading
+                      ? "Refreshing..."
+                      : "Refresh"}
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -14394,31 +12705,16 @@ const handleSaveAccountProfile = async () => {
                 handleAccountToggle
               }
               title="Account"
-              className="flex items-center gap-1.5 px-1.5 py-1 rounded-lg hover:bg-[#eef2fc] transition-all"
+              className="flex items-center gap-1.5 px-1.5 py-1 rounded-md hover:bg-white/10 transition-colors"
             >
-              <div
-                  className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #1a3a7b 0%, #2f5fd6 100%)",
-                    boxShadow:
-                      "0 2px 8px rgba(26, 58, 123, 0.18)",
-                  }}
-                >
-                  {currentUser?.profile_photo_url ? (
-                    <img
-                      src={currentUser.profile_photo_url}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <User
-                      size={13}
-                      className="text-white"
-                    />
-                  )}
-                </div>
-              <span className="hidden sm:inline text-foreground text-xs font-medium max-w-[130px] truncate">
+              <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                <User
+                  size={13}
+                  className="text-secondary-foreground"
+                />
+              </div>
+
+              <span className="hidden sm:inline text-white/90 text-xs font-medium max-w-[130px] truncate">
                 {currentUser?.name ??
                   roleInfo.label}
               </span>
@@ -14427,46 +12723,26 @@ const handleSaveAccountProfile = async () => {
             {/* ACCOUNT DROPDOWN */}
 
             {accountOpen && (
-              <div
-                  className="absolute right-0 top-10 w-72 bg-white text-foreground rounded-xl border border-[#dce3ee] overflow-hidden z-[100]"
-                  style={{
-                    boxShadow: "0 16px 40px rgba(16, 26, 51, 0.16)",
-                  }}
-                >
+              <div className="absolute right-0 top-10 w-72 bg-white text-foreground rounded-lg border border-border shadow-xl overflow-hidden z-[100]">
 
                 {/* PROFILE */}
-                <div className="px-4 py-4 border-b border-[#e5eaf2] bg-[#fbfcfe]">
+
+                <div className="px-4 py-4 border-b border-border">
                   <div className="flex items-center gap-3">
-                    <div
-                        className="w-11 h-11 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #1a3a7b 0%, #2f5fd6 100%)",
-                          boxShadow:
-                            "0 4px 12px rgba(26, 58, 123, 0.20)",
-                        }}
-                      >
-                        {currentUser?.profile_photo_url ? (
-                          <img
-                            src={currentUser.profile_photo_url}
-                            alt="Profile"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <User
-                            size={20}
-                            className="text-white"
-                          />
-                        )}
-                      </div>
+                    <div className="w-11 h-11 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                      <User
+                        size={20}
+                        className="text-secondary-foreground"
+                      />
+                    </div>
 
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#111827] truncate">
+                      <p className="text-sm font-semibold truncate">
                         {currentUser?.name ??
                           roleInfo.label}
                       </p>
 
-                      <p className="text-xs text-[#64748b] truncate mt-0.5">
+                      <p className="text-xs text-muted-foreground truncate">
                         {currentUser?.username ??
                           "QRPass User"}
                       </p>
@@ -14475,68 +12751,57 @@ const handleSaveAccountProfile = async () => {
                 </div>
 
                 {/* INFORMATION */}
-                <div className="px-4 py-3 space-y-3 bg-white">
+
+                <div className="px-4 py-3 space-y-3">
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-[#94a3b8] font-semibold">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
                       Account ID
                     </p>
 
-                    <p className="text-xs font-medium text-[#111827] mt-0.5">
-                      {currentUser?.username ?? "—"}
+                    <p className="text-xs font-medium mt-0.5">
+                      {currentUser?.username ??
+                        "—"}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-[#94a3b8] font-semibold">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
                       Role
                     </p>
 
-                    <span className="inline-flex items-center mt-1 px-2 py-1 rounded-full bg-[#eef2fc] text-[#1a3a7b] text-[11px] font-semibold">
+                    <p className="text-xs font-medium mt-0.5">
                       {roleInfo.label}
-                    </span>
+                    </p>
                   </div>
 
                   {currentUser?.email && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-wide text-[#94a3b8] font-semibold">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
                         Email
                       </p>
 
-                      <p className="text-xs font-medium text-[#111827] mt-0.5 break-all">
-                        {currentUser.email}
+                      <p className="text-xs font-medium mt-0.5 break-all">
+                        {
+                          currentUser.email
+                        }
                       </p>
                     </div>
                   )}
                 </div>
-                  {/* ACCOUNT SETTINGS */}
-                  <div className="border-t border-[#e5eaf2] p-2 bg-white">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAccountOpen(false);
-                        setAccountSettingsOpen(true);
-                      }}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-[#334155] hover:bg-[#eef2fc] hover:text-[#1a3a7b] transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Settings size={15} />
-                        <span>Account Settings</span>
-                      </div>
 
-                      <ChevronRight
-                        size={14}
-                        className="text-[#94a3b8]"
-                      />
-                    </button>
-                  </div>
                 {/* LOGOUT */}
-                <div className="border-t border-[#e5eaf2] p-2 bg-[#fbfcfe]">
+
+                <div className="border-t border-border p-2">
                   <button
                     type="button"
-                    onClick={onLogout}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                    onClick={
+                      onLogout
+                    }
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
-                    <LogOut size={15} />
+                    <LogOut
+                      size={15}
+                    />
 
                     Log Out
                   </button>
@@ -14592,8 +12857,8 @@ const handleSaveAccountProfile = async () => {
               ? "210px"
               : "0px",
 
-            background:
-            "linear-gradient(180deg, #0c1a3a 0%, #0e1f42 100%)",
+            backgroundColor:
+              "#003087",
 
             borderRight:
               "1px solid rgba(255,255,255,0.08)",
@@ -14603,7 +12868,7 @@ const handleSaveAccountProfile = async () => {
           }}
         >
           <div className="p-3 border-b border-white/10 flex-shrink-0">
-            <p className="text-xs text-[#8ea4c9] font-medium uppercase tracking-wider whitespace-nowrap">
+            <p className="text-xs text-white/50 font-medium uppercase tracking-wider whitespace-nowrap">
               Navigation
             </p>
           </div>
@@ -14618,15 +12883,19 @@ const handleSaveAccountProfile = async () => {
                   }
                   className="w-full flex items-center gap-2.5 px-3 py-3 text-sm font-medium transition-all duration-150 text-left whitespace-nowrap"
                   style={{
-                    color: activeNav === i ? "#ffffff" : "rgba(255,255,255,0.75)",
+                    color:
+                      activeNav === i
+                        ? "#f5c200"
+                        : "rgba(255,255,255,0.75)",
 
                     backgroundColor:
-                    activeNav === i
-                      ? "rgba(47,95,214,0.22)"
-                      : "transparent",
+                      activeNav === i
+                        ? "rgba(245,194,0,0.1)"
+                        : "transparent",
+
                     borderLeft:
                       activeNav === i
-                        ? "3px solid #2f5fd6"
+                        ? "3px solid #f5c200"
                         : "3px solid transparent",
                   }}
                 >
@@ -14662,7 +12931,7 @@ const handleSaveAccountProfile = async () => {
               onClick={
                 onLogout
               }
-              className="flex items-center gap-2 text-xs text-[#8ea4c9] hover:text-white transition-colors whitespace-nowrap"
+              className="flex items-center gap-2 text-xs text-white/50 hover:text-white transition-colors whitespace-nowrap"
             >
               <LogOut
                 size={13}
@@ -14687,60 +12956,58 @@ const handleSaveAccountProfile = async () => {
           }}
         >
           {/* BREADCRUMB */}
-          <div className="flex items-center gap-1.5 text-xs mb-3 flex-wrap">
+
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3 flex-wrap">
             <QrCode
               size={11}
-              className="text-[#2f5fd6] flex-shrink-0"
+              className="text-primary flex-shrink-0"
             />
 
-            <span className="text-[#1a3a7b] font-semibold">
+            <span className="text-primary font-medium">
               QRpass
             </span>
 
             <ChevronRight
               size={11}
-              className="text-[#b8c4d6]"
             />
 
-            <span className="hidden sm:inline text-[#64748b]">
-              {roleInfo.label}
+            <span className="hidden sm:inline">
+              {
+                roleInfo.label
+              }
             </span>
 
             <ChevronRight
               size={11}
-              className="hidden sm:inline text-[#b8c4d6]"
+              className="hidden sm:inline"
             />
 
-            <span className="text-[#111827] font-semibold truncate">
-              {navItems[activeNav]?.label ?? ""}
+            <span className="text-foreground font-medium truncate">
+              {navItems[
+                activeNav
+              ]?.label ??
+                ""}
             </span>
           </div>
 
           {/* ANNOUNCEMENT */}
 
-          <div
-            className="mb-4 rounded-lg px-3 py-2 flex items-start gap-2"
-            style={{
-              background: "#eef2fc",
-              border: "1px solid #d7e0f3",
-            }}
-          >
-            <div
-              className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+          <div className="mb-4 bg-secondary/20 border border-secondary/40 rounded-lg px-3 py-2 flex items-start gap-2">
+            <Bell
+              size={14}
               style={{
-                background: "#dfe7fb",
-                color: "#2f5fd6",
+                color:
+                  "#c49e00",
               }}
-            >
-              <Bell size={14} />
-            </div>
+              className="flex-shrink-0 mt-0.5"
+            />
 
-            <p className="text-xs text-[#334155] leading-relaxed pt-1">
-              <span className="font-semibold text-[#1a3a7b]">
+            <p className="text-xs text-foreground">
+              <span className="font-semibold">
                 Announcement:
               </span>{" "}
               Campus-wide QR item check on{" "}
-              <strong className="text-[#111827]">
+              <strong>
                 June 18, 2026
               </strong>
               . Ensure all items are QR-registered.
@@ -14750,474 +13017,22 @@ const handleSaveAccountProfile = async () => {
           <ActivePage />
         </main>
       </div>
-{/* =====================================================
-    ACCOUNT SETTINGS MODAL
-====================================================== */}
-
-{accountSettingsOpen && (
-  <div
-    className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-    style={{
-      background: "rgba(15, 23, 42, 0.45)",
-      backdropFilter: "blur(3px)",
-    }}
-  >
-    <div
-      className="w-full max-w-2xl bg-white border border-[#dce3ee] rounded-2xl overflow-hidden"
-      style={{
-        boxShadow: "0 24px 70px rgba(16, 26, 51, 0.22)",
-      }}
-    >
-      {/* MODAL HEADER */}
-      <div className="px-5 py-4 border-b border-[#e5eaf2] bg-[#fbfcfe] flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <Settings
-              size={18}
-              className="text-[#1a3a7b]"
-            />
-
-            <h2 className="text-base font-semibold text-[#111827]">
-              Account Settings
-            </h2>
-          </div>
-
-          <p className="text-xs text-[#64748b] mt-1">
-            Manage your profile and account security.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() =>
-            setAccountSettingsOpen(false)
-          }
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-[#64748b] hover:text-[#111827] hover:bg-[#eef2fc] transition-colors"
-          title="Close"
-        >
-          <X size={17} />
-        </button>
-      </div>
-
-      {/* PROFILE AREA */}
-      <div className="p-5">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 pb-5 border-b border-[#e5eaf2]">
-          {/* PROFILE PHOTO */}
-          <div className="flex flex-col items-center gap-2">
-            <div
-                className="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #1a3a7b 0%, #2f5fd6 100%)",
-                  boxShadow:
-                    "0 8px 20px rgba(26, 58, 123, 0.20)",
-                }}
-              >
-                {currentUser?.profile_photo_url ? (
-                  <img
-                    src={currentUser.profile_photo_url}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User
-                    size={38}
-                    className="text-white"
-                  />
-                )}
-              </div>
-
-           <div className="flex flex-col items-center gap-1.5">
-  <label
-    className={`text-[11px] font-semibold text-[#1a3a7b] hover:text-[#2f5fd6] cursor-pointer ${
-      uploadingProfilePhoto
-        ? "opacity-50 pointer-events-none"
-        : ""
-    }`}
-  >
-    {uploadingProfilePhoto
-      ? "Uploading..."
-      : "Change Photo"}
-
-    <input
-      type="file"
-      accept="image/jpeg,image/png,image/webp"
-      onChange={handleProfilePhotoUpload}
-      className="hidden"
-    />
-  </label>
-
-  {currentUser?.profile_photo_url && (
-    <button
-      type="button"
-      onClick={handleRemoveProfilePhoto}
-      disabled={uploadingProfilePhoto}
-      className="text-[10px] font-semibold text-red-500 hover:text-red-600 disabled:opacity-50"
-    >
-      Remove Photo
-    </button>
-  )}
-</div>
-          </div>
-
-          {/* ACCOUNT SUMMARY */}
-          <div className="flex-1 min-w-0 text-center sm:text-left">
-            <h3 className="text-lg font-bold text-[#111827]">
-              {currentUser?.name ??
-                roleInfo.label}
-            </h3>
-
-            <p className="text-xs text-[#64748b] mt-0.5">
-              @{currentUser?.username ??
-                "qrpass-user"}
-            </p>
-
-            <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-3">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#eef2fc] text-[#1a3a7b] text-[11px] font-semibold">
-                {roleInfo.label}
-              </span>
-
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#ecfdf3] text-[#15803d] text-[11px] font-semibold">
-                Active Account
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* ACCOUNT INFORMATION */}
-        <div className="mt-5">
-          <div className="flex items-center gap-2 mb-4">
-            <User
-              size={16}
-              className="text-[#1a3a7b]"
-            />
-
-            <h3 className="text-sm font-semibold text-[#111827]">
-              Profile Information
-            </h3>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[11px] font-semibold text-[#64748b] mb-1.5">
-                Full Name
-              </label>
-
-              <input
-                type="text"
-                value={profileName}
-                onChange={(e) => {
-                  setProfileName(e.target.value);
-                  setProfileMessage("");
-                }}
-                placeholder="Enter your full name"
-                className="w-full px-3 py-2.5 text-sm border border-[#cfd8e6] rounded-lg bg-[#fbfcfe] text-[#111827] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-[#64748b] mb-1.5">
-                Account ID
-              </label>
-
-              <input
-                type="text"
-                value={currentUser?.username ?? ""}
-                readOnly
-                className="w-full px-3 py-2.5 text-sm border border-[#cfd8e6] rounded-lg bg-[#f3f5f9] text-[#64748b]"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="block text-[11px] font-semibold text-[#64748b] mb-1.5">
-                Email Address
-              </label>
-
-              <input
-                type="email"
-                value={profileEmail}
-                onChange={(e) =>
-                  setProfileEmail(e.target.value)
-                }
-                placeholder="Enter your email address"
-                className="w-full px-3 py-2.5 text-sm border border-[#cfd8e6] rounded-lg bg-[#fbfcfe] text-[#111827] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* SECURITY */}
-        <div className="mt-5 pt-5 border-t border-[#e5eaf2]">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-[#eef2fc] text-[#1a3a7b] flex items-center justify-center">
-                <Lock size={16} />
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-[#111827]">
-                  Password & Security
-                </p>
-
-                <p className="text-xs text-[#64748b] mt-0.5">
-                  Change your account password.
-                </p>
-              </div>
-            </div>
-
-            <button
-            type="button"
-            onClick={() => setChangePasswordOpen(true)}
-            className="border border-[#cfd8e6] bg-white text-[#1a3a7b] text-xs font-semibold px-3 py-2 rounded-lg hover:bg-[#eef2fc] transition-colors"
-          >
-            Change Password
-          </button>
-          </div>
-        </div>
-      </div>
-
-     {/* MODAL FOOTER */}
-<div className="px-5 py-3 border-t border-[#e5eaf2] bg-[#fbfcfe]">
-  {profileMessage && (
-    <div className="mb-3 px-3 py-2 rounded-lg bg-[#eef2fc] border border-[#d7e0f3] text-xs font-medium text-[#1a3a7b]">
-      {profileMessage}
-    </div>
-  )}
-
-  <div className="flex items-center justify-end gap-2">
-    <button
-      type="button"
-      onClick={() =>
-        setAccountSettingsOpen(false)
-      }
-      className="px-4 py-2 text-xs font-semibold border border-[#cfd8e6] rounded-lg bg-white text-[#334155] hover:bg-[#eef2fc] transition-colors"
-    >
-      Close
-    </button>
-
-    <button
-      type="button"
-      onClick={handleSaveAccountProfile}
-      disabled={
-        savingProfile ||
-        !profileName.trim()
-      }
-      className="bg-primary text-white px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {savingProfile
-        ? "Saving..."
-        : "Save Changes"}
-    </button>
-  </div>
-</div>
-    </div>
-  </div>
-)}
-
-{/* =====================================================
-    CHANGE PASSWORD MODAL
-====================================================== */}
-
-{changePasswordOpen && (
-  <div
-    className="fixed inset-0 z-[300] flex items-center justify-center p-4"
-    style={{
-      background: "rgba(15, 23, 42, 0.55)",
-      backdropFilter: "blur(4px)",
-    }}
-    onMouseDown={(e) => {
-      if (e.target === e.currentTarget) {
-        setChangePasswordOpen(false);
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-        setPasswordMessage("");
-      }
-    }}
-  >
-    <div
-      className="w-full max-w-md overflow-hidden rounded-2xl border border-[#dce3ee] bg-white"
-      style={{
-        boxShadow:
-          "0 24px 70px rgba(16, 26, 51, 0.25)",
-      }}
-    >
-      {/* CHANGE PASSWORD HEADER */}
-      <div className="flex items-center justify-between border-b border-[#e5eaf2] bg-[#fbfcfe] px-5 py-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Lock
-              size={18}
-              className="text-[#1a3a7b]"
-            />
-
-            <h2 className="text-base font-semibold text-[#111827]">
-              Change Password
-            </h2>
-          </div>
-
-          <p className="mt-1 text-xs text-[#64748b]">
-            Enter your current password and choose a new one.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            setChangePasswordOpen(false);
-            setCurrentPassword("");
-            setNewPassword("");
-            setConfirmPassword("");
-            setPasswordMessage("");
-          }}
-          disabled={changingPassword}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#64748b] transition-colors hover:bg-[#eef2fc] hover:text-[#111827] disabled:cursor-not-allowed disabled:opacity-50"
-          title="Close"
-        >
-          <X size={17} />
-        </button>
-      </div>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleChangePassword();
-        }}
-      >
-        <div className="space-y-4 p-5">
-          {/* CURRENT PASSWORD */}
-          <div>
-            <label className="mb-1.5 block text-[11px] font-semibold text-[#64748b]">
-              Current Password
-            </label>
-
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => {
-                setCurrentPassword(e.target.value);
-                setPasswordMessage("");
-              }}
-              autoComplete="current-password"
-              placeholder="Enter your current password"
-              className="w-full rounded-lg border border-[#cfd8e6] bg-[#fbfcfe] px-3 py-2.5 text-sm text-[#111827] focus:border-[#2f5fd6] focus:outline-none focus:ring-2 focus:ring-[#2f5fd6]/15"
-            />
-          </div>
-
-          {/* NEW PASSWORD */}
-          <div>
-            <label className="mb-1.5 block text-[11px] font-semibold text-[#64748b]">
-              New Password
-            </label>
-
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => {
-                setNewPassword(e.target.value);
-                setPasswordMessage("");
-              }}
-              autoComplete="new-password"
-              placeholder="At least 8 characters"
-              className="w-full rounded-lg border border-[#cfd8e6] bg-[#fbfcfe] px-3 py-2.5 text-sm text-[#111827] focus:border-[#2f5fd6] focus:outline-none focus:ring-2 focus:ring-[#2f5fd6]/15"
-            />
-
-            <p className="mt-1 text-[10px] text-[#94a3b8]">
-              Use at least 8 characters.
-            </p>
-          </div>
-
-          {/* CONFIRM PASSWORD */}
-          <div>
-            <label className="mb-1.5 block text-[11px] font-semibold text-[#64748b]">
-              Confirm New Password
-            </label>
-
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                setPasswordMessage("");
-              }}
-              autoComplete="new-password"
-              placeholder="Re-enter your new password"
-              className="w-full rounded-lg border border-[#cfd8e6] bg-[#fbfcfe] px-3 py-2.5 text-sm text-[#111827] focus:border-[#2f5fd6] focus:outline-none focus:ring-2 focus:ring-[#2f5fd6]/15"
-            />
-          </div>
-
-          {passwordMessage && (
-            <div className="rounded-lg border border-[#d7e0f3] bg-[#eef2fc] px-3 py-2 text-xs font-medium text-[#1a3a7b]">
-              {passwordMessage}
-            </div>
-          )}
-        </div>
-
-        {/* CHANGE PASSWORD FOOTER */}
-        <div className="flex items-center justify-end gap-2 border-t border-[#e5eaf2] bg-[#fbfcfe] px-5 py-3">
-          <button
-            type="button"
-            onClick={() => {
-              setChangePasswordOpen(false);
-              setCurrentPassword("");
-              setNewPassword("");
-              setConfirmPassword("");
-              setPasswordMessage("");
-            }}
-            disabled={changingPassword}
-            className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#334155] transition-colors hover:bg-[#eef2fc] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Cancel
-          </button>
-
-          <button
-            type="submit"
-            disabled={changingPassword}
-            className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {changingPassword
-              ? "Changing..."
-              : "Change Password"}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-)}
 
       {/* =====================================================
           FOOTER
       ====================================================== */}
 
-              <footer
-          className="bg-white px-4 py-2 flex items-center justify-between gap-2 flex-wrap"
-          style={{
-            borderTop: "1px solid #e5eaf2",
-            boxShadow: "0 -2px 10px rgba(16, 26, 51, 0.03)",
-          }}
-        >
-          <p className="text-xs text-[#64748b]">
-            &copy; 2026{" "}
-            <span className="font-medium text-[#334155]">
-              University of Cebu
-            </span>{" "}
-            — QRpass
-          </p>
+      <footer className="bg-white border-t border-border px-4 py-2 flex items-center justify-between gap-2 flex-wrap">
+        <p className="text-xs text-muted-foreground">
+          &copy; 2026 University
+          of Cebu — QRpass
+        </p>
 
-          <div className="hidden sm:flex items-center gap-2 text-xs text-[#94a3b8]">
-            <span>
-              Main Campus
-            </span>
-
-            <span className="text-[#d3dbe8]">
-              |
-            </span>
-
-            <span className="font-medium text-[#1a3a7b]">
-              V1.0
-            </span>
-          </div>
-        </footer>
+        <p className="text-xs text-muted-foreground hidden sm:block">
+          Main Campus
+          &nbsp;|&nbsp; V1.0
+        </p>
+      </footer>
     </div>
   );
 }

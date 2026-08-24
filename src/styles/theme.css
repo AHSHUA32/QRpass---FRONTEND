@@ -1,140 +1,285 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* =========================================================
+     QRPASS FIGMA NAVY / BLUE THEME
+     Colors only — layout and placement remain unchanged
+     ========================================================= */
+
   --font-size: 16px;
-  --background: #f4f6fa;
-  --foreground: #0d1b3e;
+
+  /* =========================================================
+     MAIN PAGE
+     ========================================================= */
+
+  --background: #f6f8fb;
+  --foreground: #111827;
+
+  /* =========================================================
+     CARDS
+     ========================================================= */
+
   --card: #ffffff;
-  --card-foreground: #0d1b3e;
+  --card-foreground: #111827;
+
+  /* =========================================================
+     POPOVERS / DROPDOWNS
+     ========================================================= */
+
   --popover: #ffffff;
-  --popover-foreground: #0d1b3e;
-  --primary: #003087;
+  --popover-foreground: #111827;
+
+  /* =========================================================
+     PRIMARY
+     Figma deep navy blue
+     ========================================================= */
+
+  --primary: #1a3a7b;
   --primary-foreground: #ffffff;
-  --secondary: #f5c200;
-  --secondary-foreground: #0d1b3e;
-  --muted: #e8edf5;
-  --muted-foreground: #5a6a8a;
-  --accent: #f5c200;
-  --accent-foreground: #0d1b3e;
-  --destructive: #d4183d;
+
+  /* =========================================================
+     SECONDARY
+     Soft blue used for selected / subtle UI
+     ========================================================= */
+
+  --secondary: #eef2fc;
+  --secondary-foreground: #1a3a7b;
+
+  /* =========================================================
+     MUTED ELEMENTS
+     ========================================================= */
+
+  --muted: #f3f5f9;
+  --muted-foreground: #64748b;
+
+  /* =========================================================
+     ACCENT
+     Figma active navigation blue
+     ========================================================= */
+
+  --accent: #2f5fd6;
+  --accent-foreground: #ffffff;
+
+  /* =========================================================
+     ERRORS
+     ========================================================= */
+
+  --destructive: #dc3545;
   --destructive-foreground: #ffffff;
-  --border: rgba(0, 48, 135, 0.12);
-  --input: transparent;
-  --input-background: #eef1f8;
-  --switch-background: #a8b4cc;
+
+  /* =========================================================
+     FORM / BORDERS
+     ========================================================= */
+
+  --border: #dce3ee;
+  --input: #cfd8e6;
+  --input-background: #fbfcfe;
+  --switch-background: #aeb8c8;
+
+  /* =========================================================
+     TYPOGRAPHY
+     ========================================================= */
+
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #003087;
-  --chart-1: #003087;
-  --chart-2: #f5c200;
-  --chart-3: #00aeef;
-  --chart-4: #e8543a;
-  --chart-5: #2ecc71;
-  --radius: 0.5rem;
-  --sidebar: #003087;
+
+  /* =========================================================
+     FOCUS
+     ========================================================= */
+
+  --ring: #2f5fd6;
+
+  /* =========================================================
+     CHARTS
+     ========================================================= */
+
+  --chart-1: #1a3a7b;
+  --chart-2: #2f5fd6;
+  --chart-3: #557bdc;
+  --chart-4: #6b8ee6;
+  --chart-5: #8ba6ed;
+
+  /* =========================================================
+     ROUNDED CORNERS
+     Keep existing dimensions
+     ========================================================= */
+
+  --radius: 0.75rem;
+
+  /* =========================================================
+     SIDEBAR / NAVIGATION
+     ========================================================= */
+
+  --sidebar: #0c1a3a;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #f5c200;
-  --sidebar-primary-foreground: #0d1b3e;
-  --sidebar-accent: #00246b;
+
+  --sidebar-primary: #2f5fd6;
+  --sidebar-primary-foreground: #ffffff;
+
+  --sidebar-accent: #162b55;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #f5c200;
+
+  --sidebar-border: rgba(255, 255, 255, 0.10);
+  --sidebar-ring: #2f5fd6;
+
+  /* =========================================================
+     EXTRA FIGMA COLORS
+     ========================================================= */
+
+  --qrpass-navy-dark: #0c1a3a;
+  --qrpass-navy-light: #0e1f42;
+
+  --qrpass-button-start: #1a3a7b;
+  --qrpass-button-end: #0c1c3a;
+
+  --qrpass-active-blue: #2f5fd6;
+
+  --qrpass-table-header: #fafbfc;
+  --qrpass-table-alternate: #fbfcfe;
+  --qrpass-table-hover: #eef2fc;
+
+  --qrpass-card-shadow: rgba(16, 26, 51, 0.10);
 }
 
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --background: #081225;
+  --foreground: #f8fafc;
+
+  --card: #0f1d35;
+  --card-foreground: #f8fafc;
+
+  --popover: #0f1d35;
+  --popover-foreground: #f8fafc;
+
+  --primary: #557bdc;
+  --primary-foreground: #ffffff;
+
+  --secondary: #16284a;
+  --secondary-foreground: #eef2ff;
+
+  --muted: #172642;
+  --muted-foreground: #a8b5ca;
+
+  --accent: #2f5fd6;
+  --accent-foreground: #ffffff;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #263854;
+  --input: #31445f;
+  --input-background: #111f37;
+
+  --switch-background: #475569;
+
+  --ring: #557bdc;
+
+  --chart-1: #557bdc;
+  --chart-2: #6b8ee6;
+  --chart-3: #829de9;
+  --chart-4: #9ab2ef;
+  --chart-5: #b2c5f4;
+
+  --sidebar: #081225;
+  --sidebar-foreground: #ffffff;
+
+  --sidebar-primary: #2f5fd6;
+  --sidebar-primary-foreground: #ffffff;
+
+  --sidebar-accent: #162b55;
+  --sidebar-accent-foreground: #ffffff;
+
+  --sidebar-border: rgba(255, 255, 255, 0.10);
+  --sidebar-ring: #557bdc;
 }
+
+
+/* =========================================================
+   TAILWIND THEME MAPPING
+   ========================================================= */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+
   --color-border: var(--border);
+
   --color-input: var(--input);
   --color-input-background: var(--input-background);
+
   --color-switch-background: var(--switch-background);
+
   --color-ring: var(--ring);
+
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
+
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 }
+
+
+/* =========================================================
+   BASE STYLES
+   ========================================================= */
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
 
-  body {
-    @apply bg-background text-foreground;
-  }
-
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
-
   html {
     font-size: var(--font-size);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+
+    background-color: var(--background);
+    color: var(--foreground);
   }
 
   h1 {
@@ -178,4 +323,88 @@
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
+}
+/* =========================================================
+   QRPASS FIGMA BUTTON COLORS
+   ========================================================= */
+
+button.bg-primary {
+  background: linear-gradient(
+    180deg,
+    #1a3a7b 0%,
+    #0c1c3a 100%
+  );
+
+  color: #ffffff;
+  border-color: transparent;
+}
+
+button.bg-primary:hover {
+  background: linear-gradient(
+    180deg,
+    #21468f 0%,
+    #10264c 100%
+  );
+}
+
+button.bg-primary:active {
+  background: #0c1c3a;
+}
+/* =========================================================
+   QRPASS FIGMA SECONDARY / OUTLINE BUTTONS
+   ========================================================= */
+
+button.border:not([class*="red-"]):not([class*="green-"]):not([class*="yellow-"]):not([class*="orange-"]) {
+  border-color: #cfd8e6;
+}
+
+button.bg-background:not([class*="red-"]):not([class*="green-"]) {
+  background: #ffffff;
+  color: #1a3a7b;
+}
+
+button.bg-background:not([class*="red-"]):not([class*="green-"]):hover {
+  background: #eef2fc;
+  border-color: #b9c7da;
+}
+
+button.text-muted-foreground:hover {
+  color: #1a3a7b;
+  background: #eef2fc;
+}
+/* =========================================================
+   QRPASS FIGMA TABLE STYLE
+   ========================================================= */
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+table thead tr {
+  background: #fafbfc;
+}
+
+table thead th {
+  color: #64748b;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-bottom: 1px solid #dce3ee;
+}
+
+table tbody td {
+  border-bottom: 1px solid #eef2f7;
+}
+
+table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+table tbody tr:hover {
+  background: #eef2fc;
+}
+
+table tbody tr:last-child td {
+  border-bottom: none;
 }
