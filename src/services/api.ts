@@ -700,13 +700,23 @@ export async function logout() {
 }
 
 export async function createLostFoundItem(data: {
-  found_by_identifier: string;
+  report_type: "found" | "lost";
+
+  // Found report
+  found_by_identifier?: string;
+  location_found?: string;
+  date_found?: string;
+
+  // Lost report
+  lost_by_identifier?: string;
+  location_lost?: string;
+  date_lost?: string;
+
+  // Shared item details
   item_name: string;
   category?: string;
   brand_model?: string;
   color?: string;
-  location_found: string;
-  date_found: string;
   description?: string;
 }) {
   const token =
@@ -755,7 +765,7 @@ export async function createLostFoundItem(data: {
 
     throw new Error(
       result.message ||
-        "Failed to create Lost & Found record."
+        "Failed to save Lost & Found report."
     );
   }
 
@@ -763,7 +773,12 @@ export async function createLostFoundItem(data: {
 }
 
 export async function markLostFoundRecovered(
-  id: number
+  id: number,
+  data?: {
+    found_by_identifier: string;
+    location_found: string;
+    date_found: string;
+  }
 ) {
   const token = localStorage.getItem("token");
 
@@ -771,17 +786,36 @@ export async function markLostFoundRecovered(
     `http://localhost:8000/api/lost-found/${id}/recovered`,
     {
       method: "PUT",
+
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+
+      body: data
+        ? JSON.stringify(data)
+        : JSON.stringify({}),
     }
   );
 
   const result = await response.json();
 
   if (!response.ok) {
+    if (result.errors) {
+      const firstError =
+        Object.values(result.errors)[0];
+
+      if (
+        Array.isArray(firstError) &&
+        firstError.length > 0
+      ) {
+        throw new Error(
+          String(firstError[0])
+        );
+      }
+    }
+
     throw new Error(
       result.message ||
         "Failed to mark the item as recovered."

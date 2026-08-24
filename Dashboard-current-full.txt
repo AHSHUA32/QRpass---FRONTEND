@@ -1,0 +1,916 @@
+function Dashboard({
+  role,
+  onLogout,
+}: {
+  role: Role;
+  onLogout: () => void;
+}) {
+  const navItems = NAV[role];
+  const pages = PAGES[role];
+
+  const [activeNav, setActiveNav] =
+    useState(0);
+
+  const [isMobile, setIsMobile] =
+    useState(window.innerWidth < 768);
+
+  const [sidebarOpen, setSidebarOpen] =
+    useState(window.innerWidth >= 768);
+
+  // =========================================================
+  // HEADER MENUS
+  // =========================================================
+
+  const [notificationOpen, setNotificationOpen] =
+    useState(false);
+
+  const [accountOpen, setAccountOpen] =
+    useState(false);
+
+  // =========================================================
+  // NOTIFICATIONS
+  // =========================================================
+
+  const [headerNotifications, setHeaderNotifications] =
+    useState<any[]>([]);
+
+  const [notificationsLoading, setNotificationsLoading] =
+    useState(false);
+
+  const [
+    markingNotificationId,
+    setMarkingNotificationId,
+  ] = useState<number | null>(null);
+
+  const [
+    markingAllNotifications,
+    setMarkingAllNotifications,
+  ] = useState(false);
+
+  // =========================================================
+  // CURRENT USER
+  // =========================================================
+
+  const [currentUser] = useState<any>(() => {
+    try {
+      const savedUser =
+        localStorage.getItem("user");
+
+      return savedUser
+        ? JSON.parse(savedUser)
+        : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const roleInfo =
+    ROLES.find((r) => r.id === role)!;
+
+  const ActivePage =
+    pages[activeNav] ?? pages[0];
+
+  // =========================================================
+  // RESPONSIVE SIDEBAR
+  // =========================================================
+
+  useEffect(() => {
+    const handler = () => {
+      const mobile =
+        window.innerWidth < 768;
+
+      setIsMobile(mobile);
+
+      if (!mobile) {
+        setSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener(
+      "resize",
+      handler
+    );
+
+    return () => {
+      window.removeEventListener(
+        "resize",
+        handler
+      );
+    };
+  }, []);
+
+  // =========================================================
+  // LOAD HEADER NOTIFICATIONS
+  // =========================================================
+
+  async function loadHeaderNotifications() {
+    try {
+      setNotificationsLoading(true);
+
+      const data =
+        await getNotifications();
+
+      setHeaderNotifications(
+        data.notifications ?? []
+      );
+    } catch (error) {
+      console.error(
+        "Failed to load notifications:",
+        error
+      );
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadHeaderNotifications();
+  }, [role]);
+
+  useEffect(() => {
+    loadHeaderNotifications();
+  }, [activeNav]);
+
+  const unreadNotificationCount =
+    headerNotifications.filter(
+      (notification) =>
+        !notification.is_read
+    ).length;
+
+  // =========================================================
+  // MARK SINGLE NOTIFICATION READ
+  // =========================================================
+
+  async function handleHeaderMarkRead(
+    id: number
+  ) {
+    try {
+      setMarkingNotificationId(id);
+
+      await markNotificationRead(id);
+
+      setHeaderNotifications(
+        (previous) =>
+          previous.map(
+            (notification) =>
+              notification.id === id
+                ? {
+                    ...notification,
+                    is_read: true,
+                    read_at:
+                      notification.read_at ??
+                      new Date().toISOString(),
+                  }
+                : notification
+          )
+      );
+    } catch (error) {
+      console.error(
+        "Failed to mark notification as read:",
+        error
+      );
+    } finally {
+      setMarkingNotificationId(null);
+    }
+  }
+
+  // =========================================================
+  // MARK ALL NOTIFICATIONS READ
+  // =========================================================
+
+  async function handleHeaderMarkAllRead() {
+    if (
+      unreadNotificationCount === 0
+    ) {
+      return;
+    }
+
+    try {
+      setMarkingAllNotifications(true);
+
+      await markAllNotificationsRead();
+
+      setHeaderNotifications(
+        (previous) =>
+          previous.map(
+            (notification) => ({
+              ...notification,
+
+              is_read: true,
+
+              read_at:
+                notification.read_at ??
+                new Date().toISOString(),
+            })
+          )
+      );
+    } catch (error) {
+      console.error(
+        "Failed to mark all notifications as read:",
+        error
+      );
+    } finally {
+      setMarkingAllNotifications(false);
+    }
+  }
+
+  // =========================================================
+  // DATE FORMATTER
+  // =========================================================
+
+  function formatNotificationDate(
+    value:
+      | string
+      | null
+      | undefined
+  ) {
+    if (!value) {
+      return "";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "";
+    }
+
+    return date.toLocaleString(
+      "en-PH",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  // =========================================================
+  // SIDEBAR
+  // =========================================================
+
+  function handleNavClick(
+    index: number
+  ) {
+    setActiveNav(index);
+
+    setNotificationOpen(false);
+    setAccountOpen(false);
+
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }
+
+  // =========================================================
+  // NOTIFICATION TOGGLE
+  // =========================================================
+
+  function handleNotificationToggle() {
+    const next =
+      !notificationOpen;
+
+    setNotificationOpen(next);
+
+    setAccountOpen(false);
+
+    if (next) {
+      loadHeaderNotifications();
+    }
+  }
+
+  // =========================================================
+  // ACCOUNT TOGGLE
+  // =========================================================
+
+  function handleAccountToggle() {
+    setAccountOpen(
+      (current) => !current
+    );
+
+    setNotificationOpen(false);
+  }
+
+  return (
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        fontFamily:
+          "Inter, sans-serif",
+        background:
+          "#f4f6fa",
+      }}
+    >
+      {/* =====================================================
+          HEADER
+      ====================================================== */}
+
+      <header className="bg-primary text-white h-12 flex items-center px-3 gap-2 z-50 shadow-md flex-shrink-0 sticky top-0">
+        <button
+          onClick={() =>
+            setSidebarOpen(
+              !sidebarOpen
+            )
+          }
+          className="text-white/80 hover:text-white transition-colors p-1"
+        >
+          {sidebarOpen ? (
+            <X size={18} />
+          ) : (
+            <Menu size={18} />
+          )}
+        </button>
+
+        <div className="flex items-center gap-1.5">
+          <QRpassLogo
+            size={70}
+            showText
+          />
+
+          <span
+            className="font-bold text-sm tracking-wide"
+            style={{
+              fontFamily:
+                "Barlow, sans-serif",
+            }}
+          >
+            QRpass
+          </span>
+
+          <span className="hidden md:inline text-white/50 text-xs">
+            V1.0
+          </span>
+        </div>
+
+        <div className="flex-1" />
+
+        {/* ===================================================
+            HEADER RIGHT SIDE
+        ==================================================== */}
+
+        <div className="flex items-center gap-2">
+
+          {/* =================================================
+              NOTIFICATION BELL
+          ================================================== */}
+
+          <div className="relative">
+            <button
+              type="button"
+              onClick={
+                handleNotificationToggle
+              }
+              title="Notifications"
+              className="relative text-white/80 hover:text-white hover:bg-white/10 rounded-md transition-colors p-1.5"
+            >
+              <Bell size={18} />
+
+              {unreadNotificationCount >
+                0 && (
+                <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-secondary text-secondary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {unreadNotificationCount >
+                  99
+                    ? "99+"
+                    : unreadNotificationCount}
+                </span>
+              )}
+            </button>
+
+            {/* NOTIFICATION DROPDOWN */}
+
+            {notificationOpen && (
+              <div className="absolute right-0 top-10 w-[370px] max-w-[92vw] bg-white text-foreground border border-border rounded-lg shadow-xl overflow-hidden z-[100]">
+
+                {/* HEADER */}
+
+                <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold">
+                      Notifications
+                    </p>
+
+                    <p className="text-[11px] text-muted-foreground">
+                      {
+                        unreadNotificationCount
+                      }{" "}
+                      unread notification
+                      {unreadNotificationCount ===
+                      1
+                        ? ""
+                        : "s"}
+                    </p>
+                  </div>
+
+                  {unreadNotificationCount >
+                    0 && (
+                    <button
+                      type="button"
+                      onClick={
+                        handleHeaderMarkAllRead
+                      }
+                      disabled={
+                        markingAllNotifications
+                      }
+                      className="text-xs text-primary font-semibold hover:underline disabled:opacity-50 whitespace-nowrap"
+                    >
+                      {markingAllNotifications
+                        ? "Saving..."
+                        : "Mark all as read"}
+                    </button>
+                  )}
+                </div>
+
+                {/* NOTIFICATION LIST */}
+
+                <div className="max-h-[420px] overflow-y-auto">
+                  {notificationsLoading &&
+                  headerNotifications.length ===
+                    0 ? (
+                    <div className="py-10 text-center text-xs text-muted-foreground">
+                      Loading notifications...
+                    </div>
+                  ) : headerNotifications.length ===
+                    0 ? (
+                    <div className="py-10 px-4 text-center">
+                      <Bell
+                        size={26}
+                        className="mx-auto mb-2 text-muted-foreground"
+                      />
+
+                      <p className="text-sm font-semibold">
+                        No notifications
+                      </p>
+
+                      <p className="text-xs text-muted-foreground mt-1">
+                        You are all caught up.
+                      </p>
+                    </div>
+                  ) : (
+                    headerNotifications.map(
+                      (
+                        notification
+                      ) => (
+                        <div
+                          key={
+                            notification.id
+                          }
+                          className={`px-4 py-3 border-b border-border last:border-b-0 ${
+                            notification.is_read
+                              ? "bg-white"
+                              : "bg-blue-50/70"
+                          }`}
+                        >
+                          <div className="flex gap-3">
+
+                            {/* ICON */}
+
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                notification.is_read
+                                  ? "bg-gray-100 text-gray-500"
+                                  : "bg-blue-100 text-primary"
+                              }`}
+                            >
+                              <Bell
+                                size={14}
+                              />
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+
+                              {/* TITLE */}
+
+                              <div className="flex items-start gap-2">
+                                <p className="text-xs font-semibold flex-1">
+                                  {notification.title ??
+                                    "QRPass Notification"}
+                                </p>
+
+                                {!notification.is_read && (
+                                  <span className="w-2 h-2 rounded-full bg-primary mt-1 flex-shrink-0" />
+                                )}
+                              </div>
+
+                              {/* MESSAGE */}
+
+                              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                {notification.message ??
+                                  "You have a new QRPass notification."}
+                              </p>
+
+                              {/* DATE */}
+
+                              <div className="flex items-center justify-between gap-2 mt-2">
+                                <span className="text-[10px] text-muted-foreground">
+                                  {formatNotificationDate(
+                                    notification.created_at
+                                  )}
+                                </span>
+
+                                {!notification.is_read && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleHeaderMarkRead(
+                                        notification.id
+                                      )
+                                    }
+                                    disabled={
+                                      markingNotificationId ===
+                                      notification.id
+                                    }
+                                    className="text-[10px] text-primary font-semibold hover:underline disabled:opacity-50 whitespace-nowrap"
+                                  >
+                                    {markingNotificationId ===
+                                    notification.id
+                                      ? "Saving..."
+                                      : "Mark as read"}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )
+                  )}
+                </div>
+
+                {/* NOTIFICATION FOOTER */}
+
+                <div className="px-4 py-2.5 bg-muted/30 border-t border-border flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground">
+                    QRPass Notifications
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={
+                      loadHeaderNotifications
+                    }
+                    disabled={
+                      notificationsLoading
+                    }
+                    className="text-[10px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50"
+                  >
+                    <RefreshCw
+                      size={10}
+                    />
+
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* =================================================
+              ACCOUNT BUTTON
+          ================================================== */}
+
+          <div className="relative">
+            <button
+              type="button"
+              onClick={
+                handleAccountToggle
+              }
+              title="Account"
+              className="flex items-center gap-1.5 px-1.5 py-1 rounded-md hover:bg-white/10 transition-colors"
+            >
+              <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                <User
+                  size={13}
+                  className="text-secondary-foreground"
+                />
+              </div>
+
+              <span className="hidden sm:inline text-white/90 text-xs font-medium max-w-[130px] truncate">
+                {currentUser?.name ??
+                  roleInfo.label}
+              </span>
+            </button>
+
+            {/* ACCOUNT DROPDOWN */}
+
+            {accountOpen && (
+              <div className="absolute right-0 top-10 w-72 bg-white text-foreground rounded-lg border border-border shadow-xl overflow-hidden z-[100]">
+
+                {/* PROFILE */}
+
+                <div className="px-4 py-4 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                      <User
+                        size={20}
+                        className="text-secondary-foreground"
+                      />
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate">
+                        {currentUser?.name ??
+                          roleInfo.label}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground truncate">
+                        {currentUser?.username ??
+                          "QRPass User"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* INFORMATION */}
+
+                <div className="px-4 py-3 space-y-3">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      Account ID
+                    </p>
+
+                    <p className="text-xs font-medium mt-0.5">
+                      {currentUser?.username ??
+                        "—"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      Role
+                    </p>
+
+                    <p className="text-xs font-medium mt-0.5">
+                      {roleInfo.label}
+                    </p>
+                  </div>
+
+                  {currentUser?.email && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        Email
+                      </p>
+
+                      <p className="text-xs font-medium mt-0.5 break-all">
+                        {
+                          currentUser.email
+                        }
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* LOGOUT */}
+
+                <div className="border-t border-border p-2">
+                  <button
+                    type="button"
+                    onClick={
+                      onLogout
+                    }
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut
+                      size={15}
+                    />
+
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* =====================================================
+          MAIN BODY
+      ====================================================== */}
+
+      <div className="flex flex-1 min-h-0 relative">
+
+        {/* MOBILE BACKDROP */}
+
+        {isMobile &&
+          sidebarOpen && (
+            <div
+              className="fixed inset-0 top-12 bg-black/50 z-30"
+              onClick={() =>
+                setSidebarOpen(
+                  false
+                )
+              }
+            />
+          )}
+
+        {/* ===================================================
+            SIDEBAR
+        ==================================================== */}
+
+        <aside
+          className="flex-col flex-shrink-0 transition-all duration-200 overflow-hidden z-40"
+          style={{
+            position: isMobile
+              ? "fixed"
+              : "relative",
+
+            top: isMobile
+              ? "48px"
+              : "auto",
+
+            bottom: isMobile
+              ? "0"
+              : "auto",
+
+            left: 0,
+
+            width: sidebarOpen
+              ? "210px"
+              : "0px",
+
+            backgroundColor:
+              "#003087",
+
+            borderRight:
+              "1px solid rgba(255,255,255,0.08)",
+
+            display:
+              "flex",
+          }}
+        >
+          <div className="p-3 border-b border-white/10 flex-shrink-0">
+            <p className="text-xs text-white/50 font-medium uppercase tracking-wider whitespace-nowrap">
+              Navigation
+            </p>
+          </div>
+
+          <nav className="flex-1 py-2 overflow-y-auto">
+            {navItems.map(
+              (item, i) => (
+                <button
+                  key={i}
+                  onClick={() =>
+                    handleNavClick(i)
+                  }
+                  className="w-full flex items-center gap-2.5 px-3 py-3 text-sm font-medium transition-all duration-150 text-left whitespace-nowrap"
+                  style={{
+                    color:
+                      activeNav === i
+                        ? "#f5c200"
+                        : "rgba(255,255,255,0.75)",
+
+                    backgroundColor:
+                      activeNav === i
+                        ? "rgba(245,194,0,0.1)"
+                        : "transparent",
+
+                    borderLeft:
+                      activeNav === i
+                        ? "3px solid #f5c200"
+                        : "3px solid transparent",
+                  }}
+                >
+                  <span
+                    style={{
+                      opacity:
+                        activeNav === i
+                          ? 1
+                          : 0.7,
+                    }}
+                  >
+                    {item.icon}
+                  </span>
+
+                  <span className="truncate">
+                    {item.label}
+                  </span>
+
+                  {item.badge && (
+                    <span className="ml-auto bg-secondary text-secondary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
+                      {
+                        item.badge
+                      }
+                    </span>
+                  )}
+                </button>
+              )
+            )}
+          </nav>
+
+          <div className="p-3 border-t border-white/10 flex-shrink-0">
+            <button
+              onClick={
+                onLogout
+              }
+              className="flex items-center gap-2 text-xs text-white/50 hover:text-white transition-colors whitespace-nowrap"
+            >
+              <LogOut
+                size={13}
+              />
+
+              <span>
+                Log Out
+              </span>
+            </button>
+          </div>
+        </aside>
+
+        {/* ===================================================
+            MAIN CONTENT
+        ==================================================== */}
+
+        <main
+          className="flex-1 overflow-auto p-3 md:p-5 min-w-0"
+          onClick={() => {
+            setNotificationOpen(false);
+            setAccountOpen(false);
+          }}
+        >
+          {/* BREADCRUMB */}
+
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3 flex-wrap">
+            <QrCode
+              size={11}
+              className="text-primary flex-shrink-0"
+            />
+
+            <span className="text-primary font-medium">
+              QRpass
+            </span>
+
+            <ChevronRight
+              size={11}
+            />
+
+            <span className="hidden sm:inline">
+              {
+                roleInfo.label
+              }
+            </span>
+
+            <ChevronRight
+              size={11}
+              className="hidden sm:inline"
+            />
+
+            <span className="text-foreground font-medium truncate">
+              {navItems[
+                activeNav
+              ]?.label ??
+                ""}
+            </span>
+          </div>
+
+          {/* ANNOUNCEMENT */}
+
+          <div className="mb-4 bg-secondary/20 border border-secondary/40 rounded-lg px-3 py-2 flex items-start gap-2">
+            <Bell
+              size={14}
+              style={{
+                color:
+                  "#c49e00",
+              }}
+              className="flex-shrink-0 mt-0.5"
+            />
+
+            <p className="text-xs text-foreground">
+              <span className="font-semibold">
+                Announcement:
+              </span>{" "}
+              Campus-wide QR item check on{" "}
+              <strong>
+                June 18, 2026
+              </strong>
+              . Ensure all items are QR-registered.
+            </p>
+          </div>
+
+          <ActivePage />
+        </main>
+      </div>
+
+      {/* =====================================================
+          FOOTER
+      ====================================================== */}
+
+      <footer className="bg-white border-t border-border px-4 py-2 flex items-center justify-between gap-2 flex-wrap">
+        <p className="text-xs text-muted-foreground">
+          &copy; 2026 University
+          of Cebu — QRpass
+        </p>
+
+        <p className="text-xs text-muted-foreground hidden sm:block">
+          Main Campus
+          &nbsp;|&nbsp; V1.0
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+// ── App root ──────────────────────────────────────────────────────────────────

@@ -45,6 +45,7 @@ import {
   BookOpen, AlertCircle, Layers, XCircle,
 } from "lucide-react";
 
+// ── QRpass Logo ───────────────────────────────────────────────────────────────
 function QRpassLogo({
   size = 96,
   showText = false,
@@ -52,44 +53,21 @@ function QRpassLogo({
   size?: number;
   showText?: boolean;
 }) {
-  if (showText) {
-    return (
-      <img
-        src="/qrpass-logo.png"
-        alt="QRpass"
-        style={{
-          width: size,
-          height: "auto",
-          display: "block",
-          objectFit: "contain",
-        }}
-      />
-    );
-  }
-
   return (
-    <div
+    <img
+      src={
+        showText
+          ? "/qrpass-logo.png"
+          : "/qrpass-shield.png"
+      }
+      alt="QRpass"
       style={{
         width: size,
-        height: size,
-        overflow: "hidden",
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        flexShrink: 0,
+        height: "auto",
+        display: "block",
+        objectFit: "contain",
       }}
-    >
-      <img
-        src="/qrpass-logo.png"
-        alt=""
-        style={{
-          width: size * 1.55,
-          height: "auto",
-          display: "block",
-          transform: "translateY(-2px)",
-        }}
-      />
-    </div>
+    />
   );
 }
 
@@ -345,9 +323,9 @@ function StudentRegisterItem() {
           >
             {/* ITEM NAME */}
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">
-                Item Name / Description
-              </label>
+            <label className="block text-xs font-semibold text-foreground mb-1">
+              Item Name
+            </label>
 
               <input
                 type="text"
@@ -358,7 +336,7 @@ function StudentRegisterItem() {
                     item_name: e.target.value,
                   })
                 }
-                placeholder="e.g. Laptop Dell XPS 15"
+                placeholder="e.g. Basketball, Laptop, Camera"
                 required
                 className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
@@ -555,9 +533,9 @@ function StudentRegisterItem() {
 
       {/* COMPLETE DESCRIPTION */}
       <div>
-        <label className="block text-xs font-semibold text-foreground mb-1">
-          Complete Item Description
-        </label>
+      <label className="block text-xs font-semibold text-foreground mb-1">
+        Description
+      </label>
 
         <input
           type="text"
@@ -568,7 +546,7 @@ function StudentRegisterItem() {
               complete_description: e.target.value,
             })
           }
-          placeholder="e.g. Black Aquaflask 32oz with blue handle"
+          placeholder="Describe the item, identifying features, size, markings, or other useful details"
           required
           className="w-full px-3 py-2 text-sm border border-border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
@@ -1331,19 +1309,12 @@ function StudentLostAndFound() {
   const [claimingId, setClaimingId] =
     useState<number | null>(null);
 
-  /*
-  |--------------------------------------------------------------------------
-  | LOAD LOST & FOUND REGISTRY
-  |--------------------------------------------------------------------------
-  */
-
   async function loadItems() {
     try {
       setLoading(true);
       setError("");
 
-      const data =
-        await getLostFoundItems();
+      const data = await getLostFoundItems();
 
       setItems(
         Array.isArray(data)
@@ -1365,19 +1336,10 @@ function StudentLostAndFound() {
     loadItems();
   }, []);
 
-  /*
-  |--------------------------------------------------------------------------
-  | CLAIM ITEM
-  |--------------------------------------------------------------------------
-  */
-
-  async function handleClaim(
-    id: number
-  ) {
-    const confirmed =
-      window.confirm(
-        "Submit a claim for this item? You will still need to visit the CSU office for ownership verification."
-      );
+  async function handleClaim(id: number) {
+    const confirmed = window.confirm(
+      "Submit a claim for this found item? You will still need to visit the Security office for ownership verification."
+    );
 
     if (!confirmed) {
       return;
@@ -1388,8 +1350,7 @@ function StudentLostAndFound() {
       setError("");
       setSuccess("");
 
-      const result =
-        await claimLostFoundItem(id);
+      const result = await claimLostFoundItem(id);
 
       setSuccess(
         result?.message ||
@@ -1412,92 +1373,84 @@ function StudentLostAndFound() {
     }
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | SEARCH
-  |--------------------------------------------------------------------------
-  */
+  const filteredItems = items.filter((item) => {
+    const query = search.trim().toLowerCase();
 
-  const filteredItems =
-    items.filter((item) => {
-      const query =
-        search
-          .trim()
-          .toLowerCase();
+    if (!query) {
+      return true;
+    }
 
-      if (!query) {
-        return true;
-      }
+    const searchableText = [
+      item.id,
+      item.report_type,
+      item.item_name,
+      item.category,
+      item.brand_model,
+      item.color,
+      item.location_found,
+      item.location_lost,
+      item.description,
+      item.status,
+      item.finder?.name,
+      item.finder?.username,
+      item.lost_by?.name,
+      item.lost_by?.username,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
 
-      const searchableText = [
-        item.id,
-        item.item_name,
-        item.category,
-        item.brand_model,
-        item.color,
-        item.location_found,
-        item.description,
-        item.status,
-        item.finder?.name,
-        item.finder?.username,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+    return searchableText.includes(query);
+  });
 
-      return searchableText.includes(
-        query
-      );
-    });
+  const foundCount = items.filter(
+    (item) =>
+      String(item.report_type ?? "found").toLowerCase() ===
+        "found" &&
+      String(item.status ?? "").toLowerCase() ===
+        "found"
+  ).length;
 
-  /*
-  |--------------------------------------------------------------------------
-  | FORMAT DATE
-  |--------------------------------------------------------------------------
-  */
+  const lostCount = items.filter(
+    (item) =>
+      String(item.report_type ?? "").toLowerCase() ===
+        "lost" &&
+      String(item.status ?? "").toLowerCase() ===
+        "lost"
+  ).length;
 
-  function formatDate(
-    value?: string | null
-  ) {
+  const recoveredCount = items.filter(
+    (item) =>
+      String(item.status ?? "").toLowerCase() ===
+      "recovered"
+  ).length;
+
+  function formatDate(value?: string | null) {
     if (!value) {
       return "—";
     }
 
-    const date =
-      new Date(value);
+    const date = new Date(value);
 
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
+    if (Number.isNaN(date.getTime())) {
       return value;
     }
 
-    return date.toLocaleDateString(
-      "en-PH",
-      {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }
-    );
+    return date.toLocaleString("en-PH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   }
-
-  /*
-  |--------------------------------------------------------------------------
-  | PAGE
-  |--------------------------------------------------------------------------
-  */
 
   return (
     <div className="space-y-5">
       <PageHeader
         title="Lost & Found"
-        subtitle="Browse items turned over to the Civil Security Unit and submit a claim if an item belongs to you."
+        subtitle="Browse found items and lost-item reports recorded by the Security office."
       />
-
-      {/* Information */}
 
       <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
         <div className="flex items-start gap-2">
@@ -1508,26 +1461,15 @@ function StudentLostAndFound() {
 
           <div>
             <p className="text-sm font-medium text-blue-900">
-              CSU Lost & Found Procedure
+              Lost & Found Procedure
             </p>
 
             <p className="mt-1 text-xs text-blue-800">
-              Found items must be
-              physically turned over to
-              the CSU office. CSU
-              personnel will record the
-              item in QRPass and credit
-              the person who turned it
-              over. Students can browse
-              records and submit claims,
-              but cannot create Lost &
-              Found reports.
+              Found items must be physically turned over to the Security office before they are recorded. Lost-item reports are also encoded by Security. Students can browse records and claim available found items, but cannot create Lost & Found reports directly.
             </p>
           </div>
         </div>
       </div>
-
-      {/* Messages */}
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -1541,58 +1483,35 @@ function StudentLostAndFound() {
         </div>
       )}
 
-      {/* Statistics */}
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard
           label="Total Reports"
-          value={String(
-            items.length
-          )}
-          icon={
-            <BookOpen size={20} />
-          }
+          value={String(items.length)}
+          icon={<BookOpen size={20} />}
           color="#003087"
         />
 
         <StatCard
-          label="Available Items"
-          value={String(
-            items.filter(
-              (item) =>
-                String(
-                  item.status ?? ""
-                ).toLowerCase() ===
-                "found"
-            ).length
-          )}
-          icon={
-            <Package size={20} />
-          }
-          color="#f5c200"
+          label="Found Items"
+          value={String(foundCount)}
+          icon={<Package size={20} />}
+          color="#00aeef"
+        />
+
+        <StatCard
+          label="Lost Reports"
+          value={String(lostCount)}
+          icon={<AlertTriangle size={20} />}
+          color="#e74c3c"
         />
 
         <StatCard
           label="Recovered"
-          value={String(
-            items.filter(
-              (item) =>
-                String(
-                  item.status ?? ""
-                ).toLowerCase() ===
-                "recovered"
-            ).length
-          )}
-          icon={
-            <CheckCircle
-              size={20}
-            />
-          }
+          value={String(recoveredCount)}
+          icon={<CheckCircle size={20} />}
           color="#2ecc71"
         />
       </div>
-
-      {/* Search */}
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
@@ -1604,12 +1523,8 @@ function StudentLostAndFound() {
           <input
             type="text"
             value={search}
-            onChange={(e) =>
-              setSearch(
-                e.target.value
-              )
-            }
-            placeholder="Search item, category, location, finder..."
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search item, report type, category, location..."
             className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
@@ -1620,282 +1535,251 @@ function StudentLostAndFound() {
           disabled={loading}
           className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading
-            ? "Refreshing..."
-            : "Refresh"}
+          {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
-
-      {/* Loading */}
 
       {loading && (
         <div className="rounded-lg border border-border bg-card p-10 text-center">
           <p className="text-sm text-muted-foreground">
-            Loading Lost & Found
-            registry...
+            Loading Lost & Found registry...
           </p>
         </div>
       )}
 
-      {/* Empty */}
+      {!loading && filteredItems.length === 0 && (
+        <div className="rounded-lg border border-border bg-card p-10 text-center">
+          <BookOpen
+            size={32}
+            className="mx-auto mb-3 text-muted-foreground"
+          />
+
+          <p className="text-sm font-medium text-foreground">
+            No Lost & Found records found.
+          </p>
+
+          <p className="mt-1 text-xs text-muted-foreground">
+            Reports recorded by the Security office will appear here.
+          </p>
+        </div>
+      )}
 
       {!loading &&
-        filteredItems.length ===
-          0 && (
-          <div className="rounded-lg border border-border bg-card p-10 text-center">
-            <BookOpen
-              size={32}
-              className="mx-auto mb-3 text-muted-foreground"
-            />
+        filteredItems.map((item) => {
+          const reportType = String(
+            item.report_type ?? "found"
+          ).toLowerCase();
+          const isLostReport = reportType === "lost";
 
-            <p className="text-sm font-medium text-foreground">
-              No Lost & Found
-              records found.
-            </p>
+          const status = String(
+            item.status ?? (isLostReport ? "Lost" : "Found")
+          );
+          const statusLower = status.toLowerCase();
+          const isFound =
+            !isLostReport && statusLower === "found";
+          const isClaimed = statusLower === "claimed";
+          const isRecovered = statusLower === "recovered";
+          const isLost =
+            isLostReport && statusLower === "lost";
 
-            <p className="mt-1 text-xs text-muted-foreground">
-              Items turned over to
-              CSU will appear here.
-            </p>
-          </div>
-        )}
+          return (
+            <div
+              key={item.id}
+              className="rounded-lg border border-border bg-card shadow-sm"
+            >
+              <div className="p-4">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-base font-semibold text-foreground">
+                        {item.item_name}
+                      </h3>
 
-      {/* Registry */}
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                          isLostReport
+                            ? "bg-red-100 text-red-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
+                      >
+                        {isLostReport
+                          ? "Lost Report"
+                          : "Found Report"}
+                      </span>
 
-      {!loading &&
-        filteredItems.map(
-          (item) => {
-            const status =
-              String(
-                item.status ??
-                  "Found"
-              );
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                          isRecovered
+                            ? "bg-green-100 text-green-700"
+                            : isClaimed
+                            ? "bg-yellow-100 text-yellow-700"
+                            : isLost
+                            ? "bg-red-100 text-red-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
+                      >
+                        {status}
+                      </span>
 
-            const statusLower =
-              status.toLowerCase();
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        Report #{item.id}
+                      </span>
+                    </div>
 
-            const isFound =
-              statusLower ===
-              "found";
-
-            const isClaimed =
-              statusLower ===
-              "claimed";
-
-            const isRecovered =
-              statusLower ===
-              "recovered";
-
-            return (
-              <div
-                key={item.id}
-                className="rounded-lg border border-border bg-card shadow-sm"
-              >
-                <div className="p-4">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-
-                    <div className="min-w-0 flex-1">
-
-                      {/* Header */}
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base font-semibold text-foreground">
-                          {item.item_name}
-                        </h3>
-
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                            isRecovered
-                              ? "bg-green-100 text-green-700"
-                              : isClaimed
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
-                        >
-                          {status}
-                        </span>
-
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                          Report #
-                          {item.id}
-                        </span>
+                    <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Category
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {item.category || "—"}
+                        </p>
                       </div>
 
-                      {/* Details */}
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Brand / Model
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {item.brand_model || "—"}
+                        </p>
+                      </div>
 
-                      <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Color
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {item.color || "—"}
+                        </p>
+                      </div>
 
-                        <div>
-                          <p className="text-xs text-muted-foreground">
-                            Category
-                          </p>
-
-                          <p className="font-medium text-foreground">
-                            {item.category ||
-                              "—"}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs text-muted-foreground">
-                            Brand /
-                            Model
-                          </p>
-
-                          <p className="font-medium text-foreground">
-                            {item.brand_model ||
-                              "—"}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs text-muted-foreground">
-                            Color
-                          </p>
-
-                          <p className="font-medium text-foreground">
-                            {item.color ||
-                              "—"}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs text-muted-foreground">
-                            Date Found
-                          </p>
-
-                          <p className="font-medium text-foreground">
-                            {formatDate(
-                              item.date_found
-                            )}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs text-muted-foreground">
-                            Location
-                            Found
-                          </p>
-
-                          <p className="font-medium text-foreground">
-                            {item.location_found ||
-                              "—"}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs text-muted-foreground">
-                            Turned Over
-                            By
-                          </p>
-
-                          <p className="font-medium text-foreground">
-                            {item.finder
-                              ?.name ||
-                              "Not specified"}
-                          </p>
-
-                          {item.finder
-                            ?.username && (
-                            <p className="text-xs text-muted-foreground">
-                              {
-                                item
-                                  .finder
-                                  .username
-                              }
-                            </p>
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          {isLostReport
+                            ? "Date & Time Lost / Last Seen"
+                            : "Date & Time Found"}
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {formatDate(
+                            isLostReport
+                              ? item.date_lost
+                              : item.date_found
                           )}
-                        </div>
-
+                        </p>
                       </div>
 
-                      {/* Description */}
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          {isLostReport
+                            ? "Last Seen Location"
+                            : "Location Found"}
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {(isLostReport
+                            ? item.location_lost
+                            : item.location_found) || "—"}
+                        </p>
+                      </div>
 
-                      {item.description && (
-                        <div className="mt-4 rounded-lg bg-muted/40 p-3">
-                          <p className="text-xs font-medium text-muted-foreground">
-                            Item
-                            Description
-                          </p>
-
-                          <p className="mt-1 text-sm text-foreground">
-                            {
-                              item.description
-                            }
-                          </p>
-                        </div>
-                      )}
-
-                      {/* CSU */}
-
-                      {item.processor && (
-                        <div className="mt-3 text-xs text-muted-foreground">
-                          Processed by
-                          CSU:{" "}
-                          <span className="font-medium text-foreground">
-                            {
-                              item
-                                .processor
-                                .name
-                            }
-                          </span>
-                        </div>
-                      )}
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          {isLostReport
+                            ? "Reported Lost By"
+                            : "Turned Over By"}
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {isLostReport
+                            ? item.lost_by?.name || "Not specified"
+                            : item.finder?.name || "Not specified"}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Claim Action */}
+                    {isLostReport && isRecovered && (
+                      <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3">
+                        <p className="text-xs font-semibold text-green-800">
+                          Recovery / Turnover Details
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-green-900">
+                          Found / turned over by: {item.finder?.name || "Not available"}
+                        </p>
+                        {item.finder?.username && (
+                          <p className="text-xs text-green-700">
+                            ID: {item.finder.username}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-green-700">
+                          Location: {item.location_found || "—"}
+                        </p>
+                        <p className="text-xs text-green-700">
+                          Date & time: {formatDate(item.date_found)}
+                        </p>
+                      </div>
+                    )}
 
-                    <div className="flex-shrink-0">
+                    {item.description && (
+                      <div className="mt-4 rounded-lg bg-muted/40 p-3">
+                        <p className="text-xs font-medium text-muted-foreground">
+                          Item Description
+                        </p>
+                        <p className="mt-1 text-sm text-foreground">
+                          {item.description}
+                        </p>
+                      </div>
+                    )}
 
-                      {isFound && (
-                        <button
-                          type="button"
-                          disabled={
-                            claimingId ===
-                            Number(
-                              item.id
-                            )
-                          }
-                          onClick={() =>
-                            handleClaim(
-                              Number(
-                                item.id
-                              )
-                            )
-                          }
-                          className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
-                        >
-                          {claimingId ===
-                          Number(
-                            item.id
-                          )
-                            ? "Submitting..."
-                            : "Claim Item"}
-                        </button>
-                      )}
+                    {item.processor && (
+                      <div className="mt-3 text-xs text-muted-foreground">
+                        Processed by Security:{" "}
+                        <span className="font-medium text-foreground">
+                          {item.processor.name}
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
-                      {isClaimed && (
-                        <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
-                          Claim pending
-                          CSU verification
-                        </div>
-                      )}
+                  <div className="flex-shrink-0">
+                    {isFound && (
+                      <button
+                        type="button"
+                        disabled={
+                          claimingId === Number(item.id)
+                        }
+                        onClick={() =>
+                          handleClaim(Number(item.id))
+                        }
+                        className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+                      >
+                        {claimingId === Number(item.id)
+                          ? "Submitting..."
+                          : "Claim Item"}
+                      </button>
+                    )}
 
-                      {isRecovered && (
-                        <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-800">
-                          Returned to
-                          owner
-                        </div>
-                      )}
+                    {isLost && (
+                      <div className="max-w-xs rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+                        If you found an item matching this report, turn it over to the Security office.
+                      </div>
+                    )}
 
-                    </div>
+                    {isClaimed && (
+                      <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
+                        Claim pending Security verification
+                      </div>
+                    )}
 
+                    {isRecovered && (
+                      <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-800">
+                        Item recovered / returned
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-            );
-          }
-        )}
+            </div>
+          );
+        })}
     </div>
   );
 }
@@ -2976,8 +2860,7 @@ function SecurityEntryExitLog() {
       .filter(Boolean)
   ).size;
 
-  const scannedToday =
-    todayLogs.length + todayIncidents.length;
+  const scannedToday = todayLogs.length;
 
   function formatDate(dateString: string) {
     if (!dateString) return "—";
@@ -2995,26 +2878,29 @@ function SecurityEntryExitLog() {
   }
 
   function exportCSV() {
-    if (logs.length === 0) {
+    if (logs.length === 0 && incidents.length === 0) {
       alert("There are no entry / exit records to export.");
       return;
     }
 
     const headers = [
+      "Record Type",
       "Date",
       "Time",
       "Owner",
       "Owner ID",
       "Item",
       "Serial Number",
-      "QR Code",
+      "QR / Scanned Code",
       "Gate",
       "Direction",
-      "Result",
-      "Scanned By",
+      "Result / Status",
+      "Incident Type",
+      "Scanned / Reported By",
     ];
 
-    const rows = logs.map((log) => [
+    const scanRows = logs.map((log) => [
+      "Entry/Exit Scan",
       formatDate(log.scanned_at),
       formatTime(log.scanned_at),
       log.item?.user?.name ?? "",
@@ -3024,19 +2910,38 @@ function SecurityEntryExitLog() {
       log.qr_code ?? "",
       log.gate ?? "",
       log.direction ?? "",
-      log.result ?? "",
+      log.result ?? "Verified",
+      "",
       log.scanner?.name ?? "",
     ]);
+
+    const incidentRows = incidents.map((incident) => [
+      "Security Incident",
+      formatDate(incident.reported_at),
+      formatTime(incident.reported_at),
+      incident.item?.user?.name ?? "",
+      incident.item?.user?.username ?? "",
+      incident.item?.item_name ??
+        incident.item_name ??
+        "Unknown Item",
+      incident.item?.serial_number ??
+        incident.serial_number ??
+        "",
+      incident.scanned_code ?? "",
+      incident.gate ?? "",
+      "",
+      String(incident.status ?? "Flagged"),
+      incident.incident_type ?? "Security Incident",
+      incident.reporter?.name ?? "Security Personnel",
+    ]);
+
+    const rows = [...scanRows, ...incidentRows];
 
     const csvContent = [headers, ...rows]
       .map((row) =>
         row
           .map((value) => {
-            const text = String(value ?? "").replace(
-              /"/g,
-              '""'
-            );
-
+            const text = String(value ?? "").replace(/"/g, '""');
             return `"${text}"`;
           })
           .join(",")
@@ -3048,8 +2953,8 @@ function SecurityEntryExitLog() {
     });
 
     const url = URL.createObjectURL(blob);
-
     const link = document.createElement("a");
+
     link.href = url;
     link.download = `qrpass-entry-exit-${new Date()
       .toISOString()
@@ -3058,7 +2963,6 @@ function SecurityEntryExitLog() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
     URL.revokeObjectURL(url);
   }
 
@@ -3479,91 +3383,58 @@ function SecurityNotifications() {
 }
 
 function SecurityLostFound() {
-  /*
-  |--------------------------------------------------------------------------
-  | REGISTRY STATE
-  |--------------------------------------------------------------------------
-  */
-
-  const [items, setItems] =
-    useState<any[]>([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState("");
-
-  const [success, setSuccess] =
-    useState("");
-
-  const [search, setSearch] =
-    useState("");
-
-
-  /*
-  |--------------------------------------------------------------------------
-  | PAGE MODE
-  |--------------------------------------------------------------------------
-  */
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [search, setSearch] = useState("");
 
   const [tab, setTab] =
-    useState<"registry" | "report">(
-      "registry"
-    );
+    useState<"registry" | "report">("registry");
 
-
-  /*
-  |--------------------------------------------------------------------------
-  | SUBMISSION STATE
-  |--------------------------------------------------------------------------
-  */
+  const [reportMode, setReportMode] =
+    useState<"found" | "lost">("found");
 
   const [submitting, setSubmitting] =
     useState(false);
 
-  const [
-    recoveringId,
-    setRecoveringId,
-  ] = useState<number | null>(null);
+  const [recoveringId, setRecoveringId] =
+    useState<number | null>(null);
 
+  const [recoveringItem, setRecoveringItem] =
+    useState<any | null>(null);
 
-  /*
-  |--------------------------------------------------------------------------
-  | FOUND ITEM FORM
-  |--------------------------------------------------------------------------
-  */
+  const [recoveryForm, setRecoveryForm] = useState({
+    found_by_identifier: "",
+    location_found: "",
+    date_found: "",
+  });
 
   const [form, setForm] = useState({
     found_by_identifier: "",
+    location_found: "",
+    date_found: "",
+
+    lost_by_identifier: "",
+    location_lost: "",
+    date_lost: "",
+
     item_name: "",
     category: "",
     brand_model: "",
     color: "",
-    location_found: "",
-    date_found: "",
     description: "",
   });
-
-
-  /*
-  |--------------------------------------------------------------------------
-  | LOAD LOST & FOUND REGISTRY
-  |--------------------------------------------------------------------------
-  */
 
   async function loadItems() {
     try {
       setLoading(true);
       setError("");
 
-      const data =
-        await getLostFoundItems();
-
-      const list =
-        Array.isArray(data)
-          ? data
-          : data?.items ?? [];
+      const data = await getLostFoundItems();
+      const list = Array.isArray(data)
+        ? data
+        : data?.items ?? [];
 
       setItems(list);
     } catch (err) {
@@ -3577,36 +3448,18 @@ function SecurityLostFound() {
     }
   }
 
-
-  /*
-  |--------------------------------------------------------------------------
-  | LOAD PAGE
-  |--------------------------------------------------------------------------
-  */
-
   useEffect(() => {
     loadItems();
   }, []);
 
-
-  /*
-  |--------------------------------------------------------------------------
-  | FORM CHANGE
-  |--------------------------------------------------------------------------
-  */
-
   function handleFormChange(
-    e:
-      React.ChangeEvent<
-        | HTMLInputElement
-        | HTMLTextAreaElement
-        | HTMLSelectElement
-      >
+    e: React.ChangeEvent<
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | HTMLSelectElement
+    >
   ) {
-    const {
-      name,
-      value,
-    } = e.target;
+    const { name, value } = e.target;
 
     setForm((current) => ({
       ...current,
@@ -3614,19 +3467,23 @@ function SecurityLostFound() {
     }));
   }
 
+  function clearForm() {
+    setForm({
+      found_by_identifier: "",
+      location_found: "",
+      date_found: "",
 
-  /*
-  |--------------------------------------------------------------------------
-  | SUBMIT FOUND ITEM
-  |--------------------------------------------------------------------------
-  |
-  | Finder:
-  | Person who physically found / turned over the item.
-  |
-  | Processor:
-  | Automatically assigned by Laravel from the logged-in CSU account.
-  |
-  */
+      lost_by_identifier: "",
+      location_lost: "",
+      date_lost: "",
+
+      item_name: "",
+      category: "",
+      brand_model: "",
+      color: "",
+      description: "",
+    });
+  }
 
   async function handleSubmit(
     e: React.FormEvent
@@ -3636,128 +3493,111 @@ function SecurityLostFound() {
     setError("");
     setSuccess("");
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | FRONTEND VALIDATION
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-      !form.found_by_identifier.trim()
-    ) {
-      setError(
-        "Please enter the Student/Employee ID of the person who turned over the item."
-      );
-
-      return;
-    }
-
-
     if (!form.item_name.trim()) {
-      setError(
-        "Please enter the item name."
-      );
-
+      setError("Please enter the item name.");
       return;
     }
 
+    if (reportMode === "found") {
+      if (!form.found_by_identifier.trim()) {
+        setError(
+          "Please enter the Student/Employee ID of the person who turned over the item."
+        );
+        return;
+      }
 
-    if (
-      !form.location_found.trim()
-    ) {
-      setError(
-        "Please enter where the item was found."
-      );
+      if (!form.location_found.trim()) {
+        setError(
+          "Please enter where the item was found."
+        );
+        return;
+      }
 
-      return;
+      if (!form.date_found) {
+        setError(
+          "Please select the date the item was found."
+        );
+        return;
+      }
     }
 
+    if (reportMode === "lost") {
+      if (!form.lost_by_identifier.trim()) {
+        setError(
+          "Please enter the Student/Employee ID of the person who lost the item."
+        );
+        return;
+      }
 
-    if (!form.date_found) {
-      setError(
-        "Please select the date the item was found."
-      );
+      if (!form.location_lost.trim()) {
+        setError(
+          "Please enter where the item was last seen."
+        );
+        return;
+      }
 
-      return;
+      if (!form.date_lost) {
+        setError(
+          "Please select the date the item was lost."
+        );
+        return;
+      }
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | SEND TO LARAVEL
-    |--------------------------------------------------------------------------
-    */
 
     try {
       setSubmitting(true);
 
-      const result =
-        await createLostFoundItem({
+      if (reportMode === "found") {
+        const result = await createLostFoundItem({
+          report_type: "found",
           found_by_identifier:
             form.found_by_identifier.trim(),
-
-          item_name:
-            form.item_name.trim(),
-
+          item_name: form.item_name.trim(),
           category:
-            form.category.trim() ||
-            undefined,
-
+            form.category.trim() || undefined,
           brand_model:
-            form.brand_model.trim() ||
-            undefined,
-
+            form.brand_model.trim() || undefined,
           color:
-            form.color.trim() ||
-            undefined,
-
+            form.color.trim() || undefined,
           location_found:
             form.location_found.trim(),
-
-          date_found:
-            form.date_found,
-
+          date_found: form.date_found,
           description:
-            form.description.trim() ||
-            undefined,
+            form.description.trim() || undefined,
         });
 
+        setSuccess(
+          result?.message ||
+            "Found item recorded successfully."
+        );
+      } else {
+        const result = await createLostFoundItem({
+          report_type: "lost",
+          lost_by_identifier:
+            form.lost_by_identifier.trim(),
+          item_name: form.item_name.trim(),
+          category:
+            form.category.trim() || undefined,
+          brand_model:
+            form.brand_model.trim() || undefined,
+          color:
+            form.color.trim() || undefined,
+          location_lost:
+            form.location_lost.trim(),
+          date_lost: form.date_lost,
+          description:
+            form.description.trim() || undefined,
+        });
 
-      setSuccess(
-        result?.message ||
-          "Found item recorded successfully."
-      );
+        setSuccess(
+          result?.message ||
+            "Lost item report recorded successfully."
+        );
+      }
 
-
-      /*
-      |--------------------------------------------------------------------------
-      | CLEAR FORM
-      |--------------------------------------------------------------------------
-      */
-
-      setForm({
-        found_by_identifier: "",
-        item_name: "",
-        category: "",
-        brand_model: "",
-        color: "",
-        location_found: "",
-        date_found: "",
-        description: "",
-      });
-
-
-      /*
-      |--------------------------------------------------------------------------
-      | REFRESH REGISTRY
-      |--------------------------------------------------------------------------
-      */
-
+      clearForm();
       await loadItems();
-
       setTab("registry");
-
 
       setTimeout(() => {
         setSuccess("");
@@ -3766,41 +3606,58 @@ function SecurityLostFound() {
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to record the found item."
+          : "Failed to save Lost & Found report."
       );
     } finally {
       setSubmitting(false);
     }
   }
 
+  function localDateTimeNow() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const local = new Date(
+      now.getTime() - offset * 60 * 1000
+    );
 
-  /*
-  |--------------------------------------------------------------------------
-  | MARK CLAIMED ITEM AS RECOVERED
-  |--------------------------------------------------------------------------
-  */
+    return local.toISOString().slice(0, 16);
+  }
 
-  async function handleRecovered(
-    id: number
-  ) {
-    const confirmed =
-      window.confirm(
-        "Confirm that CSU has verified the claimant's ownership and the item has been returned to the rightful owner?"
-      );
+  async function handleRecovered(item: any) {
+    const reportType = String(
+      item.report_type ?? "found"
+    ).toLowerCase();
+
+    // Lost reports need turnover/recovery details first.
+    if (reportType === "lost") {
+      setError("");
+      setSuccess("");
+      setRecoveringItem(item);
+      setRecoveryForm({
+        found_by_identifier: "",
+        location_found: "",
+        date_found: localDateTimeNow(),
+      });
+      return;
+    }
+
+    // Found reports keep the existing claim-verification workflow.
+    const confirmed = window.confirm(
+      "Confirm that Security has verified the claimant's ownership and the found item has been returned to the rightful owner?"
+    );
 
     if (!confirmed) {
       return;
     }
 
     try {
-      setRecoveringId(id);
+      setRecoveringId(Number(item.id));
       setError("");
       setSuccess("");
 
-      const result =
-        await markLostFoundRecovered(
-          id
-        );
+      const result = await markLostFoundRecovered(
+        Number(item.id)
+      );
 
       setSuccess(
         result?.message ||
@@ -3823,219 +3680,209 @@ function SecurityLostFound() {
     }
   }
 
-
-  /*
-  |--------------------------------------------------------------------------
-  | SEARCH
-  |--------------------------------------------------------------------------
-  */
-
-  const filteredItems =
-    items.filter((item) => {
-      const query =
-        search
-          .trim()
-          .toLowerCase();
-
-      if (!query) {
-        return true;
-      }
-
-      const searchableText = [
-        item.id,
-        item.item_name,
-        item.category,
-        item.brand_model,
-        item.color,
-        item.location_found,
-        item.description,
-        item.status,
-
-        item.finder?.name,
-        item.finder?.username,
-
-        item.processor?.name,
-        item.processor?.username,
-
-        item.claimant?.name,
-        item.claimant?.username,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return searchableText.includes(
-        query
-      );
-    });
-
-
-  /*
-  |--------------------------------------------------------------------------
-  | STATISTICS
-  |--------------------------------------------------------------------------
-  */
-
-  const foundCount =
-    items.filter(
-      (item) =>
-        String(
-          item.status ?? ""
-        ).toLowerCase() ===
-        "found"
-    ).length;
-
-
-  const claimedCount =
-    items.filter(
-      (item) =>
-        String(
-          item.status ?? ""
-        ).toLowerCase() ===
-        "claimed"
-    ).length;
-
-
-  const recoveredCount =
-    items.filter(
-      (item) =>
-        String(
-          item.status ?? ""
-        ).toLowerCase() ===
-        "recovered"
-    ).length;
-
-
-  /*
-  |--------------------------------------------------------------------------
-  | DATE FORMATTER
-  |--------------------------------------------------------------------------
-  */
-
-  function formatDate(
-    value?: string | null
+  async function handleLostRecoverySubmit(
+    e: React.FormEvent
   ) {
+    e.preventDefault();
+
+    if (!recoveringItem) {
+      return;
+    }
+
+    if (!recoveryForm.found_by_identifier.trim()) {
+      setError(
+        "Please enter the Student/Employee ID of the person who found or returned the item."
+      );
+      return;
+    }
+
+    if (!recoveryForm.location_found.trim()) {
+      setError(
+        "Please enter where the item was found or turned over."
+      );
+      return;
+    }
+
+    if (!recoveryForm.date_found) {
+      setError(
+        "Please enter the exact date and time the item was found or turned over."
+      );
+      return;
+    }
+
+    try {
+      setRecoveringId(Number(recoveringItem.id));
+      setError("");
+      setSuccess("");
+
+      const result = await markLostFoundRecovered(
+        Number(recoveringItem.id),
+        {
+          found_by_identifier:
+            recoveryForm.found_by_identifier.trim(),
+          location_found:
+            recoveryForm.location_found.trim(),
+          date_found: recoveryForm.date_found,
+        }
+      );
+
+      setSuccess(
+        result?.message ||
+          "Lost item recovery recorded successfully."
+      );
+
+      setRecoveringItem(null);
+      setRecoveryForm({
+        found_by_identifier: "",
+        location_found: "",
+        date_found: "",
+      });
+
+      await loadItems();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to record lost item recovery."
+      );
+    } finally {
+      setRecoveringId(null);
+    }
+  }
+
+  const filteredItems = items.filter((item) => {
+    const query = search.trim().toLowerCase();
+
+    if (!query) {
+      return true;
+    }
+
+    const searchableText = [
+      item.id,
+      item.report_type,
+      item.item_name,
+      item.category,
+      item.brand_model,
+      item.color,
+      item.location_found,
+      item.location_lost,
+      item.description,
+      item.status,
+
+      item.finder?.name,
+      item.finder?.username,
+
+      item.lost_by?.name,
+      item.lost_by?.username,
+
+      item.processor?.name,
+      item.processor?.username,
+
+      item.claimant?.name,
+      item.claimant?.username,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(query);
+  });
+
+  const foundCount = items.filter(
+    (item) =>
+      String(item.report_type ?? "found").toLowerCase() ===
+        "found" &&
+      String(item.status ?? "").toLowerCase() ===
+        "found"
+  ).length;
+
+  const lostCount = items.filter(
+    (item) =>
+      String(item.report_type ?? "").toLowerCase() ===
+        "lost" &&
+      String(item.status ?? "").toLowerCase() ===
+        "lost"
+  ).length;
+
+  const claimedCount = items.filter(
+    (item) =>
+      String(item.status ?? "").toLowerCase() ===
+      "claimed"
+  ).length;
+
+  const recoveredCount = items.filter(
+    (item) =>
+      String(item.status ?? "").toLowerCase() ===
+      "recovered"
+  ).length;
+
+  function formatDate(value?: string | null) {
     if (!value) {
       return "—";
     }
 
-    const date =
-      new Date(value);
+    const date = new Date(value);
 
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
+    if (Number.isNaN(date.getTime())) {
       return value;
     }
 
-    return date.toLocaleDateString(
-      "en-PH",
-      {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }
-    );
+    return date.toLocaleString("en-PH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   }
 
+  function getStatusClass(status: string) {
+    const normalized = status.toLowerCase();
 
-  /*
-  |--------------------------------------------------------------------------
-  | STATUS STYLE
-  |--------------------------------------------------------------------------
-  */
-
-  function getStatusClass(
-    status: string
-  ) {
-    const normalized =
-      status.toLowerCase();
-
-    if (
-      normalized === "recovered"
-    ) {
-      return (
-        "bg-green-100 " +
-        "text-green-700"
-      );
+    if (normalized === "recovered") {
+      return "bg-green-100 text-green-700";
     }
 
-    if (
-      normalized === "claimed"
-    ) {
-      return (
-        "bg-yellow-100 " +
-        "text-yellow-700"
-      );
+    if (normalized === "claimed") {
+      return "bg-yellow-100 text-yellow-700";
     }
 
-    return (
-      "bg-blue-100 " +
-      "text-blue-700"
-    );
+    if (normalized === "lost") {
+      return "bg-red-100 text-red-700";
+    }
+
+    return "bg-blue-100 text-blue-700";
   }
-
-
-  /*
-  |--------------------------------------------------------------------------
-  | PAGE
-  |--------------------------------------------------------------------------
-  */
 
   return (
     <div className="space-y-5">
-
       <PageHeader
         title="Lost & Found"
-        subtitle="Record items turned over to the CSU office, credit the finder, and process ownership claims."
+        subtitle="Manage found and lost item reports in one registry, credit finders, identify owners, and process recoveries."
       />
 
-
-      {/* ===============================================================
-          CSU PROCEDURE NOTICE
-      ================================================================ */}
-
       <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-
         <div className="flex items-start gap-3">
-
           <Shield
             size={18}
             className="mt-0.5 flex-shrink-0 text-blue-700"
           />
 
           <div>
-
             <p className="text-sm font-semibold text-blue-900">
-              CSU Lost & Found
-              Procedure
+              Lost & Found Procedure
             </p>
 
             <p className="mt-1 text-xs leading-relaxed text-blue-800">
-              A found item must first
-              be physically turned over
-              to the Civil Security
-              Unit. CSU personnel then
-              records the item in
-              QRPass and credits the
-              person who turned it
-              over. Claims must be
-              verified by CSU before
-              an item is released.
+              Use Found Item when an item has been physically surrendered to Security. Use Lost Item when a student or employee reports an item missing. Security records and processes both report types in QRPass.
             </p>
-
           </div>
-
         </div>
-
       </div>
-
-
-      {/* ===============================================================
-          MESSAGES
-      ================================================================ */}
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -4043,78 +3890,50 @@ function SecurityLostFound() {
         </div>
       )}
 
-
       {success && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
           {success}
         </div>
       )}
 
-
-      {/* ===============================================================
-          STATISTICS
-      ================================================================ */}
-
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatCard
           label="Total Reports"
-          value={String(
-            items.length
-          )}
-          icon={
-            <BookOpen size={20} />
-          }
+          value={String(items.length)}
+          icon={<BookOpen size={20} />}
           color="#003087"
         />
 
-
         <StatCard
           label="Found"
-          value={String(
-            foundCount
-          )}
-          icon={
-            <Package size={20} />
-          }
+          value={String(foundCount)}
+          icon={<Package size={20} />}
           color="#00aeef"
         />
 
+        <StatCard
+          label="Lost"
+          value={String(lostCount)}
+          icon={<AlertTriangle size={20} />}
+          color="#e74c3c"
+        />
 
         <StatCard
           label="Pending Claims"
-          value={String(
-            claimedCount
-          )}
-          icon={
-            <Clock size={20} />
-          }
+          value={String(claimedCount)}
+          icon={<Clock size={20} />}
           color="#f5c200"
         />
 
-
         <StatCard
           label="Recovered"
-          value={String(
-            recoveredCount
-          )}
-          icon={
-            <CheckCircle
-              size={20}
-            />
-          }
+          value={String(recoveredCount)}
+          icon={<CheckCircle size={20} />}
           color="#2ecc71"
         />
-
       </div>
 
-
-      {/* ===============================================================
-          TAB BUTTONS
-      ================================================================ */}
-
       <div className="flex flex-wrap gap-2 border-b border-border pb-3">
-
         <button
           type="button"
           onClick={() => {
@@ -4130,12 +3949,12 @@ function SecurityLostFound() {
           Lost & Found Registry
         </button>
 
-
         <button
           type="button"
           onClick={() => {
             setTab("report");
             setError("");
+            setSuccess("");
           }}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             tab === "report"
@@ -4143,25 +3962,14 @@ function SecurityLostFound() {
               : "bg-muted text-muted-foreground hover:text-foreground"
           }`}
         >
-          + Record Found Item
+          + Record Lost / Found Item
         </button>
-
       </div>
-
-
-      {/* ===============================================================
-          REGISTRY TAB
-      ================================================================ */}
 
       {tab === "registry" && (
         <div className="space-y-4">
-
-          {/* Search */}
-
           <div className="flex flex-col gap-2 sm:flex-row">
-
             <div className="relative flex-1">
-
               <Search
                 size={15}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
@@ -4170,17 +3978,11 @@ function SecurityLostFound() {
               <input
                 type="text"
                 value={search}
-                onChange={(e) =>
-                  setSearch(
-                    e.target.value
-                  )
-                }
-                placeholder="Search report, item, finder, claimant, location..."
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search report, item, owner/finder, claimant, location..."
                 className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               />
-
             </div>
-
 
             <button
               type="button"
@@ -4188,705 +3990,573 @@ function SecurityLostFound() {
               disabled={loading}
               className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading
-                ? "Refreshing..."
-                : "Refresh"}
+              {loading ? "Refreshing..." : "Refresh"}
             </button>
-
           </div>
-
-
-          {/* Loading */}
 
           {loading && (
             <div className="rounded-lg border border-border bg-card p-10 text-center text-sm text-muted-foreground">
-              Loading Lost & Found
-              records...
+              Loading Lost & Found records...
             </div>
           )}
 
+          {!loading && filteredItems.length === 0 && (
+            <div className="rounded-lg border border-border bg-card p-10 text-center">
+              <BookOpen
+                size={32}
+                className="mx-auto mb-3 text-muted-foreground"
+              />
 
-          {/* Empty */}
+              <p className="text-sm font-medium text-foreground">
+                No Lost & Found records found.
+              </p>
 
-          {!loading &&
-            filteredItems.length ===
-              0 && (
-              <div className="rounded-lg border border-border bg-card p-10 text-center">
-
-                <BookOpen
-                  size={32}
-                  className="mx-auto mb-3 text-muted-foreground"
-                />
-
-                <p className="text-sm font-medium text-foreground">
-                  No Lost & Found
-                  records found.
-                </p>
-
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Record an item after
-                  it has been turned
-                  over to the CSU
-                  office.
-                </p>
-
-              </div>
-            )}
-
-
-          {/* Records */}
+              <p className="mt-1 text-xs text-muted-foreground">
+                Use the Record Lost / Found Item tab above, then choose the report type from the dropdown.
+              </p>
+            </div>
+          )}
 
           {!loading &&
-            filteredItems.map(
-              (item) => {
+            filteredItems.map((item) => {
+              const reportType = String(
+                item.report_type ?? "found"
+              ).toLowerCase();
+              const isLostReport = reportType === "lost";
 
-                const status =
-                  String(
-                    item.status ??
-                      "Found"
-                  );
+              const status = String(
+                item.status ??
+                  (isLostReport ? "Lost" : "Found")
+              );
+              const statusLower = status.toLowerCase();
+              const isClaimed = statusLower === "claimed";
+              const isRecovered =
+                statusLower === "recovered";
+              const isLost =
+                isLostReport && statusLower === "lost";
 
-                const statusLower =
-                  status.toLowerCase();
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-lg border border-border bg-card shadow-sm"
+                >
+                  <div className="p-4">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-base font-semibold text-foreground">
+                            {item.item_name}
+                          </h3>
 
-                const isClaimed =
-                  statusLower ===
-                  "claimed";
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                              isLostReport
+                                ? "bg-red-100 text-red-700"
+                                : "bg-blue-100 text-blue-700"
+                            }`}
+                          >
+                            {isLostReport
+                              ? "Lost Report"
+                              : "Found Report"}
+                          </span>
 
-                const isRecovered =
-                  statusLower ===
-                  "recovered";
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusClass(
+                              status
+                            )}`}
+                          >
+                            {status}
+                          </span>
 
-                return (
-                  <div
-                    key={item.id}
-                    className="rounded-lg border border-border bg-card shadow-sm"
-                  >
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            Report #{item.id}
+                          </span>
+                        </div>
 
-                    <div className="p-4">
-
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-
-                        <div className="min-w-0 flex-1">
-
-                          {/* Header */}
-
-                          <div className="flex flex-wrap items-center gap-2">
-
-                            <h3 className="text-base font-semibold text-foreground">
-                              {item.item_name}
-                            </h3>
-
-
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusClass(
-                                status
-                              )}`}
-                            >
-                              {status}
-                            </span>
-
-
-                            <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                              Report #
-                              {item.id}
-                            </span>
-
+                        <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Category
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {item.category || "—"}
+                            </p>
                           </div>
 
-
-                          {/* Item Info */}
-
-                          <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-
-                            <div>
-                              <p className="text-xs text-muted-foreground">
-                                Category
-                              </p>
-
-                              <p className="font-medium text-foreground">
-                                {item.category ||
-                                  "—"}
-                              </p>
-                            </div>
-
-
-                            <div>
-                              <p className="text-xs text-muted-foreground">
-                                Brand /
-                                Model
-                              </p>
-
-                              <p className="font-medium text-foreground">
-                                {item.brand_model ||
-                                  "—"}
-                              </p>
-                            </div>
-
-
-                            <div>
-                              <p className="text-xs text-muted-foreground">
-                                Color
-                              </p>
-
-                              <p className="font-medium text-foreground">
-                                {item.color ||
-                                  "—"}
-                              </p>
-                            </div>
-
-
-                            <div>
-                              <p className="text-xs text-muted-foreground">
-                                Location
-                                Found
-                              </p>
-
-                              <p className="font-medium text-foreground">
-                                {item.location_found ||
-                                  "—"}
-                              </p>
-                            </div>
-
-
-                            <div>
-                              <p className="text-xs text-muted-foreground">
-                                Date Found
-                              </p>
-
-                              <p className="font-medium text-foreground">
-                                {formatDate(
-                                  item.date_found
-                                )}
-                              </p>
-                            </div>
-
-
-                            <div>
-                              <p className="text-xs text-muted-foreground">
-                                Date
-                                Reported
-                              </p>
-
-                              <p className="font-medium text-foreground">
-                                {formatDate(
-                                  item.created_at
-                                )}
-                              </p>
-                            </div>
-
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Brand / Model
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {item.brand_model || "—"}
+                            </p>
                           </div>
 
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Color
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {item.color || "—"}
+                            </p>
+                          </div>
 
-                          {/* Finder Credit */}
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              {isLostReport
+                                ? "Last Seen Location"
+                                : "Location Found"}
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {(isLostReport
+                                ? item.location_lost
+                                : item.location_found) || "—"}
+                            </p>
+                          </div>
 
-                          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3">
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              {isLostReport
+                                ? "Date & Time Lost / Last Seen"
+                                : "Date & Time Found"}
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {formatDate(
+                                isLostReport
+                                  ? item.date_lost
+                                  : item.date_found
+                              )}
+                            </p>
+                          </div>
 
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Date Reported
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {formatDate(item.created_at)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {isLostReport ? (
+                          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3">
                             <div className="flex items-start gap-2">
+                              <User
+                                size={15}
+                                className="mt-0.5 flex-shrink-0 text-red-700"
+                              />
 
+                              <div>
+                                <p className="text-xs font-semibold text-red-800">
+                                  Reported Lost By / Owner
+                                </p>
+                                <p className="mt-1 text-sm font-medium text-red-900">
+                                  {item.lost_by?.name ||
+                                    "Not available"}
+                                </p>
+                                {item.lost_by?.username && (
+                                  <p className="text-xs text-red-700">
+                                    ID: {item.lost_by.username}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3">
+                            <div className="flex items-start gap-2">
                               <User
                                 size={15}
                                 className="mt-0.5 flex-shrink-0 text-green-700"
                               />
 
                               <div>
-
                                 <p className="text-xs font-semibold text-green-800">
-                                  Turned Over
-                                  By / Finder
-                                  Credit
+                                  Turned Over By / Finder Credit
                                 </p>
-
                                 <p className="mt-1 text-sm font-medium text-green-900">
-                                  {item.finder
-                                    ?.name ||
+                                  {item.finder?.name ||
                                     "Not available"}
                                 </p>
-
-                                {item.finder
-                                  ?.username && (
+                                {item.finder?.username && (
                                   <p className="text-xs text-green-700">
-                                    ID:{" "}
-                                    {
-                                      item
-                                        .finder
-                                        .username
-                                    }
+                                    ID: {item.finder.username}
                                   </p>
                                 )}
-
                               </div>
-
                             </div>
-
                           </div>
+                        )}
 
-
-                          {/* CSU Processor */}
-
-                          <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/50 p-3">
-
-                            <p className="text-xs text-muted-foreground">
-                              Processed by
-                              CSU
-                            </p>
-
-                            <p className="mt-0.5 text-sm font-medium text-foreground">
-                              {item.processor
-                                ?.name ||
-                                item.reporter
-                                  ?.name ||
-                                "—"}
-                            </p>
-
+                        {isLostReport && isRecovered && (
+                          <div className="mt-3 rounded-lg border border-green-200 bg-green-50 p-3">
+                            <div className="flex items-start gap-2">
+                              <User
+                                size={15}
+                                className="mt-0.5 flex-shrink-0 text-green-700"
+                              />
+                              <div>
+                                <p className="text-xs font-semibold text-green-800">
+                                  Found / Turned Over By
+                                </p>
+                                <p className="mt-1 text-sm font-medium text-green-900">
+                                  {item.finder?.name || "Not available"}
+                                </p>
+                                {item.finder?.username && (
+                                  <p className="text-xs text-green-700">
+                                    ID: {item.finder.username}
+                                  </p>
+                                )}
+                                <p className="mt-2 text-xs text-green-700">
+                                  Turnover location: {item.location_found || "—"}
+                                </p>
+                                <p className="text-xs text-green-700">
+                                  Turned over: {formatDate(item.date_found)}
+                                </p>
+                              </div>
+                            </div>
                           </div>
+                        )}
 
-
-                          {/* Claim Information */}
-
-                          {item.claimant && (
-                            <div className="mt-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
-
-                              <p className="text-xs font-semibold text-yellow-800">
-                                Claimant
-                              </p>
-
-                              <p className="mt-1 text-sm font-medium text-yellow-900">
-                                {
-                                  item
-                                    .claimant
-                                    .name
-                                }
-                              </p>
-
-                              {item.claimant
-                                .username && (
-                                <p className="text-xs text-yellow-700">
-                                  ID:{" "}
-                                  {
-                                    item
-                                      .claimant
-                                      .username
-                                  }
-                                </p>
-                              )}
-
-                              {item.claimed_at && (
-                                <p className="mt-1 text-xs text-yellow-700">
-                                  Claim
-                                  submitted:{" "}
-                                  {formatDate(
-                                    item.claimed_at
-                                  )}
-                                </p>
-                              )}
-
-                            </div>
-                          )}
-
-
-                          {/* Description */}
-
-                          {item.description && (
-                            <div className="mt-3 rounded-lg bg-muted/40 p-3">
-
-                              <p className="text-xs font-medium text-muted-foreground">
-                                Description
-                              </p>
-
-                              <p className="mt-1 text-sm text-foreground">
-                                {
-                                  item.description
-                                }
-                              </p>
-
-                            </div>
-                          )}
-
+                        <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/50 p-3">
+                          <p className="text-xs text-muted-foreground">
+                            Processed by Security
+                          </p>
+                          <p className="mt-0.5 text-sm font-medium text-foreground">
+                            {item.processor?.name ||
+                              item.reporter?.name ||
+                              "—"}
+                          </p>
                         </div>
 
+                        {!isLostReport && item.claimant && (
+                          <div className="mt-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+                            <p className="text-xs font-semibold text-yellow-800">
+                              Claimant
+                            </p>
+                            <p className="mt-1 text-sm font-medium text-yellow-900">
+                              {item.claimant.name}
+                            </p>
+                            {item.claimant.username && (
+                              <p className="text-xs text-yellow-700">
+                                ID: {item.claimant.username}
+                              </p>
+                            )}
+                            {item.claimed_at && (
+                              <p className="mt-1 text-xs text-yellow-700">
+                                Claim submitted:{" "}
+                                {formatDate(item.claimed_at)}
+                              </p>
+                            )}
+                          </div>
+                        )}
 
-                        {/* Actions */}
-
-                        <div className="flex flex-shrink-0 flex-col gap-2">
-
-                          {isClaimed && (
-                            <button
-                              type="button"
-                              disabled={
-                                recoveringId ===
-                                Number(
-                                  item.id
-                                )
-                              }
-                              onClick={() =>
-                                handleRecovered(
-                                  Number(
-                                    item.id
-                                  )
-                                )
-                              }
-                              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              {recoveringId ===
-                              Number(
-                                item.id
-                              )
-                                ? "Processing..."
-                                : "Verify & Mark Recovered"}
-                            </button>
-                          )}
-
-
-                          {isRecovered && (
-                            <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
-                              Item returned
-                              to verified
-                              owner
-                            </div>
-                          )}
-
-                        </div>
-
+                        {item.description && (
+                          <div className="mt-3 rounded-lg bg-muted/40 p-3">
+                            <p className="text-xs font-medium text-muted-foreground">
+                              Description
+                            </p>
+                            <p className="mt-1 text-sm text-foreground">
+                              {item.description}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
+                      <div className="flex flex-shrink-0 flex-col gap-2">
+                        {(isClaimed || isLost) && !isRecovered && (
+                          <button
+                            type="button"
+                            disabled={
+                              recoveringId === Number(item.id)
+                            }
+                            onClick={() =>
+                              handleRecovered(item)
+                            }
+                            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {recoveringId === Number(item.id)
+                              ? "Processing..."
+                              : isLostReport
+                              ? "Record Recovery"
+                              : "Verify & Mark Recovered"}
+                          </button>
+                        )}
+
+                        {isRecovered && (
+                          <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
+                            Item recovered / returned to owner
+                          </div>
+                        )}
+                      </div>
                     </div>
-
                   </div>
-                );
-              }
-            )}
-
+                </div>
+              );
+            })}
         </div>
       )}
 
-
-      {/* ===============================================================
-          RECORD FOUND ITEM TAB
-      ================================================================ */}
-
       {tab === "report" && (
         <div className="rounded-lg border border-border bg-card shadow-sm">
-
-          {/* Form Header */}
-
           <div className="border-b border-border px-4 py-4">
-
             <h3 className="font-semibold text-foreground">
-              Record Found Item
+              {reportMode === "found"
+                ? "Report Found Item"
+                : "Report Lost Item"}
             </h3>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              Use this form only after
-              the physical item has
-              been surrendered to the
-              CSU office.
+              {reportMode === "found"
+                ? "Use this form after a found item has been physically surrendered to the Security office."
+                : "Use this form when a student or employee reports an item as lost or missing."}
             </p>
-
           </div>
 
-
           <form
-            onSubmit={
-              handleSubmit
-            }
+            onSubmit={handleSubmit}
             className="space-y-5 p-4"
           >
-
-            {/* Finder Credit */}
-
-            <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-
-              <div className="mb-3">
-
-                <p className="text-sm font-semibold text-green-900">
-                  Finder / Turnover
-                  Credit
-                </p>
-
-                <p className="mt-1 text-xs text-green-700">
-                  Enter the QRPass
-                  Student or Employee
-                  ID of the person who
-                  physically found and
-                  turned over the
-                  item.
-                </p>
-
-              </div>
-
-
-              <label className="mb-1 block text-xs font-medium text-green-900">
-                Student / Employee ID
-                *
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <label className="mb-1 block text-xs font-medium text-foreground">
+                Report Type *
               </label>
 
-              <input
-                type="text"
-                name="found_by_identifier"
-                value={
-                  form.found_by_identifier
-                }
-                onChange={
-                  handleFormChange
-                }
-                required
-                placeholder="Example: 26-9999"
-                className="w-full rounded-lg border border-green-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-200"
-              />
+              <select
+                value={reportMode}
+                onChange={(e) => {
+                  const nextMode = e.target.value as "found" | "lost";
+                  setReportMode(nextMode);
+                  setError("");
+                  setSuccess("");
+                }}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="found">Found Item</option>
+                <option value="lost">Lost Item</option>
+              </select>
 
-              <p className="mt-1 text-xs text-green-700">
-                QRPass will use this
-                ID to identify and
-                credit the finder.
+              <p className="mt-2 text-xs text-muted-foreground">
+                Choose whether Security is recording an item that was found and turned over, or an item reported as lost. The required fields below will change automatically.
               </p>
-
             </div>
 
+            {reportMode === "found" ? (
+              <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                <div className="mb-3">
+                  <p className="text-sm font-semibold text-green-900">
+                    Finder / Turnover Credit
+                  </p>
+                  <p className="mt-1 text-xs text-green-700">
+                    Enter the Student or Employee ID of the person who found and physically turned over the item.
+                  </p>
+                </div>
 
-            {/* Item Name / Category */}
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-
-              <div>
-
-                <label className="mb-1 block text-xs font-medium text-foreground">
-                  Item Name *
+                <label className="mb-1 block text-xs font-medium text-green-900">
+                  Finder Student / Employee ID *
                 </label>
 
                 <input
                   type="text"
+                  name="found_by_identifier"
+                  value={form.found_by_identifier}
+                  onChange={handleFormChange}
+                  required
+                  placeholder="Example: 26-9999"
+                  className="w-full rounded-lg border border-green-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-200"
+                />
+              </div>
+            ) : (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                <div className="mb-3">
+                  <p className="text-sm font-semibold text-red-900">
+                    Person Reporting Lost Item
+                  </p>
+                  <p className="mt-1 text-xs text-red-700">
+                    Enter the Student or Employee ID of the person who owns and reported the missing item.
+                  </p>
+                </div>
+
+                <label className="mb-1 block text-xs font-medium text-red-900">
+                  Owner Student / Employee ID *
+                </label>
+
+                <input
+                  type="text"
+                  name="lost_by_identifier"
+                  value={form.lost_by_identifier}
+                  onChange={handleFormChange}
+                  required
+                  placeholder="Example: 26-9999"
+                  className="w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-200"
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Item Name *
+                </label>
+                <input
+                  type="text"
                   name="item_name"
-                  value={
-                    form.item_name
-                  }
-                  onChange={
-                    handleFormChange
-                  }
+                  value={form.item_name}
+                  onChange={handleFormChange}
                   required
                   placeholder="Example: Laptop"
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
-
               </div>
 
-
               <div>
-
                 <label className="mb-1 block text-xs font-medium text-foreground">
                   Category
                 </label>
-
                 <select
                   name="category"
-                  value={
-                    form.category
-                  }
-                  onChange={
-                    handleFormChange
-                  }
+                  value={form.category}
+                  onChange={handleFormChange}
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 >
-
-                  <option value="">
-                    Select category
-                  </option>
-
-                  <option value="Laptop">
-                    Laptop
-                  </option>
-
-                  <option value="Mobile Phone">
-                    Mobile Phone
-                  </option>
-
-                  <option value="Tablet">
-                    Tablet
-                  </option>
-
-                  <option value="Bag">
-                    Bag
-                  </option>
-
-                  <option value="Wallet">
-                    Wallet
-                  </option>
-
-                  <option value="ID / Card">
-                    ID / Card
-                  </option>
-
-                  <option value="Accessories">
-                    Accessories
-                  </option>
-
-                  <option value="Other">
-                    Other
-                  </option>
-
+                  <option value="">Select category</option>
+                  <option value="Laptop">Laptop</option>
+                  <option value="Mobile Phone">Mobile Phone</option>
+                  <option value="Tablet">Tablet</option>
+                  <option value="Bag">Bag</option>
+                  <option value="Wallet">Wallet</option>
+                  <option value="ID / Card">ID / Card</option>
+                  <option value="Accessories">Accessories</option>
+                  <option value="Other">Other</option>
                 </select>
-
               </div>
-
             </div>
 
-
-            {/* Brand / Color */}
-
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-
               <div>
-
                 <label className="mb-1 block text-xs font-medium text-foreground">
                   Brand / Model
                 </label>
-
                 <input
                   type="text"
                   name="brand_model"
-                  value={
-                    form.brand_model
-                  }
-                  onChange={
-                    handleFormChange
-                  }
+                  value={form.brand_model}
+                  onChange={handleFormChange}
                   placeholder="Example: Acer Aspire 5"
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
-
               </div>
 
-
               <div>
-
                 <label className="mb-1 block text-xs font-medium text-foreground">
                   Color
                 </label>
-
                 <input
                   type="text"
                   name="color"
-                  value={
-                    form.color
-                  }
-                  onChange={
-                    handleFormChange
-                  }
+                  value={form.color}
+                  onChange={handleFormChange}
                   placeholder="Example: Black"
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
-
               </div>
-
             </div>
-
-
-            {/* Location / Date */}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-
               <div>
-
                 <label className="mb-1 block text-xs font-medium text-foreground">
-                  Location Found *
+                  {reportMode === "found"
+                    ? "Location Found *"
+                    : "Last Seen Location *"}
                 </label>
-
                 <input
                   type="text"
-                  name="location_found"
+                  name={
+                    reportMode === "found"
+                      ? "location_found"
+                      : "location_lost"
+                  }
                   value={
-                    form.location_found
+                    reportMode === "found"
+                      ? form.location_found
+                      : form.location_lost
                   }
-                  onChange={
-                    handleFormChange
-                  }
+                  onChange={handleFormChange}
                   required
-                  placeholder="Example: 4th Floor Computer Laboratory"
+                  placeholder={
+                    reportMode === "found"
+                      ? "Example: 4th Floor Computer Laboratory"
+                      : "Example: Library, 2nd Floor"
+                  }
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
-
               </div>
-
 
               <div>
-
                 <label className="mb-1 block text-xs font-medium text-foreground">
-                  Date Found *
+                  {reportMode === "found"
+                    ? "Date & Time Found *"
+                    : "Date & Time Lost / Last Seen *"}
                 </label>
-
                 <input
-                  type="date"
-                  name="date_found"
+                  type="datetime-local"
+                  name={
+                    reportMode === "found"
+                      ? "date_found"
+                      : "date_lost"
+                  }
                   value={
-                    form.date_found
+                    reportMode === "found"
+                      ? form.date_found
+                      : form.date_lost
                   }
-                  onChange={
-                    handleFormChange
-                  }
+                  onChange={handleFormChange}
                   required
-                  max={
-                    new Date()
-                      .toISOString()
-                      .split("T")[0]
-                  }
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
-
               </div>
-
             </div>
 
-
-            {/* Description */}
-
             <div>
-
               <label className="mb-1 block text-xs font-medium text-foreground">
                 Item Description
               </label>
-
               <textarea
                 name="description"
-                value={
-                  form.description
-                }
-                onChange={
-                  handleFormChange
-                }
+                value={form.description}
+                onChange={handleFormChange}
                 rows={4}
                 placeholder="Describe identifying features, case, stickers, scratches, accessories, or other useful details."
                 className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               />
-
             </div>
 
-
-            {/* Security Notice */}
-
-            <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3">
-
-              <p className="text-xs text-yellow-800">
-                Confirm that the item
-                has already been
-                physically received by
-                CSU before saving this
-                record.
+            <div
+              className={`rounded-lg border px-4 py-3 ${
+                reportMode === "found"
+                  ? "border-yellow-200 bg-yellow-50"
+                  : "border-red-200 bg-red-50"
+              }`}
+            >
+              <p
+                className={`text-xs ${
+                  reportMode === "found"
+                    ? "text-yellow-800"
+                    : "text-red-800"
+                }`}
+              >
+                {reportMode === "found"
+                  ? "Confirm that the item has already been physically received by Security before saving this record."
+                  : "Confirm the owner's identity and the reported last-seen information before saving this lost-item report."}
               </p>
-
             </div>
-
-
-            {/* Buttons */}
 
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-
               <button
                 type="button"
                 onClick={() => {
-                  setTab(
-                    "registry"
-                  );
-
+                  setTab("registry");
                   setError("");
                 }}
                 className="rounded-lg border border-border bg-background px-5 py-2 text-sm font-medium hover:bg-muted"
@@ -4894,29 +4564,140 @@ function SecurityLostFound() {
                 Cancel
               </button>
 
-
               <button
                 type="submit"
-                disabled={
-                  submitting
-                }
+                disabled={submitting}
                 className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {submitting
                   ? "Saving..."
-                  : "Record Found Item"}
+                  : reportMode === "found"
+                  ? "Report Found Item"
+                  : "Report Lost Item"}
               </button>
-
             </div>
-
           </form>
-
         </div>
       )}
 
+      {recoveringItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-lg rounded-xl border border-border bg-card shadow-xl">
+            <div className="border-b border-border px-5 py-4">
+              <h3 className="font-semibold text-foreground">
+                Record Lost Item Recovery
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Record who found or returned the item, where it was turned over, and the exact date and time before marking it recovered.
+              </p>
+            </div>
+
+            <form
+              onSubmit={handleLostRecoverySubmit}
+              className="space-y-4 p-5"
+            >
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                <p className="text-xs font-medium text-red-800">
+                  Lost Item / Owner
+                </p>
+                <p className="mt-1 text-sm font-semibold text-red-900">
+                  {recoveringItem.item_name}
+                </p>
+                <p className="text-xs text-red-700">
+                  Owner: {recoveringItem.lost_by?.name || "Not available"}
+                  {recoveringItem.lost_by?.username
+                    ? ` (${recoveringItem.lost_by.username})`
+                    : ""}
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Found / Turned Over By Student or Employee ID *
+                </label>
+                <input
+                  type="text"
+                  value={recoveryForm.found_by_identifier}
+                  onChange={(e) =>
+                    setRecoveryForm((current) => ({
+                      ...current,
+                      found_by_identifier: e.target.value,
+                    }))
+                  }
+                  placeholder="Example: 26-9999"
+                  required
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Location Found / Turned Over *
+                </label>
+                <input
+                  type="text"
+                  value={recoveryForm.location_found}
+                  onChange={(e) =>
+                    setRecoveryForm((current) => ({
+                      ...current,
+                      location_found: e.target.value,
+                    }))
+                  }
+                  placeholder="Example: Security Office / Library"
+                  required
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Date & Time Found / Turned Over *
+                </label>
+                <input
+                  type="datetime-local"
+                  value={recoveryForm.date_found}
+                  onChange={(e) =>
+                    setRecoveryForm((current) => ({
+                      ...current,
+                      date_found: e.target.value,
+                    }))
+                  }
+                  required
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRecoveringItem(null);
+                    setError("");
+                  }}
+                  disabled={recoveringId !== null}
+                  className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={recoveringId !== null}
+                  className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {recoveringId !== null
+                    ? "Saving Recovery..."
+                    : "Save & Mark Recovered"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 // ══════════════════════════════════════════════════════════════════════════════
 // PCO PAGES
 // ══════════════════════════════════════════════════════════════════════════════
@@ -5238,12 +5019,16 @@ function PCOItemRegistry() {
   });
 
   // SUMMARY
-  const approvedCount = items.filter(
-    (item) => item.status === "approved"
+  const activeQrCount = items.filter(
+    (item) => item.is_active_qr === true
   ).length;
-
-  const pendingCount = items.filter(
-    (item) => item.status === "pending"
+  
+  const expiredCount = items.filter(
+    (item) => item.is_expired === true
+  ).length;
+  
+  const flaggedCount = items.filter(
+    (item) => item.is_flagged === true
   ).length;
 
   // EXPORT FULL ITEM REGISTRY
@@ -5283,14 +5068,24 @@ function PCOItemRegistry() {
       item.color ?? "—",
       item.purpose ?? "—",
       item.qr_code ?? "Not issued",
+    
+      item.qr_expires_at
+        ? new Date(item.qr_expires_at).toLocaleString("en-PH", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          })
+        : "No expiration",
+    
       new Date(item.created_at).toLocaleDateString("en-PH", {
         year: "numeric",
         month: "short",
         day: "numeric",
       }),
-      item.status === "approved"
-        ? "Approved"
-        : "Pending",
+    
+      item.registry_status ?? "Unknown",
     ]);
 
     const csvContent = [
@@ -5350,28 +5145,35 @@ function PCOItemRegistry() {
       />
 
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <StatCard
-          label="Total Items"
-          value={String(items.length)}
-          icon={<Package size={20} />}
-          color="#003087"
-        />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+  <StatCard
+    label="Total Registered"
+    value={String(items.length)}
+    icon={<Package size={20} />}
+    color="#003087"
+  />
 
-        <StatCard
-          label="Approved"
-          value={String(approvedCount)}
-          icon={<CheckCircle size={20} />}
-          color="#2ecc71"
-        />
+  <StatCard
+    label="Active QR Codes"
+    value={String(activeQrCount)}
+    icon={<QrCode size={20} />}
+    color="#2ecc71"
+  />
 
-        <StatCard
-          label="Pending"
-          value={String(pendingCount)}
-          icon={<Clock size={20} />}
-          color="#f5c200"
-        />
-      </div>
+  <StatCard
+    label="Expired"
+    value={String(expiredCount)}
+    icon={<Clock size={20} />}
+    color="#f5c200"
+  />
+
+  <StatCard
+    label="Flagged"
+    value={String(flaggedCount)}
+    icon={<AlertTriangle size={20} />}
+    color="#d32f2f"
+  />
+</div>
 
       <Card
         title="Registered Items"
@@ -5515,54 +5317,921 @@ function PCOItemRegistry() {
 
                     {/* STATUS */}
                     <td className="py-3 px-3">
-                      <StatusBadge
+                    <StatusBadge
                         status={
-                          item.status === "approved"
-                            ? "Approved"
-                            : "Pending"
+                          item.is_flagged
+                            ? "Flagged"
+                            : item.is_expired
+                            ? "Expired"
+                            : item.is_active_qr
+                            ? "Active"
+                            : item.status === "pending"
+                            ? "Pending"
+                            : item.registry_status || "Unknown"
                         }
-                      />
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-    </div>
-  );
-}
 
-function PCOReports() {
-  return (
-    <div className="space-y-5">
-      <PageHeader title="Reports" subtitle="Item registration and approval reports." />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Monthly Approvals" value="94" icon={<CheckCircle size={20} />} color="#003087" />
-        <StatCard label="QR Codes Issued" value="94" icon={<QrCode size={20} />} color="#00aeef" />
-        <StatCard label="Still Pending" value="8" icon={<Clock size={20} />} color="#f5c200" />
-        <StatCard label="Pending" value="8" icon={<Clock size={20} />} color="#f5c200" />
-      </div>
-      <Card title="Available Reports">
-        <div className="divide-y divide-border">
-          {[["Monthly Item Registration Summary", "Jun 2026", "PDF"], ["QR Code Issuance Log", "Jun 2026", "Excel"], ["Approval History with Timestamps", "Jun 2026", "PDF"], ["Item Registry Export", "All time", "Excel"]].map(([name, period, fmt]) => (
-            <div key={name as string} className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
-              <div>
-                <p className="text-sm text-foreground font-medium">{name}</p>
-                <p className="text-xs text-muted-foreground">{period}</p>
-              </div>
-              <button className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline">
-                <Download size={13} /> {fmt}
-              </button>
-            </div>
-          ))}
-        </div>
-      </Card>
-    </div>
-  );
-}
+                                            />
+                                          </td>
+                                        </tr>
+                                      ))
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </Card>
+                          </div>
+                        );
+                      }
 
+                      function PCOReports() {
+                        const [items, setItems] = useState<any[]>([]);
+                        const [loading, setLoading] = useState(true);
+                        const [error, setError] = useState("");
+                      
+                        async function loadReportData() {
+                          try {
+                            setLoading(true);
+                            setError("");
+                      
+                            const data = await getAllItems();
+                      
+                            setItems(data.items ?? []);
+                          } catch (err) {
+                            console.error(
+                              "Failed to load PCO report data:",
+                              err
+                            );
+                      
+                            setError("Failed to load report data.");
+                          } finally {
+                            setLoading(false);
+                          }
+                        }
+                      
+                        useEffect(() => {
+                          loadReportData();
+                        }, []);
+                      
+                        // =========================================================
+                        // STATISTICS
+                        // =========================================================
+                      
+                        const totalRegistered = items.length;
+                      
+                        const approvedCount = items.filter(
+                          (item) => item.status === "approved"
+                        ).length;
+                      
+                        const qrIssuedCount = items.filter(
+                          (item) =>
+                            item.status === "approved" &&
+                            item.qr_code
+                        ).length;
+                      
+                        const pendingCount = items.filter(
+                          (item) => item.status === "pending"
+                        ).length;
+                      
+                        const currentPeriod =
+                          new Date().toLocaleDateString("en-PH", {
+                            month: "short",
+                            year: "numeric",
+                          });
+                      
+                        // =========================================================
+                        // HELPER
+                        // =========================================================
+                      
+                        function formatDateTime(
+                          value: string | null | undefined
+                        ) {
+                          if (!value) {
+                            return "—";
+                          }
+                      
+                          return new Date(value).toLocaleString(
+                            "en-PH",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            }
+                          );
+                        }
+                      
+                        function formatDate(
+                          value: string | null | undefined
+                        ) {
+                          if (!value) {
+                            return "—";
+                          }
+                      
+                          return new Date(value).toLocaleDateString(
+                            "en-PH",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          );
+                        }
+                      
+                        // =========================================================
+                        // 1. MONTHLY ITEM REGISTRATION SUMMARY - PDF
+                        // =========================================================
+                      
+                        function handleMonthlyRegistrationPDF() {
+                          const now = new Date();
+                      
+                          const monthlyItems = items.filter(
+                            (item) => {
+                              if (!item.created_at) {
+                                return false;
+                              }
+                      
+                              const created = new Date(
+                                item.created_at
+                              );
+                      
+                              return (
+                                created.getMonth() ===
+                                  now.getMonth() &&
+                                created.getFullYear() ===
+                                  now.getFullYear()
+                              );
+                            }
+                          );
+                      
+                          const monthlyApproved =
+                            monthlyItems.filter(
+                              (item) =>
+                                item.status === "approved"
+                            ).length;
+                      
+                          const monthlyPending =
+                            monthlyItems.filter(
+                              (item) =>
+                                item.status === "pending"
+                            ).length;
+                      
+                          const doc = new jsPDF({
+                            orientation: "landscape",
+                          });
+                      
+                          doc.setFontSize(16);
+                      
+                          doc.text(
+                            "QRPass - Monthly Item Registration Summary",
+                            14,
+                            18
+                          );
+                      
+                          doc.setFontSize(10);
+                      
+                          doc.text(
+                            `Period: ${currentPeriod}`,
+                            14,
+                            27
+                          );
+                      
+                          doc.text(
+                            `Total Registrations: ${monthlyItems.length}`,
+                            14,
+                            34
+                          );
+                      
+                          doc.text(
+                            `Approved: ${monthlyApproved}`,
+                            14,
+                            41
+                          );
+                      
+                          doc.text(
+                            `Pending: ${monthlyPending}`,
+                            14,
+                            48
+                          );
+                      
+                          const rows = monthlyItems.map(
+                            (item) => [
+                              formatDate(item.created_at),
+                      
+                              item.user?.name ??
+                                "Unknown",
+                      
+                              item.user?.username ??
+                                "—",
+                      
+                              item.item_name ??
+                                "—",
+                      
+                              item.item_type ??
+                                "—",
+                      
+                              item.brand_model ??
+                                "—",
+                      
+                              item.serial_number ??
+                                "—",
+                      
+                              item.status === "approved"
+                                ? "Approved"
+                                : "Pending",
+                            ]
+                          );
+                      
+                          autoTable(doc, {
+                            startY: 56,
+                      
+                            head: [
+                              [
+                                "Date",
+                                "Owner",
+                                "Owner ID",
+                                "Item",
+                                "Type",
+                                "Brand / Model",
+                                "Serial Number",
+                                "Status",
+                              ],
+                            ],
+                      
+                            body: rows,
+                          });
+                      
+                          const fileDate = now
+                            .toISOString()
+                            .slice(0, 10);
+                      
+                          doc.save(
+                            `QRPass-Monthly-Item-Registration-${fileDate}.pdf`
+                          );
+                        }
+                      
+                        // =========================================================
+                        // 2. QR CODE ISSUANCE LOG - EXCEL
+                        // =========================================================
+                      
+                        function handleQrIssuanceExcel() {
+                          const now = new Date();
+                      
+                          const issuedItems = items.filter(
+                            (item) => {
+                              if (
+                                item.status !== "approved" ||
+                                !item.qr_code
+                              ) {
+                                return false;
+                              }
+                      
+                              const dateSource =
+                                item.approved_at ||
+                                item.updated_at ||
+                                item.created_at;
+                      
+                              if (!dateSource) {
+                                return false;
+                              }
+                      
+                              const issuedDate =
+                                new Date(dateSource);
+                      
+                              return (
+                                issuedDate.getMonth() ===
+                                  now.getMonth() &&
+                                issuedDate.getFullYear() ===
+                                  now.getFullYear()
+                              );
+                            }
+                          );
+                      
+                          const rows = issuedItems.map(
+                            (item) => ({
+                              Owner:
+                                item.user?.name ??
+                                "Unknown",
+                      
+                              "Owner ID":
+                                item.user?.username ??
+                                "—",
+                      
+                              Item:
+                                item.item_name ??
+                                "—",
+                      
+                              Type:
+                                item.item_type ??
+                                "—",
+                      
+                              "Brand / Model":
+                                item.brand_model ??
+                                "—",
+                      
+                              "Serial Number":
+                                item.serial_number ??
+                                "—",
+                      
+                              "QR ID":
+                                item.qr_code ??
+                                "—",
+                      
+                              "Approved / Issued At":
+                                formatDateTime(
+                                  item.approved_at ||
+                                    item.updated_at
+                                ),
+                      
+                              "QR Expiration":
+                                item.qr_expires_at
+                                  ? formatDateTime(
+                                      item.qr_expires_at
+                                    )
+                                  : "No expiration",
+                            })
+                          );
+                      
+                          const workbook =
+                            XLSX.utils.book_new();
+                      
+                          const worksheet =
+                            XLSX.utils.json_to_sheet(
+                              rows
+                            );
+                      
+                          worksheet["!cols"] = [
+                            { wch: 24 },
+                            { wch: 16 },
+                            { wch: 24 },
+                            { wch: 18 },
+                            { wch: 24 },
+                            { wch: 22 },
+                            { wch: 20 },
+                            { wch: 26 },
+                            { wch: 26 },
+                          ];
+                      
+                          XLSX.utils.book_append_sheet(
+                            workbook,
+                            worksheet,
+                            "QR Issuance Log"
+                          );
+                      
+                          const fileDate = now
+                            .toISOString()
+                            .slice(0, 10);
+                      
+                          XLSX.writeFile(
+                            workbook,
+                            `QRPass-QR-Code-Issuance-${fileDate}.xlsx`
+                          );
+                        }
+                      
+                        // =========================================================
+                        // 3. APPROVAL HISTORY WITH TIMESTAMPS - PDF
+                        // =========================================================
+                      
+                        function handleApprovalHistoryPDF() {
+                          const approvedItems = items
+                            .filter(
+                              (item) =>
+                                item.status === "approved"
+                            )
+                            .sort((a, b) => {
+                              const dateA = new Date(
+                                a.approved_at ||
+                                  a.updated_at ||
+                                  a.created_at
+                              ).getTime();
+                      
+                              const dateB = new Date(
+                                b.approved_at ||
+                                  b.updated_at ||
+                                  b.created_at
+                              ).getTime();
+                      
+                              return dateB - dateA;
+                            });
+                      
+                          const doc = new jsPDF({
+                            orientation: "landscape",
+                          });
+                      
+                          doc.setFontSize(16);
+                      
+                          doc.text(
+                            "QRPass - Approval History with Timestamps",
+                            14,
+                            18
+                          );
+                      
+                          doc.setFontSize(10);
+                      
+                          doc.text(
+                            `Generated: ${new Date().toLocaleString(
+                              "en-PH"
+                            )}`,
+                            14,
+                            27
+                          );
+                      
+                          doc.text(
+                            `Total Approved Items: ${approvedItems.length}`,
+                            14,
+                            34
+                          );
+                      
+                          const rows = approvedItems.map(
+                            (item) => [
+                              item.user?.name ??
+                                "Unknown",
+                      
+                              item.user?.username ??
+                                "—",
+                      
+                              item.item_name ??
+                                "—",
+                      
+                              item.item_type ??
+                                "—",
+                      
+                              item.serial_number ??
+                                "—",
+                      
+                              item.qr_code ??
+                                "—",
+                      
+                              formatDateTime(
+                                item.created_at
+                              ),
+                      
+                              formatDateTime(
+                                item.approved_at ||
+                                  item.updated_at
+                              ),
+                      
+                              "Approved",
+                            ]
+                          );
+                      
+                          autoTable(doc, {
+                            startY: 42,
+                      
+                            head: [
+                              [
+                                "Owner",
+                                "Owner ID",
+                                "Item",
+                                "Type",
+                                "Serial Number",
+                                "QR ID",
+                                "Registered At",
+                                "Approved At",
+                                "Status",
+                              ],
+                            ],
+                      
+                            body: rows,
+                      
+                            styles: {
+                              fontSize: 8,
+                            },
+                          });
+                      
+                          const fileDate = new Date()
+                            .toISOString()
+                            .slice(0, 10);
+                      
+                          doc.save(
+                            `QRPass-Approval-History-${fileDate}.pdf`
+                          );
+                        }
+                      
+                        // =========================================================
+                        // 4. ITEM REGISTRY EXPORT - EXCEL
+                        // =========================================================
+                      
+                        function handleItemRegistryExcel() {
+                          const rows = items.map(
+                            (item) => ({
+                              Owner:
+                                item.user?.name ??
+                                "Unknown",
+                      
+                              "Owner ID":
+                                item.user?.username ??
+                                "—",
+                      
+                              "Item Name":
+                                item.item_name ??
+                                "—",
+                      
+                              "Item Type":
+                                item.item_type ??
+                                "—",
+                      
+                              "Brand / Model":
+                                item.brand_model ??
+                                "—",
+                      
+                              "Serial Number":
+                                item.serial_number ??
+                                "—",
+                      
+                              Color:
+                                item.color ??
+                                "—",
+                      
+                              Purpose:
+                                item.purpose ??
+                                "—",
+                      
+                              "QR ID":
+                                item.qr_code ??
+                                "Not issued",
+                      
+                              "Date Registered":
+                                formatDateTime(
+                                  item.created_at
+                                ),
+                      
+                              "Approved At":
+                                item.status ===
+                                "approved"
+                                  ? formatDateTime(
+                                      item.approved_at ||
+                                        item.updated_at
+                                    )
+                                  : "Not approved",
+                      
+                              "QR Expiration":
+                                item.qr_expires_at
+                                  ? formatDateTime(
+                                      item.qr_expires_at
+                                    )
+                                  : "No expiration",
+                      
+                              "Registration Status":
+                                item.status ===
+                                "approved"
+                                  ? "Approved"
+                                  : item.status ===
+                                    "pending"
+                                  ? "Pending"
+                                  : item.status ??
+                                    "Unknown",
+                      
+                              "Registry Status":
+                                item.registry_status ??
+                                (item.is_flagged
+                                  ? "Flagged"
+                                  : item.is_expired
+                                  ? "Expired"
+                                  : item.is_active_qr
+                                  ? "Active"
+                                  : item.status ===
+                                    "pending"
+                                  ? "Pending"
+                                  : "Unknown"),
+                            })
+                          );
+                      
+                          const summaryRows = [
+                            {
+                              Statistic:
+                                "Total Registered",
+                              Value:
+                                totalRegistered,
+                            },
+                      
+                            {
+                              Statistic:
+                                "Approved Items",
+                              Value:
+                                approvedCount,
+                            },
+                      
+                            {
+                              Statistic:
+                                "QR Codes Issued",
+                              Value:
+                                qrIssuedCount,
+                            },
+                      
+                            {
+                              Statistic:
+                                "Pending Items",
+                              Value:
+                                pendingCount,
+                            },
+                      
+                            {
+                              Statistic:
+                                "Generated At",
+                              Value:
+                                new Date().toLocaleString(
+                                  "en-PH"
+                                ),
+                            },
+                          ];
+                      
+                          const workbook =
+                            XLSX.utils.book_new();
+                      
+                          const registrySheet =
+                            XLSX.utils.json_to_sheet(
+                              rows
+                            );
+                      
+                          const summarySheet =
+                            XLSX.utils.json_to_sheet(
+                              summaryRows
+                            );
+                      
+                          registrySheet["!cols"] = [
+                            { wch: 24 },
+                            { wch: 16 },
+                            { wch: 24 },
+                            { wch: 18 },
+                            { wch: 24 },
+                            { wch: 22 },
+                            { wch: 16 },
+                            { wch: 25 },
+                            { wch: 20 },
+                            { wch: 26 },
+                            { wch: 26 },
+                            { wch: 26 },
+                            { wch: 20 },
+                            { wch: 20 },
+                          ];
+                      
+                          summarySheet["!cols"] = [
+                            { wch: 25 },
+                            { wch: 30 },
+                          ];
+                      
+                          XLSX.utils.book_append_sheet(
+                            workbook,
+                            summarySheet,
+                            "Summary"
+                          );
+                      
+                          XLSX.utils.book_append_sheet(
+                            workbook,
+                            registrySheet,
+                            "Item Registry"
+                          );
+                      
+                          const fileDate = new Date()
+                            .toISOString()
+                            .slice(0, 10);
+                      
+                          XLSX.writeFile(
+                            workbook,
+                            `QRPass-Item-Registry-${fileDate}.xlsx`
+                          );
+                        }
+                      
+                        // =========================================================
+                        // REPORT DOWNLOAD HANDLER
+                        // =========================================================
+                      
+                        function handleReportDownload(
+                          reportName: string
+                        ) {
+                          if (
+                            reportName ===
+                            "Monthly Item Registration Summary"
+                          ) {
+                            handleMonthlyRegistrationPDF();
+                            return;
+                          }
+                      
+                          if (
+                            reportName ===
+                            "QR Code Issuance Log"
+                          ) {
+                            handleQrIssuanceExcel();
+                            return;
+                          }
+                      
+                          if (
+                            reportName ===
+                            "Approval History with Timestamps"
+                          ) {
+                            handleApprovalHistoryPDF();
+                            return;
+                          }
+                      
+                          if (
+                            reportName ===
+                            "Item Registry Export"
+                          ) {
+                            handleItemRegistryExcel();
+                          }
+                        }
+                      
+                        // =========================================================
+                        // REPORT LIST
+                        // =========================================================
+                      
+                        const reports = [
+                          {
+                            name:
+                              "Monthly Item Registration Summary",
+                            period:
+                              currentPeriod,
+                            format:
+                              "PDF",
+                          },
+                      
+                          {
+                            name:
+                              "QR Code Issuance Log",
+                            period:
+                              currentPeriod,
+                            format:
+                              "Excel",
+                          },
+                      
+                          {
+                            name:
+                              "Approval History with Timestamps",
+                            period:
+                              "All time",
+                            format:
+                              "PDF",
+                          },
+                      
+                          {
+                            name:
+                              "Item Registry Export",
+                            period:
+                              "All time",
+                            format:
+                              "Excel",
+                          },
+                        ];
+                      
+                        return (
+                          <div className="space-y-5">
+                            <PageHeader
+                              title="Reports"
+                              subtitle="Item registration, approval, QR issuance, and registry reports."
+                              action={
+                                <button
+                                  onClick={
+                                    loadReportData
+                                  }
+                                  disabled={
+                                    loading
+                                  }
+                                  className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+                                >
+                                  <RefreshCw
+                                    size={12}
+                                  />
+                      
+                                  {loading
+                                    ? "Refreshing..."
+                                    : "Refresh"}
+                                </button>
+                              }
+                            />
+                      
+                            {/* ERROR MESSAGE */}
+                            {error && (
+                              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-4 py-3">
+                                {error}
+                              </div>
+                            )}
+                      
+                            {/* STATISTICS */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              <StatCard
+                                label="Total Registered"
+                                value={
+                                  loading
+                                    ? "..."
+                                    : String(
+                                        totalRegistered
+                                      )
+                                }
+                                icon={
+                                  <Package
+                                    size={20}
+                                  />
+                                }
+                                color="#003087"
+                              />
+                      
+                              <StatCard
+                                label="Approved Items"
+                                value={
+                                  loading
+                                    ? "..."
+                                    : String(
+                                        approvedCount
+                                      )
+                                }
+                                icon={
+                                  <CheckCircle
+                                    size={20}
+                                  />
+                                }
+                                color="#2ecc71"
+                              />
+                      
+                              <StatCard
+                                label="QR Codes Issued"
+                                value={
+                                  loading
+                                    ? "..."
+                                    : String(
+                                        qrIssuedCount
+                                      )
+                                }
+                                icon={
+                                  <QrCode
+                                    size={20}
+                                  />
+                                }
+                                color="#00aeef"
+                              />
+                      
+                              <StatCard
+                                label="Pending"
+                                value={
+                                  loading
+                                    ? "..."
+                                    : String(
+                                        pendingCount
+                                      )
+                                }
+                                icon={
+                                  <Clock
+                                    size={20}
+                                  />
+                                }
+                                color="#f5c200"
+                              />
+                            </div>
+                      
+                            {/* AVAILABLE REPORTS */}
+                            <Card title="Available Reports">
+                              <div className="divide-y divide-border">
+                                {reports.map(
+                                  (report) => (
+                                    <div
+                                      key={
+                                        report.name
+                                      }
+                                      className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+                                    >
+                                      <div>
+                                        <p className="text-sm text-foreground font-medium">
+                                          {
+                                            report.name
+                                          }
+                                        </p>
+                      
+                                        <p className="text-xs text-muted-foreground">
+                                          {
+                                            report.period
+                                          }
+                                        </p>
+                                      </div>
+                      
+                                      <button
+                                        onClick={() =>
+                                          handleReportDownload(
+                                            report.name
+                                          )
+                                        }
+                                        disabled={
+                                          loading ||
+                                          items.length ===
+                                            0
+                                        }
+                                        className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline disabled:opacity-50"
+                                      >
+                                        <Download
+                                          size={13}
+                                        />
+                      
+                                        {
+                                          report.format
+                                        }
+                                      </button>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            </Card>
+                          </div>
+                        );
+                      }
 function PCONotifications() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -7010,7 +7679,7 @@ function AdminAnalytics() {
       doc.setFontSize(10);
 
       doc.text(
-        "Campus Item Registration & Verification System",
+        "University of Cebu - Main Campus",
         14,
         25
       );
@@ -9264,7 +9933,7 @@ function SysAdminSettings() {
       <div className="grid md:grid-cols-2 gap-5">
         <Card title="General Settings">
           <div className="p-4 space-y-4">
-            {[["System Name", "QRpass"], ["Institution", "Campus Item Registration & Verification System"], ["Academic Year", "2025-2026"], ["Semester", "2nd Semester"]].map(([label, value]) => (
+            {[["System Name", "QRpass"], ["Institution", "University of Cebu – Main Campus"], ["Academic Year", "2025-2026"], ["Semester", "2nd Semester"]].map(([label, value]) => (
               <div key={label as string}>
                 <label className="block text-xs font-semibold text-foreground mb-1">{label}</label>
                 <input defaultValue={value as string} className="w-full px-3 py-2 text-sm border border-border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30" />
@@ -9407,33 +10076,99 @@ function SysAdminSecurityConfig() {
 
 // ── Page registry ─────────────────────────────────────────────────────────────
 const PAGES: Record<Role, React.ComponentType[]> = {
-  student: [StudentRegisterItem, StudentMyQRCodes, StudentPermitStatus, StudentLostAndFound, StudentNotifications],
-  security: [SecurityScanVerify, SecurityEntryExitLog, SecurityLostFound, SecurityReports, SecurityNotifications],
-  pco: [PCOPermitRequests, PCOItemRegistry, PCOReports, PCONotifications],
-  sysadmin: [AdminDashboard,AdminRecords,AdminAnalytics,SysAdminUserAccounts,SysAdminSettings,SysAdminAuditLogs,SysAdminPerformance,SysAdminSecurityConfig,],
+  student: [
+    StudentRegisterItem,
+    StudentMyQRCodes,
+    StudentPermitStatus,
+    StudentLostAndFound,
+  ],
+
+  security: [
+    SecurityScanVerify,
+    SecurityEntryExitLog,
+    SecurityLostFound,
+    SecurityReports,
+  ],
+
+  pco: [
+    PCOPermitRequests,
+    PCOItemRegistry,
+    PCOReports,
+  ],
+
+  sysadmin: [
+    AdminDashboard,
+    AdminRecords,
+    AdminAnalytics,
+    SysAdminUserAccounts,
+    SysAdminSettings,
+    SysAdminAuditLogs,
+    SysAdminPerformance,
+    SysAdminSecurityConfig,
+  ],
 };
 
-const NAV: Record<Role, { icon: React.ReactNode; label: string; badge?: number }[]> = {
+const NAV: Record<
+  Role,
+  {
+    icon: React.ReactNode;
+    label: string;
+    badge?: number;
+  }[]
+> = {
   student: [
-    { icon: <Package size={16} />, label: "Register Item" },
-    { icon: <QrCode size={16} />, label: "My QR Codes", badge: 2 },
-    { icon: <Eye size={16} />, label: "Permit Status" },
-    { icon: <BookOpen size={16} />, label: "Lost & Found" },
-    { icon: <Bell size={16} />, label: "Notifications", badge: 3 },
+    {
+      icon: <Package size={16} />,
+      label: "Register Item",
+    },
+    {
+      icon: <QrCode size={16} />,
+      label: "My QR Codes",
+    },
+    {
+      icon: <Eye size={16} />,
+      label: "Permit Status",
+    },
+    {
+      icon: <BookOpen size={16} />,
+      label: "Lost & Found",
+    },
   ],
+
   security: [
-    { icon: <ScanLine size={16} />, label: "Scan & Verify" },
-    { icon: <Map size={16} />, label: "Entry / Exit Log" },
-    { icon: <BookOpen size={16} />, label: "Lost & Found" },
-    { icon: <BarChart2 size={16} />, label: "Reports" },
-    { icon: <Bell size={16} />, label: "Notifications", badge: 4 },
+    {
+      icon: <ScanLine size={16} />,
+      label: "Scan & Verify",
+    },
+    {
+      icon: <Map size={16} />,
+      label: "Entry / Exit Log",
+    },
+    {
+      icon: <BookOpen size={16} />,
+      label: "Lost & Found",
+    },
+    {
+      icon: <BarChart2 size={16} />,
+      label: "Reports",
+    },
   ],
+
   pco: [
-    { icon: <FileText size={16} />, label: "Registration Requests", badge: 8 },
-    { icon: <Layers size={16} />, label: "Item Registry" },
-    { icon: <BarChart2 size={16} />, label: "Reports" },
-    { icon: <Bell size={16} />, label: "Notifications", badge: 2 },
+    {
+      icon: <FileText size={16} />,
+      label: "Registration Requests",
+    },
+    {
+      icon: <Layers size={16} />,
+      label: "Item Registry",
+    },
+    {
+      icon: <BarChart2 size={16} />,
+      label: "Reports",
+    },
   ],
+
   sysadmin: [
     {
       icon: <BarChart2 size={16} />,
@@ -9456,7 +10191,7 @@ const NAV: Record<Role, { icon: React.ReactNode; label: string; badge?: number }
       label: "System Settings",
     },
     {
-      icon: <FileText size={16} />,
+      icon: <ClipboardList size={16} />,
       label: "Audit Logs",
     },
     {
@@ -9603,6 +10338,16 @@ function LoginPage({ onLogin }: { onLogin: (role: Role) => void }) {
       localStorage.setItem(
         "token",
         data.token
+      );
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(data.user)
+      );
+
+      localStorage.setItem(
+        "role",
+        data.user?.role ?? ""
       );
 
       const userRole =
@@ -11029,129 +11774,1243 @@ async function handleResetSubmit(
   );
 }
 
+
 // ── Dashboard layout ──────────────────────────────────────────────────────────
-function Dashboard({ role, onLogout }: { role: Role; onLogout: () => void }) {
+function Dashboard({
+  role,
+  onLogout,
+}: {
+  role: Role;
+  onLogout: () => void;
+}) {
   const navItems = NAV[role];
   const pages = PAGES[role];
-  const [activeNav, setActiveNav] = useState(0);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
-  const roleInfo = ROLES.find((r) => r.id === role)!;
-  const totalBadge = navItems.reduce((sum, n) => sum + (n.badge ?? 0), 0);
-  const ActivePage = pages[activeNav];
+
+  const [activeNav, setActiveNav] =
+    useState(0);
+
+  const [isMobile, setIsMobile] =
+    useState(window.innerWidth < 768);
+
+  const [sidebarOpen, setSidebarOpen] =
+    useState(window.innerWidth >= 768);
+
+  // =========================================================
+  // HEADER MENUS
+  // =========================================================
+
+  const [notificationOpen, setNotificationOpen] =
+    useState(false);
+
+  const [accountOpen, setAccountOpen] =
+    useState(false);
+
+  // =========================================================
+  // NOTIFICATIONS
+  // =========================================================
+
+  const [headerNotifications, setHeaderNotifications] =
+    useState<any[]>([]);
+
+  const [notificationsLoading, setNotificationsLoading] =
+    useState(false);
+
+  const [
+    markingNotificationId,
+    setMarkingNotificationId,
+  ] = useState<number | null>(null);
+
+  const [
+    markingAllNotifications,
+    setMarkingAllNotifications,
+  ] = useState(false);
+
+  const [notificationFilter, setNotificationFilter] =
+    useState<"all" | "unread" | "read">("all");
+
+  // =========================================================
+  // CURRENT USER
+  // =========================================================
+
+  const [currentUser] = useState<any>(() => {
+    try {
+      const savedUser =
+        localStorage.getItem("user");
+
+      return savedUser
+        ? JSON.parse(savedUser)
+        : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const roleInfo =
+    ROLES.find((r) => r.id === role)!;
+
+  const ActivePage =
+    pages[activeNav] ?? pages[0];
+
+  // =========================================================
+  // RESPONSIVE SIDEBAR
+  // =========================================================
 
   useEffect(() => {
     const handler = () => {
-      const mobile = window.innerWidth < 768;
+      const mobile =
+        window.innerWidth < 768;
+
       setIsMobile(mobile);
-      if (!mobile) setSidebarOpen(true);
+
+      if (!mobile) {
+        setSidebarOpen(true);
+      }
     };
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
+
+    window.addEventListener(
+      "resize",
+      handler
+    );
+
+    return () => {
+      window.removeEventListener(
+        "resize",
+        handler
+      );
+    };
   }, []);
 
-  function handleNavClick(i: number) {
-    setActiveNav(i);
-    if (isMobile) setSidebarOpen(false);
+  // =========================================================
+  // LOAD HEADER NOTIFICATIONS
+  // =========================================================
+
+  async function loadHeaderNotifications() {
+    try {
+      setNotificationsLoading(true);
+
+      const data =
+        await getNotifications();
+
+      setHeaderNotifications(
+        data.notifications ?? []
+      );
+    } catch (error) {
+      console.error(
+        "Failed to load notifications:",
+        error
+      );
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadHeaderNotifications();
+  }, [role]);
+
+  useEffect(() => {
+    loadHeaderNotifications();
+  }, [activeNav]);
+
+  const unreadNotificationCount =
+    headerNotifications.filter(
+      (notification) =>
+        !notification.is_read
+    ).length;
+
+  const readNotificationCount =
+    headerNotifications.length -
+    unreadNotificationCount;
+
+  const filteredHeaderNotifications =
+    headerNotifications.filter(
+      (notification) => {
+        if (
+          notificationFilter ===
+          "unread"
+        ) {
+          return !notification.is_read;
+        }
+
+        if (
+          notificationFilter ===
+          "read"
+        ) {
+          return Boolean(
+            notification.is_read
+          );
+        }
+
+        return true;
+      }
+    );
+
+  // =========================================================
+  // MARK SINGLE NOTIFICATION READ
+  // =========================================================
+
+  async function handleHeaderMarkRead(
+    id: number
+  ) {
+    try {
+      setMarkingNotificationId(id);
+
+      await markNotificationRead(id);
+
+      setHeaderNotifications(
+        (previous) =>
+          previous.map(
+            (notification) =>
+              notification.id === id
+                ? {
+                    ...notification,
+                    is_read: true,
+                    read_at:
+                      notification.read_at ??
+                      new Date().toISOString(),
+                  }
+                : notification
+          )
+      );
+    } catch (error) {
+      console.error(
+        "Failed to mark notification as read:",
+        error
+      );
+    } finally {
+      setMarkingNotificationId(null);
+    }
+  }
+
+  // =========================================================
+  // MARK ALL NOTIFICATIONS READ
+  // =========================================================
+
+  async function handleHeaderMarkAllRead() {
+    if (
+      unreadNotificationCount === 0
+    ) {
+      return;
+    }
+
+    try {
+      setMarkingAllNotifications(true);
+
+      await markAllNotificationsRead();
+
+      setHeaderNotifications(
+        (previous) =>
+          previous.map(
+            (notification) => ({
+              ...notification,
+
+              is_read: true,
+
+              read_at:
+                notification.read_at ??
+                new Date().toISOString(),
+            })
+          )
+      );
+    } catch (error) {
+      console.error(
+        "Failed to mark all notifications as read:",
+        error
+      );
+    } finally {
+      setMarkingAllNotifications(false);
+    }
+  }
+
+  // =========================================================
+  // DATE FORMATTER
+  // =========================================================
+
+  function formatNotificationDate(
+    value:
+      | string
+      | null
+      | undefined
+  ) {
+    if (!value) {
+      return "";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "";
+    }
+
+    return date.toLocaleString(
+      "en-PH",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    );
+  }
+
+
+  // =========================================================
+  // NOTIFICATION DISPLAY HELPERS
+  // =========================================================
+
+  function getNotificationStyle(
+    type:
+      | string
+      | null
+      | undefined
+  ) {
+    const normalizedType =
+      String(type ?? "")
+        .toLowerCase();
+
+    if (
+      normalizedType ===
+      "new_item_registration"
+    ) {
+      return {
+        card:
+          "bg-yellow-50 border-yellow-200",
+        icon:
+          "bg-yellow-100 text-yellow-700",
+        badge:
+          "bg-yellow-100 text-yellow-700",
+      };
+    }
+
+    if (
+      normalizedType ===
+      "item_approved"
+    ) {
+      return {
+        card:
+          "bg-green-50 border-green-200",
+        icon:
+          "bg-green-100 text-green-700",
+        badge:
+          "bg-green-100 text-green-700",
+      };
+    }
+
+    if (
+      normalizedType ===
+      "item_submitted"
+    ) {
+      return {
+        card:
+          "bg-blue-50 border-blue-200",
+        icon:
+          "bg-blue-100 text-blue-700",
+        badge:
+          "bg-blue-100 text-blue-700",
+      };
+    }
+
+    if (
+      normalizedType ===
+      "lost_found_claim"
+    ) {
+      return {
+        card:
+          "bg-purple-50 border-purple-200",
+        icon:
+          "bg-purple-100 text-purple-700",
+        badge:
+          "bg-purple-100 text-purple-700",
+      };
+    }
+
+    if (
+      normalizedType.includes(
+        "incident"
+      ) ||
+      normalizedType.includes(
+        "warning"
+      ) ||
+      normalizedType.includes(
+        "failed"
+      ) ||
+      normalizedType.includes(
+        "flagged"
+      )
+    ) {
+      return {
+        card:
+          "bg-red-50 border-red-200",
+        icon:
+          "bg-red-100 text-red-700",
+        badge:
+          "bg-red-100 text-red-700",
+      };
+    }
+
+    return {
+      card:
+        "bg-muted/30 border-border",
+      icon:
+        "bg-muted text-muted-foreground",
+      badge:
+        "bg-muted text-muted-foreground",
+    };
+  }
+
+  function getNotificationIcon(
+    type:
+      | string
+      | null
+      | undefined
+  ) {
+    const normalizedType =
+      String(type ?? "")
+        .toLowerCase();
+
+    if (
+      normalizedType ===
+      "new_item_registration"
+    ) {
+      return <Clock size={14} />;
+    }
+
+    if (
+      normalizedType ===
+      "item_approved"
+    ) {
+      return (
+        <CheckCircle size={14} />
+      );
+    }
+
+    if (
+      normalizedType.includes(
+        "incident"
+      ) ||
+      normalizedType.includes(
+        "warning"
+      ) ||
+      normalizedType.includes(
+        "failed"
+      ) ||
+      normalizedType.includes(
+        "flagged"
+      )
+    ) {
+      return (
+        <AlertTriangle size={14} />
+      );
+    }
+
+    if (
+      normalizedType ===
+        "item_submitted" ||
+      normalizedType ===
+        "lost_found_claim"
+    ) {
+      return <FileText size={14} />;
+    }
+
+    return <Bell size={14} />;
+  }
+
+  function getNotificationTypeLabel(
+    type:
+      | string
+      | null
+      | undefined
+  ) {
+    const value =
+      String(type ?? "").trim();
+
+    if (!value) {
+      return "General";
+    }
+
+    return value
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (letter) =>
+        letter.toUpperCase()
+      );
+  }
+
+  // =========================================================
+  // SIDEBAR
+  // =========================================================
+
+  function handleNavClick(
+    index: number
+  ) {
+    setActiveNav(index);
+
+    setNotificationOpen(false);
+    setAccountOpen(false);
+
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }
+
+  // =========================================================
+  // NOTIFICATION TOGGLE
+  // =========================================================
+
+  function handleNotificationToggle() {
+    const next =
+      !notificationOpen;
+
+    setNotificationOpen(next);
+
+    setAccountOpen(false);
+
+    if (next) {
+      loadHeaderNotifications();
+    }
+  }
+
+  // =========================================================
+  // ACCOUNT TOGGLE
+  // =========================================================
+
+  function handleAccountToggle() {
+    setAccountOpen(
+      (current) => !current
+    );
+
+    setNotificationOpen(false);
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ fontFamily: "Inter, sans-serif", background: "#f4f6fa" }}>
-      {/* Header */}
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        fontFamily:
+          "Inter, sans-serif",
+        background:
+          "#f4f6fa",
+      }}
+    >
+      {/* =====================================================
+          HEADER
+      ====================================================== */}
+
       <header className="bg-primary text-white h-12 flex items-center px-3 gap-2 z-50 shadow-md flex-shrink-0 sticky top-0">
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-white/80 hover:text-white transition-colors p-1">
-          {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+        <button
+          onClick={() =>
+            setSidebarOpen(
+              !sidebarOpen
+            )
+          }
+          className="text-white/80 hover:text-white transition-colors p-1"
+        >
+          {sidebarOpen ? (
+            <X size={18} />
+          ) : (
+            <Menu size={18} />
+          )}
         </button>
+
         <div className="flex items-center gap-1.5">
-          <QRpassLogo size={70} showText />
-          <span className="font-bold text-sm tracking-wide" style={{ fontFamily: "Barlow, sans-serif" }}>QRpass</span>
-          <span className="hidden md:inline text-white/50 text-xs">V1.0</span>
+          <QRpassLogo
+            size={70}
+            showText
+          />
+
+          <span
+            className="font-bold text-sm tracking-wide"
+            style={{
+              fontFamily:
+                "Barlow, sans-serif",
+            }}
+          >
+            QRpass
+          </span>
+
+          <span className="hidden md:inline text-white/50 text-xs">
+            V1.0
+          </span>
         </div>
+
         <div className="flex-1" />
+
+        {/* ===================================================
+            HEADER RIGHT SIDE
+        ==================================================== */}
+
         <div className="flex items-center gap-2">
-          <button className="relative text-white/80 hover:text-white transition-colors p-1">
-            <Bell size={17} />
-            {totalBadge > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-secondary text-secondary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">{totalBadge}</span>
+
+          {/* =================================================
+              NOTIFICATION BELL
+          ================================================== */}
+
+          <div className="relative">
+            <button
+              type="button"
+              onClick={
+                handleNotificationToggle
+              }
+              title="Notifications"
+              className="relative text-white/80 hover:text-white hover:bg-white/10 rounded-md transition-colors p-1.5"
+            >
+              <Bell size={18} />
+
+              {unreadNotificationCount >
+                0 && (
+                <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-secondary text-secondary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {unreadNotificationCount >
+                  99
+                    ? "99+"
+                    : unreadNotificationCount}
+                </span>
+              )}
+            </button>
+
+            {/* NOTIFICATION DROPDOWN */}
+
+            {notificationOpen && (
+              <div className="absolute right-0 top-10 w-[430px] max-w-[94vw] bg-white text-foreground border border-border rounded-lg shadow-xl overflow-hidden z-[100]">
+
+                {/* HEADER */}
+
+                <div className="px-4 py-3 border-b border-border">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">
+                        Notifications
+                      </p>
+
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {unreadNotificationCount} unread{" "}
+                        {unreadNotificationCount === 1
+                          ? "notification"
+                          : "notifications"}
+                      </p>
+                    </div>
+
+                    {unreadNotificationCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={
+                          handleHeaderMarkAllRead
+                        }
+                        disabled={
+                          markingAllNotifications
+                        }
+                        className="text-xs text-primary font-semibold hover:underline disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {markingAllNotifications
+                          ? "Saving..."
+                          : "Mark all as read"}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* COUNTS / FILTERS */}
+
+                  <div className="grid grid-cols-3 gap-2 mt-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNotificationFilter(
+                          "all"
+                        )
+                      }
+                      className={`rounded-md border px-2 py-2 text-left transition-colors ${
+                        notificationFilter ===
+                        "all"
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-white hover:bg-muted/30"
+                      }`}
+                    >
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        All
+                      </p>
+
+                      <p className="text-sm font-bold mt-0.5">
+                        {
+                          headerNotifications.length
+                        }
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNotificationFilter(
+                          "unread"
+                        )
+                      }
+                      className={`rounded-md border px-2 py-2 text-left transition-colors ${
+                        notificationFilter ===
+                        "unread"
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-white hover:bg-muted/30"
+                      }`}
+                    >
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        Unread
+                      </p>
+
+                      <p className="text-sm font-bold mt-0.5">
+                        {unreadNotificationCount}
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNotificationFilter(
+                          "read"
+                        )
+                      }
+                      className={`rounded-md border px-2 py-2 text-left transition-colors ${
+                        notificationFilter ===
+                        "read"
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-white hover:bg-muted/30"
+                      }`}
+                    >
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        Read
+                      </p>
+
+                      <p className="text-sm font-bold mt-0.5">
+                        {readNotificationCount}
+                      </p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* NOTIFICATION LIST */}
+
+                <div className="max-h-[470px] overflow-y-auto p-2 space-y-2">
+                  {notificationsLoading &&
+                  headerNotifications.length ===
+                    0 ? (
+                    <div className="py-10 text-center text-xs text-muted-foreground">
+                      Loading notifications...
+                    </div>
+                  ) : headerNotifications.length ===
+                    0 ? (
+                    <div className="py-10 px-4 text-center">
+                      <Bell
+                        size={26}
+                        className="mx-auto mb-2 text-muted-foreground"
+                      />
+
+                      <p className="text-sm font-semibold">
+                        No notifications
+                      </p>
+
+                      <p className="text-xs text-muted-foreground mt-1">
+                        You are all caught up.
+                      </p>
+                    </div>
+                  ) : filteredHeaderNotifications.length ===
+                    0 ? (
+                    <div className="py-10 px-4 text-center">
+                      <FileText
+                        size={26}
+                        className="mx-auto mb-2 text-muted-foreground"
+                      />
+
+                      <p className="text-sm font-semibold">
+                        No{" "}
+                        {notificationFilter ===
+                        "unread"
+                          ? "unread"
+                          : "read"}{" "}
+                        notifications
+                      </p>
+
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Try another notification
+                        filter.
+                      </p>
+                    </div>
+                  ) : (
+                    filteredHeaderNotifications.map(
+                      (notification) => {
+                        const style =
+                          getNotificationStyle(
+                            notification.type
+                          );
+
+                        return (
+                          <div
+                            key={notification.id}
+                            className={`rounded-lg border p-3 ${
+                              notification.is_read
+                                ? "bg-white border-border"
+                                : style.card
+                            }`}
+                          >
+                            <div className="flex gap-3">
+                              {/* ICON */}
+
+                              <div
+                                className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                  notification.is_read
+                                    ? "bg-gray-100 text-gray-500"
+                                    : style.icon
+                                }`}
+                              >
+                                {getNotificationIcon(
+                                  notification.type
+                                )}
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+
+                                {/* TITLE + NEW BADGE */}
+
+                                <div className="flex items-start gap-2">
+                                  <p className="text-xs font-semibold flex-1 leading-5">
+                                    {notification.title ??
+                                      "QRPass Notification"}
+                                  </p>
+
+                                  {!notification.is_read && (
+                                    <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-white flex-shrink-0">
+                                      New
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* MESSAGE */}
+
+                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed break-words">
+                                  {notification.message ??
+                                    "You have a new QRPass notification."}
+                                </p>
+
+                                {/* TYPE */}
+
+                                <div className="mt-2">
+                                  <span
+                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-semibold ${
+                                      notification.is_read
+                                        ? "bg-gray-100 text-gray-600"
+                                        : style.badge
+                                    }`}
+                                  >
+                                    {getNotificationTypeLabel(
+                                      notification.type
+                                    )}
+                                  </span>
+                                </div>
+
+                                {/* DATE + ACTION */}
+
+                                <div className="flex items-end justify-between gap-2 mt-2">
+                                  <div>
+                                    <p className="text-[10px] text-muted-foreground">
+                                      {formatNotificationDate(
+                                        notification.created_at
+                                      )}
+                                    </p>
+
+                                    <p className="text-[9px] mt-0.5 text-muted-foreground">
+                                      {notification.is_read
+                                        ? "Read"
+                                        : "Unread"}
+                                    </p>
+                                  </div>
+
+                                  {!notification.is_read && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleHeaderMarkRead(
+                                          notification.id
+                                        )
+                                      }
+                                      disabled={
+                                        markingNotificationId ===
+                                        notification.id
+                                      }
+                                      className="text-[10px] text-primary font-semibold hover:underline disabled:opacity-50 whitespace-nowrap"
+                                    >
+                                      {markingNotificationId ===
+                                      notification.id
+                                        ? "Saving..."
+                                        : "Mark as read"}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+                    )
+                  )}
+                </div>
+
+                {/* NOTIFICATION FOOTER */}
+
+                <div className="px-4 py-2.5 bg-muted/30 border-t border-border flex items-center justify-between gap-3">
+                  <span className="text-[10px] text-muted-foreground">
+                    Showing{" "}
+                    {
+                      filteredHeaderNotifications.length
+                    }{" "}
+                    of{" "}
+                    {headerNotifications.length}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={
+                      loadHeaderNotifications
+                    }
+                    disabled={
+                      notificationsLoading
+                    }
+                    className="text-[10px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50"
+                  >
+                    <RefreshCw
+                      size={10}
+                      className={
+                        notificationsLoading
+                          ? "animate-spin"
+                          : ""
+                      }
+                    />
+
+                    {notificationsLoading
+                      ? "Refreshing..."
+                      : "Refresh"}
+                  </button>
+                </div>
+              </div>
             )}
-          </button>
-          <div className="flex items-center gap-1.5">
-            <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-              <User size={13} className="text-secondary-foreground" />
-            </div>
-            <span className="hidden sm:inline text-white/90 text-xs font-medium max-w-[100px] truncate">{roleInfo.label}</span>
           </div>
-          <button onClick={onLogout} className="text-white/70 hover:text-white transition-colors p-1" title="Log out">
-            <LogOut size={15} />
-          </button>
+
+          {/* =================================================
+              ACCOUNT BUTTON
+          ================================================== */}
+
+          <div className="relative">
+            <button
+              type="button"
+              onClick={
+                handleAccountToggle
+              }
+              title="Account"
+              className="flex items-center gap-1.5 px-1.5 py-1 rounded-md hover:bg-white/10 transition-colors"
+            >
+              <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                <User
+                  size={13}
+                  className="text-secondary-foreground"
+                />
+              </div>
+
+              <span className="hidden sm:inline text-white/90 text-xs font-medium max-w-[130px] truncate">
+                {currentUser?.name ??
+                  roleInfo.label}
+              </span>
+            </button>
+
+            {/* ACCOUNT DROPDOWN */}
+
+            {accountOpen && (
+              <div className="absolute right-0 top-10 w-72 bg-white text-foreground rounded-lg border border-border shadow-xl overflow-hidden z-[100]">
+
+                {/* PROFILE */}
+
+                <div className="px-4 py-4 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                      <User
+                        size={20}
+                        className="text-secondary-foreground"
+                      />
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate">
+                        {currentUser?.name ??
+                          roleInfo.label}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground truncate">
+                        {currentUser?.username ??
+                          "QRPass User"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* INFORMATION */}
+
+                <div className="px-4 py-3 space-y-3">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      Account ID
+                    </p>
+
+                    <p className="text-xs font-medium mt-0.5">
+                      {currentUser?.username ??
+                        "—"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      Role
+                    </p>
+
+                    <p className="text-xs font-medium mt-0.5">
+                      {roleInfo.label}
+                    </p>
+                  </div>
+
+                  {currentUser?.email && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        Email
+                      </p>
+
+                      <p className="text-xs font-medium mt-0.5 break-all">
+                        {
+                          currentUser.email
+                        }
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* LOGOUT */}
+
+                <div className="border-t border-border p-2">
+                  <button
+                    type="button"
+                    onClick={
+                      onLogout
+                    }
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut
+                      size={15}
+                    />
+
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
-      <div className="flex flex-1 min-h-0 relative">
-        {/* Mobile backdrop */}
-        {isMobile && sidebarOpen && (
-          <div className="fixed inset-0 top-12 bg-black/50 z-30" onClick={() => setSidebarOpen(false)} />
-        )}
+      {/* =====================================================
+          MAIN BODY
+      ====================================================== */}
 
-        {/* Sidebar — fixed overlay on mobile, in-flow on desktop */}
+      <div className="flex flex-1 min-h-0 relative">
+
+        {/* MOBILE BACKDROP */}
+
+        {isMobile &&
+          sidebarOpen && (
+            <div
+              className="fixed inset-0 top-12 bg-black/50 z-30"
+              onClick={() =>
+                setSidebarOpen(
+                  false
+                )
+              }
+            />
+          )}
+
+        {/* ===================================================
+            SIDEBAR
+        ==================================================== */}
+
         <aside
           className="flex-col flex-shrink-0 transition-all duration-200 overflow-hidden z-40"
           style={{
-            position: isMobile ? "fixed" : "relative",
-            top: isMobile ? "48px" : "auto",
-            bottom: isMobile ? "0" : "auto",
+            position: isMobile
+              ? "fixed"
+              : "relative",
+
+            top: isMobile
+              ? "48px"
+              : "auto",
+
+            bottom: isMobile
+              ? "0"
+              : "auto",
+
             left: 0,
-            width: sidebarOpen ? "210px" : "0px",
-            backgroundColor: "#003087",
-            borderRight: "1px solid rgba(255,255,255,0.08)",
-            display: "flex",
+
+            width: sidebarOpen
+              ? "210px"
+              : "0px",
+
+            backgroundColor:
+              "#003087",
+
+            borderRight:
+              "1px solid rgba(255,255,255,0.08)",
+
+            display:
+              "flex",
           }}
         >
           <div className="p-3 border-b border-white/10 flex-shrink-0">
-            <p className="text-xs text-white/50 font-medium uppercase tracking-wider whitespace-nowrap">Navigation</p>
+            <p className="text-xs text-white/50 font-medium uppercase tracking-wider whitespace-nowrap">
+              Navigation
+            </p>
           </div>
+
           <nav className="flex-1 py-2 overflow-y-auto">
-            {navItems.map((item, i) => (
-              <button key={i} onClick={() => handleNavClick(i)}
-                className="w-full flex items-center gap-2.5 px-3 py-3 text-sm font-medium transition-all duration-150 text-left whitespace-nowrap"
-                style={{
-                  color: activeNav === i ? "#f5c200" : "rgba(255,255,255,0.75)",
-                  backgroundColor: activeNav === i ? "rgba(245,194,0,0.1)" : "transparent",
-                  borderLeft: activeNav === i ? "3px solid #f5c200" : "3px solid transparent",
-                }}>
-                <span style={{ opacity: activeNav === i ? 1 : 0.7 }}>{item.icon}</span>
-                <span className="truncate">{item.label}</span>
-                {item.badge && (
-                  <span className="ml-auto bg-secondary text-secondary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">{item.badge}</span>
-                )}
-              </button>
-            ))}
+            {navItems.map(
+              (item, i) => (
+                <button
+                  key={i}
+                  onClick={() =>
+                    handleNavClick(i)
+                  }
+                  className="w-full flex items-center gap-2.5 px-3 py-3 text-sm font-medium transition-all duration-150 text-left whitespace-nowrap"
+                  style={{
+                    color:
+                      activeNav === i
+                        ? "#f5c200"
+                        : "rgba(255,255,255,0.75)",
+
+                    backgroundColor:
+                      activeNav === i
+                        ? "rgba(245,194,0,0.1)"
+                        : "transparent",
+
+                    borderLeft:
+                      activeNav === i
+                        ? "3px solid #f5c200"
+                        : "3px solid transparent",
+                  }}
+                >
+                  <span
+                    style={{
+                      opacity:
+                        activeNav === i
+                          ? 1
+                          : 0.7,
+                    }}
+                  >
+                    {item.icon}
+                  </span>
+
+                  <span className="truncate">
+                    {item.label}
+                  </span>
+
+                  {item.badge && (
+                    <span className="ml-auto bg-secondary text-secondary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
+                      {
+                        item.badge
+                      }
+                    </span>
+                  )}
+                </button>
+              )
+            )}
           </nav>
+
           <div className="p-3 border-t border-white/10 flex-shrink-0">
-            <button onClick={onLogout} className="flex items-center gap-2 text-xs text-white/50 hover:text-white transition-colors whitespace-nowrap">
-              <LogOut size={13} /><span>Log Out</span>
+            <button
+              onClick={
+                onLogout
+              }
+              className="flex items-center gap-2 text-xs text-white/50 hover:text-white transition-colors whitespace-nowrap"
+            >
+              <LogOut
+                size={13}
+              />
+
+              <span>
+                Log Out
+              </span>
             </button>
           </div>
         </aside>
 
-        {/* Main content */}
-        <main className="flex-1 overflow-auto p-3 md:p-5 min-w-0">
-          {/* Breadcrumb */}
+        {/* ===================================================
+            MAIN CONTENT
+        ==================================================== */}
+
+        <main
+          className="flex-1 overflow-auto p-3 md:p-5 min-w-0"
+          onClick={() => {
+            setNotificationOpen(false);
+            setAccountOpen(false);
+          }}
+        >
+          {/* BREADCRUMB */}
+
           <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3 flex-wrap">
-            <QrCode size={11} className="text-primary flex-shrink-0" />
-            <span className="text-primary font-medium">QRpass</span>
-            <ChevronRight size={11} />
-            <span className="hidden sm:inline">{roleInfo.label}</span>
-            <ChevronRight size={11} className="hidden sm:inline" />
-            <span className="text-foreground font-medium truncate">{navItems[activeNav]?.label}</span>
+            <QrCode
+              size={11}
+              className="text-primary flex-shrink-0"
+            />
+
+            <span className="text-primary font-medium">
+              QRpass
+            </span>
+
+            <ChevronRight
+              size={11}
+            />
+
+            <span className="hidden sm:inline">
+              {
+                roleInfo.label
+              }
+            </span>
+
+            <ChevronRight
+              size={11}
+              className="hidden sm:inline"
+            />
+
+            <span className="text-foreground font-medium truncate">
+              {navItems[
+                activeNav
+              ]?.label ??
+                ""}
+            </span>
           </div>
 
-          {/* Announcement */}
+          {/* ANNOUNCEMENT */}
+
           <div className="mb-4 bg-secondary/20 border border-secondary/40 rounded-lg px-3 py-2 flex items-start gap-2">
-            <Bell size={14} style={{ color: "#c49e00" }} className="flex-shrink-0 mt-0.5" />
+            <Bell
+              size={14}
+              style={{
+                color:
+                  "#c49e00",
+              }}
+              className="flex-shrink-0 mt-0.5"
+            />
+
             <p className="text-xs text-foreground">
-              <span className="font-semibold">Announcement:</span> Campus-wide QR item check on{" "}
-              <strong>June 18, 2026</strong>. Ensure all items are QR-registered.
+              <span className="font-semibold">
+                Announcement:
+              </span>{" "}
+              Campus-wide QR item check on{" "}
+              <strong>
+                June 18, 2026
+              </strong>
+              . Ensure all items are QR-registered.
             </p>
           </div>
 
@@ -11159,13 +13018,25 @@ function Dashboard({ role, onLogout }: { role: Role; onLogout: () => void }) {
         </main>
       </div>
 
+      {/* =====================================================
+          FOOTER
+      ====================================================== */}
+
       <footer className="bg-white border-t border-border px-4 py-2 flex items-center justify-between gap-2 flex-wrap">
-        <p className="text-xs text-muted-foreground">&copy; 2026 University of Cebu — QRpass</p>
-        <p className="text-xs text-muted-foreground hidden sm:block">Main Campus &nbsp;|&nbsp; V1.0</p>
+        <p className="text-xs text-muted-foreground">
+          &copy; 2026 University
+          of Cebu — QRpass
+        </p>
+
+        <p className="text-xs text-muted-foreground hidden sm:block">
+          Main Campus
+          &nbsp;|&nbsp; V1.0
+        </p>
       </footer>
     </div>
   );
 }
+
 
 // ── App root ──────────────────────────────────────────────────────────────────
 export default function App() {
