@@ -122,6 +122,14 @@ import {
   getSecurityReports,
   getPerformance,
   getSessionPolicy,
+  verifyTwoFactor,
+
+  getAnnouncements,
+  getManagedAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
+  setAnnouncementPublished,
+  deleteAnnouncement,
 } from "../services/api";
 
 // ── QRpass Logo ───────────────────────────────────────────────────────────────
@@ -1263,10 +1271,46 @@ function StudentMyQRCodes() {
                       </span>
                     </div>
 
+                    <div className="flex gap-2 text-xs">
+                      <span className="text-muted-foreground">
+                        Expires:
+                      </span>
+
+                      <span
+                        className={
+                          item.qr_expires_at &&
+                          new Date(
+                            item.qr_expires_at
+                          ).getTime() < Date.now()
+                            ? "font-medium text-red-600"
+                            : "text-foreground"
+                        }
+                      >
+                        {item.qr_expires_at
+                          ? new Date(
+                              item.qr_expires_at
+                            ).toLocaleDateString("en-PH", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "Not set"}
+                      </span>
+                    </div>
+
                   </div>
 
                   <div className="mt-2">
-                    <StatusBadge status="Approved" />
+                    <StatusBadge
+                      status={
+                        item.qr_expires_at &&
+                        new Date(
+                          item.qr_expires_at
+                        ).getTime() < Date.now()
+                          ? "Expired"
+                          : "Approved"
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -2042,16 +2086,31 @@ function StudentNotifications() {
   const [markingAll, setMarkingAll] = useState(false);
   const [error, setError] = useState("");
 
-  async function loadNotifications() {
+  async function loadNotifications(
+    showLoading = true
+  ) {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
+
       setError("");
 
-      const data = await getNotifications();
+      const data =
+        await getNotifications();
 
-      setNotifications(data.notifications ?? []);
+      setNotifications(
+        Array.isArray(
+          data?.notifications
+        )
+          ? data.notifications
+          : []
+      );
     } catch (err) {
-      console.error("Failed to load notifications:", err);
+      console.error(
+        "Failed to load notifications:",
+        err
+      );
 
       setError(
         err instanceof Error
@@ -2059,12 +2118,63 @@ function StudentNotifications() {
           : "Failed to load notifications."
       );
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   }
 
   useEffect(() => {
-    loadNotifications();
+    loadNotifications(true);
+
+    const interval =
+      window.setInterval(
+        () => {
+          loadNotifications(false);
+        },
+        15000
+      );
+
+    const handleFocus =
+      () => {
+        loadNotifications(false);
+      };
+
+    const handleVisibility =
+      () => {
+        if (
+          document.visibilityState ===
+          "visible"
+        ) {
+          loadNotifications(false);
+        }
+      };
+
+    window.addEventListener(
+      "focus",
+      handleFocus
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+    return () => {
+      window.clearInterval(
+        interval
+      );
+
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+    };
   }, []);
 
   async function handleMarkRead(id: number) {
@@ -2190,7 +2300,7 @@ function StudentNotifications() {
 
         <div className="flex gap-2">
           <button
-            onClick={loadNotifications}
+            onClick={() => loadNotifications(true)}
             disabled={loading}
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
           >
@@ -7541,15 +7651,33 @@ function PCONotifications() {
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
 
-  async function loadNotifications() {
+  async function loadNotifications(
+    showLoading = true
+  ) {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
+
       setError("");
 
-      const data = await getNotifications();
+      const data =
+        await getNotifications();
 
-      setNotifications(data.notifications ?? []);
-      setUnreadCount(data.unread_count ?? 0);
+      setNotifications(
+        Array.isArray(
+          data?.notifications
+        )
+          ? data.notifications
+          : []
+      );
+
+      setUnreadCount(
+        Number(
+          data?.unread_count ??
+          0
+        )
+      );
     } catch (err) {
       console.error(
         "Failed to load PCO notifications:",
@@ -7562,12 +7690,63 @@ function PCONotifications() {
           : "Failed to load notifications."
       );
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   }
 
   useEffect(() => {
-    loadNotifications();
+    loadNotifications(true);
+
+    const interval =
+      window.setInterval(
+        () => {
+          loadNotifications(false);
+        },
+        15000
+      );
+
+    const handleFocus =
+      () => {
+        loadNotifications(false);
+      };
+
+    const handleVisibility =
+      () => {
+        if (
+          document.visibilityState ===
+          "visible"
+        ) {
+          loadNotifications(false);
+        }
+      };
+
+    window.addEventListener(
+      "focus",
+      handleFocus
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+    return () => {
+      window.clearInterval(
+        interval
+      );
+
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+    };
   }, []);
 
   async function handleMarkRead(id: number) {
@@ -7724,7 +7903,7 @@ function PCONotifications() {
 
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={loadNotifications}
+            onClick={() => loadNotifications(true)}
             disabled={loading}
             className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
           >
@@ -10612,40 +10791,144 @@ function SysAdminUserAccounts() {
   });
 
   async function loadUsers() {
-    try {
-      setLoading(true);
-      setError("");
+  try {
+    setLoading(true);
+    setError("");
 
-      const data = await getUsers();
+    const data =
+      await getUsers();
 
-      setUsers(data.users ?? []);
+    const userList =
+      Array.isArray(data?.users)
+        ? data.users
+        : [];
 
-      setSummary(
-        data.summary ?? {
-          total_users: 0,
-          active_users: 0,
-          inactive_users: 0,
-          students: 0,
-          security: 0,
-          pco: 0,
-          system_admins: 0,
-        }
-      );
-    } catch (err) {
-      console.error(
-        "Failed to load users:",
-        err
-      );
+    /*
+    |--------------------------------------------------------------------------
+    | USER LIST
+    |--------------------------------------------------------------------------
+    */
 
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load user accounts."
-      );
-    } finally {
-      setLoading(false);
-    }
+    setUsers(userList);
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUMMARY COUNTS
+    |--------------------------------------------------------------------------
+    */
+
+    const totalUsers =
+      userList.length;
+
+    const students =
+      userList.filter(
+        (user: any) =>
+          String(
+            user.role ?? ""
+          ).toLowerCase() ===
+          "student"
+      ).length;
+
+    const security =
+      userList.filter(
+        (user: any) =>
+          String(
+            user.role ?? ""
+          ).toLowerCase() ===
+          "security"
+      ).length;
+
+    const pco =
+      userList.filter(
+        (user: any) =>
+          String(
+            user.role ?? ""
+          ).toLowerCase() ===
+          "pco"
+      ).length;
+
+    const systemAdmins =
+      userList.filter(
+        (user: any) =>
+          String(
+            user.role ?? ""
+          ).toLowerCase() ===
+          "sysadmin"
+      ).length;
+
+    const activeUsers =
+      userList.filter(
+        (user: any) =>
+          String(
+            user.status ?? ""
+          ).toLowerCase() ===
+          "approved"
+      ).length;
+
+    const inactiveUsers =
+      userList.filter(
+        (user: any) =>
+          String(
+            user.status ?? ""
+          ).toLowerCase() !==
+          "approved"
+      ).length;
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE SUMMARY CARDS
+    |--------------------------------------------------------------------------
+    */
+
+    setSummary({
+      total_users:
+        totalUsers,
+
+      active_users:
+        activeUsers,
+
+      inactive_users:
+        inactiveUsers,
+
+      students:
+        students,
+
+      security:
+        security,
+
+      pco:
+        pco,
+
+      system_admins:
+        systemAdmins,
+    });
+  } catch (err) {
+    console.error(
+      "Failed to load users:",
+      err
+    );
+
+    setError(
+      err instanceof Error
+        ? err.message
+        : "Failed to load user accounts."
+    );
+
+    setUsers([]);
+
+    setSummary({
+      total_users: 0,
+      active_users: 0,
+      inactive_users: 0,
+      students: 0,
+      security: 0,
+      pco: 0,
+      system_admins: 0,
+    });
+  } finally {
+    setLoading(false);
   }
+}
 
   useEffect(() => {
     loadUsers();
@@ -14292,6 +14575,1213 @@ function SysAdminSecurityConfig() {
 }
 
 // ── Page registry ─────────────────────────────────────────────────────────────
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SYSTEM ADMINISTRATOR - ANNOUNCEMENT MANAGEMENT
+// ══════════════════════════════════════════════════════════════════════════════
+
+type ManagedAnnouncement = {
+  id: number;
+  title: string;
+  message: string;
+  audience:
+    | "everyone"
+    | "student"
+    | "security"
+    | "pco"
+    | "sysadmin";
+  priority:
+    | "info"
+    | "important"
+    | "urgent";
+  start_at?: string | null;
+  end_at?: string | null;
+  is_published: boolean;
+  display_status?:
+    | "draft"
+    | "scheduled"
+    | "active"
+    | "expired"
+    | string;
+  created_at?: string | null;
+  updated_at?: string | null;
+  creator?: {
+    id?: number;
+    name?: string;
+    username?: string;
+  } | null;
+};
+
+type AnnouncementFormState = {
+  title: string;
+  message: string;
+  audience:
+    | "everyone"
+    | "student"
+    | "security"
+    | "pco"
+    | "sysadmin";
+  priority:
+    | "info"
+    | "important"
+    | "urgent";
+  start_at: string;
+  end_at: string;
+  is_published: boolean;
+};
+
+function SysAdminAnnouncementManagement() {
+  const emptyForm: AnnouncementFormState = {
+    title: "",
+    message: "",
+    audience: "everyone",
+    priority: "info",
+    start_at: "",
+    end_at: "",
+    is_published: false,
+  };
+
+  const [
+    announcements,
+    setAnnouncements,
+  ] = useState<ManagedAnnouncement[]>([]);
+
+  const [form, setForm] =
+    useState<AnnouncementFormState>(
+      emptyForm
+    );
+
+  const [editingId, setEditingId] =
+    useState<number | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [
+    changingPublishId,
+    setChangingPublishId,
+  ] = useState<number | null>(null);
+
+  const [
+    deletingId,
+    setDeletingId,
+  ] = useState<number | null>(null);
+
+  const [error, setError] =
+    useState("");
+
+  const [success, setSuccess] =
+    useState("");
+
+  function toLocalDateTimeInput(
+    value?: string | null
+  ) {
+    if (!value) {
+      return "";
+    }
+
+    const date = new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "";
+    }
+
+    const offset =
+      date.getTimezoneOffset();
+
+    return new Date(
+      date.getTime() -
+        offset * 60 * 1000
+    )
+      .toISOString()
+      .slice(0, 16);
+  }
+
+  function toApiDateTime(
+    value: string
+  ) {
+    if (!value) {
+      return null;
+    }
+
+    const date = new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return null;
+    }
+
+    return date.toISOString();
+  }
+
+  function formatDateTime(
+    value?: string | null
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "—";
+    }
+
+    return date.toLocaleString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  function audienceLabel(
+    audience: string
+  ) {
+    const labels:
+      Record<string, string> = {
+        everyone: "Everyone",
+        student: "Students",
+        security: "CSU / Security",
+        pco: "PCO Staff",
+        sysadmin:
+          "System Administrators",
+      };
+
+    return (
+      labels[audience] ??
+      audience
+    );
+  }
+
+  function priorityLabel(
+    priority: string
+  ) {
+    const labels:
+      Record<string, string> = {
+        info: "Information",
+        important: "Important",
+        urgent: "Urgent",
+      };
+
+    return (
+      labels[priority] ??
+      priority
+    );
+  }
+
+  function statusStyle(
+    status?: string
+  ) {
+    const normalized =
+      String(status ?? "")
+        .toLowerCase();
+
+    if (
+      normalized === "active"
+    ) {
+      return {
+        label: "Active",
+        className:
+          "bg-green-100 text-green-700 border-green-200",
+      };
+    }
+
+    if (
+      normalized === "scheduled"
+    ) {
+      return {
+        label: "Scheduled",
+        className:
+          "bg-blue-100 text-blue-700 border-blue-200",
+      };
+    }
+
+    if (
+      normalized === "expired"
+    ) {
+      return {
+        label: "Expired",
+        className:
+          "bg-gray-100 text-gray-600 border-gray-200",
+      };
+    }
+
+    return {
+      label: "Draft",
+      className:
+        "bg-yellow-100 text-yellow-700 border-yellow-200",
+    };
+  }
+
+  function priorityStyle(
+    priority: string
+  ) {
+    if (
+      priority === "urgent"
+    ) {
+      return "bg-red-100 text-red-700 border-red-200";
+    }
+
+    if (
+      priority === "important"
+    ) {
+      return "bg-amber-100 text-amber-700 border-amber-200";
+    }
+
+    return "bg-blue-100 text-blue-700 border-blue-200";
+  }
+
+  async function loadAnnouncements() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data =
+        await getManagedAnnouncements();
+
+      setAnnouncements(
+        Array.isArray(
+          data?.announcements
+        )
+          ? data.announcements
+          : []
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load announcements:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load announcements."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadAnnouncements();
+  }, []);
+
+  function resetForm() {
+    setEditingId(null);
+
+    setForm(
+      emptyForm
+    );
+
+    setError("");
+  }
+
+  function startEdit(
+    announcement:
+      ManagedAnnouncement
+  ) {
+    setEditingId(
+      announcement.id
+    );
+
+    setForm({
+      title:
+        announcement.title ?? "",
+      message:
+        announcement.message ?? "",
+      audience:
+        announcement.audience ??
+        "everyone",
+      priority:
+        announcement.priority ??
+        "info",
+      start_at:
+        toLocalDateTimeInput(
+          announcement.start_at
+        ),
+      end_at:
+        toLocalDateTimeInput(
+          announcement.end_at
+        ),
+      is_published:
+        Boolean(
+          announcement.is_published
+        ),
+    });
+
+    setError("");
+    setSuccess("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  async function handleSubmit(
+    event: React.FormEvent
+  ) {
+    event.preventDefault();
+
+    if (!form.title.trim()) {
+      setError(
+        "Please enter an announcement title."
+      );
+      return;
+    }
+
+    if (!form.message.trim()) {
+      setError(
+        "Please enter the announcement message."
+      );
+      return;
+    }
+
+    if (
+      form.end_at &&
+      !form.start_at
+    ) {
+      setError(
+        "Please set a start date and time before adding an expiration date."
+      );
+      return;
+    }
+
+    if (
+      form.start_at &&
+      form.end_at &&
+      new Date(
+        form.end_at
+      ).getTime() <
+        new Date(
+          form.start_at
+        ).getTime()
+    ) {
+      setError(
+        "Expiration date and time cannot be earlier than the start date and time."
+      );
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError("");
+      setSuccess("");
+
+      const payload = {
+        title:
+          form.title.trim(),
+        message:
+          form.message.trim(),
+        audience:
+          form.audience,
+        priority:
+          form.priority,
+        start_at:
+          toApiDateTime(
+            form.start_at
+          ),
+        end_at:
+          toApiDateTime(
+            form.end_at
+          ),
+        is_published:
+          form.is_published,
+      };
+
+      const result =
+        editingId
+          ? await updateAnnouncement(
+              editingId,
+              payload
+            )
+          : await createAnnouncement(
+              payload
+            );
+
+      setSuccess(
+        result?.message ||
+          (editingId
+            ? "Announcement updated successfully."
+            : "Announcement created successfully.")
+      );
+
+      setEditingId(null);
+      setForm(emptyForm);
+
+      await loadAnnouncements();
+
+      window.setTimeout(
+        () => {
+          setSuccess("");
+        },
+        5000
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to save announcement."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handlePublishToggle(
+    announcement:
+      ManagedAnnouncement
+  ) {
+    try {
+      setChangingPublishId(
+        announcement.id
+      );
+
+      setError("");
+      setSuccess("");
+
+      const nextPublished =
+        !announcement.is_published;
+
+      const result =
+        await setAnnouncementPublished(
+          announcement.id,
+          nextPublished
+        );
+
+      setSuccess(
+        result?.message ||
+          (nextPublished
+            ? "Announcement published successfully."
+            : "Announcement unpublished successfully.")
+      );
+
+      await loadAnnouncements();
+
+      window.setTimeout(
+        () => {
+          setSuccess("");
+        },
+        4000
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update announcement publication status."
+      );
+    } finally {
+      setChangingPublishId(
+        null
+      );
+    }
+  }
+
+  async function handleDelete(
+    announcement:
+      ManagedAnnouncement
+  ) {
+    const confirmed =
+      window.confirm(
+        `Delete the announcement "${announcement.title}"? This cannot be undone.`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingId(
+        announcement.id
+      );
+
+      setError("");
+      setSuccess("");
+
+      const result =
+        await deleteAnnouncement(
+          announcement.id
+        );
+
+      if (
+        editingId ===
+        announcement.id
+      ) {
+        resetForm();
+      }
+
+      setSuccess(
+        result?.message ||
+          "Announcement deleted successfully."
+      );
+
+      await loadAnnouncements();
+
+      window.setTimeout(
+        () => {
+          setSuccess("");
+        },
+        4000
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete announcement."
+      );
+    } finally {
+      setDeletingId(
+        null
+      );
+    }
+  }
+
+  const activeCount =
+    announcements.filter(
+      (announcement) =>
+        announcement.display_status ===
+        "active"
+    ).length;
+
+  const scheduledCount =
+    announcements.filter(
+      (announcement) =>
+        announcement.display_status ===
+        "scheduled"
+    ).length;
+
+  const draftCount =
+    announcements.filter(
+      (announcement) =>
+        announcement.display_status ===
+        "draft"
+    ).length;
+
+  const expiredCount =
+    announcements.filter(
+      (announcement) =>
+        announcement.display_status ===
+        "expired"
+    ).length;
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Announcement Management"
+        subtitle="Create, schedule, publish, and manage QRPass announcements for specific user roles."
+        action={
+          <button
+            type="button"
+            onClick={
+              loadAnnouncements
+            }
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-lg border border-[#cfd8e6] bg-white px-3 py-2 text-xs font-semibold text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50"
+          >
+            <RefreshCw
+              size={14}
+              className={
+                loading
+                  ? "animate-spin"
+                  : ""
+              }
+            />
+            Refresh
+          </button>
+        }
+      />
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="flex items-start gap-2">
+            <AlertCircle
+              size={16}
+              className="mt-0.5 shrink-0"
+            />
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          <div className="flex items-start gap-2">
+            <CheckCircle
+              size={16}
+              className="mt-0.5 shrink-0"
+            />
+            <span>{success}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard
+          label="Active"
+          value={String(
+            activeCount
+          )}
+          icon={
+            <Bell size={20} />
+          }
+          color="#15803d"
+        />
+
+        <StatCard
+          label="Scheduled"
+          value={String(
+            scheduledCount
+          )}
+          icon={
+            <Clock size={20} />
+          }
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Drafts"
+          value={String(
+            draftCount
+          )}
+          icon={
+            <EyeOff size={20} />
+          }
+          color="#b7791f"
+        />
+
+        <StatCard
+          label="Expired"
+          value={String(
+            expiredCount
+          )}
+          icon={
+            <AlertCircle
+              size={20}
+            />
+          }
+          color="#64748b"
+        />
+      </div>
+
+      <Card
+        title={
+          editingId
+            ? "Edit Announcement"
+            : "Create Announcement"
+        }
+        action={
+          editingId ? (
+            <button
+              type="button"
+              onClick={
+                resetForm
+              }
+              className="text-xs font-semibold text-[#64748b] hover:text-[#1a3a7b]"
+            >
+              Cancel Editing
+            </button>
+          ) : undefined
+        }
+      >
+        <form
+          onSubmit={
+            handleSubmit
+          }
+          className="p-4 space-y-4"
+        >
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="lg:col-span-2">
+              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
+                Announcement Title
+              </label>
+
+              <input
+                type="text"
+                value={form.title}
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      title:
+                        event.target.value,
+                    })
+                  )
+                }
+                maxLength={255}
+                placeholder="e.g. Campus QR Item Inspection"
+                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
+                Target Audience
+              </label>
+
+              <select
+                value={
+                  form.audience
+                }
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      audience:
+                        event.target
+                          .value as AnnouncementFormState["audience"],
+                    })
+                  )
+                }
+                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6]"
+              >
+                <option value="everyone">
+                  Everyone
+                </option>
+                <option value="student">
+                  Students
+                </option>
+                <option value="security">
+                  CSU / Security
+                </option>
+                <option value="pco">
+                  PCO Staff
+                </option>
+                <option value="sysadmin">
+                  System Administrators
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
+                Priority
+              </label>
+
+              <select
+                value={
+                  form.priority
+                }
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      priority:
+                        event.target
+                          .value as AnnouncementFormState["priority"],
+                    })
+                  )
+                }
+                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6]"
+              >
+                <option value="info">
+                  Information
+                </option>
+                <option value="important">
+                  Important
+                </option>
+                <option value="urgent">
+                  Urgent
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
+                Start Date & Time
+              </label>
+
+              <input
+                type="datetime-local"
+                value={
+                  form.start_at
+                }
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      start_at:
+                        event.target.value,
+                    })
+                  )
+                }
+                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6]"
+              />
+
+              <p className="mt-1 text-[10px] text-[#94a3b8]">
+                Leave blank to start immediately after publishing.
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
+                Expiration Date & Time
+              </label>
+
+              <input
+                type="datetime-local"
+                value={
+                  form.end_at
+                }
+                min={
+                  form.start_at ||
+                  undefined
+                }
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      end_at:
+                        event.target.value,
+                    })
+                  )
+                }
+                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6]"
+              />
+
+              <p className="mt-1 text-[10px] text-[#94a3b8]">
+                Leave blank if the announcement should stay active until manually unpublished.
+              </p>
+            </div>
+
+            <div className="lg:col-span-2">
+              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
+                Message
+              </label>
+
+              <textarea
+                value={
+                  form.message
+                }
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      message:
+                        event.target.value,
+                    })
+                  )
+                }
+                maxLength={5000}
+                rows={5}
+                placeholder="Enter the complete announcement message..."
+                className="w-full resize-y rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+
+              <div className="mt-1 text-right text-[10px] text-[#94a3b8]">
+                {
+                  form.message
+                    .length
+                }
+                /5000
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-lg border border-[#d7e0f3] bg-[#f8faff] p-3 sm:flex-row sm:items-center sm:justify-between">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={
+                  form.is_published
+                }
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      is_published:
+                        event.target.checked,
+                    })
+                  )
+                }
+                className="mt-0.5 h-4 w-4 accent-[#1a3a7b]"
+              />
+
+              <span>
+                <span className="block text-sm font-semibold text-[#111827]">
+                  Publish announcement
+                </span>
+
+                <span className="block text-xs text-[#64748b]">
+                  If unchecked, the announcement is saved as a draft and is invisible to users.
+                </span>
+              </span>
+            </label>
+
+            <div className="flex items-center justify-end gap-2">
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={
+                    resetForm
+                  }
+                  disabled={saving}
+                  className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#334155] hover:bg-[#eef2fc] disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              )}
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#1a3a7b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#153164] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving ? (
+                  <RefreshCw
+                    size={14}
+                    className="animate-spin"
+                  />
+                ) : (
+                  <CheckCircle
+                    size={14}
+                  />
+                )}
+
+                {saving
+                  ? "Saving..."
+                  : editingId
+                    ? "Save Changes"
+                    : form.is_published
+                      ? "Create & Publish"
+                      : "Save Draft"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </Card>
+
+      <Card
+        title="All Announcements"
+        action={
+          <span className="rounded-full bg-[#eef2fc] px-2.5 py-1 text-[10px] font-bold text-[#1a3a7b]">
+            {
+              announcements.length
+            }{" "}
+            total
+          </span>
+        }
+      >
+        {loading ? (
+          <div className="py-14 text-center text-sm text-[#64748b]">
+            Loading announcements...
+          </div>
+        ) : announcements.length ===
+          0 ? (
+          <div className="py-14 text-center">
+            <Bell
+              size={28}
+              className="mx-auto text-[#b8c4d6]"
+            />
+
+            <p className="mt-3 text-sm font-semibold text-[#334155]">
+              No announcements yet.
+            </p>
+
+            <p className="mt-1 text-xs text-[#94a3b8]">
+              Create the first QRPass announcement using the form above.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-[#e5eaf2]">
+            {announcements.map(
+              (
+                announcement
+              ) => {
+                const status =
+                  statusStyle(
+                    announcement.display_status
+                  );
+
+                return (
+                  <div
+                    key={
+                      announcement.id
+                    }
+                    className="p-4 hover:bg-[#fbfcfe]"
+                  >
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-sm font-bold text-[#111827]">
+                            {
+                              announcement.title
+                            }
+                          </h3>
+
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${status.className}`}
+                          >
+                            {
+                              status.label
+                            }
+                          </span>
+
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${priorityStyle(
+                              announcement.priority
+                            )}`}
+                          >
+                            {priorityLabel(
+                              announcement.priority
+                            )}
+                          </span>
+                        </div>
+
+                        <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[#52637a]">
+                          {
+                            announcement.message
+                          }
+                        </p>
+
+                        <div className="mt-3 grid gap-2 text-xs text-[#64748b] sm:grid-cols-2 xl:grid-cols-4">
+                          <div>
+                            <span className="font-semibold text-[#334155]">
+                              Audience:
+                            </span>{" "}
+                            {audienceLabel(
+                              announcement.audience
+                            )}
+                          </div>
+
+                          <div>
+                            <span className="font-semibold text-[#334155]">
+                              Starts:
+                            </span>{" "}
+                            {announcement.start_at
+                              ? formatDateTime(
+                                  announcement.start_at
+                                )
+                              : "Immediately"}
+                          </div>
+
+                          <div>
+                            <span className="font-semibold text-[#334155]">
+                              Expires:
+                            </span>{" "}
+                            {announcement.end_at
+                              ? formatDateTime(
+                                  announcement.end_at
+                                )
+                              : "No expiration"}
+                          </div>
+
+                          <div>
+                            <span className="font-semibold text-[#334155]">
+                              Created by:
+                            </span>{" "}
+                            {announcement.creator
+                              ?.name ??
+                              "System Administrator"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            startEdit(
+                              announcement
+                            )
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#cfd8e6] bg-white px-3 py-2 text-xs font-semibold text-[#1a3a7b] hover:bg-[#eef2fc]"
+                        >
+                          <Settings
+                            size={13}
+                          />
+                          Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handlePublishToggle(
+                              announcement
+                            )
+                          }
+                          disabled={
+                            changingPublishId ===
+                            announcement.id
+                          }
+                          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-50 ${
+                            announcement.is_published
+                              ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                              : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
+                          }`}
+                        >
+                          {announcement.is_published ? (
+                            <EyeOff
+                              size={13}
+                            />
+                          ) : (
+                            <Eye
+                              size={13}
+                            />
+                          )}
+
+                          {changingPublishId ===
+                          announcement.id
+                            ? "Updating..."
+                            : announcement.is_published
+                              ? "Unpublish"
+                              : "Publish"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDelete(
+                              announcement
+                            )
+                          }
+                          disabled={
+                            deletingId ===
+                            announcement.id
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                        >
+                          <XCircle
+                            size={13}
+                          />
+
+                          {deletingId ===
+                          announcement.id
+                            ? "Deleting..."
+                            : "Delete"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            )}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+
 const PAGES: Record<Role, React.ComponentType[]> = {
   student: [
     StudentRegisterItem,
@@ -14323,6 +15813,7 @@ const PAGES: Record<Role, React.ComponentType[]> = {
     SysAdminActiveSessions,
     SysAdminPerformance,
     SysAdminSecurityConfig,
+    SysAdminAnnouncementManagement,
   ],
 };
 
@@ -14426,6 +15917,10 @@ const NAV: Record<
       icon: <Shield size={16} />,
       label: "Security Config",
     },
+    {
+      icon: <Bell size={16} />,
+      label: "Announcement Management",
+    },
   ],
 };
 
@@ -14510,9 +16005,28 @@ function RoleSelector({ selected, onSelect, excludeRoles = [] }: { selected: Rol
 }
 
 // ── Login page ────────────────────────────────────────────────────────────────
-type LoginMode = "login" | "register" | "forgot" | "verify" | "reset" | "reset-done";
+type LoginMode =
+  | "login"
+  | "two-factor"
+  | "register"
+  | "forgot"
+  | "verify"
+  | "reset"
+  | "reset-done";
 
 function LoginPage({ onLogin }: { onLogin: (role: Role) => void }) {
+  // Two-factor authentication state
+const [twoFactorChallenge, setTwoFactorChallenge] =
+  useState("");
+
+const [twoFactorCode, setTwoFactorCode] =
+  useState("");
+
+const [twoFactorError, setTwoFactorError] =
+  useState("");
+
+const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
+  useState(false);
   const [mode, setMode] = useState<LoginMode>("login");
 
   // Login state
@@ -14547,66 +16061,121 @@ function LoginPage({ onLogin }: { onLogin: (role: Role) => void }) {
   // LOGIN
   // ==========================================================================
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleLogin(
+  e: React.FormEvent
+) {
+  e.preventDefault();
 
-    setLoginError("");
-    setIsLoggingIn(true);
+  setLoginError("");
+  setIsLoggingIn(true);
 
-    try {
-      const data = await login(
+  try {
+    const data =
+      await login(
         username.trim(),
         password
       );
 
-      localStorage.setItem(
-        "token",
-        data.token
-      );
+    /*
+    |--------------------------------------------------------------------------
+    | TWO-FACTOR AUTHENTICATION REQUIRED
+    |--------------------------------------------------------------------------
+    */
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
-
-      localStorage.setItem(
-        "role",
-        data.user?.role ?? ""
-      );
-
-      const userRole =
-        data.user?.role as Role;
-
-      if (!userRole) {
+    if (
+      data?.requires_2fa === true
+    ) {
+      if (
+        !data.challenge_token
+      ) {
         throw new Error(
-          "User role was not returned by the server."
+          "The server did not return a two-factor authentication challenge."
         );
       }
 
-      const validRoles: Role[] = [
-        "student",
-        "security",
-        "pco",
-        "sysadmin",
-      ];
-
-      if (!validRoles.includes(userRole)) {
-        throw new Error(
-          "This account has an invalid access role."
-        );
-      }
-
-      onLogin(userRole);
-    } catch (error) {
-      setLoginError(
-        error instanceof Error
-          ? error.message
-          : "Unable to sign in. Please try again."
+      setTwoFactorChallenge(
+        data.challenge_token
       );
-    } finally {
-      setIsLoggingIn(false);
+
+      setTwoFactorCode("");
+      setTwoFactorError("");
+
+      setMode(
+        "two-factor"
+      );
+
+      return;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | NORMAL LOGIN
+    |--------------------------------------------------------------------------
+    */
+
+    if (!data?.token) {
+      throw new Error(
+        "Login token was not returned by the server."
+      );
+    }
+
+    localStorage.setItem(
+      "token",
+      data.token
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(
+        data.user
+      )
+    );
+
+    localStorage.setItem(
+      "role",
+      data.user?.role ??
+        ""
+    );
+
+    const userRole =
+      data.user?.role as Role;
+
+    if (!userRole) {
+      throw new Error(
+        "User role was not returned by the server."
+      );
+    }
+
+    const validRoles: Role[] = [
+      "student",
+      "security",
+      "pco",
+      "sysadmin",
+    ];
+
+    if (
+      !validRoles.includes(
+        userRole
+      )
+    ) {
+      throw new Error(
+        "This account has an invalid access role."
+      );
+    }
+
+    onLogin(
+      userRole
+    );
+  } catch (error) {
+    setLoginError(
+      error instanceof Error
+        ? error.message
+        : "Unable to sign in. Please try again."
+    );
+  } finally {
+    setIsLoggingIn(false);
   }
+}
 
   // ==========================================================================
   // REGISTRATION
@@ -14776,7 +16345,106 @@ async function handleResetSubmit(
     );
   }
 }
+async function handleTwoFactorSubmit(
+  e: React.FormEvent
+) {
+  e.preventDefault();
 
+  setTwoFactorError("");
+
+  const code =
+    twoFactorCode.trim();
+
+  if (!twoFactorChallenge) {
+    setTwoFactorError(
+      "Your login verification session is missing. Please sign in again."
+    );
+
+    return;
+  }
+
+  if (!/^\d{6}$/.test(code)) {
+    setTwoFactorError(
+      "Please enter the 6-digit verification code."
+    );
+
+    return;
+  }
+
+  try {
+    setIsVerifyingTwoFactor(
+      true
+    );
+
+    const data =
+      await verifyTwoFactor(
+        twoFactorChallenge,
+        code
+      );
+
+    if (!data?.token) {
+      throw new Error(
+        "Login token was not returned by the server."
+      );
+    }
+
+    const userRole =
+      data.user?.role as Role;
+
+    const validRoles: Role[] = [
+      "student",
+      "security",
+      "pco",
+      "sysadmin",
+    ];
+
+    if (
+      !userRole ||
+      !validRoles.includes(
+        userRole
+      )
+    ) {
+      throw new Error(
+        "This account has an invalid access role."
+      );
+    }
+
+    localStorage.setItem(
+      "token",
+      data.token
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(
+        data.user
+      )
+    );
+
+    localStorage.setItem(
+      "role",
+      userRole
+    );
+
+    setTwoFactorChallenge("");
+    setTwoFactorCode("");
+    setTwoFactorError("");
+
+    onLogin(
+      userRole
+    );
+  } catch (error) {
+    setTwoFactorError(
+      error instanceof Error
+        ? error.message
+        : "Unable to verify the code."
+    );
+  } finally {
+    setIsVerifyingTwoFactor(
+      false
+    );
+  }
+}
   // ==========================================================================
   // SWITCH PAGE
   // ==========================================================================
@@ -14807,6 +16475,11 @@ async function handleResetSubmit(
 
     setLoginError("");
     setShowPassword(false);
+
+    setTwoFactorChallenge("");
+    setTwoFactorCode("");
+    setTwoFactorError("");
+    setIsVerifyingTwoFactor(false);
   }
 
   const fields =
@@ -14934,6 +16607,164 @@ async function handleResetSubmit(
     },
   []
 );
+
+  // ==========================================================================
+  // TWO-FACTOR AUTHENTICATION PAGE
+  // ==========================================================================
+
+  if (mode === "two-factor") {
+    return (
+      <PageShell>
+        <div className="flex flex-col items-center mb-6">
+          <QRpassLogo
+            size={72}
+            showText
+          />
+        </div>
+
+        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+          <div className="bg-primary px-6 py-4">
+            <h2
+              className="text-white font-bold text-base"
+              style={{
+                fontFamily:
+                  "Barlow, sans-serif",
+              }}
+            >
+              Two-Factor Authentication
+            </h2>
+
+            <p className="text-white/70 text-xs mt-1">
+              Enter the verification code sent to your registered email address.
+            </p>
+          </div>
+
+          <form
+            onSubmit={
+              handleTwoFactorSubmit
+            }
+            className="p-6 space-y-4"
+          >
+            <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-3">
+              <div className="flex items-start gap-2">
+                <Shield
+                  size={16}
+                  className="text-blue-700 mt-0.5 flex-shrink-0"
+                />
+
+                <p className="text-xs text-blue-800 leading-relaxed">
+                  For your security, QRPass sent a 6-digit login verification
+                  code to the email registered with this account. The code
+                  expires after 10 minutes.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                Verification Code
+              </label>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={
+                  twoFactorCode
+                }
+                onChange={(e) => {
+                  const value =
+                    e.target.value
+                      .replace(
+                        /\D/g,
+                        ""
+                      )
+                      .slice(
+                        0,
+                        6
+                      );
+
+                  setTwoFactorCode(
+                    value
+                  );
+
+                  setTwoFactorError(
+                    ""
+                  );
+                }}
+                placeholder="000000"
+                maxLength={6}
+                autoFocus
+                disabled={
+                  isVerifyingTwoFactor
+                }
+                className="w-full px-3 py-3 text-center text-2xl font-bold tracking-[0.45em] border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 disabled:opacity-50"
+              />
+            </div>
+
+            {twoFactorError && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5"
+              >
+                <AlertCircle
+                  size={15}
+                  className="mt-0.5 flex-shrink-0 text-red-600"
+                />
+
+                <p className="text-xs leading-relaxed text-red-700">
+                  {twoFactorError}
+                </p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={
+                isVerifyingTwoFactor ||
+                twoFactorCode.length !==
+                  6
+              }
+              className="w-full bg-primary text-white py-2.5 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isVerifyingTwoFactor
+                ? "Verifying..."
+                : "Verify & Sign In"}
+            </button>
+
+            <button
+              type="button"
+              disabled={
+                isVerifyingTwoFactor
+              }
+              onClick={() => {
+                setTwoFactorChallenge(
+                  ""
+                );
+
+                setTwoFactorCode(
+                  ""
+                );
+
+                setTwoFactorError(
+                  ""
+                );
+
+                setPassword("");
+
+                setMode(
+                  "login"
+                );
+              }}
+              className="w-full text-xs text-muted-foreground hover:text-primary hover:underline disabled:opacity-50"
+            >
+              Back to Sign In
+            </button>
+          </form>
+        </div>
+      </PageShell>
+    );
+  }
 
   // ==========================================================================
   // REGISTER PAGE
@@ -16088,6 +17919,20 @@ function Dashboard({
     useState<"all" | "unread" | "read">("all");
 
   // =========================================================
+  // ACTIVE ANNOUNCEMENTS
+  // =========================================================
+
+  const [
+    activeAnnouncements,
+    setActiveAnnouncements,
+  ] = useState<any[]>([]);
+
+  const [
+    announcementsLoading,
+    setAnnouncementsLoading,
+  ] = useState(false);
+
+  // =========================================================
   // CURRENT USER
   // =========================================================
 
@@ -16103,6 +17948,191 @@ function Dashboard({
       return null;
     }
   });
+
+  // =========================================================
+  // LOAD ACTIVE ANNOUNCEMENTS FOR CURRENT ROLE
+  // =========================================================
+
+  async function loadActiveAnnouncements(
+    showLoading = true
+  ) {
+    try {
+      if (showLoading) {
+        setAnnouncementsLoading(
+          true
+        );
+      }
+
+      const data =
+        await getAnnouncements();
+
+      setActiveAnnouncements(
+        Array.isArray(
+          data?.announcements
+        )
+          ? data.announcements
+          : []
+      );
+    } catch (error) {
+      console.error(
+        "Failed to load active announcements:",
+        error
+      );
+
+      setActiveAnnouncements(
+        []
+      );
+    } finally {
+      if (showLoading) {
+        setAnnouncementsLoading(
+          false
+        );
+      }
+    }
+  }
+
+  useEffect(() => {
+    loadActiveAnnouncements(
+      true
+    );
+
+    const intervalId =
+      window.setInterval(
+        () => {
+          loadActiveAnnouncements(
+            false
+          );
+        },
+        60000
+      );
+
+    const handleFocus = () => {
+      loadActiveAnnouncements(
+        false
+      );
+    };
+
+    const handleVisibility =
+      () => {
+        if (
+          document.visibilityState ===
+          "visible"
+        ) {
+          loadActiveAnnouncements(
+            false
+          );
+        }
+      };
+
+    window.addEventListener(
+      "focus",
+      handleFocus
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+    return () => {
+      window.clearInterval(
+        intervalId
+      );
+
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+    };
+  }, [role]);
+
+  function getAnnouncementBannerStyle(
+    priority:
+      | string
+      | null
+      | undefined
+  ) {
+    if (
+      String(priority).toLowerCase() ===
+      "urgent"
+    ) {
+      return {
+        wrapper:
+          "bg-red-50 border-red-200",
+        icon:
+          "bg-red-100 text-red-700",
+        title:
+          "text-red-800",
+        badge:
+          "bg-red-100 text-red-700 border-red-200",
+      };
+    }
+
+    if (
+      String(priority).toLowerCase() ===
+      "important"
+    ) {
+      return {
+        wrapper:
+          "bg-amber-50 border-amber-200",
+        icon:
+          "bg-amber-100 text-amber-700",
+        title:
+          "text-amber-800",
+        badge:
+          "bg-amber-100 text-amber-700 border-amber-200",
+      };
+    }
+
+    return {
+      wrapper:
+        "bg-[#eef2fc] border-[#d7e0f3]",
+      icon:
+        "bg-[#dfe7fb] text-[#2f5fd6]",
+      title:
+        "text-[#1a3a7b]",
+      badge:
+        "bg-blue-100 text-blue-700 border-blue-200",
+    };
+  }
+
+  function formatAnnouncementEnd(
+    value:
+      | string
+      | null
+      | undefined
+  ) {
+    if (!value) {
+      return "";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "";
+    }
+
+    return date.toLocaleString(
+      "en-PH",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    );
+  }
 
   // =========================================================
 // LOAD LATEST ACCOUNT DATA
@@ -16388,15 +18418,23 @@ const handleSaveAccountProfile = async () => {
   // LOAD HEADER NOTIFICATIONS
   // =========================================================
 
-  async function loadHeaderNotifications() {
+  async function loadHeaderNotifications(
+    showLoading = true
+  ) {
     try {
-      setNotificationsLoading(true);
+      if (showLoading) {
+        setNotificationsLoading(true);
+      }
 
       const data =
         await getNotifications();
 
       setHeaderNotifications(
-        data.notifications ?? []
+        Array.isArray(
+          data?.notifications
+        )
+          ? data.notifications
+          : []
       );
     } catch (error) {
       console.error(
@@ -16404,17 +18442,88 @@ const handleSaveAccountProfile = async () => {
         error
       );
     } finally {
-      setNotificationsLoading(false);
+      if (showLoading) {
+        setNotificationsLoading(false);
+      }
     }
   }
 
   useEffect(() => {
-    loadHeaderNotifications();
-  }, [role]);
+    /*
+    |--------------------------------------------------------------------------
+    | INITIAL LOAD
+    |--------------------------------------------------------------------------
+    */
 
-  useEffect(() => {
-    loadHeaderNotifications();
-  }, [activeNav]);
+    loadHeaderNotifications(true);
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTOMATIC REFRESH
+    |--------------------------------------------------------------------------
+    */
+
+    const notificationInterval =
+      window.setInterval(
+        () => {
+          loadHeaderNotifications(
+            false
+          );
+        },
+        15000
+      );
+
+    /*
+    |--------------------------------------------------------------------------
+    | REFRESH WHEN USER RETURNS TO WINDOW / TAB
+    |--------------------------------------------------------------------------
+    */
+
+    const handleWindowFocus =
+      () => {
+        loadHeaderNotifications(
+          false
+        );
+      };
+
+    const handleVisibilityChange =
+      () => {
+        if (
+          document.visibilityState ===
+          "visible"
+        ) {
+          loadHeaderNotifications(
+            false
+          );
+        }
+      };
+
+    window.addEventListener(
+      "focus",
+      handleWindowFocus
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    return () => {
+      window.clearInterval(
+        notificationInterval
+      );
+
+      window.removeEventListener(
+        "focus",
+        handleWindowFocus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+    };
+  }, [role]);
 
   const unreadNotificationCount =
     headerNotifications.filter(
@@ -16578,9 +18687,18 @@ const handleSaveAccountProfile = async () => {
       String(type ?? "")
         .toLowerCase();
 
+    /*
+    |--------------------------------------------------------------------------
+    | ITEM REGISTRATION / REQUESTS
+    |--------------------------------------------------------------------------
+    */
+
     if (
       normalizedType ===
-      "new_item_registration"
+        "new_item_registration" ||
+      normalizedType.includes(
+        "admin_item_registration"
+      )
     ) {
       return {
         card:
@@ -16592,9 +18710,21 @@ const handleSaveAccountProfile = async () => {
       };
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | APPROVED ITEMS / QR READY
+    |--------------------------------------------------------------------------
+    */
+
     if (
       normalizedType ===
-      "item_approved"
+        "item_approved" ||
+      normalizedType.includes(
+        "admin_item_approved"
+      ) ||
+      normalizedType.includes(
+        "security_item_ready"
+      )
     ) {
       return {
         card:
@@ -16605,6 +18735,12 @@ const handleSaveAccountProfile = async () => {
           "bg-green-100 text-green-700",
       };
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | STUDENT SUBMISSION
+    |--------------------------------------------------------------------------
+    */
 
     if (
       normalizedType ===
@@ -16620,9 +18756,22 @@ const handleSaveAccountProfile = async () => {
       };
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | LOST & FOUND
+    |--------------------------------------------------------------------------
+    */
+
     if (
-      normalizedType ===
-      "lost_found_claim"
+      normalizedType.includes(
+        "lost_found"
+      ) ||
+      normalizedType.includes(
+        "lost"
+      ) ||
+      normalizedType.includes(
+        "found"
+      )
     ) {
       return {
         card:
@@ -16633,6 +18782,36 @@ const handleSaveAccountProfile = async () => {
           "bg-purple-100 text-purple-700",
       };
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | USER ACCOUNT ACTIVITY
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      normalizedType.includes(
+        "user_account"
+      ) ||
+      normalizedType.includes(
+        "account"
+      )
+    ) {
+      return {
+        card:
+          "bg-cyan-50 border-cyan-200",
+        icon:
+          "bg-cyan-100 text-cyan-700",
+        badge:
+          "bg-cyan-100 text-cyan-700",
+      };
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SECURITY / INCIDENT ACTIVITY
+    |--------------------------------------------------------------------------
+    */
 
     if (
       normalizedType.includes(
@@ -16680,14 +18859,23 @@ const handleSaveAccountProfile = async () => {
 
     if (
       normalizedType ===
-      "new_item_registration"
+        "new_item_registration" ||
+      normalizedType.includes(
+        "admin_item_registration"
+      )
     ) {
       return <Clock size={14} />;
     }
 
     if (
       normalizedType ===
-      "item_approved"
+        "item_approved" ||
+      normalizedType.includes(
+        "admin_item_approved"
+      ) ||
+      normalizedType.includes(
+        "security_item_ready"
+      )
     ) {
       return (
         <CheckCircle size={14} />
@@ -16714,10 +18902,33 @@ const handleSaveAccountProfile = async () => {
     }
 
     if (
+      normalizedType.includes(
+        "lost_found"
+      ) ||
+      normalizedType.includes(
+        "lost"
+      ) ||
+      normalizedType.includes(
+        "found"
+      )
+    ) {
+      return <BookOpen size={14} />;
+    }
+
+    if (
+      normalizedType.includes(
+        "user_account"
+      ) ||
+      normalizedType.includes(
+        "account"
+      )
+    ) {
+      return <User size={14} />;
+    }
+
+    if (
       normalizedType ===
-        "item_submitted" ||
-      normalizedType ===
-        "lost_found_claim"
+      "item_submitted"
     ) {
       return <FileText size={14} />;
     }
@@ -16743,6 +18954,291 @@ const handleSaveAccountProfile = async () => {
       .replace(/\b\w/g, (letter) =>
         letter.toUpperCase()
       );
+  }
+
+  // =========================================================
+  // CLICKABLE NOTIFICATION NAVIGATION
+  // =========================================================
+
+  function getNotificationTargetIndex(
+    type:
+      | string
+      | null
+      | undefined
+  ): number | null {
+    const normalizedType =
+      String(type ?? "")
+        .toLowerCase();
+
+    /*
+    |--------------------------------------------------------------------------
+    | STUDENT
+    |--------------------------------------------------------------------------
+    */
+
+    if (role === "student") {
+      if (
+        normalizedType ===
+        "item_approved"
+      ) {
+        return 1; // My QR Codes
+      }
+
+      if (
+        normalizedType ===
+          "item_submitted" ||
+        normalizedType.includes(
+          "permit"
+        )
+      ) {
+        return 2; // Permit Status
+      }
+
+      if (
+        normalizedType.includes(
+          "lost_found"
+        ) ||
+        normalizedType.includes(
+          "lost"
+        ) ||
+        normalizedType.includes(
+          "found"
+        )
+      ) {
+        return 3; // Lost & Found
+      }
+
+      return 0; // Register Item
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PCO
+    |--------------------------------------------------------------------------
+    */
+
+    if (role === "pco") {
+      if (
+        normalizedType ===
+          "new_item_registration" ||
+        normalizedType ===
+          "item_submitted" ||
+        normalizedType.includes(
+          "approval"
+        )
+      ) {
+        return 0; // Registration Requests
+      }
+
+      if (
+        normalizedType ===
+          "item_approved" ||
+        normalizedType.includes(
+          "registry"
+        ) ||
+        normalizedType.includes(
+          "qr"
+        )
+      ) {
+        return 1; // Item Registry
+      }
+
+      return 0;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CSU / SECURITY
+    |--------------------------------------------------------------------------
+    */
+
+    if (role === "security") {
+      if (
+        normalizedType.includes(
+          "lost_found"
+        ) ||
+        normalizedType.includes(
+          "lost"
+        ) ||
+        normalizedType.includes(
+          "found"
+        )
+      ) {
+        return 2; // Lost & Found
+      }
+
+      if (
+        normalizedType.includes(
+          "incident"
+        ) ||
+        normalizedType.includes(
+          "flagged"
+        ) ||
+        normalizedType.includes(
+          "warning"
+        ) ||
+        normalizedType.includes(
+          "scan"
+        ) ||
+        normalizedType.includes(
+          "security_item_ready"
+        ) ||
+        normalizedType.includes(
+          "item_approved"
+        ) ||
+        normalizedType.includes(
+          "qr"
+        )
+      ) {
+        return 0; // Scan & Verify
+      }
+
+      if (
+        normalizedType.includes(
+          "entry"
+        ) ||
+        normalizedType.includes(
+          "exit"
+        )
+      ) {
+        return 1; // Entry / Exit Log
+      }
+
+      if (
+        normalizedType.includes(
+          "report"
+        )
+      ) {
+        return 3; // Reports
+      }
+
+      return 0; // Scan & Verify
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SYSTEM ADMINISTRATOR
+    |--------------------------------------------------------------------------
+    */
+
+    if (role === "sysadmin") {
+      if (
+        normalizedType.includes(
+          "user_account"
+        ) ||
+        normalizedType.includes(
+          "user"
+        ) ||
+        normalizedType.includes(
+          "account"
+        )
+      ) {
+        return 3; // User Accounts
+      }
+
+      if (
+        normalizedType.includes(
+          "setting"
+        ) ||
+        normalizedType.includes(
+          "security_config"
+        ) ||
+        normalizedType.includes(
+          "permission"
+        )
+      ) {
+        return 8; // Security Config
+      }
+
+      if (
+        normalizedType.includes(
+          "incident"
+        ) ||
+        normalizedType.includes(
+          "audit"
+        ) ||
+        normalizedType.includes(
+          "login"
+        ) ||
+        normalizedType.includes(
+          "failed"
+        ) ||
+        normalizedType.includes(
+          "warning"
+        )
+      ) {
+        return 5; // Audit Logs
+      }
+
+      if (
+        normalizedType.includes(
+          "lost_found"
+        ) ||
+        normalizedType.includes(
+          "lost"
+        ) ||
+        normalizedType.includes(
+          "found"
+        ) ||
+        normalizedType.includes(
+          "item"
+        ) ||
+        normalizedType.includes(
+          "registration"
+        ) ||
+        normalizedType.includes(
+          "qr"
+        )
+      ) {
+        return 1; // System Records
+      }
+
+      return 0; // Overview Dashboard
+    }
+
+    return null;
+  }
+
+  async function handleHeaderNotificationOpen(
+    notification: any
+  ) {
+    if (
+      !notification?.is_read &&
+      notification?.id
+    ) {
+      await handleHeaderMarkRead(
+        notification.id
+      );
+    }
+
+    const targetIndex =
+      getNotificationTargetIndex(
+        notification?.type
+      );
+
+    if (
+      targetIndex !== null &&
+      targetIndex >= 0 &&
+      targetIndex < pages.length
+    ) {
+      setActiveNav(
+        targetIndex
+      );
+    }
+
+    setNotificationOpen(
+      false
+    );
+
+    setAccountOpen(
+      false
+    );
+
+    if (isMobile) {
+      setSidebarOpen(
+        false
+      );
+    }
   }
 
   // =========================================================
@@ -17054,13 +19550,33 @@ const handleSaveAccountProfile = async () => {
 
                         return (
                           <div
-                                key={notification.id}
-                                className={`rounded-xl border p-3 transition-all ${
-                                  notification.is_read
-                                    ? "bg-white border-[#e5eaf2]"
-                                    : `${style.card} shadow-sm`
-                                }`}
-                              >
+                            key={notification.id}
+                            role="button"
+                            tabIndex={0}
+                            title="Open related page"
+                            onClick={() =>
+                              handleHeaderNotificationOpen(
+                                notification
+                              )
+                            }
+                            onKeyDown={(event) => {
+                              if (
+                                event.key === "Enter" ||
+                                event.key === " "
+                              ) {
+                                event.preventDefault();
+
+                                handleHeaderNotificationOpen(
+                                  notification
+                                );
+                              }
+                            }}
+                            className={`rounded-xl border p-3 transition-all cursor-pointer hover:-translate-y-[1px] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#2f5fd6]/25 ${
+                              notification.is_read
+                                ? "bg-white border-[#e5eaf2] hover:bg-[#fbfcfe]"
+                                : `${style.card} shadow-sm`
+                            }`}
+                          >
                             <div className="flex gap-3">
                               {/* ICON */}
 
@@ -17130,17 +19646,25 @@ const handleSaveAccountProfile = async () => {
                                       {notification.is_read
                                         ? "Read"
                                         : "Unread"}
+                                      <span className="mx-1">
+                                        •
+                                      </span>
+                                      <span className="text-primary font-semibold">
+                                        Click to open
+                                      </span>
                                     </p>
                                   </div>
 
                                   {!notification.is_read && (
                                     <button
                                       type="button"
-                                      onClick={() =>
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+
                                         handleHeaderMarkRead(
                                           notification.id
-                                        )
-                                      }
+                                        );
+                                      }}
                                       disabled={
                                         markingNotificationId ===
                                         notification.id
@@ -17179,7 +19703,7 @@ const handleSaveAccountProfile = async () => {
 
                       <button
                         type="button"
-                        onClick={loadHeaderNotifications}
+                        onClick={() => loadHeaderNotifications(true)}
                         disabled={notificationsLoading}
                         className="text-[10px] flex items-center gap-1.5 px-2 py-1 rounded-md text-[#1a3a7b] font-semibold hover:bg-[#eef2fc] transition-colors disabled:opacity-50"
                       >
@@ -17534,36 +20058,88 @@ const handleSaveAccountProfile = async () => {
             </span>
           </div>
 
-          {/* ANNOUNCEMENT */}
+          {/* ACTIVE ANNOUNCEMENTS */}
 
-          <div
-            className="mb-4 rounded-lg px-3 py-2 flex items-start gap-2"
-            style={{
-              background: "#eef2fc",
-              border: "1px solid #d7e0f3",
-            }}
-          >
-            <div
-              className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
-              style={{
-                background: "#dfe7fb",
-                color: "#2f5fd6",
-              }}
-            >
-              <Bell size={14} />
-            </div>
+          {!announcementsLoading &&
+            activeAnnouncements.length >
+              0 && (
+              <div className="mb-4 space-y-2">
+                {activeAnnouncements.map(
+                  (
+                    announcement
+                  ) => {
+                    const bannerStyle =
+                      getAnnouncementBannerStyle(
+                        announcement.priority
+                      );
 
-            <p className="text-xs text-[#334155] leading-relaxed pt-1">
-              <span className="font-semibold text-[#1a3a7b]">
-                Announcement:
-              </span>{" "}
-              Campus-wide QR item check on{" "}
-              <strong className="text-[#111827]">
-                June 18, 2026
-              </strong>
-              . Ensure all items are QR-registered.
-            </p>
-          </div>
+                    return (
+                      <div
+                        key={
+                          announcement.id
+                        }
+                        className={`rounded-lg border px-3 py-3 flex items-start gap-3 ${bannerStyle.wrapper}`}
+                      >
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${bannerStyle.icon}`}
+                        >
+                          {String(
+                            announcement.priority
+                          ).toLowerCase() ===
+                          "urgent" ? (
+                            <AlertTriangle
+                              size={15}
+                            />
+                          ) : (
+                            <Bell
+                              size={15}
+                            />
+                          )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p
+                              className={`text-xs font-bold ${bannerStyle.title}`}
+                            >
+                              {
+                                announcement.title
+                              }
+                            </p>
+
+                            <span
+                              className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase ${bannerStyle.badge}`}
+                            >
+                              {String(
+                                announcement.priority ??
+                                  "info"
+                              )}
+                            </span>
+                          </div>
+
+                          <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-[#334155]">
+                            {
+                              announcement.message
+                            }
+                          </p>
+
+                          {announcement.end_at && (
+                            <p className="mt-1.5 text-[10px] text-[#64748b]">
+                              Available until{" "}
+                              <span className="font-semibold">
+                                {formatAnnouncementEnd(
+                                  announcement.end_at
+                                )}
+                              </span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+            )}
 
           <ActivePage />
         </main>

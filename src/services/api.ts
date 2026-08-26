@@ -1498,3 +1498,369 @@ export async function getSessionPolicy() {
 
   return data;
 }
+export async function verifyTwoFactor(
+  challengeToken: string,
+  code: string
+) {
+  const response =
+    await qrFetch(
+      `${API_URL}/verify-2fa`,
+      {
+        method: "POST",
+
+        headers: {
+          Accept:
+            "application/json",
+
+          "Content-Type":
+            "application/json",
+        },
+
+        body:
+          JSON.stringify({
+            challenge_token:
+              challengeToken,
+
+            code:
+              code,
+          }),
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Two-factor verification failed."
+    );
+  }
+
+  return data;
+}
+// =========================================================
+// ANNOUNCEMENTS
+// =========================================================
+
+export type AnnouncementPayload = {
+  title: string;
+  message: string;
+  audience:
+    | "everyone"
+    | "student"
+    | "security"
+    | "pco"
+    | "sysadmin";
+  priority:
+    | "info"
+    | "important"
+    | "urgent";
+  start_at: string | null;
+  end_at: string | null;
+  is_published: boolean;
+};
+
+
+// =========================================================
+// GET ACTIVE ANNOUNCEMENTS
+// Student / Security / PCO / SysAdmin
+// =========================================================
+
+export async function getAnnouncements() {
+  const token =
+    localStorage.getItem("token");
+
+  const response =
+    await qrFetch(
+      `${API_URL}/announcements`,
+      {
+        method: "GET",
+
+        headers: {
+          Accept:
+            "application/json",
+
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to load announcements."
+    );
+  }
+
+  return data;
+}
+
+
+// =========================================================
+// SYSADMIN - GET ALL ANNOUNCEMENTS
+// =========================================================
+
+export async function getManagedAnnouncements() {
+  const token =
+    localStorage.getItem("token");
+
+  const response =
+    await qrFetch(
+      `${API_URL}/announcements/manage`,
+      {
+        method: "GET",
+
+        headers: {
+          Accept:
+            "application/json",
+
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to load announcement management data."
+    );
+  }
+
+  return data;
+}
+
+
+// =========================================================
+// SYSADMIN - CREATE ANNOUNCEMENT
+// =========================================================
+
+export async function createAnnouncement(
+  payload: AnnouncementPayload
+) {
+  const token =
+    localStorage.getItem("token");
+
+  const response =
+    await qrFetch(
+      `${API_URL}/announcements`,
+      {
+        method: "POST",
+
+        headers: {
+          Accept:
+            "application/json",
+
+          "Content-Type":
+            "application/json",
+
+          Authorization:
+            `Bearer ${token}`,
+        },
+
+        body:
+          JSON.stringify(
+            payload
+          ),
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    if (data.errors) {
+      const firstError =
+        Object.values(
+          data.errors
+        )[0];
+
+      if (
+        Array.isArray(
+          firstError
+        ) &&
+        firstError.length > 0
+      ) {
+        throw new Error(
+          String(
+            firstError[0]
+          )
+        );
+      }
+    }
+
+    throw new Error(
+      data.message ||
+        "Failed to create announcement."
+    );
+  }
+
+  return data;
+}
+
+
+// =========================================================
+// SYSADMIN - UPDATE ANNOUNCEMENT
+// =========================================================
+
+export async function updateAnnouncement(
+  id: number,
+  payload: AnnouncementPayload
+) {
+  const token =
+    localStorage.getItem("token");
+
+  const response =
+    await qrFetch(
+      `${API_URL}/announcements/${id}`,
+      {
+        method: "PUT",
+
+        headers: {
+          Accept:
+            "application/json",
+
+          "Content-Type":
+            "application/json",
+
+          Authorization:
+            `Bearer ${token}`,
+        },
+
+        body:
+          JSON.stringify(
+            payload
+          ),
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    if (data.errors) {
+      const firstError =
+        Object.values(
+          data.errors
+        )[0];
+
+      if (
+        Array.isArray(
+          firstError
+        ) &&
+        firstError.length > 0
+      ) {
+        throw new Error(
+          String(
+            firstError[0]
+          )
+        );
+      }
+    }
+
+    throw new Error(
+      data.message ||
+        "Failed to update announcement."
+    );
+  }
+
+  return data;
+}
+
+
+// =========================================================
+// SYSADMIN - PUBLISH / UNPUBLISH ANNOUNCEMENT
+// =========================================================
+
+export async function setAnnouncementPublished(
+  id: number,
+  isPublished: boolean
+) {
+  const token =
+    localStorage.getItem("token");
+
+  const response =
+    await qrFetch(
+      `${API_URL}/announcements/${id}/publish`,
+      {
+        method: "PUT",
+
+        headers: {
+          Accept:
+            "application/json",
+
+          "Content-Type":
+            "application/json",
+
+          Authorization:
+            `Bearer ${token}`,
+        },
+
+        body:
+          JSON.stringify({
+            is_published:
+              isPublished,
+          }),
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to update announcement publication status."
+    );
+  }
+
+  return data;
+}
+
+
+// =========================================================
+// SYSADMIN - DELETE ANNOUNCEMENT
+// =========================================================
+
+export async function deleteAnnouncement(
+  id: number
+) {
+  const token =
+    localStorage.getItem("token");
+
+  const response =
+    await qrFetch(
+      `${API_URL}/announcements/${id}`,
+      {
+        method: "DELETE",
+
+        headers: {
+          Accept:
+            "application/json",
+
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to delete announcement."
+    );
+  }
+
+  return data;
+}
