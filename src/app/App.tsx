@@ -67,6 +67,7 @@ import {
 
   createItem,
   getItems,
+  getMyQRCodes,
   getPendingItems,
   approveItem,
 
@@ -119,6 +120,8 @@ import {
   updateRolePermissions,
 
   getSecurityReports,
+  getPerformance,
+  getSessionPolicy,
 } from "../services/api";
 
 // ── QRpass Logo ───────────────────────────────────────────────────────────────
@@ -1128,12 +1131,28 @@ function StudentMyQRCodes() {
   async function loadMyItems() {
     try {
       setLoading(true);
-
-      const data = await getItems();
-
-      setItems(data.items ?? []);
+  
+      const data =
+        await getMyQRCodes();
+  
+      setItems(
+        Array.isArray(data?.items)
+          ? data.items
+          : []
+      );
     } catch (error) {
-      console.error("Failed to load QR codes:", error);
+      console.error(
+        "Failed to load QR codes:",
+        error
+      );
+  
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to load QR codes."
+      );
+  
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -13144,29 +13163,460 @@ function SysAdminActiveSessions() {
 }
 
 function SysAdminPerformance() {
+  type PerformanceMetrics = {
+    server_uptime_seconds: number | null;
+    active_sessions: number;
+    qr_response_ms: number | null;
+    errors_today: number;
+    session_timeout_minutes: number;
+  };
+
+  type PerformanceService = {
+    name: string;
+    status: string;
+    response_ms: number | null;
+    last_run?: string | null;
+  };
+
+  type PerformanceResponse = {
+    metrics: PerformanceMetrics;
+    services: PerformanceService[];
+  };
+
+  const [metrics, setMetrics] =
+    useState<PerformanceMetrics>({
+      server_uptime_seconds: null,
+      active_sessions: 0,
+      qr_response_ms: null,
+      errors_today: 0,
+      session_timeout_minutes: 30,
+    });
+
+  const [services, setServices] =
+    useState<PerformanceService[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD PERFORMANCE
+  |--------------------------------------------------------------------------
+  */
+
+  async function loadPerformance() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data =
+        (await getPerformance()) as PerformanceResponse;
+
+      setMetrics({
+        server_uptime_seconds:
+          data.metrics?.server_uptime_seconds ??
+          null,
+
+        active_sessions:
+          Number(
+            data.metrics?.active_sessions ??
+              0
+          ),
+
+        qr_response_ms:
+          data.metrics?.qr_response_ms ??
+          null,
+
+        errors_today:
+          Number(
+            data.metrics?.errors_today ??
+              0
+          ),
+
+        session_timeout_minutes:
+          Number(
+            data.metrics
+              ?.session_timeout_minutes ??
+              30
+          ),
+      });
+
+      setServices(
+        Array.isArray(data.services)
+          ? data.services
+          : []
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load performance data:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load performance data."
+      );
+
+      setServices([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadPerformance();
+  }, []);
+
+  /*
+  |--------------------------------------------------------------------------
+  | FORMAT UPTIME
+  |--------------------------------------------------------------------------
+  */
+
+  function formatUptime(
+    seconds: number | null
+  ) {
+    if (
+      seconds === null ||
+      seconds === undefined
+    ) {
+      return "—";
+    }
+
+    const totalSeconds =
+      Number(seconds);
+
+    if (
+      Number.isNaN(totalSeconds)
+    ) {
+      return "—";
+    }
+
+    const days =
+      Math.floor(
+        totalSeconds / 86400
+      );
+
+    const hours =
+      Math.floor(
+        (totalSeconds % 86400) /
+          3600
+      );
+
+    const minutes =
+      Math.floor(
+        (totalSeconds % 3600) /
+          60
+      );
+
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m`;
+    }
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+
+    return `${minutes}m`;
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | FORMAT RESPONSE TIME
+  |--------------------------------------------------------------------------
+  */
+
+  function formatResponseTime(
+    value: number | null | undefined
+  ) {
+    if (
+      value === null ||
+      value === undefined
+    ) {
+      return "—";
+    }
+
+    const numberValue =
+      Number(value);
+
+    if (
+      Number.isNaN(numberValue)
+    ) {
+      return "—";
+    }
+
+    return `${numberValue.toFixed(
+      2
+    )}ms`;
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | FORMAT LAST RUN
+  |--------------------------------------------------------------------------
+  */
+
+  function formatLastRun(
+    value?: string | null
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return value;
+    }
+
+    return date.toLocaleString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | STATUS COLOR
+  |--------------------------------------------------------------------------
+  */
+
+  function statusColor(
+    status: string
+  ) {
+    const normalized =
+      String(status)
+        .trim()
+        .toLowerCase();
+
+    if (
+      normalized === "online" ||
+      normalized === "available"
+    ) {
+      return "bg-green-500";
+    }
+
+    if (
+      normalized === "offline"
+    ) {
+      return "bg-red-500";
+    }
+
+    return "bg-yellow-500";
+  }
+
   return (
     <div className="space-y-5">
-      <PageHeader title="Performance" subtitle="System health, uptime, and QRpass resource usage." />
+      <PageHeader
+        title="Performance"
+        subtitle="Real-time QRPass system health and resource monitoring."
+        action={
+          <button
+            type="button"
+            onClick={
+              loadPerformance
+            }
+            disabled={loading}
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+          >
+            <RefreshCw
+              size={12}
+              className={
+                loading
+                  ? "animate-spin"
+                  : ""
+              }
+            />
+
+            {loading
+              ? "Refreshing..."
+              : "Refresh"}
+          </button>
+        }
+      />
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Uptime" value="99.9%" icon={<CheckCircle size={20} />} color="#2ecc71" />
-        <StatCard label="Active Sessions" value="247" icon={<Eye size={20} />} color="#1a3a7b" />
-        <StatCard label="Avg QR Response" value="82ms" icon={<Clock size={20} />} color="#2f5fd6" />
-        <StatCard label="Errors Today" value="3" icon={<AlertTriangle size={20} />} color="#e8543a" />
+        <StatCard
+          label="Server Uptime"
+          value={
+            loading
+              ? "..."
+              : formatUptime(
+                  metrics.server_uptime_seconds
+                )
+          }
+          icon={
+            <CheckCircle
+              size={20}
+            />
+          }
+          color="#2ecc71"
+        />
+
+        <StatCard
+          label="Active Sessions"
+          value={
+            loading
+              ? "..."
+              : String(
+                  metrics.active_sessions
+                )
+          }
+          icon={
+            <Eye size={20} />
+          }
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="QR Response"
+          value={
+            loading
+              ? "..."
+              : formatResponseTime(
+                  metrics.qr_response_ms
+                )
+          }
+          icon={
+            <Clock size={20} />
+          }
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Errors Today"
+          value={
+            loading
+              ? "..."
+              : String(
+                  metrics.errors_today
+                )
+          }
+          icon={
+            <AlertTriangle
+              size={20}
+            />
+          }
+          color="#e8543a"
+        />
       </div>
+
       <Card title="System Status">
-        <div className="p-4 space-y-4">
-          {[["Database Server", "Online", "green", "23ms"], ["Web Application", "Online", "green", "82ms"], ["QR Scan Service", "Online", "green", "12ms"], ["Notification Service", "Online", "green", "—"], ["Backup Service", "Last run: 8:00 AM", "yellow", "—"]].map(([s, v, c, rt]) => (
-            <div key={s as string} className="flex items-center justify-between p-3 bg-muted/40 rounded-md">
-              <div className="flex items-center gap-2.5">
-                <span className={`w-2.5 h-2.5 rounded-full ${c === "green" ? "bg-green-500" : "bg-yellow-500"}`} />
-                <span className="text-sm text-foreground font-medium">{s}</span>
-              </div>
-              <div className="flex items-center gap-4">
-                {rt !== "—" && <span className="text-xs text-muted-foreground font-mono">{rt}</span>}
-                <span className="text-xs text-muted-foreground">{v}</span>
-              </div>
+        {loading ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            Loading system
+            performance...
+          </div>
+        ) : services.length ===
+          0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            No service information
+            available.
+          </div>
+        ) : (
+          <div className="p-4 space-y-4">
+            {services.map(
+              (
+                service,
+                index
+              ) => (
+                <div
+                  key={`${service.name}-${index}`}
+                  className="flex items-center justify-between gap-4 p-3 bg-muted/40 rounded-md"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full ${statusColor(
+                        service.status
+                      )}`}
+                    />
+
+                    <div>
+                      <p className="text-sm text-foreground font-medium">
+                        {
+                          service.name
+                        }
+                      </p>
+
+                      {service.last_run && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Last run:{" "}
+                          {formatLastRun(
+                            service.last_run
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    {service.response_ms !==
+                      null &&
+                      service.response_ms !==
+                        undefined && (
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {formatResponseTime(
+                            service.response_ms
+                          )}
+                        </span>
+                      )}
+
+                    <span className="text-xs text-muted-foreground">
+                      {
+                        service.status
+                      }
+                    </span>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        )}
+      </Card>
+
+      <Card title="Session Policy">
+        <div className="p-4">
+          <div className="flex items-center justify-between p-3 bg-muted/40 rounded-md">
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                Session Timeout
+              </p>
+
+              <p className="text-xs text-muted-foreground mt-1">
+                Current inactivity
+                timeout configured
+                in System Settings.
+              </p>
             </div>
-          ))}
+
+            <span className="text-sm font-semibold text-primary">
+              {
+                metrics.session_timeout_minutes
+              }{" "}
+              minutes
+            </span>
+          </div>
         </div>
       </Card>
     </div>
@@ -17598,6 +18048,147 @@ export default function App() {
 
   const [role, setRole] =
     useState<Role>("student");
+
+        /*
+    |--------------------------------------------------------------------------
+    | AUTOMATIC SESSION INACTIVITY TIMEOUT
+    |--------------------------------------------------------------------------
+    */
+
+    useEffect(() => {
+      if (view !== "dashboard") {
+        return;
+      }
+
+      let timeoutId:
+        ReturnType<typeof setTimeout> | null =
+          null;
+
+      let timeoutMinutes = 30;
+
+      let disposed = false;
+
+      async function loadTimeoutPolicy() {
+        try {
+          const data =
+            await getSessionPolicy();
+
+          timeoutMinutes =
+            Math.max(
+              1,
+              Number(
+                data
+                  ?.session_timeout_minutes ??
+                  30
+              )
+            );
+
+      resetInactivityTimer();
+    } catch (error) {
+      console.error(
+        "Failed to load session timeout policy:",
+        error
+      );
+
+      timeoutMinutes = 30;
+
+      resetInactivityTimer();
+    }
+  }
+
+  function expireSession() {
+    if (disposed) {
+      return;
+    }
+
+    localStorage.removeItem(
+      "token"
+    );
+
+    localStorage.removeItem(
+      "user"
+    );
+
+    localStorage.removeItem(
+      "role"
+    );
+
+    alert(
+      "Your session has expired due to inactivity. Please log in again."
+    );
+
+    setRole("student");
+    setView("login");
+  }
+
+  function resetInactivityTimer() {
+    if (disposed) {
+      return;
+    }
+
+    if (timeoutId) {
+      clearTimeout(
+        timeoutId
+      );
+    }
+
+    timeoutId =
+      setTimeout(
+        expireSession,
+        timeoutMinutes *
+          60 *
+          1000
+      );
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | REAL USER ACTIVITY
+  |--------------------------------------------------------------------------
+  */
+
+  const activityEvents = [
+    "mousedown",
+    "mousemove",
+    "keydown",
+    "scroll",
+    "touchstart",
+    "click",
+  ];
+
+  activityEvents.forEach(
+    (eventName) => {
+      window.addEventListener(
+        eventName,
+        resetInactivityTimer,
+        {
+          passive: true,
+        }
+      );
+    }
+  );
+
+  loadTimeoutPolicy();
+
+  return () => {
+    disposed = true;
+
+    if (timeoutId) {
+      clearTimeout(
+        timeoutId
+      );
+    }
+
+    activityEvents.forEach(
+      (eventName) => {
+        window.removeEventListener(
+          eventName,
+          resetInactivityTimer
+        );
+      }
+    );
+  };
+}, [view]);
 
   /*
   |--------------------------------------------------------------------------

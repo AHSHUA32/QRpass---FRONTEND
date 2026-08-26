@@ -1,10 +1,60 @@
 const API_URL = "http://localhost:8000/api";
 
+async function qrFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  const response =
+    await window.fetch(input, init);
+
+  if (response.status === 401) {
+    try {
+      const data =
+        await response.clone().json();
+
+      const message =
+        String(
+          data?.message ?? ""
+        );
+
+      if (
+        message.includes(
+          "session has expired due to inactivity"
+        )
+      ) {
+        localStorage.removeItem(
+          "token"
+        );
+
+        localStorage.removeItem(
+          "user"
+        );
+
+        localStorage.removeItem(
+          "role"
+        );
+
+        alert(
+          "Your session has expired due to inactivity. Please log in again."
+        );
+
+        window.location.reload();
+      }
+    } catch {
+      // Ignore JSON parsing errors.
+    }
+  }
+
+  return response;
+}
+
+const fetch = qrFetch;
+
 export async function login(
   username: string,
   password: string
 ) {
-  const response = await fetch(`${API_URL}/login`, {
+  const response = await qrFetch(`${API_URL}/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -75,6 +125,32 @@ export async function getItems() {
 
   if (!response.ok) {
     throw new Error(data.message || "Failed to load items.");
+  }
+
+  return data;
+}
+
+export async function getMyQRCodes() {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_URL}/items/qr-codes`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to load QR codes."
+    );
   }
 
   return data;
@@ -1248,20 +1324,25 @@ export async function getActiveSessions() {
 export async function revokeActiveSession(
   id: number
 ) {
-  const token = localStorage.getItem("token");
+  const token =
+    localStorage.getItem("token");
 
-  const response = await fetch(
-    `${API_URL}/active-sessions/${id}`,
-    {
-      method: "DELETE",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const response =
+    await qrFetch(
+      `${API_URL}/active-sessions/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Accept:
+            "application/json",
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
   if (!response.ok) {
     throw new Error(
@@ -1273,21 +1354,27 @@ export async function revokeActiveSession(
   return data;
 }
 
+
 export async function getRolePermissions() {
-  const token = localStorage.getItem("token");
+  const token =
+    localStorage.getItem("token");
 
-  const response = await fetch(
-    `${API_URL}/role-permissions`,
-    {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const response =
+    await qrFetch(
+      `${API_URL}/role-permissions`,
+      {
+        method: "GET",
+        headers: {
+          Accept:
+            "application/json",
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
   if (!response.ok) {
     throw new Error(
@@ -1311,27 +1398,101 @@ export async function updateRolePermissions(
     manage_users: boolean;
   }
 ) {
-  const token = localStorage.getItem("token");
+  const token =
+    localStorage.getItem("token");
 
-  const response = await fetch(
-    `${API_URL}/role-permissions/${role}`,
-    {
-      method: "PUT",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(permissions),
-    }
-  );
+  const response =
+    await qrFetch(
+      `${API_URL}/role-permissions/${role}`,
+      {
+        method: "PUT",
 
-  const data = await response.json();
+        headers: {
+          Accept:
+            "application/json",
+          "Content-Type":
+            "application/json",
+          Authorization:
+            `Bearer ${token}`,
+        },
+
+        body:
+          JSON.stringify(
+            permissions
+          ),
+      }
+    );
+
+  const data =
+    await response.json();
 
   if (!response.ok) {
     throw new Error(
       data.message ||
         "Failed to update role permissions."
+    );
+  }
+
+  return data;
+}
+export async function getPerformance() {
+  const token =
+    localStorage.getItem("token");
+
+  const response =
+    await qrFetch(
+      `${API_URL}/performance`,
+      {
+        method: "GET",
+
+        headers: {
+          Accept:
+            "application/json",
+
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to load performance data."
+    );
+  }
+
+  return data;
+}
+
+export async function getSessionPolicy() {
+  const token =
+    localStorage.getItem("token");
+
+  const response =
+    await qrFetch(
+      `${API_URL}/session-policy`,
+      {
+        method: "GET",
+        headers: {
+          Accept:
+            "application/json",
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to load session policy."
     );
   }
 
