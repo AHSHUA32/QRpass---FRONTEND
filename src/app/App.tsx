@@ -1,54 +1,125 @@
-﻿import * as XLSX from "xlsx";
+﻿// =========================================================
+// REACT
+// =========================================================
+
+import React, { useEffect, useState } from "react";
+
+
+// =========================================================
+// THIRD-PARTY LIBRARIES
+// =========================================================
+
+import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable";
+
+import { QRCodeSVG } from "qrcode.react";
+import { Html5QrcodeScanner } from "html5-qrcode";
+
+
+// =========================================================
+// ICONS
+// =========================================================
+
+import {
+  AlertCircle,
+  AlertTriangle,
+  BarChart2,
+  Bell,
+  BookOpen,
+  CheckCircle,
+  ChevronRight,
+  ClipboardList,
+  Clock,
+  Download,
+  Eye,
+  EyeOff,
+  FileText,
+  Filter,
+  Layers,
+  Lock,
+  LogOut,
+  Map,
+  Menu,
+  Package,
+  Plus,
+  QrCode,
+  RefreshCw,
+  ScanLine,
+  Search,
+  Settings,
+  Shield,
+  User,
+  Users,
+  X,
+  XCircle,
+} from "lucide-react";
+
+
+// =========================================================
+// QRPass API SERVICES
+// =========================================================
+
 import {
   login,
   register,
+  logout,
+
   createItem,
   getItems,
   getPendingItems,
   approveItem,
+
   verifyItem,
   createScanLog,
   getScanLogs,
+
   getAllItems,
+
   getSecurityIncidents,
   createSecurityIncident,
   resolveSecurityIncident,
+
   getLostFoundItems,
   createLostFoundItem,
   claimLostFoundItem,
   markLostFoundRecovered,
+
   getNotifications,
   markNotificationRead,
   markAllNotificationsRead,
+
   getDashboard,
   getSystemRecords,
   getReports,
+
+  getSystemSettings,
+  updateSystemSettings,
+
+  getAuditLogs,
   getUsers,
-  updateUserStatus,
   createUser,
   updateUser,
-  logout,
+  updateUserStatus,
+
   requestPasswordReset,
   verifyPasswordResetCode,
   resetPassword,
+
   getAccount,
   updateAccountProfile,
   uploadAccountProfilePhoto,
   removeAccountProfilePhoto,
   updateAccountPassword,
+
+  getActiveSessions,
+  revokeActiveSession,
+
+  getRolePermissions,
+  updateRolePermissions,
+
+  getSecurityReports,
 } from "../services/api";
-import { QRCodeSVG } from "qrcode.react";
-import { Html5QrcodeScanner } from "html5-qrcode";
-import React, { useState, useEffect } from "react";
-import {
-  Shield, LogOut, Bell, ClipboardList, Users, FileText, Map,
-  Settings, BarChart2, ChevronRight, CheckCircle, Clock,
-  AlertTriangle, Eye, EyeOff, Menu, X, Lock, User, Plus, Search,
-  Download, Filter, RefreshCw, QrCode, Package, ScanLine,
-  BookOpen, AlertCircle, Layers, XCircle,
-} from "lucide-react";
 
 // ── QRpass Logo ───────────────────────────────────────────────────────────────
 function QRpassLogo({
@@ -3511,22 +3582,19 @@ function SecurityReports() {
     try {
       setLoading(true);
       setError("");
-
-      const [scanResponse, incidentResponse] =
-        await Promise.all([
-          getScanLogs(),
-          getSecurityIncidents(),
-        ]);
-
+  
+      const response =
+        await getSecurityReports();
+  
       setLogs(
-        Array.isArray(scanResponse?.logs)
-          ? scanResponse.logs
+        Array.isArray(response?.logs)
+          ? response.logs
           : []
       );
-
+  
       setIncidents(
-        Array.isArray(incidentResponse?.incidents)
-          ? incidentResponse.incidents
+        Array.isArray(response?.incidents)
+          ? response.incidents
           : []
       );
     } catch (err) {
@@ -3534,13 +3602,13 @@ function SecurityReports() {
         "Failed to load security report data:",
         err
       );
-
+  
       setError(
         err instanceof Error
           ? err.message
           : "Failed to load security reports."
       );
-
+  
       setLogs([]);
       setIncidents([]);
     } finally {
@@ -5892,16 +5960,33 @@ function PCOPermitRequests() {
   const [approved, setApproved] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [error, setError] = useState("");
 
   async function loadPendingItems() {
     try {
       setLoading(true);
-
+      setError("");
+  
       const data = await getPendingItems();
-
-      setPending(data.items ?? []);
+  
+      setPending(
+        Array.isArray(data?.items)
+          ? data.items
+          : []
+      );
     } catch (error) {
-      console.error("Failed to load pending items:", error);
+      console.error(
+        "Failed to load pending items:",
+        error
+      );
+  
+      setPending([]);
+  
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load registration requests."
+      );
     } finally {
       setLoading(false);
     }
@@ -5958,10 +6043,17 @@ function PCOPermitRequests() {
             onClick={loadPendingItems}
             className="text-xs flex items-center gap-1 text-primary font-medium"
           >
+
+            {error && (
+              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                {error}
+              </div>
+            )}
             <RefreshCw size={12} />
             Refresh
           </button>
         }
+        
       />
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -9418,198 +9510,417 @@ function AdminAnalytics() {
   // SECURITY INCIDENT EXCEL
   // =========================================================
 
-  async function downloadFlaggedIncidentsExcel() {
-    try {
-      const data =
-        await getSecurityIncidents();
+  // =========================================================
+// SECURITY INCIDENT EXCEL
+// =========================================================
 
-      const incidents =
-        data.incidents ?? [];
+async function downloadFlaggedIncidentsExcel() {
+  try {
+    const data = await getSecurityIncidents();
 
-      if (incidents.length === 0) {
-        alert(
-          "There are no security incident records to export."
-        );
+    const incidents = data.incidents ?? [];
 
-        return;
-      }
-
-      const flaggedCount =
-        incidents.filter(
-          (incident: any) =>
-            String(
-              incident.status ?? ""
-            ).toLowerCase() ===
-            "flagged"
-        ).length;
-
-      const resolvedCount =
-        incidents.filter(
-          (incident: any) =>
-            String(
-              incident.status ?? ""
-            ).toLowerCase() ===
-            "resolved"
-        ).length;
-
-      const incidentRows =
-        incidents.map(
-          (incident: any) => {
-            return {
-              Date: formatDate(
-                incident.reported_at
-              ),
-
-              Time: formatTime(
-                incident.reported_at
-              ),
-
-              "Incident Type":
-                incident.incident_type ??
-                "Security Incident",
-
-              "Scanned Code":
-                incident.scanned_code ??
-                "",
-
-              "Item Name":
-                incident.item
-                  ?.item_name ??
-                incident.item_name ??
-                "Unknown Item",
-
-              "Serial Number":
-                incident.item
-                  ?.serial_number ??
-                incident.serial_number ??
-                "",
-
-              Gate:
-                incident.gate ??
-                "",
-
-              "Reported By":
-                incident.reporter
-                  ?.name ??
-                "Security Personnel",
-
-              "Reporter ID":
-                incident.reporter
-                  ?.username ??
-                "",
-
-              Status:
-                incident.status ??
-                "Flagged",
-
-              Description:
-                incident.description ??
-                "",
-            };
-          }
-        );
-
-      const summaryRows = [
-        {
-          Metric:
-            "Total Security Incidents",
-
-          Value:
-            incidents.length,
-        },
-
-        {
-          Metric:
-            "Currently Flagged",
-
-          Value:
-            flaggedCount,
-        },
-
-        {
-          Metric:
-            "Resolved Incidents",
-
-          Value:
-            resolvedCount,
-        },
-
-        {
-          Metric:
-            "Report Generated",
-
-          Value:
-            new Date().toLocaleString(),
-        },
-      ];
-
-      const workbook =
-        XLSX.utils.book_new();
-
-      const summarySheet =
-        XLSX.utils.json_to_sheet(
-          summaryRows
-        );
-
-      const incidentSheet =
-        XLSX.utils.json_to_sheet(
-          incidentRows
-        );
-
-      summarySheet["!cols"] = [
-        { wch: 25 },
-        { wch: 25 },
-      ];
-
-      incidentSheet["!cols"] = [
-        { wch: 14 },
-        { wch: 12 },
-        { wch: 22 },
-        { wch: 25 },
-        { wch: 25 },
-        { wch: 22 },
-        { wch: 15 },
-        { wch: 25 },
-        { wch: 20 },
-        { wch: 14 },
-        { wch: 45 },
-      ];
-
-      XLSX.utils.book_append_sheet(
-        workbook,
-        summarySheet,
-        "Summary"
-      );
-
-      XLSX.utils.book_append_sheet(
-        workbook,
-        incidentSheet,
-        "Security Incidents"
-      );
-
-      const today = new Date()
-        .toISOString()
-        .slice(0, 10);
-
-      XLSX.writeFile(
-        workbook,
-        `QRPass-Security-Incidents-${today}.xlsx`
-      );
-    } catch (err) {
-      console.error(
-        "Failed to generate security incident Excel report:",
-        err
-      );
-
+    if (incidents.length === 0) {
       alert(
-        err instanceof Error
-          ? err.message
-          : "Failed to generate Security Incident Excel report."
+        "There are no security incident records to export."
       );
-    }
-  }
 
-  return (
+      return;
+    }
+
+    const flaggedCount = incidents.filter(
+      (incident: any) =>
+        String(
+          incident.status ?? ""
+        ).toLowerCase() === "flagged"
+    ).length;
+
+    const resolvedCount = incidents.filter(
+      (incident: any) =>
+        String(
+          incident.status ?? ""
+        ).toLowerCase() === "resolved"
+    ).length;
+
+    const incidentRows = incidents.map(
+      (incident: any) => {
+        return {
+          Date: formatDate(
+            incident.reported_at
+          ),
+
+          Time: formatTime(
+            incident.reported_at
+          ),
+
+          "Incident Type":
+            incident.incident_type ??
+            "Security Incident",
+
+          "Scanned Code":
+            incident.scanned_code ?? "",
+
+          "Item Name":
+            incident.item?.item_name ??
+            incident.item_name ??
+            "Unknown Item",
+
+          "Serial Number":
+            incident.item?.serial_number ??
+            incident.serial_number ??
+            "",
+
+          Gate:
+            incident.gate ?? "",
+
+          "Reported By":
+            incident.reporter?.name ??
+            "Security Personnel",
+
+          "Reporter ID":
+            incident.reporter?.username ??
+            "",
+
+          Status:
+            incident.status ??
+            "Flagged",
+
+          Description:
+            incident.description ?? "",
+        };
+      }
+    );
+
+    const summaryRows = [
+      {
+        Metric:
+          "Total Security Incidents",
+        Value:
+          incidents.length,
+      },
+      {
+        Metric:
+          "Currently Flagged",
+        Value:
+          flaggedCount,
+      },
+      {
+        Metric:
+          "Resolved Incidents",
+        Value:
+          resolvedCount,
+      },
+      {
+        Metric:
+          "Report Generated",
+        Value:
+          new Date().toLocaleString(),
+      },
+    ];
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    const summarySheet =
+      XLSX.utils.json_to_sheet(
+        summaryRows
+      );
+
+    const incidentSheet =
+      XLSX.utils.json_to_sheet(
+        incidentRows
+      );
+
+    summarySheet["!cols"] = [
+      { wch: 25 },
+      { wch: 25 },
+    ];
+
+    incidentSheet["!cols"] = [
+      { wch: 14 },
+      { wch: 12 },
+      { wch: 22 },
+      { wch: 25 },
+      { wch: 25 },
+      { wch: 22 },
+      { wch: 15 },
+      { wch: 25 },
+      { wch: 20 },
+      { wch: 14 },
+      { wch: 45 },
+    ];
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      summarySheet,
+      "Summary"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      incidentSheet,
+      "Security Incidents"
+    );
+
+    const today = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    XLSX.writeFile(
+      workbook,
+      `QRPass-Security-Incidents-${today}.xlsx`
+    );
+  } catch (err) {
+    console.error(
+      "Failed to generate security incident Excel report:",
+      err
+    );
+
+    alert(
+      err instanceof Error
+        ? err.message
+        : "Failed to generate Security Incident Excel report."
+    );
+  }
+}
+
+// =========================================================
+// GATE ENTRY / EXIT LOG PDF
+// =========================================================
+
+async function downloadGateEntryExitPDF() {
+  try {
+    const data = await getScanLogs();
+
+    const logs = Array.isArray(data?.logs)
+      ? data.logs
+      : [];
+
+    const gateLogs = logs.filter(
+      (log: any) => {
+        const direction = String(
+          log.direction ?? ""
+        ).toUpperCase();
+
+        return (
+          direction === "IN" ||
+          direction === "OUT"
+        );
+      }
+    );
+
+    if (gateLogs.length === 0) {
+      alert(
+        "There are no Gate Entry/Exit records to generate."
+      );
+      return;
+    }
+
+    const entryCount = gateLogs.filter(
+      (log: any) =>
+        String(
+          log.direction ?? ""
+        ).toUpperCase() === "IN"
+    ).length;
+
+    const exitCount = gateLogs.filter(
+      (log: any) =>
+        String(
+          log.direction ?? ""
+        ).toUpperCase() === "OUT"
+    ).length;
+
+    const verifiedCount = gateLogs.filter(
+      (log: any) =>
+        String(
+          log.result ?? ""
+        ).toLowerCase() === "verified"
+    ).length;
+
+    const uniqueOwners = new Set(
+      gateLogs
+        .map(
+          (log: any) =>
+            log.item?.user?.id ??
+            log.item?.user?.username ??
+            null
+        )
+        .filter(Boolean)
+    ).size;
+
+    const doc = new jsPDF({
+      orientation: "landscape",
+    });
+
+    doc.setFontSize(18);
+
+    doc.text(
+      "QRPass Gate Entry / Exit Log",
+      14,
+      18
+    );
+
+    doc.setFontSize(10);
+
+    doc.text(
+      "University of Cebu - Main Campus",
+      14,
+      25
+    );
+
+    doc.text(
+      `Generated: ${new Date().toLocaleString(
+        "en-PH"
+      )}`,
+      14,
+      31
+    );
+
+    doc.text(
+      `Total Transactions: ${gateLogs.length}`,
+      14,
+      39
+    );
+
+    doc.text(
+      `Entries: ${entryCount}`,
+      14,
+      45
+    );
+
+    doc.text(
+      `Exits: ${exitCount}`,
+      65,
+      39
+    );
+
+    doc.text(
+      `Verified: ${verifiedCount}`,
+      65,
+      45
+    );
+
+    doc.text(
+      `Unique Owners: ${uniqueOwners}`,
+      115,
+      39
+    );
+
+    const rows = gateLogs.map(
+      (log: any) => {
+        const scanDate = log.scanned_at
+          ? new Date(log.scanned_at)
+          : null;
+
+        return [
+          scanDate &&
+          !Number.isNaN(
+            scanDate.getTime()
+          )
+            ? scanDate.toLocaleDateString(
+                "en-PH"
+              )
+            : "—",
+
+          scanDate &&
+          !Number.isNaN(
+            scanDate.getTime()
+          )
+            ? scanDate.toLocaleTimeString(
+                "en-PH",
+                {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }
+              )
+            : "—",
+
+          log.qr_code ?? "—",
+
+          log.item?.item_name ??
+            "Unknown Item",
+
+          log.item?.item_type ?? "—",
+
+          log.item?.serial_number ??
+            "—",
+
+          log.item?.user?.name ??
+            "Unknown",
+
+          log.item?.user?.username ??
+            "—",
+
+          log.gate ?? "—",
+
+          log.direction ?? "—",
+
+          log.result ?? "—",
+
+          log.scanner?.name ?? "—",
+        ];
+      }
+    );
+
+    autoTable(doc, {
+      startY: 52,
+
+      head: [
+        [
+          "Date",
+          "Time",
+          "QR ID",
+          "Item",
+          "Type",
+          "Serial No.",
+          "Owner",
+          "Owner ID",
+          "Gate",
+          "Direction",
+          "Result",
+          "Scanned By",
+        ],
+      ],
+
+      body: rows,
+
+      styles: {
+        fontSize: 6.5,
+        cellPadding: 2,
+      },
+
+      headStyles: {
+        fillColor: [26, 58, 123],
+        textColor: [255, 255, 255],
+      },
+
+      alternateRowStyles: {
+        fillColor: [245, 247, 250],
+      },
+    });
+
+    const today = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    doc.save(
+      `QRPass-Gate-Entry-Exit-Log-${today}.pdf`
+    );
+  } catch (err) {
+    console.error(
+      "Failed to generate Gate Entry/Exit Log PDF:",
+      err
+    );
+
+    alert(
+      err instanceof Error
+        ? err.message
+        : "Failed to generate Gate Entry/Exit Log PDF."
+    );
+  }
+}
+
+return (
     <div className="space-y-5">
       {/* HEADER */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -9660,6 +9971,15 @@ function AdminAnalytics() {
           >
             <Download size={14} />
             Daily QR Scan PDF
+          </button>
+
+            <button
+            type="button"
+            onClick={downloadGateEntryExitPDF}
+            className="px-4 py-2.5 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
+          >
+            <Download size={14} />
+            Gate Entry/Exit Log PDF
           </button>
 
           <button
@@ -11333,36 +11653,424 @@ function SysAdminUserAccounts() {
   );
 }
 function SysAdminSettings() {
+  const [settings, setSettings] = useState({
+    system_name: "QRpass",
+    institution: "University of Cebu - Main Campus",
+    academic_year: "2026-2027",
+    semester: "1st Semester",
+    session_timeout: 30,
+    max_login_attempts: 5,
+    qr_code_validity_months: 6,
+    two_factor_enabled: false,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [savingGeneral, setSavingGeneral] = useState(false);
+  const [savingPolicy, setSavingPolicy] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  async function loadSettings() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getSystemSettings();
+
+      if (data?.settings) {
+        setSettings({
+          system_name:
+            data.settings.system_name ?? "QRpass",
+
+          institution:
+            data.settings.institution ??
+            "University of Cebu - Main Campus",
+
+          academic_year:
+            data.settings.academic_year ?? "2026-2027",
+
+          semester:
+            data.settings.semester ?? "1st Semester",
+
+          session_timeout:
+            Number(data.settings.session_timeout) || 30,
+
+          max_login_attempts:
+            Number(data.settings.max_login_attempts) || 5,
+
+          qr_code_validity_months:
+            Number(data.settings.qr_code_validity_months) || 6,
+
+          two_factor_enabled:
+            Boolean(data.settings.two_factor_enabled),
+        });
+      }
+    } catch (err) {
+      console.error(
+        "Failed to load system settings:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load system settings."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function saveGeneralSettings() {
+    try {
+      setSavingGeneral(true);
+      setError("");
+      setSuccess("");
+
+      const data = await updateSystemSettings(settings);
+
+      if (data?.settings) {
+        setSettings({
+          ...settings,
+          ...data.settings,
+
+          session_timeout:
+            Number(data.settings.session_timeout) ||
+            settings.session_timeout,
+
+          max_login_attempts:
+            Number(data.settings.max_login_attempts) ||
+            settings.max_login_attempts,
+
+          qr_code_validity_months:
+            Number(data.settings.qr_code_validity_months) ||
+            settings.qr_code_validity_months,
+
+          two_factor_enabled:
+            Boolean(data.settings.two_factor_enabled),
+        });
+      }
+
+      setSuccess(
+        "General settings saved successfully."
+      );
+    } catch (err) {
+      console.error(
+        "Failed to save general settings:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to save general settings."
+      );
+    } finally {
+      setSavingGeneral(false);
+    }
+  }
+
+  async function saveSecurityPolicy() {
+    try {
+      setSavingPolicy(true);
+      setError("");
+      setSuccess("");
+
+      const data = await updateSystemSettings(settings);
+
+      if (data?.settings) {
+        setSettings({
+          ...settings,
+          ...data.settings,
+
+          session_timeout:
+            Number(data.settings.session_timeout) ||
+            settings.session_timeout,
+
+          max_login_attempts:
+            Number(data.settings.max_login_attempts) ||
+            settings.max_login_attempts,
+
+          qr_code_validity_months:
+            Number(data.settings.qr_code_validity_months) ||
+            settings.qr_code_validity_months,
+
+          two_factor_enabled:
+            Boolean(data.settings.two_factor_enabled),
+        });
+      }
+
+      setSuccess(
+        "Security policy saved successfully."
+      );
+    } catch (err) {
+      console.error(
+        "Failed to save security policy:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to save security policy."
+      );
+    } finally {
+      setSavingPolicy(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-5">
+        <PageHeader
+          title="System Settings"
+          subtitle="Configure QRpass portal settings and security policies."
+        />
+
+        <Card title="Loading Settings">
+          <div className="p-6 text-sm text-muted-foreground">
+            Loading system settings...
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
-      <PageHeader title="System Settings" subtitle="Configure QRpass portal settings and security policies." />
+      <PageHeader
+        title="System Settings"
+        subtitle="Configure QRpass portal settings and security policies."
+      />
+
+      {error && (
+        <div className="p-3 border border-red-200 bg-red-50 rounded-md text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="p-3 border border-green-200 bg-green-50 rounded-md text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
       <div className="grid md:grid-cols-2 gap-5">
         <Card title="General Settings">
           <div className="p-4 space-y-4">
-            {[["System Name", "QRpass"], ["Institution", "University of Cebu – Main Campus"], ["Academic Year", "2025-2026"], ["Semester", "2nd Semester"]].map(([label, value]) => (
-              <div key={label as string}>
-                <label className="block text-xs font-semibold text-foreground mb-1">{label}</label>
-                <input defaultValue={value as string} className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15" />
-              </div>
-            ))}
-            <button className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold hover:opacity-90">Save Settings</button>
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                System Name
+              </label>
+
+              <input
+                type="text"
+                value={settings.system_name}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    system_name: e.target.value,
+                  }))
+                }
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Institution
+              </label>
+
+              <input
+                type="text"
+                value={settings.institution}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    institution: e.target.value,
+                  }))
+                }
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Academic Year
+              </label>
+
+              <input
+                type="text"
+                value={settings.academic_year}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    academic_year: e.target.value,
+                  }))
+                }
+                placeholder="2026-2027"
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Semester
+              </label>
+
+              <select
+                value={settings.semester}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    semester: e.target.value,
+                  }))
+                }
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              >
+                <option value="1st Semester">
+                  1st Semester
+                </option>
+
+                <option value="2nd Semester">
+                  2nd Semester
+                </option>
+
+                <option value="Summer">
+                  Summer
+                </option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={saveGeneralSettings}
+              disabled={savingGeneral}
+              className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+            >
+              {savingGeneral
+                ? "Saving..."
+                : "Save Settings"}
+            </button>
           </div>
         </Card>
+
         <Card title="QR & Security Policy">
           <div className="p-4 space-y-4">
-            {[["Session Timeout (minutes)", "30"], ["Max Login Attempts", "5"], ["QR Code Validity (months)", "6"]].map(([label, value]) => (
-              <div key={label as string}>
-                <label className="block text-xs font-semibold text-foreground mb-1">{label}</label>
-                <input defaultValue={value as string} type="number" className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15" />
-              </div>
-            ))}
-            <div className="flex items-center justify-between p-3 border border-[#cfd8e6] rounded-md">
-              <span className="text-sm text-foreground">Enable Two-Factor Auth</span>
-              <div className="w-10 h-5 bg-primary rounded-full relative cursor-pointer">
-                <div className="w-4 h-4 bg-white rounded-full absolute right-0.5 top-0.5" />
-              </div>
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Session Timeout (minutes)
+              </label>
+
+              <input
+                type="number"
+                min={5}
+                max={1440}
+                value={settings.session_timeout}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    session_timeout:
+                      Number(e.target.value) || 0,
+                  }))
+                }
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
             </div>
-            <button className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold hover:opacity-90">Save Policy</button>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Max Login Attempts
+              </label>
+
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={settings.max_login_attempts}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    max_login_attempts:
+                      Number(e.target.value) || 0,
+                  }))
+                }
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                QR Code Validity (months)
+              </label>
+
+              <input
+                type="number"
+                min={1}
+                max={60}
+                value={settings.qr_code_validity_months}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    qr_code_validity_months:
+                      Number(e.target.value) || 0,
+                  }))
+                }
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-3 border border-[#cfd8e6] rounded-md">
+              <div>
+                <span className="text-sm text-foreground">
+                  Enable Two-Factor Auth
+                </span>
+
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Stores the system-wide 2FA policy.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    two_factor_enabled:
+                      !prev.two_factor_enabled,
+                  }))
+                }
+                className={`w-10 h-5 rounded-full relative transition-colors ${
+                  settings.two_factor_enabled
+                    ? "bg-primary"
+                    : "bg-gray-300"
+                }`}
+                aria-label="Toggle two-factor authentication"
+              >
+                <div
+                  className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${
+                    settings.two_factor_enabled
+                      ? "right-0.5"
+                      : "left-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={saveSecurityPolicy}
+              disabled={savingPolicy}
+              className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+            >
+              {savingPolicy
+                ? "Saving..."
+                : "Save Policy"}
+            </button>
           </div>
         </Card>
       </div>
@@ -11371,42 +12079,1064 @@ function SysAdminSettings() {
 }
 
 function SysAdminAuditLogs() {
+  const [logs, setLogs] = useState<any[]>([]);
+
+  const [stats, setStats] = useState({
+    logs_today: 0,
+    qr_scan_events: 0,
+    data_changes: 0,
+    errors: 0,
+  });
+
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    loadAuditLogs();
+  }, []);
+
+  async function loadAuditLogs(
+    customSearch = search,
+    customStatus = statusFilter,
+    customDate = dateFilter
+  ) {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getAuditLogs({
+        search: customSearch || undefined,
+        status: customStatus || undefined,
+        date: customDate || undefined,
+        limit: 500,
+      });
+
+      setLogs(
+        Array.isArray(data?.logs)
+          ? data.logs
+          : []
+      );
+
+      setStats({
+        logs_today:
+          Number(data?.stats?.logs_today) || 0,
+
+        qr_scan_events:
+          Number(data?.stats?.qr_scan_events) || 0,
+
+        data_changes:
+          Number(data?.stats?.data_changes) || 0,
+
+        errors:
+          Number(data?.stats?.errors) || 0,
+      });
+    } catch (err) {
+      console.error(
+        "Failed to load audit logs:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load audit logs."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleSearch(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    loadAuditLogs();
+  }
+
+  function clearFilters() {
+    setSearch("");
+    setStatusFilter("");
+    setDateFilter("");
+
+    loadAuditLogs("", "", "");
+  }
+
+  function formatAuditDate(
+    value: string | null | undefined
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }
+    );
+  }
+
+  function formatAuditTime(
+    value: string | null | undefined
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleTimeString(
+      "en-PH",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  function getStatusClasses(
+    status: string | null | undefined
+  ) {
+    const normalized =
+      String(status ?? "").toLowerCase();
+
+    if (
+      normalized === "failed" ||
+      normalized === "error"
+    ) {
+      return "bg-red-100 text-red-700";
+    }
+
+    if (
+      normalized === "warning" ||
+      normalized === "flagged"
+    ) {
+      return "bg-yellow-100 text-yellow-700";
+    }
+
+    if (
+      normalized === "success" ||
+      normalized === "resolved"
+    ) {
+      return "bg-green-100 text-green-700";
+    }
+
+    return "bg-blue-100 text-blue-700";
+  }
+
+  function getIconClasses(
+    status: string | null | undefined
+  ) {
+    const normalized =
+      String(status ?? "").toLowerCase();
+
+    if (
+      normalized === "failed" ||
+      normalized === "error"
+    ) {
+      return "bg-red-100 text-red-600";
+    }
+
+    if (
+      normalized === "warning" ||
+      normalized === "flagged"
+    ) {
+      return "bg-yellow-100 text-yellow-600";
+    }
+
+    if (
+      normalized === "success" ||
+      normalized === "resolved"
+    ) {
+      return "bg-green-100 text-green-600";
+    }
+
+    return "bg-primary/10 text-primary";
+  }
+
+  function exportAuditLogsExcel() {
+    if (logs.length === 0) {
+      alert(
+        "There are no audit logs to export."
+      );
+      return;
+    }
+
+    const rows = logs.map(
+      (log: any) => ({
+        Date: formatAuditDate(
+          log.created_at
+        ),
+
+        Time: formatAuditTime(
+          log.created_at
+        ),
+
+        "Actor Name":
+          log.actor_name ??
+          log.user?.name ??
+          "System",
+
+        Username:
+          log.actor_username ??
+          log.user?.username ??
+          "",
+
+        Role:
+          log.user?.role ?? "",
+
+        "Event Type":
+          log.event_type ?? "activity",
+
+        Action:
+          log.action ?? "",
+
+        Module:
+          log.module ?? "",
+
+        Description:
+          log.description ?? "",
+
+        Status:
+          log.status ?? "",
+
+        "IP Address":
+          log.ip_address ?? "",
+      })
+    );
+
+    const worksheet =
+      XLSX.utils.json_to_sheet(rows);
+
+    worksheet["!cols"] = [
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 24 },
+      { wch: 20 },
+      { wch: 16 },
+      { wch: 18 },
+      { wch: 24 },
+      { wch: 22 },
+      { wch: 55 },
+      { wch: 15 },
+      { wch: 18 },
+    ];
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Audit Logs"
+    );
+
+    const today = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    XLSX.writeFile(
+      workbook,
+      `QRPass-Audit-Logs-${today}.xlsx`
+    );
+  }
+
   return (
     <div className="space-y-5">
-      <PageHeader title="Audit Logs" subtitle="Complete record of all system activity, QR scans, and user actions." />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Logs Today" value="1,024" icon={<FileText size={20} />} color="#1a3a7b" />
-        <StatCard label="QR Scan Events" value="214" icon={<ScanLine size={20} />} color="#557bdc" />
-        <StatCard label="Data Changes" value="382" icon={<RefreshCw size={20} />} color="#2f5fd6" />
-        <StatCard label="Errors" value="3" icon={<AlertTriangle size={20} />} color="#e8543a" />
-      </div>
-      <Card title="Recent Audit Log" action={
-        <div className="flex gap-2">
-          <button className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground"><Filter size={12} /> Filter</button>
-          <button className="text-xs text-primary flex items-center gap-1 font-medium"><Download size={12} /> Export</button>
+      <PageHeader
+        title="Audit Logs"
+        subtitle="Complete record of QRPass system activity and user actions."
+      />
+
+      {error && (
+        <div className="p-3 border border-red-200 bg-red-50 rounded-md text-sm text-red-700">
+          {error}
         </div>
-      }>
-        <div className="divide-y divide-border">
-          {[
-            ["PCO De paz", "Approved item registration for Maria Santos — QR code QRPASS-001 issued", "9:45 AM", "success"],
-            ["Guard Ramos", "QR scan: QRPASS-001-SN92841 — Verified at Gate 1", "7:02 AM", "info"],
-            ["System", "Flagged unknown QR code scan attempt at Gate 1", "8:15 AM", "warning"],
-            ["22-1234", "Submitted item registration for iPad Pro 12.9", "7:30 AM", "info"],
-            ["Admin Lim", "Updated QR code validity period to 6 months", "9:00 AM", "info"],
-          ].map(([u, a, t, type]) => (
-            <div key={`${u}-${t}`} className="px-4 py-2.5 flex gap-3 hover:bg-[#eef2fc] transition-colors">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${type === "warning" ? "bg-yellow-100" : type === "success" ? "bg-green-100" : "bg-primary/10"}`}>
-                <User size={12} className={type === "warning" ? "text-yellow-600" : type === "success" ? "text-green-600" : "text-primary"} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-foreground">{u}</p>
-                  <p className="text-xs text-muted-foreground">{t}</p>
-                </div>
-                <p className="text-xs text-muted-foreground">{a}</p>
-              </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          label="Logs Today"
+          value={stats.logs_today.toLocaleString()}
+          icon={
+            <FileText size={20} />
+          }
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="QR Scan Events"
+          value={stats.qr_scan_events.toLocaleString()}
+          icon={
+            <ScanLine size={20} />
+          }
+          color="#557bdc"
+        />
+
+        <StatCard
+          label="Data Changes"
+          value={stats.data_changes.toLocaleString()}
+          icon={
+            <RefreshCw size={20} />
+          }
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Errors"
+          value={stats.errors.toLocaleString()}
+          icon={
+            <AlertTriangle size={20} />
+          }
+          color="#e8543a"
+        />
+      </div>
+
+      <Card title="Audit Log Records">
+        <div className="p-4 border-b border-[#cfd8e6]">
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-col xl:flex-row gap-3"
+          >
+            <div className="relative flex-1">
+              <Search
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+
+              <input
+                type="text"
+                value={search}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+                placeholder="Search user, action, module, description..."
+                className="w-full pl-9 pr-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6]"
+              />
             </div>
-          ))}
+
+            <select
+              value={statusFilter}
+              onChange={(e) =>
+                setStatusFilter(
+                  e.target.value
+                )
+              }
+              className="px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none"
+            >
+              <option value="">
+                All Statuses
+              </option>
+
+              <option value="success">
+                Success
+              </option>
+
+              <option value="warning">
+                Warning
+              </option>
+
+              <option value="failed">
+                Failed
+              </option>
+
+              <option value="error">
+                Error
+              </option>
+            </select>
+
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) =>
+                setDateFilter(
+                  e.target.value
+                )
+              }
+              className="px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none"
+            />
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <Filter size={14} />
+
+              {loading
+                ? "Loading..."
+                : "Apply"}
+            </button>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted"
+            >
+              Clear
+            </button>
+
+            <button
+              type="button"
+              onClick={
+                exportAuditLogsExcel
+              }
+              className="px-4 py-2 border border-[#cfd8e6] text-primary rounded-md text-xs font-semibold hover:bg-primary/5 flex items-center justify-center gap-2"
+            >
+              <Download size={14} />
+              Export Excel
+            </button>
+          </form>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            Loading audit logs...
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="p-8 text-center">
+            <ClipboardList
+              size={32}
+              className="mx-auto mb-2 text-muted-foreground/50"
+            />
+
+            <p className="text-sm font-medium text-foreground">
+              No audit logs found.
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              New system activities will appear here once they are recorded.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {logs.map(
+              (log: any) => {
+                const actor =
+                  log.actor_name ??
+                  log.user?.name ??
+                  "System";
+
+                const username =
+                  log.actor_username ??
+                  log.user?.username ??
+                  "";
+
+                return (
+                  <div
+                    key={log.id}
+                    className="px-4 py-3 flex gap-3 hover:bg-[#eef2fc] transition-colors"
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${getIconClasses(
+                        log.status
+                      )}`}
+                    >
+                      <User size={14} />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs font-semibold text-foreground">
+                            {actor}
+                          </p>
+
+                          {username && (
+                            <span className="text-xs text-muted-foreground">
+                              ({username})
+                            </span>
+                          )}
+
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${getStatusClasses(
+                              log.status
+                            )}`}
+                          >
+                            {String(
+                              log.status ??
+                                "activity"
+                            ).toUpperCase()}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatAuditDate(
+                            log.created_at
+                          )}{" "}
+                          {formatAuditTime(
+                            log.created_at
+                          )}
+                        </p>
+                      </div>
+
+                      <p className="text-sm text-foreground mt-1">
+                        {log.description ??
+                          "System activity"}
+                      </p>
+
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5">
+                        {log.module && (
+                          <span className="text-xs text-muted-foreground">
+                            Module:{" "}
+                            <span className="font-medium">
+                              {log.module}
+                            </span>
+                          </span>
+                        )}
+
+                        {log.action && (
+                          <span className="text-xs text-muted-foreground">
+                            Action:{" "}
+                            <span className="font-medium">
+                              {log.action}
+                            </span>
+                          </span>
+                        )}
+
+                        {log.event_type && (
+                          <span className="text-xs text-muted-foreground">
+                            Event:{" "}
+                            <span className="font-medium">
+                              {log.event_type}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            )}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function SysAdminActiveSessions() {
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [activeCount, setActiveCount] = useState(0);
+  const [totalSessions, setTotalSessions] = useState(0);
+  const [sessionTimeout, setSessionTimeout] = useState(30);
+
+  const [loading, setLoading] = useState(true);
+  const [revokingId, setRevokingId] =
+    useState<number | null>(null);
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD ACTIVE SESSIONS
+  |--------------------------------------------------------------------------
+  */
+
+  async function loadSessions() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data =
+        await getActiveSessions();
+
+      setSessions(
+        Array.isArray(data.sessions)
+          ? data.sessions
+          : []
+      );
+
+      setActiveCount(
+        Number(
+          data.active_count ?? 0
+        )
+      );
+
+      setTotalSessions(
+        Number(
+          data.total_sessions ?? 0
+        )
+      );
+
+      setSessionTimeout(
+        Number(
+          data.session_timeout_minutes ??
+            30
+        )
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load active sessions:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load active sessions."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD ON PAGE OPEN
+  |--------------------------------------------------------------------------
+  */
+
+  useEffect(() => {
+    loadSessions();
+  }, []);
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | REVOKE SESSION
+  |--------------------------------------------------------------------------
+  */
+
+  async function handleRevoke(
+    session: any
+  ) {
+    if (session.is_current) {
+      setError(
+        "You cannot revoke your current administrator session from this page."
+      );
+
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        `Revoke the session for ${
+          session.name ??
+          session.username ??
+          "this user"
+        }?`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setRevokingId(
+        Number(session.id)
+      );
+
+      setError("");
+      setSuccess("");
+
+      const result =
+        await revokeActiveSession(
+          Number(session.id)
+        );
+
+      setSuccess(
+        result?.message ||
+          "Session revoked successfully."
+      );
+
+      await loadSessions();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 4000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to revoke session."
+      );
+    } finally {
+      setRevokingId(null);
+    }
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | FORMAT DATE / TIME
+  |--------------------------------------------------------------------------
+  */
+
+  function formatDateTime(
+    value?: string | null
+  ) {
+    if (!value) {
+      return "Never";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "—";
+    }
+
+    return date.toLocaleString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | ROLE LABEL
+  |--------------------------------------------------------------------------
+  */
+
+  function roleLabel(
+    role?: string
+  ) {
+    switch (
+      String(role ?? "").toLowerCase()
+    ) {
+      case "student":
+        return "Student";
+
+      case "security":
+        return "Security (CSU)";
+
+      case "pco":
+        return "PCO Staff";
+
+      case "sysadmin":
+        return "System Administrator";
+
+      default:
+        return role || "Unknown";
+    }
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | PAGE
+  |--------------------------------------------------------------------------
+  */
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Active Sessions"
+        subtitle="Monitor authenticated QRPass sessions and revoke access when necessary."
+      />
+
+
+      {/* STATUS MESSAGES */}
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="flex items-start gap-2">
+            <AlertCircle
+              size={16}
+              className="mt-0.5 shrink-0"
+            />
+
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          <div className="flex items-start gap-2">
+            <CheckCircle
+              size={16}
+              className="mt-0.5 shrink-0"
+            />
+
+            <span>
+              {success}
+            </span>
+          </div>
+        </div>
+      )}
+
+
+      {/* STAT CARDS */}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <StatCard
+          label="Active Sessions"
+          value={String(activeCount)}
+          icon={
+            <Eye size={20} />
+          }
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="Stored Sessions"
+          value={String(totalSessions)}
+          icon={
+            <Users size={20} />
+          }
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Session Timeout"
+          value={`${sessionTimeout} min`}
+          icon={
+            <Clock size={20} />
+          }
+          color="#d49b17"
+        />
+      </div>
+
+
+      {/* SESSION TABLE */}
+
+      <Card title="Authenticated Sessions">
+        <div className="p-4 border-b border-[#dce3ee] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              Session Management
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Sessions are considered active when they have activity within the configured{" "}
+              {sessionTimeout}-minute timeout period.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={loadSessions}
+            disabled={loading}
+            className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-[#cfd8e6] bg-white text-sm font-medium text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50"
+          >
+            <RefreshCw
+              size={15}
+              className={
+                loading
+                  ? "animate-spin"
+                  : ""
+              }
+            />
+
+            Refresh
+          </button>
+        </div>
+
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#fafbfc] border-b border-[#dce3ee]">
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  User
+                </th>
+
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Role
+                </th>
+
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Session
+                </th>
+
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Created
+                </th>
+
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Last Activity
+                </th>
+
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Status
+                </th>
+
+                <th className="text-right py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Action
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading &&
+              sessions.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    Loading active sessions...
+                  </td>
+                </tr>
+              ) : sessions.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center"
+                  >
+                    <Users
+                      size={28}
+                      className="mx-auto mb-2 text-muted-foreground"
+                    />
+
+                    <p className="text-sm font-semibold">
+                      No sessions found
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-1">
+                      There are currently no stored authentication sessions.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                sessions.map(
+                  (session: any) => (
+                    <tr
+                      key={session.id}
+                      className="border-b border-[#edf0f5] hover:bg-[#fafbfc]"
+                    >
+                      <td className="py-3 px-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground">
+                              {session.name ||
+                                "Unknown User"}
+                            </p>
+
+                            {session.is_current && (
+                              <span className="rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                                Current
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {session.username ||
+                              "—"}
+                          </p>
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-4 text-sm">
+                        {roleLabel(
+                          session.role
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <p className="text-xs font-mono text-foreground">
+                          #{session.id}
+                        </p>
+
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {session.token_name ||
+                            "qrpass-token"}
+                        </p>
+                      </td>
+
+                      <td className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDateTime(
+                          session.created_at
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDateTime(
+                          session.last_activity
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        {session.is_active ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-xs font-semibold text-green-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-600">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+
+                            Inactive
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4 text-right">
+                        {session.is_current ? (
+                          <span className="text-xs text-muted-foreground">
+                            Current Session
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRevoke(
+                                session
+                              )
+                            }
+                            disabled={
+                              revokingId ===
+                              Number(
+                                session.id
+                              )
+                            }
+                            className="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            <XCircle
+                              size={14}
+                            />
+
+                            {revokingId ===
+                            Number(
+                              session.id
+                            )
+                              ? "Revoking..."
+                              : "Revoke"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                )
+              )}
+            </tbody>
+          </table>
         </div>
       </Card>
     </div>
@@ -11444,36 +13174,667 @@ function SysAdminPerformance() {
 }
 
 function SysAdminSecurityConfig() {
+  type PermissionKey =
+    | "register_items"
+    | "view_qr_codes"
+    | "approve_requests"
+    | "scan_verify"
+    | "view_reports"
+    | "manage_users";
+
+  type RolePermission = {
+    id?: number;
+    role: string;
+    register_items: boolean;
+    view_qr_codes: boolean;
+    approve_requests: boolean;
+    scan_verify: boolean;
+    view_reports: boolean;
+    manage_users: boolean;
+  };
+
+  const [permissions, setPermissions] =
+    useState<RolePermission[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [savingRole, setSavingRole] =
+    useState<string | null>(null);
+
+  const [error, setError] =
+    useState("");
+
+  const [success, setSuccess] =
+    useState("");
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | PERMISSION COLUMNS
+  |--------------------------------------------------------------------------
+  */
+
+  const permissionColumns: {
+    key: PermissionKey;
+    label: string;
+  }[] = [
+    {
+      key: "register_items",
+      label: "Register Items",
+    },
+    {
+      key: "view_qr_codes",
+      label: "View QR Codes",
+    },
+    {
+      key: "approve_requests",
+      label: "Approve Requests",
+    },
+    {
+      key: "scan_verify",
+      label: "Scan & Verify",
+    },
+    {
+      key: "view_reports",
+      label: "View Reports",
+    },
+    {
+      key: "manage_users",
+      label: "Manage Users",
+    },
+  ];
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | ROLE LABEL
+  |--------------------------------------------------------------------------
+  */
+
+  function getRoleLabel(
+    role: string
+  ) {
+    switch (role) {
+      case "student":
+        return "Student";
+
+      case "security":
+        return "Security (CSU)";
+
+      case "pco":
+        return "PCO Staff";
+
+      case "sysadmin":
+        return "System Administrator";
+
+      default:
+        return role;
+    }
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD PERMISSIONS
+  |--------------------------------------------------------------------------
+  */
+
+  async function loadPermissions() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data =
+        await getRolePermissions();
+
+      const rows =
+        Array.isArray(
+          data.permissions
+        )
+          ? data.permissions
+          : [];
+
+      setPermissions(
+        rows.map(
+          (row: any) => ({
+            id:
+              row.id,
+
+            role:
+              String(
+                row.role ?? ""
+              ),
+
+            register_items:
+              Boolean(
+                row.register_items
+              ),
+
+            view_qr_codes:
+              Boolean(
+                row.view_qr_codes
+              ),
+
+            approve_requests:
+              Boolean(
+                row.approve_requests
+              ),
+
+            scan_verify:
+              Boolean(
+                row.scan_verify
+              ),
+
+            view_reports:
+              Boolean(
+                row.view_reports
+              ),
+
+            manage_users:
+              Boolean(
+                row.manage_users
+              ),
+          })
+        )
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load role permissions:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load role permissions."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD PAGE
+  |--------------------------------------------------------------------------
+  */
+
+  useEffect(() => {
+    loadPermissions();
+  }, []);
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | TOGGLE PERMISSION
+  |--------------------------------------------------------------------------
+  */
+
+  function togglePermission(
+    role: string,
+    permission: PermissionKey
+  ) {
+    /*
+    |--------------------------------------------------------------------------
+    | System Administrator stays fully privileged
+    |--------------------------------------------------------------------------
+    */
+
+    if (role === "sysadmin") {
+      return;
+    }
+
+    setPermissions(
+      (current) =>
+        current.map(
+          (row) => {
+            if (
+              row.role !== role
+            ) {
+              return row;
+            }
+
+            return {
+              ...row,
+              [permission]:
+                !row[
+                  permission
+                ],
+            };
+          }
+        )
+    );
+
+    setSuccess("");
+    setError("");
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | SAVE ROLE
+  |--------------------------------------------------------------------------
+  */
+
+  async function saveRole(
+    row: RolePermission
+  ) {
+    try {
+      setSavingRole(
+        row.role
+      );
+
+      setError("");
+      setSuccess("");
+
+      const result =
+        await updateRolePermissions(
+          row.role,
+          {
+            register_items:
+              row.register_items,
+
+            view_qr_codes:
+              row.view_qr_codes,
+
+            approve_requests:
+              row.approve_requests,
+
+            scan_verify:
+              row.scan_verify,
+
+            view_reports:
+              row.view_reports,
+
+            manage_users:
+              row.manage_users,
+          }
+        );
+
+      setSuccess(
+        result?.message ||
+          `Permissions for ${getRoleLabel(
+            row.role
+          )} updated successfully.`
+      );
+
+      await loadPermissions();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 4000);
+    } catch (err) {
+      console.error(
+        "Failed to update role permissions:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update role permissions."
+      );
+    } finally {
+      setSavingRole(null);
+    }
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | PAGE
+  |--------------------------------------------------------------------------
+  */
+
   return (
     <div className="space-y-5">
-      <PageHeader title="Security Config" subtitle="Role-based access control and QRpass permission matrix." />
+      <PageHeader
+        title="Security Config"
+        subtitle="Manage QRPass role-based access permissions."
+      />
+
+
+      {/* MESSAGES */}
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="flex items-start gap-2">
+            <AlertCircle
+              size={16}
+              className="mt-0.5 shrink-0"
+            />
+
+            <span>
+              {error}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          <div className="flex items-start gap-2">
+            <CheckCircle
+              size={16}
+              className="mt-0.5 shrink-0"
+            />
+
+            <span>
+              {success}
+            </span>
+          </div>
+        </div>
+      )}
+
+
+      {/* INFORMATION */}
+
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+        <div className="flex gap-3">
+          <Shield
+            size={18}
+            className="text-[#1a3a7b] mt-0.5 shrink-0"
+          />
+
+          <div>
+            <p className="text-sm font-semibold text-[#1a3a7b]">
+              Role-Based Access Control
+            </p>
+
+            <p className="text-xs text-[#52637a] mt-1 leading-relaxed">
+              Configure the permissions assigned to each QRPass role.
+              System Administrator permissions are protected and
+              remain fully enabled to prevent administrator lockout.
+            </p>
+          </div>
+        </div>
+      </div>
+
+
+      {/* PERMISSION MATRIX */}
+
       <Card title="Role Permissions">
+        <div className="p-4 border-b border-[#dce3ee] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold">
+              Permission Matrix
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Changes are stored in the QRPass database.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={
+              loadPermissions
+            }
+            disabled={
+              loading
+            }
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-[#cfd8e6] bg-white px-3 py-2 text-sm font-medium text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50"
+          >
+            <RefreshCw
+              size={15}
+              className={
+                loading
+                  ? "animate-spin"
+                  : ""
+              }
+            />
+
+            Refresh
+          </button>
+        </div>
+
+
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead><tr className="bg-[#fafbfc]">
-              <th className="text-left py-2 px-3 text-xs text-muted-foreground font-medium">Role</th>
-              {["Register Items", "View QR Codes", "Approve Requests", "Scan & Verify", "View Reports", "Manage Users"].map(p => (
-                <th key={p} className="text-center py-2 px-3 text-xs text-muted-foreground font-medium">{p}</th>
-              ))}
-            </tr></thead>
+            <thead>
+              <tr className="bg-[#fafbfc] border-b border-[#dce3ee]">
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium min-w-[180px]">
+                  Role
+                </th>
+
+                {permissionColumns.map(
+                  (permission) => (
+                    <th
+                      key={
+                        permission.key
+                      }
+                      className="text-center py-3 px-3 text-xs text-muted-foreground font-medium min-w-[125px]"
+                    >
+                      {
+                        permission.label
+                      }
+                    </th>
+                  )
+                )}
+
+                <th className="text-right py-3 px-4 text-xs text-muted-foreground font-medium min-w-[120px]">
+                  Action
+                </th>
+              </tr>
+            </thead>
+
+
             <tbody>
-              {[
-                ["Student", [true, true, false, false, false, false]],
-                ["Security (CSU)", [false, false, false, true, false, false]],
-                ["PCO Staff", [false, true, true, false, true, false]],
-                ["System Administrator", [true, true, true, true, true, true]],
-              ].map(([role, perms]) => (
-                <tr key={role as string} className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors">
-                  <td className="py-2.5 px-3 text-sm text-foreground font-medium">{role}</td>
-                  {(perms as boolean[]).map((p, i) => (
-                    <td key={i} className="py-2.5 px-3 text-center">
-                      {p ? <CheckCircle size={14} className="text-green-500 mx-auto" /> : <X size={14} className="text-muted-foreground/40 mx-auto" />}
-                    </td>
-                  ))}
+              {loading &&
+              permissions.length ===
+                0 ? (
+                <tr>
+                  <td
+                    colSpan={
+                      permissionColumns.length +
+                      2
+                    }
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    Loading role permissions...
+                  </td>
                 </tr>
-              ))}
+              ) : permissions.length ===
+                0 ? (
+                <tr>
+                  <td
+                    colSpan={
+                      permissionColumns.length +
+                      2
+                    }
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    No role permissions found.
+                  </td>
+                </tr>
+              ) : (
+                permissions.map(
+                  (row) => {
+                    const locked =
+                      row.role ===
+                      "sysadmin";
+
+                    return (
+                      <tr
+                        key={
+                          row.role
+                        }
+                        className="border-b border-[#edf0f5] hover:bg-[#fafbfc]"
+                      >
+                        <td className="py-3 px-4">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">
+                              {getRoleLabel(
+                                row.role
+                              )}
+                            </p>
+
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {locked
+                                ? "Protected administrator role"
+                                : `Role: ${row.role}`}
+                            </p>
+                          </div>
+                        </td>
+
+
+                        {permissionColumns.map(
+                          (
+                            permission
+                          ) => {
+                            const enabled =
+                              Boolean(
+                                row[
+                                  permission
+                                    .key
+                                ]
+                              );
+
+                            return (
+                              <td
+                                key={
+                                  permission.key
+                                }
+                                className="py-3 px-3 text-center"
+                              >
+                                <button
+                                  type="button"
+                                  disabled={
+                                    locked
+                                  }
+                                  onClick={() =>
+                                    togglePermission(
+                                      row.role,
+                                      permission.key
+                                    )
+                                  }
+                                  title={
+                                    locked
+                                      ? "System Administrator permissions are protected."
+                                      : `${
+                                          enabled
+                                            ? "Disable"
+                                            : "Enable"
+                                        } ${permission.label}`
+                                  }
+                                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors ${
+                                    enabled
+                                      ? "border-green-200 bg-green-50 text-green-600"
+                                      : "border-[#dce3ee] bg-white text-muted-foreground"
+                                  } ${
+                                    locked
+                                      ? "cursor-not-allowed opacity-70"
+                                      : "hover:bg-[#eef2fc]"
+                                  }`}
+                                >
+                                  {enabled ? (
+                                    <CheckCircle
+                                      size={
+                                        16
+                                      }
+                                    />
+                                  ) : (
+                                    <X
+                                      size={
+                                        16
+                                      }
+                                    />
+                                  )}
+                                </button>
+                              </td>
+                            );
+                          }
+                        )}
+
+
+                        <td className="py-3 px-4 text-right">
+                          {locked ? (
+                            <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                              Protected
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                saveRole(
+                                  row
+                                )
+                              }
+                              disabled={
+                                savingRole ===
+                                row.role
+                              }
+                              className="inline-flex items-center justify-center rounded-md bg-[#1a3a7b] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#153064] disabled:opacity-50"
+                            >
+                              {savingRole ===
+                              row.role
+                                ? "Saving..."
+                                : "Save"}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  }
+                )
+              )}
             </tbody>
           </table>
+        </div>
+      </Card>
+
+
+      {/* ROLE GUIDE */}
+
+      <Card title="Role Access Guide">
+        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="rounded-md border border-[#dce3ee] p-3">
+            <p className="text-sm font-semibold">
+              Student
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Registers personal items, views approved QR codes,
+              permit status, and Lost & Found records.
+            </p>
+          </div>
+
+          <div className="rounded-md border border-[#dce3ee] p-3">
+            <p className="text-sm font-semibold">
+              Security (CSU)
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Performs QR verification, entry and exit monitoring,
+              security incidents, Lost & Found processing, and
+              security reports.
+            </p>
+          </div>
+
+          <div className="rounded-md border border-[#dce3ee] p-3">
+            <p className="text-sm font-semibold">
+              PCO Staff
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Reviews registration requests, issues QR codes,
+              manages the item registry, and generates reports.
+            </p>
+          </div>
+
+          <div className="rounded-md border border-[#dce3ee] p-3">
+            <p className="text-sm font-semibold">
+              System Administrator
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Maintains full administrative access to system
+              configuration, records, users, sessions, audit logs,
+              security settings, and reports.
+            </p>
+          </div>
         </div>
       </Card>
     </div>
@@ -11509,6 +13870,7 @@ const PAGES: Record<Role, React.ComponentType[]> = {
     SysAdminUserAccounts,
     SysAdminSettings,
     SysAdminAuditLogs,
+    SysAdminActiveSessions,
     SysAdminPerformance,
     SysAdminSecurityConfig,
   ],
@@ -11600,6 +13962,12 @@ const NAV: Record<
       icon: <ClipboardList size={16} />,
       label: "Audit Logs",
     },
+
+    {
+      icon: <Eye size={16} />,
+      label: "Active Sessions",
+    },
+
     {
       icon: <BarChart2 size={16} />,
       label: "Performance",

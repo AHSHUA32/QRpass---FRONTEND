@@ -224,6 +224,33 @@ export async function getScanLogs() {
 
   return data;
 }
+
+export async function getSecurityReports() {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_URL}/security-reports`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to load security reports."
+    );
+  }
+
+  return data;
+}
+
 export async function getAllItems() {
   const token = localStorage.getItem("token");
 
@@ -482,6 +509,8 @@ export async function getSystemRecords() {
   return data;
 }
 
+
+
 export async function getReports() {
   const token = localStorage.getItem("token");
 
@@ -497,6 +526,137 @@ export async function getReports() {
   if (!response.ok) {
     throw new Error(
       data.message || "Failed to load report data."
+    );
+  }
+
+  return data;
+}
+
+// =========================================================
+// SYSTEM SETTINGS
+// =========================================================
+
+export async function getSystemSettings() {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_URL}/system-settings`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to load system settings."
+    );
+  }
+
+  return data;
+}
+
+export async function updateSystemSettings(settings: {
+  system_name: string;
+  institution: string;
+  academic_year: string;
+  semester: string;
+  session_timeout: number;
+  max_login_attempts: number;
+  qr_code_validity_months: number;
+  two_factor_enabled: boolean;
+}) {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_URL}/system-settings`,
+    {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(settings),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to update system settings."
+    );
+  }
+
+  return data;
+}
+
+// =========================================================
+// AUDIT LOGS
+// =========================================================
+
+export async function getAuditLogs(params?: {
+  search?: string;
+  event_type?: string;
+  status?: string;
+  module?: string;
+  date?: string;
+  limit?: number;
+}) {
+  const token = localStorage.getItem("token");
+
+  const query = new URLSearchParams();
+
+  if (params?.search) {
+    query.set("search", params.search);
+  }
+
+  if (params?.event_type) {
+    query.set("event_type", params.event_type);
+  }
+
+  if (params?.status) {
+    query.set("status", params.status);
+  }
+
+  if (params?.module) {
+    query.set("module", params.module);
+  }
+
+  if (params?.date) {
+    query.set("date", params.date);
+  }
+
+  if (params?.limit) {
+    query.set("limit", String(params.limit));
+  }
+
+  const queryString = query.toString();
+
+  const response = await fetch(
+    `${API_URL}/audit-logs${
+      queryString ? `?${queryString}` : ""
+    }`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to load audit logs."
     );
   }
 
@@ -1034,19 +1194,144 @@ export async function uploadAccountProfilePhoto(file: File) {
 export async function removeAccountProfilePhoto() {
   const token = localStorage.getItem("token");
 
-  const response = await fetch(`${API_URL}/account/profile-photo`, {
-    method: "DELETE",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `${API_URL}/account/profile-photo`,
+    {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   const data = await response.json();
 
   if (!response.ok) {
     throw new Error(
-      data.message || "Failed to remove profile photo."
+      data.message ||
+        "Failed to remove profile photo."
+    );
+  }
+
+  return data;
+}
+
+
+export async function getActiveSessions() {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_URL}/active-sessions`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to load active sessions."
+    );
+  }
+
+  return data;
+}
+
+
+export async function revokeActiveSession(
+  id: number
+) {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_URL}/active-sessions/${id}`,
+    {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to revoke session."
+    );
+  }
+
+  return data;
+}
+
+export async function getRolePermissions() {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_URL}/role-permissions`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to load role permissions."
+    );
+  }
+
+  return data;
+}
+
+
+export async function updateRolePermissions(
+  role: string,
+  permissions: {
+    register_items: boolean;
+    view_qr_codes: boolean;
+    approve_requests: boolean;
+    scan_verify: boolean;
+    view_reports: boolean;
+    manage_users: boolean;
+  }
+) {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_URL}/role-permissions/${role}`,
+    {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(permissions),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to update role permissions."
     );
   }
 
