@@ -496,6 +496,58 @@ function StudentRegisterItem() {
   async function handleItemSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    const commonRequiredFields = [
+      ["Item Name", form.item_name],
+      ["Brand & Model", form.brand_model],
+      ["Serial Number", form.serial_number],
+      ["Color", form.color],
+      ["Item Type", form.item_type],
+      ["Purpose / Reason for Bringing", form.purpose],
+      ["Valid Until (Date & Time)", form.valid_until],
+    ];
+
+    const laptopRequiredFields = [
+      ["Computer / Laptop Type", form.computer_type],
+      ["Processor", form.processor],
+      ["Motherboard", form.motherboard],
+      ["Memory / RAM", form.memory],
+      ["Hard Drive / Storage", form.hard_drive],
+      ["Monitor", form.monitor],
+      ["Casing", form.casing],
+      ["Operating System", form.operating_system],
+    ];
+
+    const nonComputerRequiredFields = [
+      ["Quantity", form.quantity],
+      ["Description", form.complete_description],
+    ];
+
+    const requiredFields =
+      form.item_type === "Laptop"
+        ? [
+            ...commonRequiredFields,
+            ...laptopRequiredFields,
+          ]
+        : [
+            ...commonRequiredFields,
+            ...nonComputerRequiredFields,
+          ];
+
+    const missingFields = requiredFields
+      .filter(([, value]) => !String(value ?? "").trim())
+      .map(([label]) => label);
+
+    if (missingFields.length > 0) {
+      alert(
+        `Please complete all required fields before submitting:
+
+${missingFields
+          .map((field) => `• ${field}`)
+          .join("\n")}`
+      );
+      return;
+    }
+
     try {
       setSubmitting(true);
 
@@ -526,7 +578,7 @@ function StudentRegisterItem() {
 
         accessories_included: "",
         valid_until: "",
-});
+      });
 
       setShowForm(false);
 
@@ -601,6 +653,7 @@ function StudentRegisterItem() {
                   })
                 }
                 placeholder="e.g. Dell XPS 15 9530"
+                required
                 className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
               />
             </div>
@@ -608,7 +661,7 @@ function StudentRegisterItem() {
             {/* SERIAL NUMBER */}
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Serial Number (Optional)
+                Serial Number
               </label>
 
               <input
@@ -620,7 +673,8 @@ function StudentRegisterItem() {
                     serial_number: e.target.value,
                   })
                 }
-                placeholder="e.g. SN-00000 — leave blank if none"
+                placeholder="e.g. SN-00000"
+                required
                 className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
               />
             </div>
@@ -641,6 +695,7 @@ function StudentRegisterItem() {
                   })
                 }
                 placeholder="e.g. Silver"
+                required
                 className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
               />
             </div>
@@ -659,6 +714,7 @@ function StudentRegisterItem() {
                     item_type: e.target.value,
                   })
                 }
+                required
                 className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
               >
                 <option value="Laptop">Laptop / Computer</option>
@@ -696,6 +752,7 @@ function StudentRegisterItem() {
                   })
                 }
                 placeholder="e.g. Academic use, thesis documentation"
+                required
                 className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
               />
             </div>
@@ -703,7 +760,7 @@ function StudentRegisterItem() {
             {/* ACCESSORIES */}
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Accessories Included
+                Accessories Included (Optional)
               </label>
 
               <input
@@ -735,6 +792,7 @@ function StudentRegisterItem() {
                   valid_until: e.target.value,
                 })
               }
+              required
               className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
             />
             </div>
@@ -828,6 +886,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. Laptop, Desktop, Gaming Laptop"
+                      required
                       className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                     />
                   </div>
@@ -848,6 +907,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. Intel Core i5 / Ryzen 5"
+                      required
                       className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                     />
                   </div>
@@ -868,6 +928,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. ASUS B550M / Built-in"
+                      required
                       className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                     />
                   </div>
@@ -888,6 +949,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. 16 GB DDR4"
+                      required
                       className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                     />
                   </div>
@@ -908,6 +970,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. 512 GB SSD"
+                      required
                       className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                     />
                   </div>
@@ -928,6 +991,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. Built-in 15.6 inch"
+                      required
                       className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                     />
                   </div>
@@ -948,6 +1012,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. Black chassis / Built-in"
+                      required
                       className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                     />
                   </div>
@@ -955,7 +1020,7 @@ function StudentRegisterItem() {
                   {/* CD/DVD */}
                   <div>
                     <label className="block text-xs font-semibold text-foreground mb-1">
-                      CD / DVD ROM
+                      CD / DVD ROM (Optional)
                     </label>
 
                     <input
@@ -988,6 +1053,7 @@ function StudentRegisterItem() {
                         })
                       }
                       placeholder="e.g. Windows 11 Pro"
+                      required
                       className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                     />
                   </div>
@@ -997,8 +1063,10 @@ function StudentRegisterItem() {
 
             {/* NOTE */}
             <div className="md:col-span-2 bg-yellow-50 border border-yellow-200 rounded-md p-3 text-xs text-yellow-800">
-              <strong>Note:</strong> After submission, your item will be
-              reviewed by PCO. A QR code will be issued after approval.
+              <strong>Note:</strong> All displayed fields are required except
+              <strong> Accessories Included</strong> and
+              <strong> CD / DVD ROM</strong>. The form cannot be submitted
+              until all required information is completed.
             </div>
 
             {/* BUTTONS */}
@@ -2725,8 +2793,8 @@ function SecurityScanVerify() {
                 Gate 3
               </option>
 
-              <option value="Main Entrance">
-                Main Entrance
+              <option value="Gate 4">
+                Gate 4
               </option>
             </select>
           </div>
@@ -2966,20 +3034,16 @@ function SecurityScanVerify() {
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs border border-[#cfd8e6] rounded-md px-3 py-2 bg-muted/30">
-                    {gate}
-                  </span>
-
                   <button
                     onClick={() =>
                       handleLog("IN")
                     }
                     disabled={logging}
-                    className="text-xs bg-green-600 text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+                    className="text-xs bg-green-600 text-white px-5 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
                   >
                     {logging
                       ? "Saving..."
-                      : "Log IN"}
+                      : "IN"}
                   </button>
 
                   <button
@@ -2987,11 +3051,11 @@ function SecurityScanVerify() {
                       handleLog("OUT")
                     }
                     disabled={logging}
-                    className="text-xs bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+                    className="text-xs bg-blue-600 text-white px-5 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
                   >
                     {logging
                       ? "Saving..."
-                      : "Log OUT"}
+                      : "OUT"}
                   </button>
                 </div>
               </div>
@@ -15365,9 +15429,7 @@ function SysAdminAnnouncementManagement() {
                 <option value="pco">
                   PCO Staff
                 </option>
-                <option value="sysadmin">
-                  System Administrators
-                </option>
+                
               </select>
             </div>
 
@@ -16016,6 +16078,7 @@ type LoginMode =
 
 function LoginPage({ onLogin }: { onLogin: (role: Role) => void }) {
   // Two-factor authentication state
+const [showHelp, setShowHelp] = useState(false);
 const [twoFactorChallenge, setTwoFactorChallenge] =
   useState("");
 
@@ -16495,41 +16558,208 @@ async function handleTwoFactorSubmit(
     <div className="bg-primary h-1.5 w-full" />
   );
 
-  // ==========================================================================
+    // ==========================================================================
   // SHARED NAVBAR
   // ==========================================================================
 
   const NavBar = (
-    <div className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-[#cfd8e6] shadow-sm">
-      <div className="flex items-center gap-2.5">
-        <QRpassLogo size={90} showText />
+    <>
+      <div className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-[#cfd8e6] shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <QRpassLogo size={90} showText />
 
-        <div>
-          <p
-            className="text-xs font-semibold text-primary"
-            style={{
-              fontFamily:
-                "Barlow, sans-serif",
-            }}
+          <div>
+            <p
+              className="text-xs font-semibold text-primary"
+              style={{
+                fontFamily: "Barlow, sans-serif",
+              }}
+            >
+              QRpass
+            </p>
+
+            <p className="text-xs text-muted-foreground">
+              Campus Item Registration & Verification System
+            </p>
+          </div>
+        </div>
+
+        <div className="text-xs text-muted-foreground">
+          V1.0
+          &nbsp;|&nbsp;
+
+          <button
+            type="button"
+            onClick={() => setShowHelp(true)}
+            className="text-primary font-medium cursor-pointer hover:underline bg-transparent border-0 p-0"
           >
-            QRpass
-          </p>
-
-          <p className="text-xs text-muted-foreground">
-            Campus Item Registration & Verification System
-          </p>
+            Help
+          </button>
         </div>
       </div>
 
-      <div className="text-xs text-muted-foreground">
-        V1.0
-        &nbsp;|&nbsp;
+      {showHelp && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4"
+          onClick={() => setShowHelp(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white border border-[#dce3ee] shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#dce3ee]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#eef2fc] flex items-center justify-center">
+                  <BookOpen
+                    size={20}
+                    className="text-primary"
+                  />
+                </div>
 
-        <span className="text-primary font-medium cursor-pointer hover:underline">
-          Help
-        </span>
-      </div>
-    </div>
+                <div>
+                  <h2 className="text-base font-bold text-[#111827]">
+                    QRPass Help
+                  </h2>
+
+                  <p className="text-xs text-muted-foreground">
+                    Campus Item Registration & Verification System
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowHelp(false)}
+                className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                aria-label="Close Help"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <div className="flex items-start gap-3">
+                  <Shield
+                    size={18}
+                    className="text-blue-700 mt-0.5 flex-shrink-0"
+                  />
+
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900">
+                      Need Assistance?
+                    </p>
+
+                    <p className="text-xs text-blue-800 mt-1 leading-relaxed">
+                      If you need assistance using QRPass, encounter an
+                      unexpected problem, or have questions about your account,
+                      item registration, QR codes, or verification, please
+                      contact the QRPass System Administrator.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-md bg-[#eef2fc] flex items-center justify-center flex-shrink-0">
+                    <User
+                      size={16}
+                      className="text-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">
+                      Account Assistance
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Contact the System Administrator for login, account,
+                      password, or access-related concerns.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-md bg-[#eef2fc] flex items-center justify-center flex-shrink-0">
+                    <Package
+                      size={16}
+                      className="text-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">
+                      Item Registration
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Register your item and wait for the required approval
+                      before a QR code is issued.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-md bg-[#eef2fc] flex items-center justify-center flex-shrink-0">
+                    <QrCode
+                      size={16}
+                      className="text-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">
+                      QR Code Assistance
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      For problems with QR code viewing, scanning, or
+                      verification, contact the QRPass System Administrator.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-md bg-[#eef2fc] flex items-center justify-center flex-shrink-0">
+                    <Shield
+                      size={16}
+                      className="text-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">
+                      Security Concerns
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Report suspicious activity, verification issues, or
+                      security-related concerns to authorized QRPass personnel.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between px-5 py-3 border-t border-[#dce3ee] bg-[#fafbfc] rounded-b-xl">
+              <p className="text-xs text-muted-foreground">
+                QRPass System • V1.0
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setShowHelp(false)}
+                className="text-xs font-semibold bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 transition-opacity"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 
   // ==========================================================================
@@ -17622,7 +17852,7 @@ async function handleTwoFactorSubmit(
             {/* USERNAME */}
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
-                Username / ID Number
+                ID NUMBER
               </label>
 
               <div className="relative">
@@ -17916,7 +18146,7 @@ function Dashboard({
   ] = useState(false);
 
   const [notificationFilter, setNotificationFilter] =
-    useState<"all" | "unread" | "read">("all");
+  useState<"all" | "unread" | "read">("unread");
 
   // =========================================================
   // ACTIVE ANNOUNCEMENTS
@@ -17966,13 +18196,44 @@ function Dashboard({
       const data =
         await getAnnouncements();
 
-      setActiveAnnouncements(
-        Array.isArray(
-          data?.announcements
-        )
-          ? data.announcements
-          : []
-      );
+     const announcements =
+  Array.isArray(
+    data?.announcements
+  )
+    ? data.announcements
+    : [];
+
+const userId =
+  currentUser?.id ??
+  currentUser?.username ??
+  "user";
+
+const storageKey =
+  `qrpass-viewed-announcements-${userId}`;
+
+let viewedIds: number[] = [];
+
+try {
+  const saved =
+    localStorage.getItem(
+      storageKey
+    );
+
+  viewedIds = saved
+    ? JSON.parse(saved)
+    : [];
+} catch {
+  viewedIds = [];
+}
+
+setActiveAnnouncements(
+  announcements.filter(
+    (announcement: any) =>
+      !viewedIds.includes(
+        Number(announcement.id)
+      )
+  )
+);
     } catch (error) {
       console.error(
         "Failed to load active announcements:",
@@ -18563,37 +18824,43 @@ const handleSaveAccountProfile = async () => {
   // =========================================================
 
   async function handleHeaderMarkRead(
-    id: number
-  ) {
-    try {
-      setMarkingNotificationId(id);
+  id: number
+) {
+  try {
+    setMarkingNotificationId(id);
 
-      await markNotificationRead(id);
+    await markNotificationRead(id);
 
-      setHeaderNotifications(
-        (previous) =>
-          previous.map(
-            (notification) =>
-              notification.id === id
-                ? {
-                    ...notification,
-                    is_read: true,
-                    read_at:
-                      notification.read_at ??
-                      new Date().toISOString(),
-                  }
-                : notification
-          )
-      );
-    } catch (error) {
-      console.error(
-        "Failed to mark notification as read:",
-        error
-      );
-    } finally {
-      setMarkingNotificationId(null);
-    }
+    setHeaderNotifications(
+      (previous) =>
+        previous.map(
+          (notification) =>
+            notification.id === id
+              ? {
+                  ...notification,
+                  is_read: true,
+                  read_at:
+                    notification.read_at ??
+                    new Date().toISOString(),
+                }
+              : notification
+        )
+    );
+
+    // After viewing/reading a notification,
+    // return the bell dropdown to unread notifications.
+    // The notification will disappear from the current list.
+    setNotificationFilter("unread");
+
+  } catch (error) {
+    console.error(
+      "Failed to mark notification as read:",
+      error
+    );
+  } finally {
+    setMarkingNotificationId(null);
   }
+}
 
   // =========================================================
   // MARK ALL NOTIFICATIONS READ
@@ -19999,22 +20266,6 @@ const handleSaveAccountProfile = async () => {
             )}
           </nav>
 
-          <div className="p-3 border-t border-white/10 flex-shrink-0">
-            <button
-              onClick={
-                onLogout
-              }
-              className="flex items-center gap-2 text-xs text-[#8ea4c9] hover:text-white transition-colors whitespace-nowrap"
-            >
-              <LogOut
-                size={13}
-              />
-
-              <span>
-                Log Out
-              </span>
-            </button>
-          </div>
         </aside>
 
         {/* ===================================================
@@ -20058,86 +20309,184 @@ const handleSaveAccountProfile = async () => {
             </span>
           </div>
 
-          {/* ACTIVE ANNOUNCEMENTS */}
+                    {/* ACTIVE ANNOUNCEMENTS */}
 
           {!announcementsLoading &&
-            activeAnnouncements.length >
-              0 && (
+            activeAnnouncements.length > 0 && (
               <div className="mb-4 space-y-2">
-                {activeAnnouncements.map(
-                  (
-                    announcement
-                  ) => {
-                    const bannerStyle =
-                      getAnnouncementBannerStyle(
-                        announcement.priority
+                {activeAnnouncements.map((announcement) => {
+                  const bannerStyle =
+                    getAnnouncementBannerStyle(
+                      announcement.priority
+                    );
+
+                  async function markAnnouncementAsViewed() {function markAnnouncementAsViewed() {
+  const userId =
+    currentUser?.id ??
+    currentUser?.username ??
+    "user";
+
+  const storageKey =
+    `qrpass-viewed-announcements-${userId}`;
+
+  let viewedIds: number[] = [];
+
+  try {
+    const saved =
+      localStorage.getItem(storageKey);
+
+    viewedIds = saved
+      ? JSON.parse(saved)
+      : [];
+  } catch {
+    viewedIds = [];
+  }
+
+  const announcementId =
+    Number(announcement.id);
+
+  if (
+    !viewedIds.includes(
+      announcementId
+    )
+  ) {
+    viewedIds.push(
+      announcementId
+    );
+  }
+
+  localStorage.setItem(
+    storageKey,
+    JSON.stringify(viewedIds)
+  );
+
+  setActiveAnnouncements(
+    (current) =>
+      current.filter(
+        (item) =>
+          Number(item.id) !==
+          announcementId
+      )
+  );
+} 
+                  const announcementId = Number(announcement.id);
+
+                  try {
+                    const token = localStorage.getItem("token");
+
+                    if (!token) {
+                      throw new Error("Authentication token not found.");
+                    }
+
+                    const response = await fetch(
+                      `http://localhost:8000/api/announcements/${announcementId}/view`,
+                      {
+                        method: "PUT",
+                        headers: {
+                          Authorization: `Bearer ${token}`,
+                          Accept: "application/json",
+                          "Content-Type": "application/json",
+                        },
+                      }
+                    );
+
+                    const data = await response.json().catch(() => null);
+
+                    if (!response.ok) {
+                      console.error(
+                        "Mark announcement viewed failed:",
+                        response.status,
+                        data
                       );
 
-                    return (
-                      <div
-                        key={
-                          announcement.id
-                        }
-                        className={`rounded-lg border px-3 py-3 flex items-start gap-3 ${bannerStyle.wrapper}`}
-                      >
-                        <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${bannerStyle.icon}`}
-                        >
-                          {String(
-                            announcement.priority
-                          ).toLowerCase() ===
-                          "urgent" ? (
-                            <AlertTriangle
-                              size={15}
-                            />
-                          ) : (
-                            <Bell
-                              size={15}
-                            />
-                          )}
-                        </div>
+                      throw new Error(
+                        data?.message ||
+                          "Failed to mark announcement as viewed."
+                      );
+                    }
 
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p
-                              className={`text-xs font-bold ${bannerStyle.title}`}
-                            >
-                              {
-                                announcement.title
-                              }
-                            </p>
-
-                            <span
-                              className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase ${bannerStyle.badge}`}
-                            >
-                              {String(
-                                announcement.priority ??
-                                  "info"
-                              )}
-                            </span>
-                          </div>
-
-                          <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-[#334155]">
-                            {
-                              announcement.message
-                            }
-                          </p>
-
-                          {announcement.end_at && (
-                            <p className="mt-1.5 text-[10px] text-[#64748b]">
-                              Available until{" "}
-                              <span className="font-semibold">
-                                {formatAnnouncementEnd(
-                                  announcement.end_at
-                                )}
-                              </span>
-                            </p>
-                          )}
-                        </div>
-                      </div>
+                    setActiveAnnouncements((current) =>
+                      current.filter(
+                        (item) => Number(item.id) !== announcementId
+                      )
+                    );
+                  } catch (error) {
+                    console.error(
+                      "Failed to mark announcement as viewed:",
+                      error
                     );
                   }
-                )}
+                }
+
+                  return (
+                    <div
+                      key={announcement.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={markAnnouncementAsViewed}
+                      onKeyDown={(event) => {
+                        if (
+                          event.key === "Enter" ||
+                          event.key === " "
+                        ) {
+                          event.preventDefault();
+                          markAnnouncementAsViewed();
+                        }
+                      }}
+                      className={`rounded-lg border px-3 py-3 flex items-start gap-3 cursor-pointer hover:shadow-md transition-all ${bannerStyle.wrapper}`}
+                      title="Click to mark this announcement as viewed"
+                    >
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${bannerStyle.icon}`}
+                      >
+                        {String(
+                          announcement.priority
+                        ).toLowerCase() === "urgent" ? (
+                          <AlertTriangle size={15} />
+                        ) : (
+                          <Bell size={15} />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p
+                            className={`text-xs font-bold ${bannerStyle.title}`}
+                          >
+                            {announcement.title}
+                          </p>
+
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase ${bannerStyle.badge}`}
+                          >
+                            {String(
+                              announcement.priority ?? "info"
+                            )}
+                          </span>
+                        </div>
+
+                        <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-[#334155]">
+                          {announcement.message}
+                        </p>
+
+                        {announcement.end_at && (
+                          <p className="mt-1.5 text-[10px] text-[#64748b]">
+                            Available until{" "}
+                            <span className="font-semibold">
+                              {formatAnnouncementEnd(
+                                announcement.end_at
+                              )}
+                            </span>
+                          </p>
+                        )}
+
+                        <p className="mt-1.5 text-[9px] font-medium text-[#64748b]">
+                          Click to mark as viewed
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
