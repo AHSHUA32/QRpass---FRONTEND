@@ -41,6 +41,12 @@ import {
   LogOut,
   Map,
   Menu,
+  Monitor,
+  Camera,
+  Smartphone,
+  Music2,
+  Globe2,
+  Box,
   Package,
   Plus,
   QrCode,
@@ -83,6 +89,7 @@ import {
 
   getLostFoundItems,
   createLostFoundItem,
+  updateLostFoundItem,
   claimLostFoundItem,
   markLostFoundRecovered,
 
@@ -444,36 +451,285 @@ const sampleItems = [
 // ══════════════════════════════════════════════════════════════════════════════
 // STUDENT PAGES
 // ══════════════════════════════════════════════════════════════════════════════
+
+function RegistrationField({
+  label,
+  field,
+  value,
+  onChange,
+  placeholder,
+  optional = false,
+  type = "text",
+}: {
+  label: string;
+  field: string;
+  value: string;
+  onChange: (field: string, value: string) => void;
+  placeholder?: string;
+  optional?: boolean;
+  type?: string;
+}) {
+  const fieldClass =
+    "w-full px-3 py-2.5 text-sm border border-[#c7d2fe] rounded-lg bg-[#eef2ff] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15";
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-foreground mb-1.5">
+        {label}
+        {optional && (
+          <span className="ml-1 text-[11px] font-normal text-muted-foreground">
+            (Optional)
+          </span>
+        )}
+      </label>
+
+      <input
+        type={type}
+        value={value}
+        onChange={(e) =>
+          onChange(field, e.target.value)
+        }
+        placeholder={placeholder}
+        className={fieldClass}
+      />
+    </div>
+  );
+}
+
+function RegistrationPermitValidUntilField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const fieldClass =
+    "w-full px-3 py-2.5 text-sm border border-[#c7d2fe] rounded-lg bg-[#eef2ff] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15";
+
+  return (
+    <div className="md:col-span-2">
+      <label className="block text-xs font-semibold text-foreground mb-1.5">
+        Permit Valid Until
+      </label>
+
+      <input
+        type="datetime-local"
+        value={value}
+        onChange={(e) =>
+          onChange(e.target.value)
+        }
+        className={fieldClass}
+      />
+
+      <p className="text-[11px] text-muted-foreground mt-1.5">
+        This is retained for QRPass permit validity and QR expiration.
+      </p>
+    </div>
+  );
+}
+
 function StudentRegisterItem() {
-  const [showForm, setShowForm] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [items, setItems] = useState<any[]>([]);
-  const [loadingItems, setLoadingItems] = useState(true);
+  type RegistrationGroupId =
+    | "computer"
+    | "highvalue"
+    | "mobile"
+    | "musical"
+    | "sports"
+    | "other";
 
-  const [form, setForm] = useState({
-    item_name: "",
-    brand_model: "",
-    serial_number: "",
-    color: "",
-    item_type: "Laptop",
-    purpose: "",
-    
-    quantity: "1",
-    complete_description: "",
-    
-    computer_type: "",
-    processor: "",
-    motherboard: "",
-    memory: "",
-    hard_drive: "",
-    monitor: "",
-    casing: "",
-    cd_dvd_rom: "",
-    operating_system: "",
+  type RegistrationForm = {
+    item_name: string;
+    brand_model: string;
+    serial_number: string;
+    color: string;
+    purpose: string;
+    accessories_included: string;
+    valid_until: string;
 
-    accessories_included: "",
-    valid_until: "",
-  });
+    quantity: string;
+    complete_description: string;
+
+    computer_type: string;
+    processor: string;
+    motherboard: string;
+    memory: string;
+    hard_drive: string;
+    monitor: string;
+    casing: string;
+    cd_dvd_rom: string;
+    operating_system: string;
+
+    unit_type: string;
+    power_source: string;
+    lens_attachment: string;
+    condition: string;
+
+    storage_capacity: string;
+
+    brand: string;
+    model_no: string;
+    material_body: string;
+    size: string;
+
+    equipment_type: string;
+  };
+
+  const registrationGroups: {
+    id: RegistrationGroupId;
+    name: string;
+    description: string;
+    types: string;
+    color: string;
+  }[] = [
+    {
+      id: "computer",
+      name: "Computer Equipment",
+      description:
+        "For laptops, desktop computers, and similar computer equipment.",
+      types: "Laptop / Computer",
+      color: "#16224b",
+    },
+    {
+      id: "highvalue",
+      name: "High-Value Electronics",
+      description:
+        "For DSLR cameras, projectors, printers, and similar equipment.",
+      types: "Camera (DSLR), Projector, Printer",
+      color: "#16224b",
+    },
+    {
+      id: "mobile",
+      name: "Mobile / Personal Electronics",
+      description:
+        "For mobile phones, tablets, and personal audio equipment.",
+      types: "Mobile Phone, Tablet, Audio Equipment",
+      color: "#0f766e",
+    },
+    {
+      id: "musical",
+      name: "Musical Instrument",
+      description:
+        "For guitars, keyboards, and other musical instruments.",
+      types: "Musical Instrument",
+      color: "#7c3aed",
+    },
+    {
+      id: "sports",
+      name: "Sports Equipment",
+      description:
+        "For balls, rackets, training gear, and other sports equipment.",
+      types: "Sports Equipment",
+      color: "#15803d",
+    },
+    {
+      id: "other",
+      name: "Other Equipment",
+      description:
+        "For equipment that does not belong to the other registration groups.",
+      types: "Other Equipment",
+      color: "#475569",
+    },
+  ];
+
+  function emptyForm(): RegistrationForm {
+    return {
+      item_name: "",
+      brand_model: "",
+      serial_number: "",
+      color: "",
+      purpose: "",
+      accessories_included: "",
+      valid_until: "",
+
+      quantity: "1",
+      complete_description: "",
+
+      computer_type: "",
+      processor: "",
+      motherboard: "",
+      memory: "",
+      hard_drive: "",
+      monitor: "",
+      casing: "",
+      cd_dvd_rom: "",
+      operating_system: "",
+
+      unit_type: "",
+      power_source: "",
+      lens_attachment: "",
+      condition: "",
+
+      storage_capacity: "",
+
+      brand: "",
+      model_no: "",
+      material_body: "",
+      size: "",
+
+      equipment_type: "",
+    };
+  }
+
+  const [selectedGroup, setSelectedGroup] =
+    useState<RegistrationGroupId | null>(null);
+
+  const [showTypeMenu, setShowTypeMenu] =
+    useState(false);
+
+  const [submitting, setSubmitting] =
+    useState(false);
+
+  const [items, setItems] =
+    useState<any[]>([]);
+
+  const [loadingItems, setLoadingItems] =
+    useState(true);
+
+  const [form, setForm] =
+    useState<RegistrationForm>(emptyForm());
+
+  const activeGroup =
+    registrationGroups.find(
+      (group) => group.id === selectedGroup
+    ) ?? null;
+
+  function getRegistrationGroupIcon(
+    groupId: RegistrationGroupId,
+    size = 18
+  ) {
+    switch (groupId) {
+      case "computer":
+        return <Monitor size={size} strokeWidth={1.8} />;
+
+      case "highvalue":
+        return <Camera size={size} strokeWidth={1.8} />;
+
+      case "mobile":
+        return <Smartphone size={size} strokeWidth={1.8} />;
+
+      case "musical":
+        return <Music2 size={size} strokeWidth={1.8} />;
+
+      case "sports":
+        return <Globe2 size={size} strokeWidth={1.8} />;
+
+      case "other":
+        return <Box size={size} strokeWidth={1.8} />;
+
+      default:
+        return <Package size={size} strokeWidth={1.8} />;
+    }
+  }
+
+  function updateField(
+    key: keyof RegistrationForm,
+    value: string
+  ) {
+    setForm((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  }
 
   async function loadItems() {
     try {
@@ -481,9 +737,25 @@ function StudentRegisterItem() {
 
       const data = await getItems();
 
-      setItems(data.items ?? []);
+      const loadedItems =
+        Array.isArray(data?.items)
+          ? data.items
+          : [];
+
+      setItems(
+        [...loadedItems].sort(
+          (a, b) =>
+            Number(b?.id ?? 0) -
+            Number(a?.id ?? 0)
+        )
+      );
     } catch (error) {
-      console.error("Failed to load items:", error);
+      console.error(
+        "Failed to load items:",
+        error
+      );
+
+      setItems([]);
     } finally {
       setLoadingItems(false);
     }
@@ -493,94 +765,356 @@ function StudentRegisterItem() {
     loadItems();
   }, []);
 
-  async function handleItemSubmit(e: React.FormEvent) {
+  function selectGroup(
+    groupId: RegistrationGroupId
+  ) {
+    setSelectedGroup(groupId);
+    setShowTypeMenu(false);
+    setForm(emptyForm());
+  }
+
+  function backToSelection() {
+    setSelectedGroup(null);
+    setShowTypeMenu(false);
+    setForm(emptyForm());
+  }
+
+  function missingRequiredFields() {
+    const required: [string, string][] = [
+      [
+        "Purpose / Reason for Bringing",
+        form.purpose,
+      ],
+      [
+        "Permit Valid Until",
+        form.valid_until,
+      ],
+    ];
+
+    if (selectedGroup === "computer") {
+      required.push(
+        ["Item Name", form.item_name],
+        ["Brand & Model", form.brand_model],
+        ["Serial Number", form.serial_number],
+        ["Color", form.color],
+        [
+          "Computer / Laptop Type",
+          form.computer_type,
+        ],
+        ["Processor", form.processor],
+        ["Motherboard", form.motherboard],
+        ["Memory / RAM", form.memory],
+        [
+          "Hard Drive / Storage",
+          form.hard_drive,
+        ],
+        ["Monitor", form.monitor],
+        ["Casing", form.casing],
+        [
+          "Operating System",
+          form.operating_system,
+        ]
+      );
+    }
+
+    if (selectedGroup === "highvalue") {
+      required.push(
+        ["Item Name", form.item_name],
+        ["Brand & Model", form.brand_model],
+        ["Serial Number", form.serial_number],
+        ["Color", form.color],
+        ["Unit Type", form.unit_type],
+        [
+          "Power Source / Cable",
+          form.power_source,
+        ],
+        ["Condition", form.condition]
+      );
+    }
+
+    if (selectedGroup === "mobile") {
+      required.push(
+        ["Item Name", form.item_name],
+        ["Brand & Model", form.brand_model],
+        ["Color", form.color]
+      );
+    }
+
+    if (selectedGroup === "musical") {
+      required.push(
+        ["Item Name", form.item_name],
+        ["Brand", form.brand],
+        ["Model No.", form.model_no],
+        [
+          "Material / Body",
+          form.material_body,
+        ]
+      );
+    }
+
+    if (selectedGroup === "sports") {
+      required.push(
+        [
+          "Equipment Type",
+          form.equipment_type,
+        ],
+        ["Quantity", form.quantity],
+        ["Condition", form.condition]
+      );
+    }
+
+    if (selectedGroup === "other") {
+      required.push(
+        [
+          "Item/s with Complete Description",
+          form.complete_description,
+        ],
+        ["Quantity", form.quantity]
+      );
+    }
+
+    return required
+      .filter(
+        ([, value]) =>
+          !String(value ?? "").trim()
+      )
+      .map(([label]) => label);
+  }
+
+  function buildPayload() {
+    const detailParts: string[] = [];
+
+    let itemName =
+      form.item_name.trim();
+
+    let brandModel =
+      form.brand_model.trim();
+
+    let serialNumber =
+      form.serial_number.trim();
+
+    let color =
+      form.color.trim();
+
+    let itemType =
+      "Other Equipment";
+
+    let quantity =
+      form.quantity.trim() || "1";
+
+    let computerType = "";
+    let processor = "";
+    let motherboard = "";
+    let memory = "";
+    let hardDrive = "";
+    let monitor = "";
+    let casing = "";
+    let cdDvdRom = "";
+    let operatingSystem = "";
+
+    if (selectedGroup === "computer") {
+      itemType = "Laptop";
+
+      computerType =
+        form.computer_type.trim();
+
+      processor =
+        form.processor.trim();
+
+      motherboard =
+        form.motherboard.trim();
+
+      memory =
+        form.memory.trim();
+
+      hardDrive =
+        form.hard_drive.trim();
+
+      monitor =
+        form.monitor.trim();
+
+      casing =
+        form.casing.trim();
+
+      cdDvdRom =
+        form.cd_dvd_rom.trim();
+
+      operatingSystem =
+        form.operating_system.trim();
+    }
+
+    if (selectedGroup === "highvalue") {
+      itemType =
+        form.unit_type.trim() ||
+        "High-Value Electronics";
+
+      detailParts.push(
+        `Unit Type: ${form.unit_type.trim()}`,
+        `Power Source / Cable: ${form.power_source.trim()}`,
+        `Condition: ${form.condition.trim()}`
+      );
+
+      if (
+        form.lens_attachment.trim()
+      ) {
+        detailParts.push(
+          `Lens / Attachment Included: ${form.lens_attachment.trim()}`
+        );
+      }
+    }
+
+    if (selectedGroup === "mobile") {
+      itemType =
+        form.item_name.trim() ||
+        "Mobile / Personal Electronics";
+
+      if (
+        form.storage_capacity.trim()
+      ) {
+        detailParts.push(
+          `Storage / Capacity: ${form.storage_capacity.trim()}`
+        );
+      }
+    }
+
+    if (selectedGroup === "musical") {
+      itemType =
+        "Musical Instrument";
+
+      brandModel = [
+        form.brand.trim(),
+        form.model_no.trim(),
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      color = "N/A";
+
+      detailParts.push(
+        `Material / Body: ${form.material_body.trim()}`
+      );
+
+      if (form.size.trim()) {
+        detailParts.push(
+          `Size: ${form.size.trim()}`
+        );
+      }
+    }
+
+    if (selectedGroup === "sports") {
+      itemName =
+        form.equipment_type.trim();
+
+      itemType =
+        "Sports Equipment";
+
+      brandModel =
+        form.brand.trim() || "N/A";
+
+      serialNumber = "";
+      color = "N/A";
+
+      detailParts.push(
+        `Condition: ${form.condition.trim()}`
+      );
+    }
+
+    if (selectedGroup === "other") {
+      itemName =
+        form.complete_description.trim();
+
+      itemType =
+        "Other Equipment";
+
+      brandModel = "N/A";
+      serialNumber = "";
+      color = "N/A";
+    }
+
+    if (
+      form.complete_description.trim() &&
+      selectedGroup !== "other"
+    ) {
+      detailParts.push(
+        form.complete_description.trim()
+      );
+    }
+
+    const completeDescription =
+      selectedGroup === "other"
+        ? form.complete_description.trim()
+        : detailParts.join(" | ");
+
+    return {
+      item_name: itemName,
+      brand_model: brandModel,
+      serial_number: serialNumber,
+      color,
+      item_type: itemType,
+      purpose: form.purpose.trim(),
+
+      quantity,
+      complete_description:
+        completeDescription,
+
+      computer_type: computerType,
+      processor,
+      motherboard,
+      memory,
+      hard_drive: hardDrive,
+      monitor,
+      casing,
+      cd_dvd_rom: cdDvdRom,
+      operating_system:
+        operatingSystem,
+
+      accessories_included:
+        form.accessories_included.trim(),
+
+      valid_until:
+        form.valid_until,
+    };
+  }
+
+  async function handleItemSubmit(
+    e: React.FormEvent
+  ) {
     e.preventDefault();
 
-    const commonRequiredFields = [
-      ["Item Name", form.item_name],
-      ["Brand & Model", form.brand_model],
-      ["Serial Number", form.serial_number],
-      ["Color", form.color],
-      ["Item Type", form.item_type],
-      ["Purpose / Reason for Bringing", form.purpose],
-      ["Valid Until (Date & Time)", form.valid_until],
-    ];
+    if (!selectedGroup) {
+      return;
+    }
 
-    const laptopRequiredFields = [
-      ["Computer / Laptop Type", form.computer_type],
-      ["Processor", form.processor],
-      ["Motherboard", form.motherboard],
-      ["Memory / RAM", form.memory],
-      ["Hard Drive / Storage", form.hard_drive],
-      ["Monitor", form.monitor],
-      ["Casing", form.casing],
-      ["Operating System", form.operating_system],
-    ];
+    const missing =
+      missingRequiredFields();
 
-    const nonComputerRequiredFields = [
-      ["Quantity", form.quantity],
-      ["Description", form.complete_description],
-    ];
-
-    const requiredFields =
-      form.item_type === "Laptop"
-        ? [
-            ...commonRequiredFields,
-            ...laptopRequiredFields,
-          ]
-        : [
-            ...commonRequiredFields,
-            ...nonComputerRequiredFields,
-          ];
-
-    const missingFields = requiredFields
-      .filter(([, value]) => !String(value ?? "").trim())
-      .map(([label]) => label);
-
-    if (missingFields.length > 0) {
+    if (missing.length > 0) {
       alert(
-        `Please complete all required fields before submitting:
-
-${missingFields
-          .map((field) => `• ${field}`)
+        `Please complete all required fields before submitting:\n\n${missing
+          .map(
+            (field) => `• ${field}`
+          )
           .join("\n")}`
       );
+
       return;
     }
 
     try {
       setSubmitting(true);
 
-      await createItem(form);
+      const payload =
+        buildPayload();
 
-      alert("Item registration submitted successfully!");
+      await createItem(payload);
 
-      setForm({
-        item_name: "",
-        brand_model: "",
-        serial_number: "",
-        color: "",
-        item_type: "Laptop",
-        purpose: "",
+      alert(
+        "Item registration submitted successfully!"
+      );
 
-        quantity: "1",
-        complete_description: "",
-
-        computer_type: "",
-        processor: "",
-        motherboard: "",
-        memory: "",
-        hard_drive: "",
-        monitor: "",
-        casing: "",
-        cd_dvd_rom: "",
-        operating_system: "",
-
-        accessories_included: "",
-        valid_until: "",
-      });
-
-      setShowForm(false);
+      setForm(emptyForm());
+      setSelectedGroup(null);
+      setShowTypeMenu(false);
 
       await loadItems();
     } catch (error) {
@@ -594,487 +1128,833 @@ ${missingFields
     }
   }
 
-  return (
-    <div className="space-y-5">
-      <PageHeader
-        title="Register Item"
-        subtitle="Submit a new item for QR code registration. Items must be approved by PCO before a QR code is issued."
-        action={
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-3 py-2 rounded-md hover:opacity-90 transition-opacity"
-          >
-            <Plus size={13} />
-            New Registration
-          </button>
-        }
-      />
+  function renderSelectedForm() {
+    if (!activeGroup) {
+      return null;
+    }
 
-      {showForm && (
-        <Card title="Item Registration Form">
+    return (
+      <div className="space-y-4">
+        <div
+          className="bg-white border border-[#dce3ee] overflow-hidden"
+          style={{
+            borderRadius: "14px",
+            boxShadow:
+              "0 8px 24px rgba(16, 26, 51, 0.10)",
+          }}
+        >
+          <div className="px-5 py-4 border-b border-[#dce3ee] flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-[#f2f5fb] border border-[#dce3ee] text-[#16224b]">
+              {getRegistrationGroupIcon(activeGroup.id, 20)}
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-base text-foreground">
+                {activeGroup.name}
+              </h3>
+
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Registration Form
+              </p>
+            </div>
+          </div>
+
           <form
             onSubmit={handleItemSubmit}
-            className="p-4 grid md:grid-cols-2 gap-4"
+            className="p-5"
           >
-            {/* ITEM NAME */}
-            <div>
-            <label className="block text-xs font-semibold text-foreground mb-1">
-              Item Name
-            </label>
+            {/* COMPUTER EQUIPMENT */}
+            {selectedGroup ===
+              "computer" && (
+              <>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <RegistrationField
+  label="Item Name"
+  field="item_name"
+  value={form.item_name}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Laptop"
+/>
 
-              <input
-                type="text"
-                value={form.item_name}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    item_name: e.target.value,
-                  })
-                }
-                placeholder="e.g. Basketball, Laptop, Camera"
-                required
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
-            </div>
+                  <RegistrationField
+  label="Brand & Model"
+  field="brand_model"
+  value={form.brand_model}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Dell XPS 15 9530"
+/>
 
-            {/* BRAND / MODEL */}
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">
-                Brand & Model
-              </label>
+                  <RegistrationField
+  label="Serial Number"
+  field="serial_number"
+  value={form.serial_number}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. SN-00000"
+/>
 
-              <input
-                type="text"
-                value={form.brand_model}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    brand_model: e.target.value,
-                  })
-                }
-                placeholder="e.g. Dell XPS 15 9530"
-                required
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
-            </div>
+                  <RegistrationField
+  label="Color"
+  field="color"
+  value={form.color}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Silver"
+/>
 
-            {/* SERIAL NUMBER */}
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">
-                Serial Number
-              </label>
+                  <RegistrationField
+  label="Purpose / Reason for Bringing"
+  field="purpose"
+  value={form.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Academic use, thesis documentation"
+/>
 
-              <input
-                type="text"
-                value={form.serial_number}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    serial_number: e.target.value,
-                  })
-                }
-                placeholder="e.g. SN-00000"
-                required
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
-            </div>
-
-            {/* COLOR */}
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">
-                Color
-              </label>
-
-              <input
-                type="text"
-                value={form.color}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    color: e.target.value,
-                  })
-                }
-                placeholder="e.g. Silver"
-                required
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
-            </div>
-
-            {/* ITEM TYPE */}
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">
-                Item Type
-              </label>
-
-              <select
-                value={form.item_type}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    item_type: e.target.value,
-                  })
-                }
-                required
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              >
-                <option value="Laptop">Laptop / Computer</option>
-                <option value="Mobile Phone">Mobile Phone</option>
-                <option value="Tablet">Tablet</option>
-                <option value="Camera">Camera</option>
-                <option value="Audio Equipment">
-                  Audio Equipment
-                </option>
-                <option value="Musical Instrument">
-                  Musical Instrument
-                </option>
-                <option value="Sports Equipment">
-                  Sports Equipment
-                </option>
-                <option value="Other Equipment">
-                  Other Equipment
-                </option>
-              </select>
-            </div>
-
-            {/* PURPOSE */}
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">
-                Purpose / Reason for Bringing
-              </label>
-
-              <input
-                type="text"
-                value={form.purpose}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    purpose: e.target.value,
-                  })
-                }
-                placeholder="e.g. Academic use, thesis documentation"
-                required
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
-            </div>
-
-            {/* ACCESSORIES */}
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">
-                Accessories Included (Optional)
-              </label>
-
-              <input
-                type="text"
-                value={form.accessories_included}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    accessories_included: e.target.value,
-                  })
-                }
-                placeholder="e.g. Charger, mouse, laptop bag"
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
-            </div>
-
-            {/* VALID UNTIL */}
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">
-              Valid Until (Date & Time)
-            </label>
-
-            <input
-              type="datetime-local"
-              value={form.valid_until}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  valid_until: e.target.value,
-                })
-              }
-              required
-              className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-            />
-            </div>
-{/* NON-COMPUTER GATE PASS DETAILS */}
-{form.item_type !== "Laptop" && (
-  <div className="md:col-span-2 border border-cyan-200 rounded-lg overflow-hidden bg-cyan-50/30">
-    <div className="bg-cyan-600 px-4 py-3">
-      <h3 className="text-sm font-semibold text-white">
-        Non-Computer Gate Pass Details
-      </h3>
-
-      <p className="text-xs text-white/80 mt-0.5">
-        Complete the details for non-computer items such as tumblers,
-        sports equipment, musical instruments, and other equipment.
-      </p>
-    </div>
-
-    <div className="p-4 grid md:grid-cols-2 gap-4">
-      {/* QUANTITY */}
-      <div>
-        <label className="block text-xs font-semibold text-foreground mb-1">
-          Quantity
-        </label>
-
-        <input
-          type="number"
-          min="1"
-          value={form.quantity}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              quantity: e.target.value,
-            })
-          }
-          required
-          className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-        />
-      </div>
-
-      {/* COMPLETE DESCRIPTION */}
-      <div>
-      <label className="block text-xs font-semibold text-foreground mb-1">
-        Description
-      </label>
-
-        <input
-          type="text"
-          value={form.complete_description}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              complete_description: e.target.value,
-            })
-          }
-          placeholder="Describe the item, identifying features, size, markings, or other useful details"
-          required
-          className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-        />
-      </div>
-    </div>
-  </div>
-)}
-            {/* COMPUTER SPECIFICATIONS */}
-            {form.item_type === "Laptop" && (
-              <div className="md:col-span-2 border border-blue-200 rounded-lg overflow-hidden bg-blue-50/30">
-                <div className="bg-primary px-4 py-3">
-                  <h3 className="text-sm font-semibold text-white">
-                    Computer / Laptop Specifications
-                  </h3>
-
-                  <p className="text-xs text-white/70 mt-0.5">
-                    Complete the applicable specifications based on the
-                    UC Computer Equipment Gate Pass.
-                  </p>
+                  <RegistrationField
+  label="Accessories Included"
+  field="accessories_included"
+  value={form.accessories_included}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Charger, mouse, laptop bag"
+  optional
+/>
                 </div>
 
-                <div className="p-4 grid md:grid-cols-2 gap-4">
-                  {/* COMPUTER TYPE */}
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      Computer / Laptop Type
-                    </label>
+                <div className="mt-5 rounded-xl overflow-hidden border border-blue-200">
+                  <div className="bg-primary px-4 py-3">
+                    <p className="text-sm font-semibold text-white">
+                      Computer / Laptop Specifications
+                    </p>
 
-                    <input
-                      type="text"
-                      value={form.computer_type}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          computer_type: e.target.value,
-                        })
-                      }
-                      placeholder="e.g. Laptop, Desktop, Gaming Laptop"
-                      required
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-                    />
+                    <p className="text-xs text-white/75 mt-0.5">
+                      Complete the applicable specifications based on the UC Computer Equipment Gate Pass.
+                    </p>
                   </div>
 
-                  {/* PROCESSOR */}
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      Processor
-                    </label>
+                  <div className="p-4 grid md:grid-cols-2 gap-4 bg-blue-50/30">
+                    <RegistrationField
+  label="Computer / Laptop Type"
+  field="computer_type"
+  value={form.computer_type}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Laptop, Desktop, Gaming Laptop"
+/>
 
-                    <input
-                      type="text"
-                      value={form.processor}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          processor: e.target.value,
-                        })
-                      }
-                      placeholder="e.g. Intel Core i5 / Ryzen 5"
-                      required
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-                    />
-                  </div>
+                    <RegistrationField
+  label="Processor"
+  field="processor"
+  value={form.processor}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Intel Core i5 / Ryzen 5"
+/>
 
-                  {/* MOTHERBOARD */}
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      Motherboard
-                    </label>
+                    <RegistrationField
+  label="Motherboard"
+  field="motherboard"
+  value={form.motherboard}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. ASUS B550M / Built-in"
+/>
 
-                    <input
-                      type="text"
-                      value={form.motherboard}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          motherboard: e.target.value,
-                        })
-                      }
-                      placeholder="e.g. ASUS B550M / Built-in"
-                      required
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-                    />
-                  </div>
+                    <RegistrationField
+  label="Memory / RAM"
+  field="memory"
+  value={form.memory}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 16 GB DDR4"
+/>
 
-                  {/* MEMORY */}
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      Memory / RAM
-                    </label>
+                    <RegistrationField
+  label="Hard Drive / Storage"
+  field="hard_drive"
+  value={form.hard_drive}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 512 GB SSD"
+/>
 
-                    <input
-                      type="text"
-                      value={form.memory}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          memory: e.target.value,
-                        })
-                      }
-                      placeholder="e.g. 16 GB DDR4"
-                      required
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-                    />
-                  </div>
+                    <RegistrationField
+  label="Monitor"
+  field="monitor"
+  value={form.monitor}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Built-in 15.6 inch"
+/>
 
-                  {/* STORAGE */}
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      Hard Drive / Storage
-                    </label>
+                    <RegistrationField
+  label="Casing"
+  field="casing"
+  value={form.casing}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Black chassis / Built-in"
+/>
 
-                    <input
-                      type="text"
-                      value={form.hard_drive}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          hard_drive: e.target.value,
-                        })
-                      }
-                      placeholder="e.g. 512 GB SSD"
-                      required
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-                    />
-                  </div>
+                    <RegistrationField
+  label="CD / DVD ROM"
+  field="cd_dvd_rom"
+  value={form.cd_dvd_rom}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. None / DVD-RW"
+  optional
+/>
 
-                  {/* MONITOR */}
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      Monitor
-                    </label>
-
-                    <input
-                      type="text"
-                      value={form.monitor}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          monitor: e.target.value,
-                        })
-                      }
-                      placeholder="e.g. Built-in 15.6 inch"
-                      required
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-                    />
-                  </div>
-
-                  {/* CASING */}
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      Casing
-                    </label>
-
-                    <input
-                      type="text"
-                      value={form.casing}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          casing: e.target.value,
-                        })
-                      }
-                      placeholder="e.g. Black chassis / Built-in"
-                      required
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-                    />
-                  </div>
-
-                  {/* CD/DVD */}
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      CD / DVD ROM (Optional)
-                    </label>
-
-                    <input
-                      type="text"
-                      value={form.cd_dvd_rom}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          cd_dvd_rom: e.target.value,
-                        })
-                      }
-                      placeholder="e.g. None / DVD-RW"
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-                    />
-                  </div>
-
-                  {/* OPERATING SYSTEM */}
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      Operating System
-                    </label>
-
-                    <input
-                      type="text"
-                      value={form.operating_system}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          operating_system: e.target.value,
-                        })
-                      }
-                      placeholder="e.g. Windows 11 Pro"
-                      required
-                      className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-                    />
+                    <div className="md:col-span-2">
+                      <RegistrationField
+  label="Operating System"
+  field="operating_system"
+  value={form.operating_system}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Windows 11 Pro"
+/>
+                    </div>
                   </div>
                 </div>
+
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                  <RegistrationPermitValidUntilField
+  value={form.valid_until}
+  onChange={(value) =>
+    updateField(
+      "valid_until",
+      value
+    )
+  }
+/>
+                </div>
+              </>
+            )}
+
+            {/* HIGH-VALUE ELECTRONICS */}
+            {selectedGroup ===
+              "highvalue" && (
+              <>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <RegistrationField
+  label="Item Name"
+  field="item_name"
+  value={form.item_name}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Projector"
+/>
+
+                  <RegistrationField
+  label="Brand & Model"
+  field="brand_model"
+  value={form.brand_model}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Epson EB-X51"
+/>
+
+                  <RegistrationField
+  label="Serial Number"
+  field="serial_number"
+  value={form.serial_number}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. SN-00000"
+/>
+
+                  <RegistrationField
+  label="Color"
+  field="color"
+  value={form.color}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. White"
+/>
+
+                  <RegistrationField
+  label="Purpose / Reason for Bringing"
+  field="purpose"
+  value={form.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Classroom presentation"
+/>
+
+                  <RegistrationField
+  label="Accessories Included"
+  field="accessories_included"
+  value={form.accessories_included}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Power cable, remote, bag"
+  optional
+/>
+                </div>
+
+                <div className="mt-5 rounded-xl overflow-hidden border border-[#dce3ee]">
+                  <div className="bg-primary px-4 py-3">
+                    <p className="text-sm font-semibold text-white">
+                      High-Value Equipment Specifications
+                    </p>
+
+                    <p className="text-xs text-white/75 mt-0.5">
+                      Complete the applicable specifications for the unit being registered.
+                    </p>
+                  </div>
+
+                  <div className="p-4 grid md:grid-cols-2 gap-4 bg-[#fafbfc]">
+                    <RegistrationField
+  label="Unit Type"
+  field="unit_type"
+  value={form.unit_type}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. DSLR Camera, Projector, Printer"
+/>
+
+                    <RegistrationField
+  label="Power Source / Cable"
+  field="power_source"
+  value={form.power_source}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. AC Adapter, Battery Pack"
+/>
+
+                    <RegistrationField
+  label="Lens / Attachment Included"
+  field="lens_attachment"
+  value={form.lens_attachment}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 18-55mm kit lens"
+  optional
+/>
+
+                    <RegistrationField
+  label="Condition"
+  field="condition"
+  value={form.condition}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Good, Minor scratches"
+/>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                  <RegistrationPermitValidUntilField
+  value={form.valid_until}
+  onChange={(value) =>
+    updateField(
+      "valid_until",
+      value
+    )
+  }
+/>
+                </div>
+              </>
+            )}
+
+            {/* MOBILE / PERSONAL ELECTRONICS */}
+            {selectedGroup ===
+              "mobile" && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <RegistrationField
+  label="Item Name"
+  field="item_name"
+  value={form.item_name}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Mobile Phone"
+/>
+
+                <RegistrationField
+  label="Brand & Model"
+  field="brand_model"
+  value={form.brand_model}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Samsung Galaxy A54"
+/>
+
+                <RegistrationField
+  label="Serial Number"
+  field="serial_number"
+  value={form.serial_number}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. SN-00000 or leave blank"
+  optional
+/>
+
+                <RegistrationField
+  label="Color"
+  field="color"
+  value={form.color}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Black"
+/>
+
+                <RegistrationField
+  label="Purpose / Reason for Bringing"
+  field="purpose"
+  value={form.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Personal use"
+/>
+
+                <RegistrationField
+  label="Accessories Included"
+  field="accessories_included"
+  value={form.accessories_included}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Charger, case"
+  optional
+/>
+
+                <RegistrationField
+  label="Storage / Capacity"
+  field="storage_capacity"
+  value={form.storage_capacity}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 128 GB, 256 GB"
+  optional
+/>
+
+                <div />
+
+                <RegistrationPermitValidUntilField
+  value={form.valid_until}
+  onChange={(value) =>
+    updateField(
+      "valid_until",
+      value
+    )
+  }
+/>
+              </div>
+            )}
+
+            {/* MUSICAL INSTRUMENT */}
+            {selectedGroup ===
+              "musical" && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <RegistrationField
+  label="Item Name"
+  field="item_name"
+  value={form.item_name}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Acoustic Guitar"
+/>
+
+                <RegistrationField
+  label="Brand"
+  field="brand"
+  value={form.brand}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Yamaha"
+/>
+
+                <RegistrationField
+  label="Model No."
+  field="model_no"
+  value={form.model_no}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. F310"
+/>
+
+                <RegistrationField
+  label="Serial Number"
+  field="serial_number"
+  value={form.serial_number}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="Leave blank if none"
+  optional
+/>
+
+                <RegistrationField
+  label="Purpose / Reason for Bringing"
+  field="purpose"
+  value={form.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Band rehearsal"
+/>
+
+                <RegistrationField
+  label="Accessories Included"
+  field="accessories_included"
+  value={form.accessories_included}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Case, strap, picks"
+  optional
+/>
+
+                <RegistrationField
+  label="Material / Body"
+  field="material_body"
+  value={form.material_body}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Spruce top, mahogany body"
+/>
+
+                <RegistrationField
+  label="Size"
+  field="size"
+  value={form.size}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Full size, 4/4"
+  optional
+/>
+
+                <RegistrationPermitValidUntilField
+  value={form.valid_until}
+  onChange={(value) =>
+    updateField(
+      "valid_until",
+      value
+    )
+  }
+/>
+              </div>
+            )}
+
+            {/* SPORTS EQUIPMENT */}
+            {selectedGroup ===
+              "sports" && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <RegistrationField
+  label="Equipment Type"
+  field="equipment_type"
+  value={form.equipment_type}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Basketball, Badminton Racket"
+/>
+
+                <RegistrationField
+  label="Brand"
+  field="brand"
+  value={form.brand}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Molten, Yonex"
+  optional
+/>
+
+                <RegistrationField
+  label="Quantity"
+  field="quantity"
+  value={form.quantity}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 2"
+  type="number"
+/>
+
+                <RegistrationField
+  label="Condition"
+  field="condition"
+  value={form.condition}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Good, Used"
+/>
+
+                <div className="md:col-span-2">
+                  <RegistrationField
+  label="Purpose / Reason for Bringing"
+  field="purpose"
+  value={form.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Varsity practice"
+/>
+                </div>
+
+                <RegistrationPermitValidUntilField
+  value={form.valid_until}
+  onChange={(value) =>
+    updateField(
+      "valid_until",
+      value
+    )
+  }
+/>
+              </div>
+            )}
+
+            {/* OTHER EQUIPMENT */}
+            {selectedGroup ===
+              "other" && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <RegistrationField
+  label="Item/s with Complete Description"
+  field="complete_description"
+  value={form.complete_description}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 2x extension cords, 1x megaphone"
+/>
+                </div>
+
+                <RegistrationField
+  label="Quantity"
+  field="quantity"
+  value={form.quantity}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 3"
+  type="number"
+/>
+
+                <RegistrationField
+  label="Purpose / Reason for Bringing"
+  field="purpose"
+  value={form.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Org event"
+/>
+
+                <RegistrationPermitValidUntilField
+  value={form.valid_until}
+  onChange={(value) =>
+    updateField(
+      "valid_until",
+      value
+    )
+  }
+/>
               </div>
             )}
 
             {/* NOTE */}
-            <div className="md:col-span-2 bg-yellow-50 border border-yellow-200 rounded-md p-3 text-xs text-yellow-800">
-              <strong>Note:</strong> All displayed fields are required except
-              <strong> Accessories Included</strong> and
-              <strong> CD / DVD ROM</strong>. The form cannot be submitted
-              until all required information is completed.
+            <div className="mt-5 bg-slate-50 border border-slate-200 border-l-4 border-l-slate-400 rounded-lg p-3 text-xs text-slate-600 leading-relaxed">
+              <strong className="text-slate-800">
+                Note:
+              </strong>{" "}
+              All fields are required except those marked
+              <strong> (Optional)</strong>. The form cannot be submitted until all required information is completed.
             </div>
 
-            {/* BUTTONS */}
-            <div className="md:col-span-2 flex gap-2 justify-end">
+            {/* ACTIONS */}
+            <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setShowForm(false)}
-                className="text-xs px-3 py-2 border border-[#cfd8e6] rounded-md text-muted-foreground hover:bg-muted"
+                onClick={backToSelection}
+                className="text-xs px-4 py-2 border border-[#cfd8e6] rounded-md text-muted-foreground hover:bg-muted"
               >
                 Cancel
               </button>
@@ -1090,144 +1970,251 @@ ${missingFields
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Register Item"
+        subtitle={
+          selectedGroup
+            ? "Complete the form below. It will be submitted to PCO for approval."
+            : "Submit a new item for QR code registration. Items must be approved by PCO before a QR code is issued."
+        }
+        action={
+          !selectedGroup ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() =>
+                  setShowTypeMenu(
+                    (current) => !current
+                  )
+                }
+                className="flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-3 py-2 rounded-md hover:opacity-90 transition-opacity"
+              >
+                <Plus size={13} />
+                New Registration
+              </button>
+
+              {showTypeMenu && (
+                <div className="absolute right-0 top-full mt-2 z-50 w-[340px] max-w-[90vw] rounded-xl border border-[#dce3ee] bg-white p-2 shadow-xl">
+                  <div className="px-3 py-2 text-xs font-bold text-foreground border-b border-[#edf0f5] mb-1">
+                    Select item type
+                  </div>
+
+                  {registrationGroups.map(
+                    (group) => (
+                      <button
+                        key={group.id}
+                        type="button"
+                        onClick={() =>
+                          selectGroup(
+                            group.id
+                          )
+                        }
+                        className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[#f3f5fa]"
+                      >
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#f2f5fb] border border-[#dce3ee] text-[#16224b]">
+                          {getRegistrationGroupIcon(group.id, 18)}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-foreground">
+                            {group.name}
+                          </p>
+
+                          <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                            {group.types}
+                          </p>
+                        </div>
+
+                        <ChevronRight
+                          size={15}
+                          className="text-muted-foreground"
+                        />
+                      </button>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          ) : undefined
+        }
+      />
+
+      {selectedGroup ? (
+        renderSelectedForm()
+      ) : (
+        <Card
+          title="Registered Items"
+          action={
+            <button
+              onClick={loadItems}
+              className="text-xs flex items-center gap-1 text-primary font-medium"
+            >
+              <RefreshCw size={12} />
+              Refresh
+            </button>
+          }
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-[#fafbfc]">
+                  {[
+                    "Item ID",
+                    "Item",
+                    "Type",
+                    "Serial No.",
+                    "Status",
+                    "Date Filed",
+                  ].map((heading) => (
+                    <th
+                      key={heading}
+                      className="text-left py-2 px-3 text-xs text-muted-foreground font-medium"
+                    >
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {loadingItems ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="text-center py-6 text-sm text-muted-foreground"
+                    >
+                      Loading items...
+                    </td>
+                  </tr>
+                ) : items.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="text-center py-8 text-sm text-muted-foreground"
+                    >
+                      No registered items yet. Click
+                      <strong> New Registration </strong>
+                      to choose an item type.
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((item) => {
+                    const rawStatus =
+                      String(
+                        item.status ?? ""
+                      );
+
+                    const displayStatus =
+                      rawStatus
+                        ? rawStatus
+                            .charAt(0)
+                            .toUpperCase() +
+                          rawStatus.slice(1)
+                        : "Pending";
+
+                    return (
+                      <tr
+                        key={item.id}
+                        className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
+                      >
+                        <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
+                          ITEM-
+                          {String(
+                            item.id
+                          ).padStart(
+                            3,
+                            "0"
+                          )}
+                        </td>
+
+                        <td className="py-2.5 px-3 text-sm text-foreground font-medium">
+                          {item.item_name}
+                        </td>
+
+                        <td className="py-2.5 px-3 text-xs text-muted-foreground">
+                          {item.item_type}
+                        </td>
+
+                        <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
+                          {item.serial_number ||
+                            "—"}
+                        </td>
+
+                        <td className="py-2.5 px-3">
+                          <StatusBadge
+                            status={
+                              displayStatus
+                            }
+                          />
+                        </td>
+
+                        <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {item.created_at
+                            ? new Date(
+                                item.created_at
+                              ).toLocaleDateString(
+                                "en-PH",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )
+                            : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </Card>
       )}
-
-      {/* MY REGISTERED ITEMS */}
-      <Card
-        title="My Registered Items"
-        action={
-          <button
-            onClick={loadItems}
-            className="text-xs flex items-center gap-1 text-primary font-medium"
-          >
-            <RefreshCw size={12} />
-            Refresh
-          </button>
-        }
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-[#fafbfc]">
-                {[
-                  "Item ID",
-                  "Item",
-                  "Type",
-                  "Serial No.",
-                  "Status",
-                  "Date Filed",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="text-left py-2 px-3 text-xs text-muted-foreground font-medium"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-
-            <tbody>
-              {loadingItems ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="text-center py-6 text-sm text-muted-foreground"
-                  >
-                    Loading items...
-                  </td>
-                </tr>
-              ) : items.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="text-center py-6 text-sm text-muted-foreground"
-                  >
-                    No registered items yet.
-                  </td>
-                </tr>
-              ) : (
-                items.map((item) => {
-                  const displayStatus =
-                    item.status?.charAt(0).toUpperCase() +
-                    item.status?.slice(1);
-
-                  return (
-                    <tr
-                      key={item.id}
-                      className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
-                    >
-                      <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
-                        ITEM-{String(item.id).padStart(3, "0")}
-                      </td>
-
-                      <td className="py-2.5 px-3 text-sm text-foreground font-medium">
-                        {item.item_name}
-                      </td>
-
-                      <td className="py-2.5 px-3 text-xs text-muted-foreground">
-                        {item.item_type}
-                      </td>
-
-                      <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
-                        {item.serial_number || "—"}
-                      </td>
-
-                      <td className="py-2.5 px-3">
-                        <StatusBadge status={displayStatus} />
-                      </td>
-
-                      <td className="py-2.5 px-3 text-xs text-muted-foreground">
-                        {new Date(item.created_at).toLocaleDateString(
-                          "en-PH",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          }
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
     </div>
   );
 }
+
 function StudentMyQRCodes() {
   const [items, setItems] = useState<any[]>([]);
-  const [selected, setSelected] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [qrModalItem, setQrModalItem] = useState<any | null>(null);
+  const [downloadingQrId, setDownloadingQrId] =
+    useState<number | string | null>(null);
 
   async function loadMyItems() {
     try {
       setLoading(true);
-  
-      const data =
-        await getMyQRCodes();
-  
+
+      const data = await getMyQRCodes();
+
+      const loadedItems = Array.isArray(data?.items)
+        ? data.items
+        : [];
+
       setItems(
-        Array.isArray(data?.items)
-          ? data.items
-          : []
+        [...loadedItems].sort(
+          (a, b) =>
+            Number(b?.id ?? 0) -
+            Number(a?.id ?? 0)
+        )
       );
     } catch (error) {
-      console.error(
-        "Failed to load QR codes:",
-        error
-      );
-  
+      console.error("Failed to load QR codes:", error);
+
       alert(
         error instanceof Error
           ? error.message
           : "Failed to load QR codes."
       );
-  
+
       setItems([]);
     } finally {
       setLoading(false);
@@ -1239,17 +2226,208 @@ function StudentMyQRCodes() {
   }, []);
 
   const approvedItems = items.filter(
-    (item) => item.status === "approved" && item.qr_code
+    (item) =>
+      item.status === "approved" &&
+      item.qr_code
   );
 
   const pendingItems = items.filter(
     (item) => item.status === "pending"
   );
 
+  function isExpired(item: any) {
+    return Boolean(
+      item.qr_expires_at &&
+        new Date(item.qr_expires_at).getTime() <
+          Date.now()
+    );
+  }
+
+  function formatDate(value?: string | null) {
+    if (!value) {
+      return "Not set";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleDateString("en-PH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
+
+  function safeFileName(value: string) {
+    return value
+      .replace(/[^a-zA-Z0-9-_]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  async function downloadQRCode(item: any) {
+    try {
+      setDownloadingQrId(item.id);
+
+      const wrapper =
+        document.getElementById(
+          `qr-source-${item.id}`
+        );
+
+      const svg =
+        wrapper?.querySelector(
+          "svg"
+        ) as SVGSVGElement | null;
+
+      if (!svg) {
+        throw new Error(
+          "QR code image could not be found."
+        );
+      }
+
+      const clonedSvg =
+        svg.cloneNode(true) as SVGSVGElement;
+
+      clonedSvg.setAttribute("width", "1024");
+      clonedSvg.setAttribute("height", "1024");
+      clonedSvg.setAttribute(
+        "xmlns",
+        "http://www.w3.org/2000/svg"
+      );
+
+      const serializer = new XMLSerializer();
+
+      const svgString =
+        serializer.serializeToString(
+          clonedSvg
+        );
+
+      const svgBlob = new Blob(
+        [svgString],
+        {
+          type: "image/svg+xml;charset=utf-8",
+        }
+      );
+
+      const svgUrl =
+        URL.createObjectURL(svgBlob);
+
+      const image = new Image();
+
+      image.onload = () => {
+        const canvas =
+          document.createElement("canvas");
+
+        canvas.width = 1024;
+        canvas.height = 1024;
+
+        const ctx =
+          canvas.getContext("2d");
+
+        if (!ctx) {
+          URL.revokeObjectURL(svgUrl);
+          setDownloadingQrId(null);
+          alert(
+            "Unable to prepare the QR code for download."
+          );
+          return;
+        }
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        ctx.drawImage(
+          image,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(svgUrl);
+
+            if (!blob) {
+              setDownloadingQrId(null);
+              alert(
+                "Unable to create QR image."
+              );
+              return;
+            }
+
+            const pngUrl =
+              URL.createObjectURL(blob);
+
+            const link =
+              document.createElement("a");
+
+            const itemName =
+              safeFileName(
+                String(
+                  item.item_name ?? "item"
+                )
+              ) || "item";
+
+            const qrCode =
+              safeFileName(
+                String(
+                  item.qr_code ?? "qr"
+                )
+              ) || "qr";
+
+            link.href = pngUrl;
+            link.download =
+              `${itemName}-${qrCode}.png`;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(pngUrl);
+            setDownloadingQrId(null);
+          },
+          "image/png"
+        );
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(svgUrl);
+        setDownloadingQrId(null);
+        alert(
+          "Unable to prepare the QR code for download."
+        );
+      };
+
+      image.src = svgUrl;
+    } catch (error) {
+      console.error(
+        "Failed to download QR code:",
+        error
+      );
+
+      setDownloadingQrId(null);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to download QR code."
+      );
+    }
+  }
+
   return (
     <div className="space-y-5">
       <PageHeader
-        title="My QR Codes"
+        title="QR Codes"
         subtitle="Approved items with their QR codes. Present these to security during inspection or exit."
         action={
           <button
@@ -1268,133 +2446,139 @@ function StudentMyQRCodes() {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
+          {approvedItems.map((item) => {
+            const expired = isExpired(item);
 
-          {approvedItems.map((item) => (
-            <div
-              key={item.id}
-              onClick={() =>
-                setSelected(
-                  selected?.id === item.id ? null : item
-                )
-              }
-              className="bg-card rounded-lg border-2 cursor-pointer transition-all hover:shadow-md"
-              style={{
-                borderColor:
-                  selected?.id === item.id
-                    ? "#1a3a7b"
-                    : "var(--border)",
-              }}
-            >
-              <div className="p-4 flex gap-4 items-start">
-
-                <QRCodeDisplay
-                  value={item.qr_code}
-                  size={88}
-                />
-
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-foreground">
-                    {item.item_name}
-                  </p>
-
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {item.item_type}
-                  </p>
-
-                  <div className="mt-2 space-y-1">
-
-                    <div className="flex gap-2 text-xs">
-                      <span className="text-muted-foreground">
-                        Serial:
-                      </span>
-
-                      <span className="font-mono text-foreground">
-                        {item.serial_number}
-                      </span>
-                    </div>
-
-                    <div className="flex gap-2 text-xs">
-                      <span className="text-muted-foreground">
-                        QR ID:
-                      </span>
-
-                      <span className="font-mono text-foreground">
-                        {item.qr_code}
-                      </span>
-                    </div>
-
-                    <div className="flex gap-2 text-xs">
-                      <span className="text-muted-foreground">
-                        Registered:
-                      </span>
-
-                      <span className="text-foreground">
-                        {new Date(
-                          item.created_at
-                        ).toLocaleDateString("en-PH", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </span>
-                    </div>
-
-                    <div className="flex gap-2 text-xs">
-                      <span className="text-muted-foreground">
-                        Expires:
-                      </span>
-
-                      <span
-                        className={
-                          item.qr_expires_at &&
-                          new Date(
-                            item.qr_expires_at
-                          ).getTime() < Date.now()
-                            ? "font-medium text-red-600"
-                            : "text-foreground"
-                        }
-                      >
-                        {item.qr_expires_at
-                          ? new Date(
-                              item.qr_expires_at
-                            ).toLocaleDateString("en-PH", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })
-                          : "Not set"}
-                      </span>
-                    </div>
-
-                  </div>
-
-                  <div className="mt-2">
-                    <StatusBadge
-                      status={
-                        item.qr_expires_at &&
-                        new Date(
-                          item.qr_expires_at
-                        ).getTime() < Date.now()
-                          ? "Expired"
-                          : "Approved"
-                      }
+            return (
+              <div
+                key={item.id}
+                className="bg-card rounded-lg border border-[#dce3ee] transition-all hover:shadow-md overflow-hidden"
+              >
+                <div className="p-4 flex gap-4 items-start">
+                  <div
+                    id={`qr-source-${item.id}`}
+                    className="flex-shrink-0"
+                  >
+                    <QRCodeDisplay
+                      value={item.qr_code}
+                      size={88}
                     />
                   </div>
-                </div>
-              </div>
 
-              {selected?.id === item.id && (
-                <div className="border-t border-[#cfd8e6] px-4 py-3 bg-muted/30">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-foreground">
+                      {item.item_name}
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {item.item_type}
+                    </p>
+
+                    <div className="mt-2 space-y-1">
+                      <div className="flex gap-2 text-xs">
+                        <span className="text-muted-foreground">
+                          Serial:
+                        </span>
+
+                        <span className="font-mono text-foreground">
+                          {item.serial_number || "—"}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 text-xs">
+                        <span className="text-muted-foreground">
+                          QR ID:
+                        </span>
+
+                        <span className="font-mono text-foreground">
+                          {item.qr_code}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 text-xs">
+                        <span className="text-muted-foreground">
+                          Registered:
+                        </span>
+
+                        <span className="text-foreground">
+                          {formatDate(item.created_at)}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 text-xs">
+                        <span className="text-muted-foreground">
+                          Expires:
+                        </span>
+
+                        <span
+                          className={
+                            expired
+                              ? "font-medium text-red-600"
+                              : "text-foreground"
+                          }
+                        >
+                          {formatDate(
+                            item.qr_expires_at
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-2">
+                      <StatusBadge
+                        status={
+                          expired
+                            ? "Expired"
+                            : "Approved"
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-[#dce3ee] bg-[#fafbfc] px-4 py-3 flex flex-wrap items-center justify-between gap-2">
                   <p className="text-xs text-muted-foreground">
                     QR ID:
                     <span className="font-mono text-primary ml-2">
                       {item.qr_code}
                     </span>
                   </p>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setQrModalItem(item)
+                      }
+                      className="inline-flex items-center gap-1.5 rounded-md border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-[#eef2fc]"
+                    >
+                      <Eye size={13} />
+                      View QR
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadQRCode(item)
+                      }
+                      disabled={
+                        downloadingQrId ===
+                        item.id
+                      }
+                      className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                    >
+                      <Download size={13} />
+
+                      {downloadingQrId ===
+                      item.id
+                        ? "Preparing..."
+                        : "Download QR"}
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
 
           {pendingItems.map((item) => (
             <div
@@ -1418,12 +2602,13 @@ function StudentMyQRCodes() {
                 </p>
 
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {item.item_type} · {item.serial_number}
+                  {item.item_type} ·{" "}
+                  {item.serial_number ||
+                    "No serial number"}
                 </p>
 
                 <p className="text-xs text-yellow-600 mt-2">
-                  Awaiting PCO approval — QR code will be issued
-                  upon approval.
+                  Awaiting PCO approval — QR code will be issued upon approval.
                 </p>
               </div>
             </div>
@@ -1435,7 +2620,109 @@ function StudentMyQRCodes() {
                 You don't have any registered items yet.
               </div>
             )}
+        </div>
+      )}
 
+      {qrModalItem && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/55 flex items-center justify-center p-4"
+          onClick={() =>
+            setQrModalItem(null)
+          }
+        >
+          <div
+            className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+            <div className="px-5 py-4 border-b border-[#dce3ee] bg-[#fafbfc] flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">
+                  {qrModalItem.item_name}
+                </h2>
+
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Present this QR code to CSU for scanning.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setQrModalItem(null)
+                }
+                className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:bg-[#eef2fc] hover:text-primary"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="mx-auto w-fit rounded-2xl border border-[#dce3ee] bg-white p-5 shadow-sm">
+                <QRCodeDisplay
+                  value={qrModalItem.qr_code}
+                  size={300}
+                />
+              </div>
+
+              <div className="mt-5 text-center">
+                <p className="text-xs text-muted-foreground">
+                  QR ID
+                </p>
+
+                <p className="font-mono text-sm font-semibold text-primary mt-1">
+                  {qrModalItem.qr_code}
+                </p>
+
+                <p className="text-xs text-muted-foreground mt-3">
+                  {qrModalItem.item_type}
+                  {qrModalItem.serial_number
+                    ? ` • Serial: ${qrModalItem.serial_number}`
+                    : ""}
+                </p>
+
+                {isExpired(qrModalItem) && (
+                  <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+                    This QR code is expired.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="px-5 py-4 border-t border-[#dce3ee] bg-[#fafbfc] flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setQrModalItem(null)
+                }
+                className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold text-muted-foreground hover:bg-white"
+              >
+                Close
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  downloadQRCode(
+                    qrModalItem
+                  )
+                }
+                disabled={
+                  downloadingQrId ===
+                  qrModalItem.id
+                }
+                className="inline-flex items-center gap-1.5 bg-primary text-white px-4 py-2 rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+              >
+                <Download size={14} />
+
+                {downloadingQrId ===
+                qrModalItem.id
+                  ? "Preparing..."
+                  : "Download QR"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -2556,6 +3843,24 @@ function SecurityScanVerify() {
 
   const [incidentMessage, setIncidentMessage] = useState("");
 
+  const [pendingIncident, setPendingIncident] = useState<{
+    code: string;
+    incidentType: string;
+    errorMessage: string;
+  } | null>(null);
+
+  const [savingIncident, setSavingIncident] = useState(false);
+  const [sameAsOwner, setSameAsOwner] = useState(false);
+
+  const [flaggedForm, setFlaggedForm] = useState({
+    item_name: "",
+    owner_name: "",
+    owner_id_number: "",
+    carrier_name: "",
+    carrier_id_number: "",
+    direction: "OUT" as "IN" | "OUT",
+  });
+
   // Keeps the latest selected gate available to the camera scanner
   const gateRef = React.useRef(gate);
 
@@ -2580,49 +3885,143 @@ function SecurityScanVerify() {
     }
   }
 
-  async function recordSecurityIncident(
+  function prepareSecurityIncident(
     code: string,
     errorMessage: string
   ) {
-    try {
-      let incidentType = "";
+    const normalizedError = errorMessage.toLowerCase();
 
-      if (
-        errorMessage
-          .toLowerCase()
-          .includes("not found")
-      ) {
-        incidentType = "Unregistered Item";
-      } else if (
-        errorMessage
-          .toLowerCase()
-          .includes("not approved")
-      ) {
-        incidentType = "Unapproved Item";
-      } else {
-        // Do not create incidents for network/server errors
-        return;
+    let incidentType = "";
+
+    if (normalizedError.includes("not found")) {
+      incidentType = "Unregistered Item";
+    } else if (normalizedError.includes("not approved")) {
+      incidentType = "Unapproved Item";
+    } else {
+      // Network/server errors should not create a security incident.
+      setPendingIncident(null);
+      return;
+    }
+
+    setSameAsOwner(false);
+    setFlaggedForm({
+      item_name: "",
+      owner_name: "",
+      owner_id_number: "",
+      carrier_name: "",
+      carrier_id_number: "",
+      direction: "OUT",
+    });
+
+    setPendingIncident({
+      code,
+      incidentType,
+      errorMessage,
+    });
+  }
+
+  function updateFlaggedForm(
+    field: keyof typeof flaggedForm,
+    value: string
+  ) {
+    setFlaggedForm((current) => {
+      const next = {
+        ...current,
+        [field]: value,
+      };
+
+      if (sameAsOwner) {
+        if (field === "owner_name") {
+          next.carrier_name = value;
+        }
+
+        if (field === "owner_id_number") {
+          next.carrier_id_number = value;
+        }
       }
+
+      return next;
+    });
+  }
+
+  function handleSameAsOwner(checked: boolean) {
+    setSameAsOwner(checked);
+
+    if (checked) {
+      setFlaggedForm((current) => ({
+        ...current,
+        carrier_name: current.owner_name,
+        carrier_id_number: current.owner_id_number,
+      }));
+    }
+  }
+
+  async function submitSecurityIncident(
+    event: React.FormEvent
+  ) {
+    event.preventDefault();
+
+    if (!pendingIncident) {
+      return;
+    }
+
+    const requiredFields = [
+      ["Item Name", flaggedForm.item_name],
+      ["Owner Name", flaggedForm.owner_name],
+      ["Owner ID Number", flaggedForm.owner_id_number],
+      ["Person Carrying Item", flaggedForm.carrier_name],
+      ["Carrier ID Number", flaggedForm.carrier_id_number],
+      ["Direction", flaggedForm.direction],
+    ];
+
+    const missingFields = requiredFields
+      .filter(([, value]) => !String(value ?? "").trim())
+      .map(([label]) => label);
+
+    if (missingFields.length > 0) {
+      alert(
+        `Please complete all required flagged-item details:\n\n${missingFields
+          .map((field) => `• ${field}`)
+          .join("\n")}`
+      );
+      return;
+    }
+
+    try {
+      setSavingIncident(true);
 
       await createSecurityIncident({
         registered_item_id: null,
-        scanned_code: code,
-        incident_type: incidentType,
-        item_name:
-          incidentType === "Unregistered Item"
-            ? "Unknown Item"
-            : "Unapproved Item",
+        scanned_code: pendingIncident.code,
+        incident_type: pendingIncident.incidentType,
+        item_name: flaggedForm.item_name.trim(),
         serial_number: null,
+        owner_name: flaggedForm.owner_name.trim(),
+        owner_id_number: flaggedForm.owner_id_number.trim(),
+        carrier_name: flaggedForm.carrier_name.trim(),
+        carrier_id_number: flaggedForm.carrier_id_number.trim(),
+        direction: flaggedForm.direction,
         gate: gateRef.current,
         description:
-          incidentType === "Unregistered Item"
-            ? `Unregistered QR ID or serial number "${code}" was presented at ${gateRef.current}.`
-            : `An item that has not yet been approved was presented at ${gateRef.current}. Code: ${code}.`,
+          pendingIncident.incidentType === "Unregistered Item"
+            ? `Unregistered QR ID or serial number "${pendingIncident.code}" was presented at ${gateRef.current}.`
+            : `An item that has not yet been approved was presented at ${gateRef.current}. Code: ${pendingIncident.code}.`,
       });
 
       setIncidentMessage(
-        `${incidentType} has been flagged and recorded at ${gateRef.current}.`
+        `${pendingIncident.incidentType} has been flagged and recorded at ${gateRef.current}.`
       );
+
+      setPendingIncident(null);
+      setSameAsOwner(false);
+      setFlaggedForm({
+        item_name: "",
+        owner_name: "",
+        owner_id_number: "",
+        carrier_name: "",
+        carrier_id_number: "",
+        direction: "OUT",
+      });
     } catch (incidentError) {
       console.error(
         "Failed to record security incident:",
@@ -2632,6 +4031,8 @@ function SecurityScanVerify() {
       setIncidentMessage(
         "The item could not be verified, but the security incident could not be saved."
       );
+    } finally {
+      setSavingIncident(false);
     }
   }
 
@@ -2644,6 +4045,7 @@ function SecurityScanVerify() {
       );
       setScanResult(null);
       setIncidentMessage("");
+      setPendingIncident(null);
       return;
     }
 
@@ -2658,8 +4060,10 @@ function SecurityScanVerify() {
       setInput(cleanCode);
       setScanResult(data.item);
 
-      // Successful verification removes previous incident warning
+      // Successful verification removes previous incident warning/form.
       setIncidentMessage("");
+      setPendingIncident(null);
+      setSameAsOwner(false);
     } catch (error) {
       setScanResult(null);
       setInput(cleanCode);
@@ -2671,8 +4075,9 @@ function SecurityScanVerify() {
 
       setVerifyError(message);
 
-      // Automatically record unregistered/unapproved items
-      await recordSecurityIncident(
+      // Ask CSU to complete the item/owner/carrier details before
+      // the failed verification is officially recorded as flagged.
+      prepareSecurityIncident(
         cleanCode,
         message
       );
@@ -2703,6 +4108,15 @@ function SecurityScanVerify() {
       );
 
       await loadRecentLogs();
+
+      // Clear the verified item after a successful IN / OUT log
+      // so CSU is ready to scan the next item immediately.
+      setScanResult(null);
+      setInput("");
+      setVerifyError("");
+      setIncidentMessage("");
+      setPendingIncident(null);
+      setSameAsOwner(false);
 
       alert(
         `Item logged ${direction} successfully!`
@@ -2861,6 +4275,223 @@ function SecurityScanVerify() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* FLAGGED ITEM DETAILS FORM */}
+          {pendingIncident && (
+            <form
+              onSubmit={submitSecurityIncident}
+              className="w-full max-w-2xl bg-orange-50 border-2 border-orange-300 rounded-lg p-4"
+            >
+              <div className="flex items-start gap-3 mb-4">
+                <AlertTriangle
+                  size={20}
+                  className="text-orange-600 mt-0.5 flex-shrink-0"
+                />
+
+                <div>
+                  <p className="text-sm font-bold text-orange-800">
+                    {pendingIncident.incidentType.toUpperCase()} DETECTED
+                  </p>
+
+                  <p className="text-xs text-orange-700 mt-1">
+                    QR / Code:{" "}
+                    <span className="font-mono font-semibold">
+                      {pendingIncident.code}
+                    </span>
+                  </p>
+
+                  <p className="text-xs text-orange-700 mt-1">
+                    Complete the details below before recording this
+                    item as a security incident.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-3">
+                {/* ITEM NAME */}
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Item Name *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={flaggedForm.item_name}
+                    onChange={(e) =>
+                      updateFlaggedForm(
+                        "item_name",
+                        e.target.value
+                      )
+                    }
+                    placeholder="e.g. Acer Laptop, iPhone 15, Camera"
+                    required
+                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
+                  />
+                </div>
+
+                {/* OWNER NAME */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Owner Name *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={flaggedForm.owner_name}
+                    onChange={(e) =>
+                      updateFlaggedForm(
+                        "owner_name",
+                        e.target.value
+                      )
+                    }
+                    placeholder="Full name of item owner"
+                    required
+                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
+                  />
+                </div>
+
+                {/* OWNER ID */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Owner ID Number *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={flaggedForm.owner_id_number}
+                    onChange={(e) =>
+                      updateFlaggedForm(
+                        "owner_id_number",
+                        e.target.value
+                      )
+                    }
+                    placeholder="Student / Employee ID"
+                    required
+                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
+                  />
+                </div>
+
+                {/* SAME AS OWNER */}
+                <div className="md:col-span-2">
+                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={sameAsOwner}
+                      onChange={(e) =>
+                        handleSameAsOwner(e.target.checked)
+                      }
+                      className="rounded border-gray-300"
+                    />
+                    The owner is the same person carrying the item
+                  </label>
+                </div>
+
+                {/* CARRIER NAME */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Person Carrying the Item *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={flaggedForm.carrier_name}
+                    onChange={(e) =>
+                      updateFlaggedForm(
+                        "carrier_name",
+                        e.target.value
+                      )
+                    }
+                    placeholder="Full name of person carrying item"
+                    disabled={sameAsOwner}
+                    required
+                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 disabled:bg-gray-100"
+                  />
+                </div>
+
+                {/* CARRIER ID */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Student / Employee ID *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={flaggedForm.carrier_id_number}
+                    onChange={(e) =>
+                      updateFlaggedForm(
+                        "carrier_id_number",
+                        e.target.value
+                      )
+                    }
+                    placeholder="ID of person carrying item"
+                    disabled={sameAsOwner}
+                    required
+                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 disabled:bg-gray-100"
+                  />
+                </div>
+
+                {/* DIRECTION */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Direction *
+                  </label>
+
+                  <select
+                    value={flaggedForm.direction}
+                    onChange={(e) =>
+                      setFlaggedForm((current) => ({
+                        ...current,
+                        direction: e.target.value as "IN" | "OUT",
+                      }))
+                    }
+                    required
+                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
+                  >
+                    <option value="OUT">OUT</option>
+                    <option value="IN">IN</option>
+                  </select>
+                </div>
+
+                {/* GATE */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Gate
+                  </label>
+
+                  <input
+                    type="text"
+                    value={gate}
+                    readOnly
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md bg-gray-100 text-gray-600"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap justify-end gap-2 mt-4 pt-3 border-t border-orange-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingIncident(null);
+                    setSameAsOwner(false);
+                  }}
+                  disabled={savingIncident}
+                  className="px-4 py-2 text-xs font-semibold border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={savingIncident}
+                  className="px-4 py-2 text-xs font-semibold rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {savingIncident
+                    ? "Saving Flagged Item..."
+                    : "Flag Item"}
+                </button>
+              </div>
+            </form>
           )}
 
           {/* FLAGGED INCIDENT */}
@@ -3083,7 +4714,7 @@ function SecurityScanVerify() {
             <thead>
               <tr className="bg-[#fafbfc]">
                 {[
-                  "Time",
+                  "Date and Time",
                   "QR ID",
                   "Item",
                   "Owner",
@@ -3191,6 +4822,15 @@ function SecurityEntryExitLog() {
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [selectedIncident, setSelectedIncident] =
+    useState<any | null>(null);
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD DATA
+  |--------------------------------------------------------------------------
+  */
+
   async function loadData() {
     setLoading(true);
 
@@ -3198,15 +4838,27 @@ function SecurityEntryExitLog() {
       const logsData = await getScanLogs();
       setLogs(logsData.logs ?? []);
     } catch (error) {
-      console.error("Failed to load scan logs:", error);
+      console.error(
+        "Failed to load scan logs:",
+        error
+      );
+
       setLogs([]);
     }
 
     try {
-      const incidentsData = await getSecurityIncidents();
-      setIncidents(incidentsData.incidents ?? []);
+      const incidentsData =
+        await getSecurityIncidents();
+
+      setIncidents(
+        incidentsData.incidents ?? []
+      );
     } catch (error) {
-      console.error("Failed to load security incidents:", error);
+      console.error(
+        "Failed to load security incidents:",
+        error
+      );
+
       setIncidents([]);
     }
 
@@ -3217,21 +4869,38 @@ function SecurityEntryExitLog() {
     loadData();
   }, []);
 
-  async function handleResolveIncident(id: number) {
+  /*
+  |--------------------------------------------------------------------------
+  | RESOLVE INCIDENT
+  |--------------------------------------------------------------------------
+  */
+
+  async function handleResolveIncident(
+    id: number
+  ) {
     const confirmed = window.confirm(
       "Are you sure you want to resolve this security incident?"
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     try {
       await resolveSecurityIncident(id);
 
-      alert("Security incident resolved successfully.");
+      alert(
+        "Security incident resolved successfully."
+      );
+
+      setSelectedIncident(null);
 
       await loadData();
     } catch (error) {
-      console.error("Failed to resolve incident:", error);
+      console.error(
+        "Failed to resolve incident:",
+        error
+      );
 
       alert(
         error instanceof Error
@@ -3241,8 +4910,16 @@ function SecurityEntryExitLog() {
     }
   }
 
+  /*
+  |--------------------------------------------------------------------------
+  | DATE HELPERS
+  |--------------------------------------------------------------------------
+  */
+
   function isToday(dateString: string) {
-    if (!dateString) return false;
+    if (!dateString) {
+      return false;
+    }
 
     const date = new Date(dateString);
     const today = new Date();
@@ -3254,24 +4931,77 @@ function SecurityEntryExitLog() {
     );
   }
 
+  function formatDate(
+    dateString?: string | null
+  ) {
+    if (!dateString) {
+      return "—";
+    }
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return dateString;
+    }
+
+    return date.toLocaleDateString(
+      "en-PH",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }
+    );
+  }
+
+  function formatTime(
+    dateString?: string | null
+  ) {
+    if (!dateString) {
+      return "—";
+    }
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleTimeString(
+      "en-PH",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | SUMMARY COUNTS
+  |--------------------------------------------------------------------------
+  */
+
   const todayLogs = logs.filter((log) =>
     isToday(log.scanned_at)
   );
 
-  const todayIncidents = incidents.filter((incident) =>
-    isToday(incident.reported_at)
+  const todayIncidents = incidents.filter(
+    (incident) =>
+      isToday(incident.reported_at)
   );
 
   const verifiedCount = todayLogs.filter(
     (log) =>
-      String(log.result ?? "")
-        .toLowerCase() === "verified"
+      String(log.result ?? "").toLowerCase() ===
+      "verified"
   ).length;
 
   const flaggedCount = todayIncidents.filter(
     (incident) =>
-      String(incident.status ?? "")
-        .toLowerCase() === "flagged"
+      String(
+        incident.status ?? ""
+      ).toLowerCase() === "flagged"
   ).length;
 
   const uniqueStudents = new Set(
@@ -3287,24 +5017,21 @@ function SecurityEntryExitLog() {
 
   const scannedToday = todayLogs.length;
 
-  function formatDate(dateString: string) {
-    if (!dateString) return "—";
-
-    return new Date(dateString).toLocaleDateString();
-  }
-
-  function formatTime(dateString: string) {
-    if (!dateString) return "—";
-
-    return new Date(dateString).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
+  /*
+  |--------------------------------------------------------------------------
+  | EXPORT CSV
+  |--------------------------------------------------------------------------
+  */
 
   function exportCSV() {
-    if (logs.length === 0 && incidents.length === 0) {
-      alert("There are no entry / exit records to export.");
+    if (
+      logs.length === 0 &&
+      incidents.length === 0
+    ) {
+      alert(
+        "There are no entry / exit records to export."
+      );
+
       return;
     }
 
@@ -3314,6 +5041,8 @@ function SecurityEntryExitLog() {
       "Time",
       "Owner",
       "Owner ID",
+      "Person Carrying Item",
+      "Carrier ID",
       "Item",
       "Serial Number",
       "QR / Scanned Code",
@@ -3330,6 +5059,8 @@ function SecurityEntryExitLog() {
       formatTime(log.scanned_at),
       log.item?.user?.name ?? "",
       log.item?.user?.username ?? "",
+      log.item?.user?.name ?? "",
+      log.item?.user?.username ?? "",
       log.item?.item_name ?? "",
       log.item?.serial_number ?? "",
       log.qr_code ?? "",
@@ -3340,54 +5071,97 @@ function SecurityEntryExitLog() {
       log.scanner?.name ?? "",
     ]);
 
-    const incidentRows = incidents.map((incident) => [
-      "Security Incident",
-      formatDate(incident.reported_at),
-      formatTime(incident.reported_at),
-      incident.item?.user?.name ?? "",
-      incident.item?.user?.username ?? "",
-      incident.item?.item_name ??
-        incident.item_name ??
-        "Unknown Item",
-      incident.item?.serial_number ??
-        incident.serial_number ??
-        "",
-      incident.scanned_code ?? "",
-      incident.gate ?? "",
-      "",
-      String(incident.status ?? "Flagged"),
-      incident.incident_type ?? "Security Incident",
-      incident.reporter?.name ?? "Security Personnel",
-    ]);
+    const incidentRows = incidents.map(
+      (incident) => [
+        "Security Incident",
+        formatDate(incident.reported_at),
+        formatTime(incident.reported_at),
 
-    const rows = [...scanRows, ...incidentRows];
+        incident.owner_name ??
+          incident.item?.user?.name ??
+          "",
 
-    const csvContent = [headers, ...rows]
+        incident.owner_id_number ??
+          incident.item?.user?.username ??
+          "",
+
+        incident.carrier_name ?? "",
+        incident.carrier_id_number ?? "",
+
+        incident.item?.item_name ??
+          incident.item_name ??
+          "Unknown Item",
+
+        incident.item?.serial_number ??
+          incident.serial_number ??
+          "",
+
+        incident.scanned_code ?? "",
+        incident.gate ?? "",
+        incident.direction ?? "",
+
+        String(
+          incident.status ?? "Flagged"
+        ),
+
+        incident.incident_type ??
+          "Security Incident",
+
+        incident.reporter?.name ??
+          "Security Personnel",
+      ]
+    );
+
+    const rows = [
+      ...scanRows,
+      ...incidentRows,
+    ];
+
+    const csvContent = [
+      headers,
+      ...rows,
+    ]
       .map((row) =>
         row
           .map((value) => {
-            const text = String(value ?? "").replace(/"/g, '""');
-            return `"${text}"`;
+            const cell =
+              String(value ?? "").replace(
+                /"/g,
+                '""'
+              );
+
+            return `"${cell}"`;
           })
           .join(",")
       )
       .join("\n");
 
-    const blob = new Blob([csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
+    const blob = new Blob(
+      [csvContent],
+      {
+        type: "text/csv;charset=utf-8;",
+      }
+    );
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
 
     link.href = url;
-    link.download = `qrpass-entry-exit-${new Date()
-      .toISOString()
-      .slice(0, 10)}.csv`;
+
+    link.download =
+      `qrpass-entry-exit-${new Date()
+        .toISOString()
+        .slice(0, 10)}.csv`;
 
     document.body.appendChild(link);
+
     link.click();
+
     document.body.removeChild(link);
+
     URL.revokeObjectURL(url);
   }
 
@@ -3412,7 +5186,9 @@ function SecurityEntryExitLog() {
             disabled={loading}
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
           >
-            {loading ? "Refreshing..." : "Refresh"}
+            {loading
+              ? "Refreshing..."
+              : "Refresh"}
           </button>
 
           <button
@@ -3424,7 +5200,7 @@ function SecurityEntryExitLog() {
         </div>
       </div>
 
-      {/* SUMMARY CARDS */}
+      {/* SUMMARY */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-5">
           <p className="text-sm text-gray-500">
@@ -3467,7 +5243,7 @@ function SecurityEntryExitLog() {
         </div>
       </div>
 
-      {/* ENTRY / EXIT RECORDS */}
+      {/* SUCCESSFUL ENTRY / EXIT */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-200">
           <h2 className="text-lg font-bold text-gray-900">
@@ -3529,12 +5305,16 @@ function SecurityEntryExitLog() {
                     key={log.id}
                     className="hover:bg-gray-50"
                   >
-                    <td className="py-3 px-3 text-sm text-gray-700">
-                      {formatDate(log.scanned_at)}
+                    <td className="py-3 px-3 text-sm text-gray-700 whitespace-nowrap">
+                      {formatDate(
+                        log.scanned_at
+                      )}
                     </td>
 
-                    <td className="py-3 px-3 text-sm text-gray-700">
-                      {formatTime(log.scanned_at)}
+                    <td className="py-3 px-3 text-sm text-gray-700 whitespace-nowrap">
+                      {formatTime(
+                        log.scanned_at
+                      )}
                     </td>
 
                     <td className="py-3 px-3">
@@ -3562,33 +5342,39 @@ function SecurityEntryExitLog() {
                     </td>
 
                     <td className="py-3 px-3 text-sm font-mono text-gray-700">
-                      {log.qr_code ?? "—"}
+                      {log.qr_code ??
+                        "—"}
                     </td>
 
                     <td className="py-3 px-3 text-sm text-gray-700">
-                      {log.gate ?? "—"}
+                      {log.gate ??
+                        "—"}
                     </td>
 
                     <td className="py-3 px-3">
                       <span
                         className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          log.direction === "IN"
+                          log.direction ===
+                          "IN"
                             ? "bg-blue-100 text-blue-700"
                             : "bg-purple-100 text-purple-700"
                         }`}
                       >
-                        {log.direction ?? "—"}
+                        {log.direction ??
+                          "—"}
                       </span>
                     </td>
 
                     <td className="py-3 px-3">
                       <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                        {log.result ?? "Verified"}
+                        {log.result ??
+                          "Verified"}
                       </span>
                     </td>
 
                     <td className="py-3 px-3 text-sm text-gray-700">
-                      {log.scanner?.name ?? "—"}
+                      {log.scanner?.name ??
+                        "—"}
                     </td>
                   </tr>
                 ))
@@ -3598,7 +5384,7 @@ function SecurityEntryExitLog() {
         </div>
       </div>
 
-      {/* FLAGGED / UNREGISTERED ITEMS */}
+      {/* FLAGGED ITEMS */}
       <div className="bg-white border border-red-200 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-red-100 bg-red-50">
           <h2 className="text-lg font-bold text-red-700">
@@ -3612,15 +5398,16 @@ function SecurityEntryExitLog() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1100px]">
+          <table className="w-full min-w-[1450px]">
             <thead className="bg-gray-50">
               <tr>
                 {[
-                  "Date",
-                  "Time",
+                  "Date / Time",
                   "Code",
-                  "Incident",
                   "Item",
+                  "Owner",
+                  "Person Carrying",
+                  "Direction",
                   "Gate",
                   "Reported By",
                   "Status",
@@ -3640,7 +5427,7 @@ function SecurityEntryExitLog() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={10}
                     className="py-10 text-center text-gray-500"
                   >
                     Loading security incidents...
@@ -3649,114 +5436,472 @@ function SecurityEntryExitLog() {
               ) : incidents.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={10}
                     className="py-10 text-center text-gray-500"
                   >
                     No security incidents found.
                   </td>
                 </tr>
               ) : (
-                incidents.map((incident) => (
-                  <tr
-                    key={incident.id}
-                    className="hover:bg-red-50/40"
-                  >
-                    <td className="py-3 px-3 text-sm text-gray-700">
-                      {formatDate(
-                        incident.reported_at
-                      )}
-                    </td>
+                incidents.map((incident) => {
+                  const ownerName =
+                    incident.owner_name ??
+                    incident.item?.user?.name ??
+                    "Unknown Owner";
 
-                    <td className="py-3 px-3 text-sm text-gray-700">
-                      {formatTime(
-                        incident.reported_at
-                      )}
-                    </td>
+                  const ownerId =
+                    incident.owner_id_number ??
+                    incident.item?.user?.username ??
+                    "—";
 
-                    <td className="py-3 px-3 text-sm font-mono text-gray-700">
-                      {incident.scanned_code ??
-                        "—"}
-                    </td>
+                  const carrierName =
+                    incident.carrier_name ??
+                    "Unknown";
 
-                    <td className="py-3 px-3">
-                      <span className="text-sm font-semibold text-red-700">
-                        {incident.incident_type ??
-                          "Security Incident"}
-                      </span>
+                  const carrierId =
+                    incident.carrier_id_number ??
+                    "—";
 
-                      {incident.description && (
-                        <div className="text-xs text-gray-500 mt-1 max-w-[240px]">
-                          {incident.description}
+                  const itemName =
+                    incident.item?.item_name ??
+                    incident.item_name ??
+                    "Unknown Item";
+
+                  const serialNumber =
+                    incident.item?.serial_number ??
+                    incident.serial_number ??
+                    "—";
+
+                  const resolved =
+                    String(
+                      incident.status ?? ""
+                    ).toLowerCase() ===
+                    "resolved";
+
+                  return (
+                    <tr
+                      key={incident.id}
+                      className="hover:bg-red-50/40"
+                    >
+                      {/* DATE/TIME */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <div className="text-sm text-gray-800">
+                          {formatDate(
+                            incident.reported_at
+                          )}
                         </div>
-                      )}
-                    </td>
 
-                    <td className="py-3 px-3">
-                      <div className="text-sm font-semibold text-gray-900">
-                        {incident.item?.item_name ??
-                          incident.item_name ??
-                          "Unknown Item"}
-                      </div>
+                        <div className="text-xs text-gray-500">
+                          {formatTime(
+                            incident.reported_at
+                          )}
+                        </div>
+                      </td>
 
-                      <div className="text-xs text-gray-500">
-                        {incident.item?.serial_number ??
-                          incident.serial_number ??
-                          ""}
-                      </div>
-                    </td>
-
-                    <td className="py-3 px-3 text-sm text-gray-700">
-                      {incident.gate ?? "—"}
-                    </td>
-
-                    <td className="py-3 px-3 text-sm text-gray-700">
-                      {incident.reporter?.name ??
-                        "Security Personnel"}
-                    </td>
-
-                    <td className="py-3 px-3">
-                      {String(
-                        incident.status ?? ""
-                      ).toLowerCase() ===
-                      "resolved" ? (
-                        <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                          Resolved
+                      {/* CODE */}
+                      <td className="py-3 px-3">
+                        <span className="text-xs font-mono text-gray-700">
+                          {incident.scanned_code ??
+                            "—"}
                         </span>
-                      ) : (
-                        <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-                          Flagged
-                        </span>
-                      )}
-                    </td>
 
-                    <td className="py-3 px-3">
-                      {String(
-                        incident.status ?? ""
-                      ).toLowerCase() ===
-                      "flagged" ? (
-                        <button
-                          onClick={() =>
-                            handleResolveIncident(
-                              incident.id
-                            )
-                          }
-                          className="px-3 py-1.5 bg-green-600 text-white rounded-md text-xs font-semibold hover:bg-green-700"
-                        >
-                          Resolve
-                        </button>
-                      ) : (
-                        <span className="text-xs font-semibold text-green-600">
-                          Resolved
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                        <div className="text-xs font-semibold text-red-600 mt-1">
+                          {incident.incident_type ??
+                            "Security Incident"}
+                        </div>
+                      </td>
+
+                      {/* ITEM */}
+                      <td className="py-3 px-3">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {itemName}
+                        </div>
+
+                        <div className="text-xs text-gray-500">
+                          Serial:{" "}
+                          {serialNumber}
+                        </div>
+                      </td>
+
+                      {/* OWNER */}
+                      <td className="py-3 px-3">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {ownerName}
+                        </div>
+
+                        <div className="text-xs text-gray-500">
+                          ID:{" "}
+                          {ownerId}
+                        </div>
+                      </td>
+
+                      {/* CARRIER */}
+                      <td className="py-3 px-3">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {carrierName}
+                        </div>
+
+                        <div className="text-xs text-gray-500">
+                          ID:{" "}
+                          {carrierId}
+                        </div>
+                      </td>
+
+                      {/* DIRECTION */}
+                      <td className="py-3 px-3">
+                        {incident.direction ? (
+                          <span
+                            className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
+                              incident.direction ===
+                              "IN"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-purple-100 text-purple-700"
+                            }`}
+                          >
+                            {incident.direction}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">
+                            —
+                          </span>
+                        )}
+                      </td>
+
+                      {/* GATE */}
+                      <td className="py-3 px-3 text-sm text-gray-700 whitespace-nowrap">
+                        {incident.gate ??
+                          "—"}
+                      </td>
+
+                      {/* REPORTED BY */}
+                      <td className="py-3 px-3 text-sm text-gray-700">
+                        {incident.reporter?.name ??
+                          "Security Personnel"}
+                      </td>
+
+                      {/* STATUS */}
+                      <td className="py-3 px-3">
+                        {resolved ? (
+                          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                            Resolved
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                            Flagged
+                          </span>
+                        )}
+                      </td>
+
+                      {/* ACTIONS */}
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedIncident(
+                                incident
+                              )
+                            }
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-blue-200 text-blue-700 bg-blue-50 rounded-md text-xs font-semibold hover:bg-blue-100"
+                          >
+                            <Eye size={13} />
+                            View
+                          </button>
+
+                          {!resolved && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleResolveIncident(
+                                  incident.id
+                                )
+                              }
+                              className="px-3 py-1.5 bg-green-600 text-white rounded-md text-xs font-semibold hover:bg-green-700"
+                            >
+                              Resolve
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* INCIDENT DETAILS MODAL */}
+      {selectedIncident && (
+        <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+            {/* MODAL HEADER */}
+            <div className="px-5 py-4 bg-red-50 border-b border-red-200 flex items-start justify-between gap-4">
+              <div className="flex gap-3">
+                <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle
+                    size={20}
+                    className="text-red-600"
+                  />
+                </div>
+
+                <div>
+                  <h2 className="text-lg font-bold text-red-700">
+                    Security Incident Details
+                  </h2>
+
+                  <p className="text-xs text-red-600 mt-0.5">
+                    {selectedIncident.incident_type ??
+                      "Flagged Item"}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedIncident(
+                    null
+                  )
+                }
+                className="h-8 w-8 rounded-md flex items-center justify-center text-gray-500 hover:bg-red-100 hover:text-red-700"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* MODAL BODY */}
+            <div className="p-5 space-y-5">
+              {/* ITEM */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
+                  Item Information
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Item Name
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {selectedIncident.item?.item_name ??
+                        selectedIncident.item_name ??
+                        "Unknown Item"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Serial Number
+                    </p>
+
+                    <p className="text-sm font-mono font-semibold mt-1">
+                      {selectedIncident.item?.serial_number ??
+                        selectedIncident.serial_number ??
+                        "—"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3 md:col-span-2">
+                    <p className="text-xs text-gray-500">
+                      Scanned Code
+                    </p>
+
+                    <p className="text-sm font-mono font-semibold mt-1 text-red-700">
+                      {selectedIncident.scanned_code ??
+                        "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* OWNER */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
+                  Registered / Claimed Owner
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Owner Name
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {selectedIncident.owner_name ??
+                        selectedIncident.item?.user?.name ??
+                        "Unknown Owner"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Owner ID Number
+                    </p>
+
+                    <p className="text-sm font-mono font-semibold mt-1">
+                      {selectedIncident.owner_id_number ??
+                        selectedIncident.item?.user?.username ??
+                        "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* CARRIER */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
+                  Person Carrying Item
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Name
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {selectedIncident.carrier_name ??
+                        "Unknown"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Student / Employee ID
+                    </p>
+
+                    <p className="text-sm font-mono font-semibold mt-1">
+                      {selectedIncident.carrier_id_number ??
+                        "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* INCIDENT */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
+                  Incident Information
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Direction
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {selectedIncident.direction ??
+                        "—"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Gate
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {selectedIncident.gate ??
+                        "—"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Reported By
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {selectedIncident.reporter?.name ??
+                        "Security Personnel"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Date & Time
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {formatDate(
+                        selectedIncident.reported_at
+                      )}{" "}
+                      {formatTime(
+                        selectedIncident.reported_at
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* DESCRIPTION */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
+                  Description
+                </h3>
+
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+                  {selectedIncident.description ||
+                    "No additional description provided."}
+                </div>
+              </div>
+            </div>
+
+            {/* MODAL FOOTER */}
+            <div className="px-5 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
+              <div>
+                {String(
+                  selectedIncident.status ?? ""
+                ).toLowerCase() ===
+                "resolved" ? (
+                  <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                    Resolved
+                  </span>
+                ) : (
+                  <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                    Flagged
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedIncident(
+                      null
+                    )
+                  }
+                  className="px-4 py-2 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                >
+                  Close
+                </button>
+
+                {String(
+                  selectedIncident.status ?? ""
+                ).toLowerCase() ===
+                  "flagged" && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleResolveIncident(
+                        selectedIncident.id
+                      )
+                    }
+                    className="px-4 py-2 bg-green-600 text-white rounded-md text-xs font-semibold hover:bg-green-700"
+                  >
+                    Resolve Incident
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -4836,6 +6981,26 @@ function SecurityLostFound() {
   const [success, setSuccess] = useState("");
   const [search, setSearch] = useState("");
 
+  const [editingItem, setEditingItem] =
+    useState<any | null>(null);
+
+  const [editSubmitting, setEditSubmitting] =
+    useState(false);
+
+  const [editError, setEditError] =
+    useState("");
+
+  const [editForm, setEditForm] = useState({
+    person_identifier: "",
+    item_name: "",
+    category: "",
+    brand_model: "",
+    color: "",
+    location: "",
+    date_time: "",
+    description: "",
+  });
+
   const [tab, setTab] =
     useState<"registry" | "report">("registry");
 
@@ -4941,7 +7106,7 @@ function SecurityLostFound() {
     setSuccess("");
 
     if (!form.item_name.trim()) {
-      setError("Please enter the item name.");
+      setEditError("Please enter the item name.");
       return;
     }
 
@@ -5057,6 +7222,204 @@ function SecurityLostFound() {
       );
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  function toDateTimeLocal(
+    value?: string | null
+  ) {
+    if (!value) {
+      return "";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return String(value).slice(0, 16);
+    }
+
+    const offset = date.getTimezoneOffset();
+    const local = new Date(
+      date.getTime() - offset * 60 * 1000
+    );
+
+    return local.toISOString().slice(0, 16);
+  }
+
+  function openEditReport(item: any) {
+    const reportType = String(
+      item.report_type ?? "found"
+    ).toLowerCase();
+
+    setError("");
+    setSuccess("");
+    setEditError("");
+    setEditingItem(item);
+
+    setEditForm({
+      person_identifier:
+        reportType === "lost"
+          ? item.lost_by?.username ?? ""
+          : item.finder?.username ?? "",
+
+      item_name:
+        item.item_name ?? "",
+
+      category:
+        item.category ?? "",
+
+      brand_model:
+        item.brand_model ?? "",
+
+      color:
+        item.color ?? "",
+
+      location:
+        reportType === "lost"
+          ? item.location_lost ?? ""
+          : item.location_found ?? "",
+
+      date_time:
+        toDateTimeLocal(
+          reportType === "lost"
+            ? item.date_lost
+            : item.date_found
+        ),
+
+      description:
+        item.description ?? "",
+    });
+  }
+
+  function handleEditFormChange(
+    e: React.ChangeEvent<
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | HTMLSelectElement
+    >
+  ) {
+    const { name, value } = e.target;
+
+    setEditForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+
+    if (editError) {
+      setEditError("");
+    }
+  }
+
+  async function handleEditSubmit(
+    e: React.FormEvent
+  ) {
+    e.preventDefault();
+
+    if (!editingItem) {
+      return;
+    }
+
+    const reportType = String(
+      editingItem.report_type ?? "found"
+    ).toLowerCase();
+
+    if (!editForm.person_identifier.trim()) {
+      setEditError(
+        reportType === "lost"
+          ? "Please enter the owner Student/Employee ID."
+          : "Please enter the finder Student/Employee ID."
+      );
+      return;
+    }
+
+    if (!editForm.item_name.trim()) {
+      setError("Please enter the item name.");
+      return;
+    }
+
+    if (!editForm.location.trim()) {
+      setEditError(
+        reportType === "lost"
+          ? "Please enter the last seen location."
+          : "Please enter the location found."
+      );
+      return;
+    }
+
+    if (!editForm.date_time) {
+      setEditError(
+        reportType === "lost"
+          ? "Please enter the date and time lost / last seen."
+          : "Please enter the date and time found."
+      );
+      return;
+    }
+
+    try {
+      setEditSubmitting(true);
+      setEditError("");
+      setSuccess("");
+
+      const common = {
+        item_name:
+          editForm.item_name.trim(),
+        category:
+          editForm.category.trim() || undefined,
+        brand_model:
+          editForm.brand_model.trim() || undefined,
+        color:
+          editForm.color.trim() || undefined,
+        description:
+          editForm.description.trim() || undefined,
+      };
+
+      const result =
+        reportType === "lost"
+          ? await updateLostFoundItem(
+              Number(editingItem.id),
+              {
+                ...common,
+                lost_by_identifier:
+                  editForm.person_identifier.trim(),
+                location_lost:
+                  editForm.location.trim(),
+                date_lost:
+                  editForm.date_time,
+              }
+            )
+          : await updateLostFoundItem(
+              Number(editingItem.id),
+              {
+                ...common,
+                found_by_identifier:
+                  editForm.person_identifier.trim(),
+                location_found:
+                  editForm.location.trim(),
+                date_found:
+                  editForm.date_time,
+              }
+            );
+
+      setSuccess(
+        result?.message ||
+          "Lost & Found report updated successfully."
+      );
+
+      setEditError("");
+      setEditingItem(null);
+      await loadItems();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+    } catch (err) {
+      setEditError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update Lost & Found report."
+      );
+    } finally {
+      setEditSubmitting(false);
     }
   }
 
@@ -5393,7 +7756,7 @@ function SecurityLostFound() {
               : "bg-muted text-muted-foreground hover:text-foreground"
           }`}
         >
-          Lost & Found Registry
+          Lost & Found Reports
         </button>
 
         <button
@@ -5712,6 +8075,16 @@ function SecurityLostFound() {
                       </div>
 
                       <div className="flex flex-shrink-0 flex-col gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openEditReport(item)
+                          }
+                          className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-sm font-medium text-primary hover:bg-[#eef2fc]"
+                        >
+                          Edit Report
+                        </button>
+
                         {(isClaimed || isLost) && !isRecovered && (
                           <button
                             type="button"
@@ -6024,6 +8397,237 @@ function SecurityLostFound() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[#cfd8e6] bg-card shadow-xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[#cfd8e6] px-5 py-4">
+              <div>
+                <h3 className="font-semibold text-foreground">
+                  Edit Lost & Found Report
+                </h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Correct typographical errors or incorrect report information. Report type and recovery status are not changed here.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingItem(null);
+                  setEditError("");
+                }}
+                disabled={editSubmitting}
+                className="rounded-md p-1 text-muted-foreground hover:bg-muted disabled:opacity-50"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleEditSubmit}
+              className="space-y-4 p-5"
+            >
+              <div
+                className={`rounded-lg border px-4 py-3 ${
+                  String(
+                    editingItem.report_type ?? "found"
+                  ).toLowerCase() === "lost"
+                    ? "border-red-200 bg-red-50"
+                    : "border-green-200 bg-green-50"
+                }`}
+              >
+                <p className="text-xs font-semibold text-foreground">
+                  {String(
+                    editingItem.report_type ?? "found"
+                  ).toLowerCase() === "lost"
+                    ? "Lost Report"
+                    : "Found Report"}
+                  {` • Report #${editingItem.id}`}
+                </p>
+              </div>
+
+              {editError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle
+                      size={16}
+                      className="mt-0.5 shrink-0 text-red-600"
+                    />
+                    <p className="text-xs font-medium text-red-700">
+                      {editError}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  {String(
+                    editingItem.report_type ?? "found"
+                  ).toLowerCase() === "lost"
+                    ? "Owner Student / Employee ID *"
+                    : "Finder Student / Employee ID *"}
+                </label>
+
+                <input
+                  type="text"
+                  name="person_identifier"
+                  value={editForm.person_identifier}
+                  onChange={handleEditFormChange}
+                  required
+                  className={`w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 ${
+                    editError
+                      ? "border-red-300 focus:ring-red-200"
+                      : "border-[#cfd8e6] focus:ring-primary/20"
+                  }`}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-foreground">
+                    Item Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="item_name"
+                    value={editForm.item_name}
+                    onChange={handleEditFormChange}
+                    required
+                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-foreground">
+                    Category
+                  </label>
+                  <select
+                    name="category"
+                    value={editForm.category}
+                    onChange={handleEditFormChange}
+                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="">Select category</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Mobile Phone">Mobile Phone</option>
+                    <option value="Tablet">Tablet</option>
+                    <option value="Bag">Bag</option>
+                    <option value="Wallet">Wallet</option>
+                    <option value="ID / Card">ID / Card</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-foreground">
+                    Brand / Model
+                  </label>
+                  <input
+                    type="text"
+                    name="brand_model"
+                    value={editForm.brand_model}
+                    onChange={handleEditFormChange}
+                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-foreground">
+                    Color
+                  </label>
+                  <input
+                    type="text"
+                    name="color"
+                    value={editForm.color}
+                    onChange={handleEditFormChange}
+                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-foreground">
+                    {String(
+                      editingItem.report_type ?? "found"
+                    ).toLowerCase() === "lost"
+                      ? "Last Seen Location *"
+                      : "Location Found *"}
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={editForm.location}
+                    onChange={handleEditFormChange}
+                    required
+                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-foreground">
+                    {String(
+                      editingItem.report_type ?? "found"
+                    ).toLowerCase() === "lost"
+                      ? "Date & Time Lost / Last Seen *"
+                      : "Date & Time Found *"}
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="date_time"
+                    value={editForm.date_time}
+                    onChange={handleEditFormChange}
+                    required
+                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Item Description
+                </label>
+                <textarea
+                  name="description"
+                  value={editForm.description}
+                  onChange={handleEditFormChange}
+                  rows={4}
+                  className="w-full resize-none rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div className="flex flex-col-reverse gap-2 border-t border-[#cfd8e6] pt-4 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingItem(null);
+                    setEditError("");
+                  }}
+                  disabled={editSubmitting}
+                  className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {editSubmitting
+                    ? "Saving Changes..."
+                    : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -6728,7 +9332,7 @@ function PCOItemRegistry() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={12}
                     className="text-center py-8 text-sm text-muted-foreground"
                   >
                     Loading registered items...
@@ -6737,7 +9341,7 @@ function PCOItemRegistry() {
               ) : filteredItems.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={12}
                     className="text-center py-8 text-sm text-muted-foreground"
                   >
                     {search
@@ -11834,7 +14438,7 @@ function SysAdminUserAccounts() {
               <tr className="bg-[#fafbfc]">
                 {[
                   "Name",
-                  "Username / ID",
+                  "User ID",
                   "Email",
                   "Role",
                   "Created",
@@ -11899,16 +14503,11 @@ function SysAdminUserAccounts() {
                               "Unknown User"}
                           </div>
 
-                          <div className="text-[11px] text-muted-foreground">
-                            User ID:{" "}
-                            {user.id}
-                          </div>
                         </td>
 
-                        {/* USERNAME */}
+                        {/* USER ID */}
                         <td className="py-3 px-3 text-xs font-mono text-muted-foreground">
-                          {user.username ??
-                            "—"}
+                          {user.id ?? "—"}
                         </td>
 
                         {/* EMAIL */}
@@ -13996,14 +16595,55 @@ function SysAdminSecurityConfig() {
   const [loading, setLoading] =
     useState(true);
 
-  const [savingRole, setSavingRole] =
-    useState<string | null>(null);
-
   const [error, setError] =
     useState("");
 
-  const [success, setSuccess] =
-    useState("");
+  /*
+  |--------------------------------------------------------------------------
+  | FIXED QRPass ROLE PERMISSION MATRIX
+  |--------------------------------------------------------------------------
+  */
+
+  const fixedPermissionMatrix: Record<
+    string,
+    Omit<RolePermission, "id" | "role">
+  > = {
+    student: {
+      register_items: true,
+      view_qr_codes: true,
+      approve_requests: false,
+      scan_verify: false,
+      view_reports: false,
+      manage_users: false,
+    },
+
+    security: {
+      register_items: false,
+      view_qr_codes: false,
+      approve_requests: false,
+      scan_verify: true,
+      view_reports: true,
+      manage_users: false,
+    },
+
+    pco: {
+      register_items: false,
+      view_qr_codes: true,
+      approve_requests: true,
+      scan_verify: false,
+      view_reports: true,
+      manage_users: false,
+    },
+
+    sysadmin: {
+      register_items: false,
+      view_qr_codes: false,
+      approve_requests: false,
+      scan_verify: false,
+      view_reports: true,
+      manage_users: true,
+    },
+  };
 
 
   /*
@@ -14092,48 +16732,39 @@ function SysAdminSecurityConfig() {
           ? data.permissions
           : [];
 
+      const roleOrder = [
+        "student",
+        "security",
+        "pco",
+        "sysadmin",
+      ];
+
+      const fixedRows =
+        roleOrder.map(
+          (role) => {
+            const databaseRow =
+              rows.find(
+                (row: any) =>
+                  String(
+                    row.role ?? ""
+                  ) === role
+              );
+
+            return {
+              id:
+                databaseRow?.id,
+
+              role,
+
+              ...fixedPermissionMatrix[
+                role
+              ],
+            };
+          }
+        );
+
       setPermissions(
-        rows.map(
-          (row: any) => ({
-            id:
-              row.id,
-
-            role:
-              String(
-                row.role ?? ""
-              ),
-
-            register_items:
-              Boolean(
-                row.register_items
-              ),
-
-            view_qr_codes:
-              Boolean(
-                row.view_qr_codes
-              ),
-
-            approve_requests:
-              Boolean(
-                row.approve_requests
-              ),
-
-            scan_verify:
-              Boolean(
-                row.scan_verify
-              ),
-
-            view_reports:
-              Boolean(
-                row.view_reports
-              ),
-
-            manage_users:
-              Boolean(
-                row.manage_users
-              ),
-          })
-        )
+        fixedRows
       );
     } catch (err) {
       console.error(
@@ -14165,122 +16796,6 @@ function SysAdminSecurityConfig() {
 
   /*
   |--------------------------------------------------------------------------
-  | TOGGLE PERMISSION
-  |--------------------------------------------------------------------------
-  */
-
-  function togglePermission(
-    role: string,
-    permission: PermissionKey
-  ) {
-    /*
-    |--------------------------------------------------------------------------
-    | System Administrator stays fully privileged
-    |--------------------------------------------------------------------------
-    */
-
-    if (role === "sysadmin") {
-      return;
-    }
-
-    setPermissions(
-      (current) =>
-        current.map(
-          (row) => {
-            if (
-              row.role !== role
-            ) {
-              return row;
-            }
-
-            return {
-              ...row,
-              [permission]:
-                !row[
-                  permission
-                ],
-            };
-          }
-        )
-    );
-
-    setSuccess("");
-    setError("");
-  }
-
-
-  /*
-  |--------------------------------------------------------------------------
-  | SAVE ROLE
-  |--------------------------------------------------------------------------
-  */
-
-  async function saveRole(
-    row: RolePermission
-  ) {
-    try {
-      setSavingRole(
-        row.role
-      );
-
-      setError("");
-      setSuccess("");
-
-      const result =
-        await updateRolePermissions(
-          row.role,
-          {
-            register_items:
-              row.register_items,
-
-            view_qr_codes:
-              row.view_qr_codes,
-
-            approve_requests:
-              row.approve_requests,
-
-            scan_verify:
-              row.scan_verify,
-
-            view_reports:
-              row.view_reports,
-
-            manage_users:
-              row.manage_users,
-          }
-        );
-
-      setSuccess(
-        result?.message ||
-          `Permissions for ${getRoleLabel(
-            row.role
-          )} updated successfully.`
-      );
-
-      await loadPermissions();
-
-      setTimeout(() => {
-        setSuccess("");
-      }, 4000);
-    } catch (err) {
-      console.error(
-        "Failed to update role permissions:",
-        err
-      );
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to update role permissions."
-      );
-    } finally {
-      setSavingRole(null);
-    }
-  }
-
-
-  /*
-  |--------------------------------------------------------------------------
   | PAGE
   |--------------------------------------------------------------------------
   */
@@ -14289,11 +16804,11 @@ function SysAdminSecurityConfig() {
     <div className="space-y-5">
       <PageHeader
         title="Security Config"
-        subtitle="Manage QRPass role-based access permissions."
+        subtitle="View the fixed QRPass role-based access permissions."
       />
 
 
-      {/* MESSAGES */}
+      {/* ERROR MESSAGE */}
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -14305,21 +16820,6 @@ function SysAdminSecurityConfig() {
 
             <span>
               {error}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {success && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          <div className="flex items-start gap-2">
-            <CheckCircle
-              size={16}
-              className="mt-0.5 shrink-0"
-            />
-
-            <span>
-              {success}
             </span>
           </div>
         </div>
@@ -14337,13 +16837,12 @@ function SysAdminSecurityConfig() {
 
           <div>
             <p className="text-sm font-semibold text-[#1a3a7b]">
-              Role-Based Access Control
+              Fixed Role-Based Access Control
             </p>
 
             <p className="text-xs text-[#52637a] mt-1 leading-relaxed">
-              Configure the permissions assigned to each QRPass role.
-              System Administrator permissions are protected and
-              remain fully enabled to prevent administrator lockout.
+              QRPass permissions are predefined for each role and cannot be edited.
+              This prevents accidental changes to the system's access-control rules.
             </p>
           </div>
         </div>
@@ -14360,7 +16859,7 @@ function SysAdminSecurityConfig() {
             </p>
 
             <p className="text-xs text-muted-foreground mt-1">
-              Changes are stored in the QRPass database.
+              All permissions are fixed and synchronized with the QRPass database.
             </p>
           </div>
 
@@ -14411,8 +16910,8 @@ function SysAdminSecurityConfig() {
                   )
                 )}
 
-                <th className="text-right py-3 px-4 text-xs text-muted-foreground font-medium min-w-[120px]">
-                  Action
+                <th className="text-right py-3 px-4 text-xs text-muted-foreground font-medium min-w-[110px]">
+                  Status
                 </th>
               </tr>
             </thead>
@@ -14448,133 +16947,86 @@ function SysAdminSecurityConfig() {
                 </tr>
               ) : (
                 permissions.map(
-                  (row) => {
-                    const locked =
-                      row.role ===
-                      "sysadmin";
-
-                    return (
-                      <tr
-                        key={
-                          row.role
-                        }
-                        className="border-b border-[#edf0f5] hover:bg-[#fafbfc]"
-                      >
-                        <td className="py-3 px-4">
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">
-                              {getRoleLabel(
-                                row.role
-                              )}
-                            </p>
-
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {locked
-                                ? "Protected administrator role"
-                                : `Role: ${row.role}`}
-                            </p>
-                          </div>
-                        </td>
-
-
-                        {permissionColumns.map(
-                          (
-                            permission
-                          ) => {
-                            const enabled =
-                              Boolean(
-                                row[
-                                  permission
-                                    .key
-                                ]
-                              );
-
-                            return (
-                              <td
-                                key={
-                                  permission.key
-                                }
-                                className="py-3 px-3 text-center"
-                              >
-                                <button
-                                  type="button"
-                                  disabled={
-                                    locked
-                                  }
-                                  onClick={() =>
-                                    togglePermission(
-                                      row.role,
-                                      permission.key
-                                    )
-                                  }
-                                  title={
-                                    locked
-                                      ? "System Administrator permissions are protected."
-                                      : `${
-                                          enabled
-                                            ? "Disable"
-                                            : "Enable"
-                                        } ${permission.label}`
-                                  }
-                                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors ${
-                                    enabled
-                                      ? "border-green-200 bg-green-50 text-green-600"
-                                      : "border-[#dce3ee] bg-white text-muted-foreground"
-                                  } ${
-                                    locked
-                                      ? "cursor-not-allowed opacity-70"
-                                      : "hover:bg-[#eef2fc]"
-                                  }`}
-                                >
-                                  {enabled ? (
-                                    <CheckCircle
-                                      size={
-                                        16
-                                      }
-                                    />
-                                  ) : (
-                                    <X
-                                      size={
-                                        16
-                                      }
-                                    />
-                                  )}
-                                </button>
-                              </td>
-                            );
-                          }
-                        )}
-
-
-                        <td className="py-3 px-4 text-right">
-                          {locked ? (
-                            <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
-                              Protected
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                saveRole(
-                                  row
-                                )
-                              }
-                              disabled={
-                                savingRole ===
-                                row.role
-                              }
-                              className="inline-flex items-center justify-center rounded-md bg-[#1a3a7b] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#153064] disabled:opacity-50"
-                            >
-                              {savingRole ===
+                  (row) => (
+                    <tr
+                      key={
+                        row.role
+                      }
+                      className="border-b border-[#edf0f5]"
+                    >
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            {getRoleLabel(
                               row.role
-                                ? "Saving..."
-                                : "Save"}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  }
+                            )}
+                          </p>
+
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Fixed role permissions
+                          </p>
+                        </div>
+                      </td>
+
+
+                      {permissionColumns.map(
+                        (
+                          permission
+                        ) => {
+                          const enabled =
+                            Boolean(
+                              row[
+                                permission
+                                  .key
+                              ]
+                            );
+
+                          return (
+                            <td
+                              key={
+                                permission.key
+                              }
+                              className="py-3 px-3 text-center"
+                            >
+                              <div
+                                title={`${permission.label}: ${
+                                  enabled
+                                    ? "Enabled"
+                                    : "Disabled"
+                                } (Fixed)`}
+                                className={`mx-auto inline-flex h-8 w-8 items-center justify-center rounded-md border cursor-default ${
+                                  enabled
+                                    ? "border-green-200 bg-green-50 text-green-600"
+                                    : "border-[#dce3ee] bg-white text-muted-foreground"
+                                }`}
+                              >
+                                {enabled ? (
+                                  <CheckCircle
+                                    size={
+                                      16
+                                    }
+                                  />
+                                ) : (
+                                  <X
+                                    size={
+                                      16
+                                    }
+                                  />
+                                )}
+                              </div>
+                            </td>
+                          );
+                        }
+                      )}
+
+
+                      <td className="py-3 px-4 text-right">
+                        <span className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                          Fixed
+                        </span>
+                      </td>
+                    </tr>
+                  )
                 )
               )}
             </tbody>
@@ -14593,8 +17045,7 @@ function SysAdminSecurityConfig() {
             </p>
 
             <p className="text-xs text-muted-foreground mt-1">
-              Registers personal items, views approved QR codes,
-              permit status, and Lost & Found records.
+              Can register personal items and view approved QR codes.
             </p>
           </div>
 
@@ -14604,9 +17055,7 @@ function SysAdminSecurityConfig() {
             </p>
 
             <p className="text-xs text-muted-foreground mt-1">
-              Performs QR verification, entry and exit monitoring,
-              security incidents, Lost & Found processing, and
-              security reports.
+              Can scan and verify QR codes and view security reports.
             </p>
           </div>
 
@@ -14616,8 +17065,8 @@ function SysAdminSecurityConfig() {
             </p>
 
             <p className="text-xs text-muted-foreground mt-1">
-              Reviews registration requests, issues QR codes,
-              manages the item registry, and generates reports.
+              Can view QR codes, approve item-registration requests,
+              and view reports.
             </p>
           </div>
 
@@ -14627,9 +17076,7 @@ function SysAdminSecurityConfig() {
             </p>
 
             <p className="text-xs text-muted-foreground mt-1">
-              Maintains full administrative access to system
-              configuration, records, users, sessions, audit logs,
-              security settings, and reports.
+              Can view reports and manage user accounts.
             </p>
           </div>
         </div>
@@ -15894,7 +18341,7 @@ const NAV: Record<
     },
     {
       icon: <QrCode size={16} />,
-      label: "My QR Codes",
+      label: "QR Codes",
     },
     {
       icon: <Eye size={16} />,
@@ -19248,7 +21695,7 @@ const handleSaveAccountProfile = async () => {
         normalizedType ===
         "item_approved"
       ) {
-        return 1; // My QR Codes
+        return 1; // QR Codes
       }
 
       if (
