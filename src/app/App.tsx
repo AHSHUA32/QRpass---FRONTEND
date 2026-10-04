@@ -9303,9 +9303,12 @@ function PCOPermitRequests() {
                   "Ref #",
                   "Student",
                   "ID",
-                  "Item",
+                  "Item / Description",
                   "Type",
+                  "Qty",
                   "Serial No.",
+                  "Purpose / Reason",
+                  "Permit Valid Until",
                   "Date Filed",
                   "Action",
                 ].map((h) => (
@@ -9323,7 +9326,7 @@ function PCOPermitRequests() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={11}
                     className="text-center py-8 text-sm text-muted-foreground"
                   >
                     Loading pending requests...
@@ -9332,7 +9335,7 @@ function PCOPermitRequests() {
               ) : pending.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={11}
                     className="text-center py-8 text-sm text-muted-foreground"
                   >
                     No pending item registration requests.
@@ -9356,16 +9359,47 @@ function PCOPermitRequests() {
                       {item.user?.username ?? "—"}
                     </td>
 
-                    <td className="py-2.5 px-3 text-sm text-foreground">
-                      {item.item_name}
+                    <td className="py-2.5 px-3 text-sm text-foreground min-w-[190px]">
+                      <div className="font-medium">
+                        {item.item_name}
+                      </div>
+
+                      {item.complete_description &&
+                        String(item.complete_description).trim() &&
+                        String(item.complete_description).trim().toLowerCase() !==
+                          String(item.item_name ?? "").trim().toLowerCase() && (
+                          <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+                            {item.complete_description}
+                          </div>
+                        )}
                     </td>
 
-                    <td className="py-2.5 px-3 text-xs text-muted-foreground">
+                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
                       {item.item_type}
                     </td>
 
-                    <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
-                      {item.serial_number}
+                    <td className="py-2.5 px-3 text-xs text-foreground text-center">
+                      {item.quantity ?? "—"}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground whitespace-nowrap">
+                      {item.serial_number || "—"}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs text-muted-foreground min-w-[180px]">
+                      {item.purpose || "—"}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {item.qr_expires_at
+                        ? new Date(item.qr_expires_at).toLocaleString("en-PH", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })
+                        : "—"}
                     </td>
 
                     <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">

@@ -328,6 +328,12 @@ export async function createItem(item: {
 
   purpose: string;
 
+  quantity?: number | string | null;
+
+  complete_description?: string | null;
+
+  valid_until?: string | null;
+
 }) {
 
   const token = localStorage.getItem("token");
