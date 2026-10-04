@@ -786,54 +786,55 @@ export async function createSecurityIncident(data: {
   return responseData;
 }
 
-export async function resolveSecurityIncident(id: number) {
-
+export async function resolveSecurityIncident(
+  id: number,
+  resolutionType: string,
+  resolutionDetails: string
+) {
   const token = localStorage.getItem("token");
 
-
-
   const response = await fetch(
-
     `${API_URL}/security-incidents/${id}/resolve`,
-
     {
-
       method: "PUT",
-
       headers: {
-
         Accept: "application/json",
-
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-
       },
-
+      body: JSON.stringify({
+        resolution_type: resolutionType,
+        resolution_details: resolutionDetails,
+      }),
     }
-
   );
-
-
 
   const data = await response.json();
 
-
-
   if (!response.ok) {
+    if (data.errors) {
+      const firstError = Object.values(
+        data.errors
+      )[0];
+
+      if (
+        Array.isArray(firstError) &&
+        firstError.length > 0
+      ) {
+        throw new Error(
+          String(firstError[0])
+        );
+      }
+    }
 
     throw new Error(
-
-      data.message || "Failed to resolve security incident."
-
+      data.message ||
+        "Failed to resolve security incident."
     );
-
   }
 
-
-
   return data;
-
 }
-
 
 
 export async function getLostFoundItems() {

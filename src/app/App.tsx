@@ -4825,6 +4825,21 @@ function SecurityEntryExitLog() {
   const [selectedIncident, setSelectedIncident] =
     useState<any | null>(null);
 
+  const [resolvingIncident, setResolvingIncident] =
+    useState<any | null>(null);
+
+  const [resolutionType, setResolutionType] =
+    useState("");
+
+  const [resolutionDetails, setResolutionDetails] =
+    useState("");
+
+  const [resolutionError, setResolutionError] =
+    useState("");
+
+  const [savingResolution, setSavingResolution] =
+    useState(false);
+
   /*
   |--------------------------------------------------------------------------
   | LOAD DATA
@@ -4875,38 +4890,114 @@ function SecurityEntryExitLog() {
   |--------------------------------------------------------------------------
   */
 
-  async function handleResolveIncident(
-    id: number
-  ) {
-    const confirmed = window.confirm(
-      "Are you sure you want to resolve this security incident?"
-    );
+  const resolutionTypeOptions = [
+    "Ownership Verified",
+    "Returned to Owner",
+    "Authorized by Owner",
+    "Item Held by Security",
+    "Registration Required",
+    "Invalid QR / Manual Verification",
+    "Other",
+  ];
 
-    if (!confirmed) {
+  function suggestedResolutionNote(
+    type: string
+  ) {
+    switch (type) {
+      case "Ownership Verified":
+        return "Owner presented a valid University ID and proof of ownership. CSU verified the information and cleared the item.";
+
+      case "Returned to Owner":
+        return "The item was returned to the registered owner after CSU verified the owner's identity and ownership.";
+
+      case "Authorized by Owner":
+        return "The registered owner confirmed that the person carrying the item had permission. CSU verified the identities before clearing the item.";
+
+      case "Item Held by Security":
+        return "Ownership could not be verified. The item was held by Security and the person was advised to coordinate with the appropriate university office.";
+
+      case "Registration Required":
+        return "The item was not properly registered. CSU advised the owner to complete item registration and secure an approved QR permit before the item can pass through the gate.";
+
+      case "Invalid QR / Manual Verification":
+        return "The QR code was invalid or could not be verified. CSU performed manual verification and confirmed the item information before resolving the incident.";
+
+      default:
+        return "";
+    }
+  }
+
+  function openResolveIncident(
+    incident: any
+  ) {
+    setResolutionType("");
+    setResolutionDetails("");
+    setResolutionError("");
+    setResolvingIncident(incident);
+  }
+
+  async function handleResolveIncident(
+    event: React.FormEvent
+  ) {
+    event.preventDefault();
+
+    if (!resolvingIncident) {
+      return;
+    }
+
+    const type =
+      resolutionType.trim();
+
+    const details =
+      resolutionDetails.trim();
+
+    if (!type) {
+      setResolutionError(
+        "Please select a resolution type."
+      );
+      return;
+    }
+
+    if (!details) {
+      setResolutionError(
+        "Please explain how this security incident was resolved."
+      );
       return;
     }
 
     try {
-      await resolveSecurityIncident(id);
+      setSavingResolution(true);
+      setResolutionError("");
+
+      await resolveSecurityIncident(
+        resolvingIncident.id,
+        type,
+        details
+      );
+
+      setResolvingIncident(null);
+      setSelectedIncident(null);
+      setResolutionType("");
+      setResolutionDetails("");
+
+      await loadData();
 
       alert(
         "Security incident resolved successfully."
       );
-
-      setSelectedIncident(null);
-
-      await loadData();
     } catch (error) {
       console.error(
         "Failed to resolve incident:",
         error
       );
 
-      alert(
+      setResolutionError(
         error instanceof Error
           ? error.message
           : "Failed to resolve security incident."
       );
+    } finally {
+      setSavingResolution(false);
     }
   }
 
@@ -5612,8 +5703,8 @@ function SecurityEntryExitLog() {
                             <button
                               type="button"
                               onClick={() =>
-                                handleResolveIncident(
-                                  incident.id
+                                openResolveIncident(
+                                  incident
                                 )
                               }
                               className="px-3 py-1.5 bg-green-600 text-white rounded-md text-xs font-semibold hover:bg-green-700"
@@ -5849,6 +5940,86 @@ function SecurityEntryExitLog() {
                     "No additional description provided."}
                 </div>
               </div>
+
+              {String(
+                selectedIncident.status ?? ""
+              ).toLowerCase() === "resolved" && (
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-green-700 mb-2">
+                    Resolution Information
+                  </h3>
+
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="rounded-md border border-green-200 bg-white/70 p-3">
+                        <p className="text-xs text-gray-500">
+                          Resolution Type
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-green-900">
+                          {selectedIncident.resolution_type ||
+                            "Not recorded"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-md border border-green-200 bg-white/70 p-3">
+                        <p className="text-xs text-gray-500">
+                          Resolution Status
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-green-900">
+                          Resolved
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <p className="text-xs font-semibold text-green-700">
+                        How the incident was resolved
+                      </p>
+
+                      <p className="mt-1 whitespace-pre-wrap text-sm text-green-900">
+                        {selectedIncident.resolution_details ||
+                          "No resolution details were recorded for this older incident."}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 grid md:grid-cols-2 gap-3">
+                      <div className="rounded-md border border-green-200 bg-white/70 p-3">
+                        <p className="text-xs text-gray-500">
+                          Resolved By
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-gray-800">
+                          {selectedIncident.resolver?.name ??
+                            "Security Personnel"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-md border border-green-200 bg-white/70 p-3">
+                        <p className="text-xs text-gray-500">
+                          Date & Time Resolved
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-gray-800">
+                          {selectedIncident.resolved_at ? (
+                            <>
+                              {formatDate(
+                                selectedIncident.resolved_at
+                              )}{" "}
+                              {formatTime(
+                                selectedIncident.resolved_at
+                              )}
+                            </>
+                          ) : (
+                            "Not recorded"
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* MODAL FOOTER */}
@@ -5888,8 +6059,8 @@ function SecurityEntryExitLog() {
                   <button
                     type="button"
                     onClick={() =>
-                      handleResolveIncident(
-                        selectedIncident.id
+                      openResolveIncident(
+                        selectedIncident
                       )
                     }
                     className="px-4 py-2 bg-green-600 text-white rounded-md text-xs font-semibold hover:bg-green-700"
@@ -5900,6 +6071,246 @@ function SecurityEntryExitLog() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* RESOLVE INCIDENT MODAL */}
+      {resolvingIncident && (
+        <div
+          className="fixed inset-0 z-[10000] bg-black/55 flex items-center justify-center p-4"
+          onClick={() => {
+            if (!savingResolution) {
+              setResolvingIncident(null);
+              setResolutionType("");
+              setResolutionError("");
+              setResolutionDetails("");
+            }
+          }}
+        >
+          <form
+            onSubmit={handleResolveIncident}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+            className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-green-200 bg-green-50 px-5 py-4">
+              <div className="flex gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100">
+                  <CheckCircle
+                    size={20}
+                    className="text-green-700"
+                  />
+                </div>
+
+                <div>
+                  <h2 className="text-lg font-bold text-green-800">
+                    Resolve Security Incident
+                  </h2>
+
+                  <p className="mt-0.5 text-xs text-green-700">
+                    Record how this flagged item was resolved before closing the incident.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={savingResolution}
+                onClick={() => {
+                  setResolvingIncident(null);
+                  setResolutionError("");
+                  setResolutionDetails("");
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-green-100 disabled:opacity-50"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4 p-5">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <p className="text-xs text-gray-500">
+                    Item
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold">
+                    {resolvingIncident.item?.item_name ??
+                      resolvingIncident.item_name ??
+                      "Unknown Item"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <p className="text-xs text-gray-500">
+                    Code
+                  </p>
+
+                  <p className="mt-1 font-mono text-sm font-semibold">
+                    {resolvingIncident.scanned_code ??
+                      "—"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <p className="text-xs text-gray-500">
+                    Owner
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold">
+                    {resolvingIncident.owner_name ??
+                      resolvingIncident.item?.user?.name ??
+                      "Unknown Owner"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <p className="text-xs text-gray-500">
+                    Person Carrying
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold">
+                    {resolvingIncident.carrier_name ??
+                      "Unknown"}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-foreground">
+                  Resolution Type *
+                </label>
+
+                <select
+                  value={resolutionType}
+                  onChange={(event) => {
+                    const nextType =
+                      event.target.value;
+
+                    setResolutionType(
+                      nextType
+                    );
+
+                    setResolutionDetails(
+                      suggestedResolutionNote(
+                        nextType
+                      )
+                    );
+
+                    if (resolutionError) {
+                      setResolutionError("");
+                    }
+                  }}
+                  className={`w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 ${
+                    resolutionError &&
+                    !resolutionType
+                      ? "border-red-300 focus:ring-red-200"
+                      : "border-[#cfd8e6] focus:ring-primary/20"
+                  }`}
+                >
+                  <option value="">
+                    Select resolution type
+                  </option>
+
+                  {resolutionTypeOptions.map(
+                    (option) => (
+                      <option
+                        key={option}
+                        value={option}
+                      >
+                        {option}
+                      </option>
+                    )
+                  )}
+                </select>
+
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Selecting a type will suggest a resolution note that CSU can still edit.
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-foreground">
+                  Additional Resolution Details *
+                </label>
+
+                <textarea
+                  value={resolutionDetails}
+                  onChange={(event) => {
+                    setResolutionDetails(
+                      event.target.value
+                    );
+
+                    if (resolutionError) {
+                      setResolutionError("");
+                    }
+                  }}
+                  rows={5}
+                  maxLength={2000}
+                  placeholder="Explain what CSU verified, what action was taken, and why the incident can now be closed."
+                  className={`w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 ${
+                    resolutionError
+                      ? "border-red-300 focus:ring-red-200"
+                      : "border-[#cfd8e6] focus:ring-primary/20"
+                  }`}
+                  autoFocus
+                />
+
+                <div className="mt-1 flex items-center justify-between gap-3">
+                  <p className="text-[11px] text-muted-foreground">
+                    This note will be stored permanently with the incident.
+                  </p>
+
+                  <p className="text-[11px] text-muted-foreground">
+                    {resolutionDetails.length}/2000
+                  </p>
+                </div>
+              </div>
+
+              {resolutionError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle
+                      size={16}
+                      className="mt-0.5 shrink-0 text-red-600"
+                    />
+
+                    <p className="text-xs font-medium text-red-700">
+                      {resolutionError}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-gray-200 bg-gray-50 px-5 py-4">
+              <button
+                type="button"
+                disabled={savingResolution}
+                onClick={() => {
+                  setResolvingIncident(null);
+                  setResolutionError("");
+                  setResolutionDetails("");
+                }}
+                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={savingResolution}
+                className="inline-flex items-center gap-1.5 rounded-md bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                <CheckCircle size={14} />
+
+                {savingResolution
+                  ? "Saving..."
+                  : "Confirm Resolution"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>
@@ -9059,6 +9470,8 @@ function PCOItemRegistry() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedItem, setSelectedItem] =
+    useState<any | null>(null);
 
   async function loadItems() {
     try {
@@ -9317,6 +9730,7 @@ function PCOItemRegistry() {
                   "QR ID",
                   "Date Registered",
                   "Status",
+                  "Action",
                 ].map((heading) => (
                   <th
                     key={heading}
@@ -9332,7 +9746,7 @@ function PCOItemRegistry() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={12}
+                    colSpan={10}
                     className="text-center py-8 text-sm text-muted-foreground"
                   >
                     Loading registered items...
@@ -9341,7 +9755,7 @@ function PCOItemRegistry() {
               ) : filteredItems.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={12}
+                    colSpan={10}
                     className="text-center py-8 text-sm text-muted-foreground"
                   >
                     {search
@@ -9403,7 +9817,7 @@ function PCOItemRegistry() {
 
                     {/* STATUS */}
                     <td className="py-3 px-3">
-                    <StatusBadge
+                      <StatusBadge
                         status={
                           item.is_flagged
                             ? "Flagged"
@@ -9415,9 +9829,22 @@ function PCOItemRegistry() {
                             ? "Pending"
                             : item.registry_status || "Unknown"
                         }
+                      />
+                    </td>
 
-                                            />
-                                          </td>
+                    {/* ACTION */}
+                    <td className="py-3 px-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedItem(item)
+                        }
+                        className="inline-flex items-center gap-1.5 rounded-md border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-[#eef2fc]"
+                      >
+                        <Eye size={13} />
+                        View
+                      </button>
+                    </td>
                                         </tr>
                                       ))
                                     )}
@@ -9425,6 +9852,356 @@ function PCOItemRegistry() {
                                 </table>
                               </div>
                             </Card>
+
+                            {/* REGISTERED ITEM DETAILS MODAL */}
+                            {selectedItem && (
+                              <div
+                                className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 p-4"
+                                onClick={() =>
+                                  setSelectedItem(null)
+                                }
+                              >
+                                <div
+                                  className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+                                  onClick={(e) =>
+                                    e.stopPropagation()
+                                  }
+                                >
+                                  {/* HEADER */}
+                                  <div className="flex items-start justify-between gap-4 border-b border-[#dce3ee] bg-[#fafbfc] px-5 py-4">
+                                    <div>
+                                      <h2 className="text-lg font-bold text-foreground">
+                                        Registered Item Details
+                                      </h2>
+
+                                      <p className="mt-0.5 text-xs text-muted-foreground">
+                                        Complete registration information for this campus item.
+                                      </p>
+                                    </div>
+
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setSelectedItem(null)
+                                      }
+                                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-[#eef2fc] hover:text-primary"
+                                    >
+                                      <X size={18} />
+                                    </button>
+                                  </div>
+
+                                  {/* CONTENT */}
+                                  <div className="max-h-[70vh] overflow-y-auto p-5">
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Owner
+                                        </p>
+                                        <p className="mt-1 text-sm font-semibold text-foreground">
+                                          {selectedItem.user?.name ?? "Unknown"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Owner ID
+                                        </p>
+                                        <p className="mt-1 font-mono text-sm text-foreground">
+                                          {selectedItem.user?.username ?? "—"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Item Name
+                                        </p>
+                                        <p className="mt-1 text-sm font-semibold text-foreground">
+                                          {selectedItem.item_name || "—"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Item Type
+                                        </p>
+                                        <p className="mt-1 text-sm text-foreground">
+                                          {selectedItem.item_type || "—"}
+                                        </p>
+                                      </div>
+
+                                      {(() => {
+                                        const detailCards = [
+                                          selectedItem.brand_model &&
+                                          String(
+                                            selectedItem.brand_model
+                                          ).trim() &&
+                                          String(
+                                            selectedItem.brand_model
+                                          ).toUpperCase() !== "N/A"
+                                            ? {
+                                                label: "Brand / Model",
+                                                value:
+                                                  selectedItem.brand_model,
+                                                mono: false,
+                                              }
+                                            : null,
+
+                                          selectedItem.serial_number &&
+                                          String(
+                                            selectedItem.serial_number
+                                          ).trim()
+                                            ? {
+                                                label: "Serial Number",
+                                                value:
+                                                  selectedItem.serial_number,
+                                                mono: true,
+                                              }
+                                            : null,
+
+                                          selectedItem.color &&
+                                          String(
+                                            selectedItem.color
+                                          ).trim() &&
+                                          String(
+                                            selectedItem.color
+                                          ).toUpperCase() !== "N/A"
+                                            ? {
+                                                label: "Color",
+                                                value:
+                                                  selectedItem.color,
+                                                mono: false,
+                                              }
+                                            : null,
+
+                                          [
+                                            "sports equipment",
+                                            "other equipment",
+                                          ].includes(
+                                            String(
+                                              selectedItem.item_type ?? ""
+                                            ).toLowerCase()
+                                          )
+                                            ? {
+                                                label: "Quantity",
+                                                value:
+                                                  selectedItem.quantity ||
+                                                  "1",
+                                                mono: false,
+                                              }
+                                            : null,
+                                        ].filter(Boolean) as {
+                                          label: string;
+                                          value: any;
+                                          mono: boolean;
+                                        }[];
+
+                                        return detailCards.map(
+                                          (detail, index) => {
+                                            const isLastOddCard =
+                                              detailCards.length % 2 === 1 &&
+                                              index ===
+                                                detailCards.length - 1;
+
+                                            return (
+                                              <div
+                                                key={detail.label}
+                                                className={`rounded-lg border border-[#dce3ee] p-3 ${
+                                                  isLastOddCard
+                                                    ? "sm:col-span-2"
+                                                    : ""
+                                                }`}
+                                              >
+                                                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                                  {detail.label}
+                                                </p>
+
+                                                <p
+                                                  className={`mt-1 text-sm text-foreground ${
+                                                    detail.mono
+                                                      ? "font-mono"
+                                                      : ""
+                                                  }`}
+                                                >
+                                                  {detail.value}
+                                                </p>
+                                              </div>
+                                            );
+                                          }
+                                        );
+                                      })()}
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3 sm:col-span-2">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Purpose / Reason for Bringing
+                                        </p>
+                                        <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
+                                          {selectedItem.purpose || "—"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] bg-[#f8fafc] p-3 sm:col-span-2">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Description / Specifications
+                                        </p>
+                                        <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
+                                          {selectedItem.complete_description ||
+                                            selectedItem.description ||
+                                            "No additional description or specifications were provided."}
+                                        </p>
+                                      </div>
+
+                                      {selectedItem.accessories_included && (
+                                        <div className="rounded-lg border border-[#dce3ee] p-3 sm:col-span-2">
+                                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Accessories Included
+                                          </p>
+                                          <p className="mt-1 text-sm text-foreground">
+                                            {selectedItem.accessories_included}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {selectedItem.computer_type && (
+                                        <div className="rounded-lg border border-[#dce3ee] p-3">
+                                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Computer / Laptop Type
+                                          </p>
+                                          <p className="mt-1 text-sm text-foreground">
+                                            {selectedItem.computer_type}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {selectedItem.processor && (
+                                        <div className="rounded-lg border border-[#dce3ee] p-3">
+                                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Processor
+                                          </p>
+                                          <p className="mt-1 text-sm text-foreground">
+                                            {selectedItem.processor}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {selectedItem.memory && (
+                                        <div className="rounded-lg border border-[#dce3ee] p-3">
+                                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Memory / RAM
+                                          </p>
+                                          <p className="mt-1 text-sm text-foreground">
+                                            {selectedItem.memory}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {selectedItem.hard_drive && (
+                                        <div className="rounded-lg border border-[#dce3ee] p-3">
+                                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Storage
+                                          </p>
+                                          <p className="mt-1 text-sm text-foreground">
+                                            {selectedItem.hard_drive}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {selectedItem.operating_system && (
+                                        <div className="rounded-lg border border-[#dce3ee] p-3">
+                                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Operating System
+                                          </p>
+                                          <p className="mt-1 text-sm text-foreground">
+                                            {selectedItem.operating_system}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          QR ID
+                                        </p>
+                                        <p className="mt-1 font-mono text-sm text-primary">
+                                          {selectedItem.qr_code || "Not issued"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          QR Expiration
+                                        </p>
+                                        <p className="mt-1 text-sm text-foreground">
+                                          {selectedItem.qr_expires_at
+                                            ? new Date(
+                                                selectedItem.qr_expires_at
+                                              ).toLocaleString("en-PH", {
+                                                year: "numeric",
+                                                month: "short",
+                                                day: "numeric",
+                                                hour: "numeric",
+                                                minute: "2-digit",
+                                              })
+                                            : "No expiration set"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Date Registered
+                                        </p>
+                                        <p className="mt-1 text-sm text-foreground">
+                                          {selectedItem.created_at
+                                            ? new Date(
+                                                selectedItem.created_at
+                                              ).toLocaleString("en-PH", {
+                                                year: "numeric",
+                                                month: "short",
+                                                day: "numeric",
+                                                hour: "numeric",
+                                                minute: "2-digit",
+                                              })
+                                            : "—"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Status
+                                        </p>
+                                        <div className="mt-1">
+                                          <StatusBadge
+                                            status={
+                                              selectedItem.is_flagged
+                                                ? "Flagged"
+                                                : selectedItem.is_expired
+                                                ? "Expired"
+                                                : selectedItem.is_active_qr
+                                                ? "Active"
+                                                : selectedItem.status === "pending"
+                                                ? "Pending"
+                                                : selectedItem.registry_status ||
+                                                  "Unknown"
+                                            }
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* FOOTER */}
+                                  <div className="flex justify-end border-t border-[#dce3ee] bg-[#fafbfc] px-5 py-4">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setSelectedItem(null)
+                                      }
+                                      className="rounded-md bg-primary px-4 py-2 text-xs font-semibold text-white hover:opacity-90"
+                                    >
+                                      Close
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       }
@@ -10086,6 +10863,14 @@ function PCOItemRegistry() {
                         function handleReportDownload(
                           reportName: string
                         ) {
+                          if (
+                            reportName ===
+                            "Monthly Item Registration Summary"
+                          ) {
+                            handleMonthlyRegistrationPDF();
+                            return;
+                          }
+
                       
                           if (
                             reportName ===
