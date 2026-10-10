@@ -2,7 +2,7 @@
 // REACT
 // =========================================================
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 
 // =========================================================
@@ -57,6 +57,7 @@ import {
   Shield,
   User,
   Users,
+  Upload,
   X,
   XCircle,
 } from "lucide-react";
@@ -7421,6 +7422,24 @@ function SecurityLostFound() {
   const [submitting, setSubmitting] =
     useState(false);
 
+  const [photoFile, setPhotoFile] =
+    useState<File | null>(null);
+
+  const [photoPreview, setPhotoPreview] =
+    useState("");
+
+  const [cameraOpen, setCameraOpen] =
+    useState(false);
+
+  const [cameraError, setCameraError] =
+    useState("");
+
+  const videoRef =
+    useRef<HTMLVideoElement | null>(null);
+
+  const cameraStreamRef =
+    useRef<MediaStream | null>(null);
+
   const [recoveringId, setRecoveringId] =
     useState<number | null>(null);
 
@@ -7475,6 +7494,149 @@ function SecurityLostFound() {
     loadItems();
   }, []);
 
+  useEffect(() => {
+    if (!cameraOpen) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function startCamera() {
+      try {
+        setCameraError("");
+
+        if (
+          !navigator.mediaDevices ||
+          !navigator.mediaDevices.getUserMedia
+        ) {
+          throw new Error(
+            "Camera access is not supported by this browser."
+          );
+        }
+
+        const stream =
+          await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: {
+                ideal: "environment",
+              },
+            },
+            audio: false,
+          });
+
+        if (cancelled) {
+          stream
+            .getTracks()
+            .forEach((track) => track.stop());
+          return;
+        }
+
+        cameraStreamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+      } catch (err) {
+        setCameraError(
+          err instanceof Error
+            ? err.message
+            : "Unable to access the camera."
+        );
+      }
+    }
+
+    startCamera();
+
+    return () => {
+      cancelled = true;
+
+      cameraStreamRef.current
+        ?.getTracks()
+        .forEach((track) => track.stop());
+
+      cameraStreamRef.current = null;
+    };
+  }, [cameraOpen]);
+
+  function closeCamera() {
+    setCameraOpen(false);
+    setCameraError("");
+  }
+
+  function captureCameraPhoto() {
+    const video = videoRef.current;
+
+    if (
+      !video ||
+      !video.videoWidth ||
+      !video.videoHeight
+    ) {
+      setCameraError(
+        "The camera is still starting. Please wait a moment and try again."
+      );
+      return;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      setCameraError(
+        "Unable to capture the camera image."
+      );
+      return;
+    }
+
+    context.drawImage(
+      video,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          setCameraError(
+            "Unable to capture the camera image."
+          );
+          return;
+        }
+
+        if (blob.size > 5 * 1024 * 1024) {
+          setCameraError(
+            "The captured photo is larger than 5 MB."
+          );
+          return;
+        }
+
+        const file = new File(
+          [blob],
+          `lost-found-${Date.now()}.jpg`,
+          { type: "image/jpeg" }
+        );
+
+        if (photoPreview) {
+          URL.revokeObjectURL(photoPreview);
+        }
+
+        setPhotoFile(file);
+        setPhotoPreview(
+          URL.createObjectURL(file)
+        );
+        setError("");
+        closeCamera();
+      },
+      "image/jpeg",
+      0.9
+    );
+  }
+
   function handleFormChange(
     e: React.ChangeEvent<
       | HTMLInputElement
@@ -7488,6 +7650,55 @@ function SecurityLostFound() {
       ...current,
       [name]: value,
     }));
+  }
+
+  function clearPhoto() {
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview);
+    }
+
+    setPhotoFile(null);
+    setPhotoPreview("");
+  }
+
+  function handlePhotoChange(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = e.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      setError(
+        "Please select a JPG, JPEG, PNG, or WEBP image."
+      );
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError(
+        "The item photo must not be larger than 5 MB."
+      );
+      e.target.value = "";
+      return;
+    }
+
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview);
+    }
+
+    setError("");
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
   }
 
   function clearForm() {
@@ -7506,6 +7717,8 @@ function SecurityLostFound() {
       color: "",
       description: "",
     });
+
+    clearPhoto();
   }
 
   async function handleSubmit(
@@ -7587,6 +7800,7 @@ function SecurityLostFound() {
           date_found: form.date_found,
           description:
             form.description.trim() || undefined,
+          photo: photoFile,
         });
 
         setSuccess(
@@ -7610,6 +7824,7 @@ function SecurityLostFound() {
           date_lost: form.date_lost,
           description:
             form.description.trim() || undefined,
+          photo: photoFile,
         });
 
         setSuccess(
@@ -8473,6 +8688,26 @@ function SecurityLostFound() {
                           </div>
                         )}
 
+                        {item.photo_url && (
+                          <div className="mt-3 overflow-hidden rounded-lg border border-[#cfd8e6] bg-muted/20 p-3">
+                            <p className="mb-2 text-xs font-medium text-muted-foreground">
+                              Item Photo
+                            </p>
+                            <a
+                              href={item.photo_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block"
+                            >
+                              <img
+                                src={item.photo_url}
+                                alt={`${item.item_name || "Lost and Found item"} photo`}
+                                className="max-h-64 w-full rounded-lg border border-[#cfd8e6] bg-background object-contain"
+                              />
+                            </a>
+                          </div>
+                        )}
+
                         {item.description && (
                           <div className="mt-3 rounded-lg bg-muted/40 p-3">
                             <p className="text-xs font-medium text-muted-foreground">
@@ -8763,6 +8998,138 @@ function SecurityLostFound() {
               />
             </div>
 
+            <div className="rounded-lg border border-[#cfd8e6] bg-muted/20 p-4">
+              <div className="mb-3">
+                <p className="text-sm font-semibold text-foreground">
+                  Item Photo
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Optional. CSU can take a photo on a phone or upload an existing image. JPG, PNG, or WEBP up to 5 MB.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <label
+                  htmlFor="lost-found-photo"
+                  className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                >
+                  <Upload size={16} />
+                  Upload Photo
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCameraError("");
+                    setCameraOpen(true);
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+                >
+                  <Camera size={16} />
+                  Use Camera
+                </button>
+              </div>
+
+              <input
+                id="lost-found-photo"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handlePhotoChange}
+                className="sr-only"
+              />
+
+              {cameraOpen && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4">
+                  <div className="w-full max-w-2xl rounded-xl bg-card p-4 shadow-2xl">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-base font-semibold text-foreground">
+                          Take Item Photo
+                        </h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Allow camera access, position the item clearly, then capture the photo.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={closeCamera}
+                        className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+
+                    <div className="overflow-hidden rounded-lg bg-black">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="max-h-[60vh] w-full object-contain"
+                      />
+                    </div>
+
+                    {cameraError && (
+                      <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                        {cameraError}
+                      </div>
+                    )}
+
+                    <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                      <button
+                        type="button"
+                        onClick={closeCamera}
+                        className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={captureCameraPhoto}
+                        disabled={Boolean(cameraError)}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Camera size={16} />
+                        Capture Photo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {photoPreview && (
+                <div className="mt-4">
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">
+                    Photo Preview
+                  </p>
+
+                  <div className="overflow-hidden rounded-lg border border-[#cfd8e6] bg-background p-2">
+                    <img
+                      src={photoPreview}
+                      alt="Selected Lost and Found item preview"
+                      className="max-h-72 w-full rounded-md object-contain"
+                    />
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <p className="max-w-full truncate text-xs text-muted-foreground">
+                      {photoFile?.name}
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={clearPhoto}
+                      className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
+                    >
+                      Remove Photo
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div
               className={`rounded-lg border px-4 py-3 ${
                 reportMode === "found"
@@ -8787,8 +9154,10 @@ function SecurityLostFound() {
               <button
                 type="button"
                 onClick={() => {
+                  clearForm();
                   setTab("registry");
                   setError("");
+                  setSuccess("");
                 }}
                 className="rounded-lg border border-[#cfd8e6] bg-background px-5 py-2 text-sm font-medium hover:bg-muted"
               >
@@ -9646,7 +10015,7 @@ function PCOItemRegistry() {
   link.href = url;
 
   link.download =
-    `QRPass-Item-Registry-${fileDate}.csv`;
+    `QRPass-Registered-Items-${fileDate}.csv`;
 
   document.body.appendChild(link);
 
@@ -9660,8 +10029,8 @@ function PCOItemRegistry() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Item Registry"
-        subtitle="View and manage the centralized registry of campus items."
+        title="Registered Items"
+        subtitle="View and monitor the centralized records of registered items."
         action={
           <button
             onClick={loadItems}
@@ -10877,7 +11246,7 @@ function PCOItemRegistry() {
                           XLSX.utils.book_append_sheet(
                             workbook,
                             registrySheet,
-                            "Item Registry"
+                            "Registered Items"
                           );
                       
                           const fileDate = new Date()
@@ -10886,7 +11255,7 @@ function PCOItemRegistry() {
                       
                           XLSX.writeFile(
                             workbook,
-                            `QRPass-Item-Registry-${fileDate}.xlsx`
+                            `QRPass-Registered-Items-${fileDate}.xlsx`
                           );
                         }
                       
@@ -10924,7 +11293,7 @@ function PCOItemRegistry() {
                       
                           if (
                             reportName ===
-                            "Item Registry Export"
+                            "Registered Items Export"
                           ) {
                             handleItemRegistryExcel();
                           }
@@ -10964,7 +11333,7 @@ function PCOItemRegistry() {
                       
                           {
                             name:
-                              "Item Registry Export",
+                              "Registered Items Export",
                             period:
                               "All time",
                             format:
@@ -10976,7 +11345,7 @@ function PCOItemRegistry() {
                           <div className="space-y-5">
                             <PageHeader
                               title="Reports"
-                              subtitle="Item registration, approval, QR issuance, and registry reports."
+                              subtitle="Item registration, approval, QR issuance, and registered-item reports."
                               action={
                                 <button
                                   onClick={
@@ -19133,6 +19502,7 @@ const PAGES: Record<Role, React.ComponentType[]> = {
 
   sysadmin: [
     AdminDashboard,
+    PCOItemRegistry,
     AdminRecords,
     AdminAnalytics,
     SysAdminUserAccounts,
@@ -19198,7 +19568,7 @@ const NAV: Record<
     },
     {
       icon: <Layers size={16} />,
-      label: "Item Registry",
+      label: "Registered Items",
     },
     {
       icon: <BarChart2 size={16} />,
@@ -19210,6 +19580,10 @@ const NAV: Record<
     {
       icon: <BarChart2 size={16} />,
       label: "Overview Dashboard",
+    },
+    {
+      icon: <Package size={16} />,
+      label: "Registered Items",
     },
     {
       icon: <Layers size={16} />,
@@ -19231,12 +19605,10 @@ const NAV: Record<
       icon: <ClipboardList size={16} />,
       label: "Audit Logs",
     },
-
     {
       icon: <Eye size={16} />,
       label: "Active Sessions",
     },
-
     {
       icon: <BarChart2 size={16} />,
       label: "Performance",
@@ -22494,243 +22866,181 @@ const handleSaveAccountProfile = async () => {
   // =========================================================
 
   function getNotificationTargetIndex(
-    type:
-      | string
-      | null
-      | undefined
+    type: string | null | undefined
   ): number | null {
-    const normalizedType =
-      String(type ?? "")
-        .toLowerCase();
-
+    const normalizedType = String(type ?? "").toLowerCase();
+  
     /*
     |--------------------------------------------------------------------------
     | STUDENT
     |--------------------------------------------------------------------------
     */
-
+  
     if (role === "student") {
-      if (
-        normalizedType ===
-        "item_approved"
-      ) {
+      if (normalizedType === "item_approved") {
         return 1; // QR Codes
       }
-
+  
       if (
-        normalizedType ===
-          "item_submitted" ||
-        normalizedType.includes(
-          "permit"
-        )
+        normalizedType === "item_submitted" ||
+        normalizedType.includes("permit")
       ) {
         return 2; // Permit Status
       }
-
+  
       if (
-        normalizedType.includes(
-          "lost_found"
-        ) ||
-        normalizedType.includes(
-          "lost"
-        ) ||
-        normalizedType.includes(
-          "found"
-        )
+        normalizedType.includes("lost_found") ||
+        normalizedType.includes("lost") ||
+        normalizedType.includes("found")
       ) {
         return 3; // Lost & Found
       }
-
+  
       return 0; // Register Item
     }
-
+  
     /*
     |--------------------------------------------------------------------------
     | PCO
     |--------------------------------------------------------------------------
     */
-
+  
     if (role === "pco") {
       if (
-        normalizedType ===
-          "new_item_registration" ||
-        normalizedType ===
-          "item_submitted" ||
-        normalizedType.includes(
-          "approval"
-        )
+        normalizedType === "new_item_registration" ||
+        normalizedType === "item_submitted" ||
+        normalizedType.includes("approval")
       ) {
         return 0; // Registration Requests
       }
-
+  
       if (
-        normalizedType ===
-          "item_approved" ||
-        normalizedType.includes(
-          "registry"
-        ) ||
-        normalizedType.includes(
-          "qr"
-        )
+        normalizedType === "item_approved" ||
+        normalizedType.includes("registry") ||
+        normalizedType.includes("qr")
       ) {
-        return 1; // Item Registry
+        return 1; // Registered Items
       }
-
+  
       return 0;
     }
-
+  
     /*
     |--------------------------------------------------------------------------
     | CSU / SECURITY
     |--------------------------------------------------------------------------
     */
-
+  
     if (role === "security") {
       if (
-        normalizedType.includes(
-          "lost_found"
-        ) ||
-        normalizedType.includes(
-          "lost"
-        ) ||
-        normalizedType.includes(
-          "found"
-        )
+        normalizedType.includes("lost_found") ||
+        normalizedType.includes("lost") ||
+        normalizedType.includes("found")
       ) {
         return 2; // Lost & Found
       }
-
+  
       if (
-        normalizedType.includes(
-          "incident"
-        ) ||
-        normalizedType.includes(
-          "flagged"
-        ) ||
-        normalizedType.includes(
-          "warning"
-        ) ||
-        normalizedType.includes(
-          "scan"
-        ) ||
-        normalizedType.includes(
-          "security_item_ready"
-        ) ||
-        normalizedType.includes(
-          "item_approved"
-        ) ||
-        normalizedType.includes(
-          "qr"
-        )
+        normalizedType.includes("incident") ||
+        normalizedType.includes("flagged") ||
+        normalizedType.includes("warning") ||
+        normalizedType.includes("scan") ||
+        normalizedType.includes("security_item_ready") ||
+        normalizedType.includes("item_approved") ||
+        normalizedType.includes("qr")
       ) {
         return 0; // Scan & Verify
       }
-
+  
       if (
-        normalizedType.includes(
-          "entry"
-        ) ||
-        normalizedType.includes(
-          "exit"
-        )
+        normalizedType.includes("entry") ||
+        normalizedType.includes("exit")
       ) {
         return 1; // Entry / Exit Log
       }
-
-      if (
-        normalizedType.includes(
-          "report"
-        )
-      ) {
+  
+      if (normalizedType.includes("report")) {
         return 3; // Reports
       }
-
+  
       return 0; // Scan & Verify
     }
-
+  
     /*
     |--------------------------------------------------------------------------
     | SYSTEM ADMINISTRATOR
     |--------------------------------------------------------------------------
+    |
+    | 0 = Overview Dashboard
+    | 1 = Registered Items
+    | 2 = System Records
+    | 3 = Reports & Analytics
+    | 4 = User Accounts
+    | 5 = System Settings
+    | 6 = Audit Logs
+    | 7 = Active Sessions
+    | 8 = Performance
+    | 9 = Security Config
+    | 10 = Announcement Management
+    |
     */
-
+  
     if (role === "sysadmin") {
       if (
-        normalizedType.includes(
-          "user_account"
-        ) ||
-        normalizedType.includes(
-          "user"
-        ) ||
-        normalizedType.includes(
-          "account"
-        )
+        normalizedType.includes("user_account") ||
+        normalizedType.includes("user") ||
+        normalizedType.includes("account")
       ) {
-        return 3; // User Accounts
+        return 4; // User Accounts
       }
-
+  
       if (
-        normalizedType.includes(
-          "setting"
-        ) ||
-        normalizedType.includes(
-          "security_config"
-        ) ||
-        normalizedType.includes(
-          "permission"
-        )
+        normalizedType.includes("security_config") ||
+        normalizedType.includes("permission")
       ) {
-        return 8; // Security Config
+        return 9; // Security Config
       }
-
+  
+      if (normalizedType.includes("setting")) {
+        return 5; // System Settings
+      }
+  
       if (
-        normalizedType.includes(
-          "incident"
-        ) ||
-        normalizedType.includes(
-          "audit"
-        ) ||
-        normalizedType.includes(
-          "login"
-        ) ||
-        normalizedType.includes(
-          "failed"
-        ) ||
-        normalizedType.includes(
-          "warning"
-        )
+        normalizedType.includes("incident") ||
+        normalizedType.includes("audit") ||
+        normalizedType.includes("login") ||
+        normalizedType.includes("failed") ||
+        normalizedType.includes("warning")
       ) {
-        return 5; // Audit Logs
+        return 6; // Audit Logs
       }
-
+  
+      if (normalizedType.includes("report")) {
+        return 3; // Reports & Analytics
+      }
+  
       if (
-        normalizedType.includes(
-          "lost_found"
-        ) ||
-        normalizedType.includes(
-          "lost"
-        ) ||
-        normalizedType.includes(
-          "found"
-        ) ||
-        normalizedType.includes(
-          "item"
-        ) ||
-        normalizedType.includes(
-          "registration"
-        ) ||
-        normalizedType.includes(
-          "qr"
-        )
+        normalizedType.includes("lost_found") ||
+        normalizedType.includes("lost") ||
+        normalizedType.includes("found")
       ) {
-        return 1; // System Records
+        return 2; // System Records
       }
-
+  
+      if (
+        normalizedType.includes("item") ||
+        normalizedType.includes("registration") ||
+        normalizedType.includes("qr")
+      ) {
+        return 1; // Registered Items
+      }
+  
       return 0; // Overview Dashboard
     }
-
+  
     return null;
   }
+
 
   async function handleHeaderNotificationOpen(
     notification: any
