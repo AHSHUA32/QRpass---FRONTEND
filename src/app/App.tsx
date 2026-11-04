@@ -1,4 +1,4 @@
-﻿// =========================================================
+// =========================================================
 // REACT
 // =========================================================
 
@@ -41,6 +41,8 @@ import {
   LogOut,
   Map,
   Menu,
+  Moon,
+  Sun,
   Monitor,
   Camera,
   Smartphone,
@@ -2960,6 +2962,18 @@ function StudentLostAndFound() {
   const [claimingId, setClaimingId] =
     useState<number | null>(null);
 
+  const [statusFilter, setStatusFilter] =
+    useState<"all" | "found" | "lost" | "recovered">("all");
+
+  const [sortOrder, setSortOrder] =
+    useState<"newest" | "oldest">("newest");
+
+  const [showProcedure, setShowProcedure] =
+    useState(true);
+
+  const [selectedItem, setSelectedItem] =
+    useState<any | null>(null);
+
   async function loadItems() {
     try {
       setLoading(true);
@@ -3001,7 +3015,8 @@ function StudentLostAndFound() {
       setError("");
       setSuccess("");
 
-      const result = await claimLostFoundItem(id);
+      const result =
+        await claimLostFoundItem(id);
 
       setSuccess(
         result?.message ||
@@ -3024,76 +3039,267 @@ function StudentLostAndFound() {
     }
   }
 
-  const filteredItems = items.filter((item) => {
-    const query = search.trim().toLowerCase();
-
-    if (!query) {
-      return true;
-    }
-
-    const searchableText = [
-      item.id,
-      item.report_type,
-      item.item_name,
-      item.category,
-      item.brand_model,
-      item.color,
-      item.location_found,
-      item.location_lost,
-      item.description,
-      item.status,
-      item.finder?.name,
-      item.finder?.username,
-      item.lost_by?.name,
-      item.lost_by?.username,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-
-    return searchableText.includes(query);
-  });
-
-  const foundCount = items.filter(
-    (item) =>
-      String(item.report_type ?? "found").toLowerCase() ===
-        "found" &&
-      String(item.status ?? "").toLowerCase() ===
-        "found"
-  ).length;
-
-  const lostCount = items.filter(
-    (item) =>
-      String(item.report_type ?? "").toLowerCase() ===
-        "lost" &&
-      String(item.status ?? "").toLowerCase() ===
-        "lost"
-  ).length;
-
-  const recoveredCount = items.filter(
-    (item) =>
-      String(item.status ?? "").toLowerCase() ===
-      "recovered"
-  ).length;
-
-  function formatDate(value?: string | null) {
+  function formatDate(
+    value?: string | null
+  ) {
     if (!value) {
       return "—";
     }
 
     const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
       return value;
     }
 
-    return date.toLocaleString("en-PH", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    return date.toLocaleString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  function getReportType(
+    item: any
+  ) {
+    return String(
+      item?.report_type ??
+        "found"
+    ).toLowerCase();
+  }
+
+  function getStatus(
+    item: any
+  ) {
+    const reportType =
+      getReportType(item);
+
+    return String(
+      item?.status ??
+        (reportType === "lost"
+          ? "Lost"
+          : "Found")
+    );
+  }
+
+  function getLocation(
+    item: any
+  ) {
+    return (
+      (getReportType(item) ===
+      "lost"
+        ? item.location_lost
+        : item.location_found) ||
+      item.location_found ||
+      item.location_lost ||
+      "Location not specified"
+    );
+  }
+
+  function getEventDate(
+    item: any
+  ) {
+    if (
+      getReportType(item) ===
+      "lost"
+    ) {
+      return (
+        item.date_lost ||
+        item.created_at
+      );
+    }
+
+    return (
+      item.date_found ||
+      item.created_at
+    );
+  }
+
+  const foundCount =
+    items.filter((item) => {
+      return (
+        getReportType(item) ===
+          "found" &&
+        getStatus(item).toLowerCase() ===
+          "found"
+      );
+    }).length;
+
+  const lostCount =
+    items.filter((item) => {
+      return (
+        getReportType(item) ===
+          "lost" &&
+        getStatus(item).toLowerCase() ===
+          "lost"
+      );
+    }).length;
+
+  const recoveredCount =
+    items.filter(
+      (item) =>
+        getStatus(
+          item
+        ).toLowerCase() ===
+        "recovered"
+    ).length;
+
+  const visibleItems =
+    items
+      .filter((item) => {
+        const query =
+          search
+            .trim()
+            .toLowerCase();
+
+        if (query) {
+          const searchableText = [
+            item.id,
+            item.report_type,
+            item.item_name,
+            item.category,
+            item.brand_model,
+            item.color,
+            item.location_found,
+            item.location_lost,
+            item.description,
+            item.status,
+            item.finder?.name,
+            item.finder?.username,
+            item.lost_by?.name,
+            item.lost_by?.username,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+          if (
+            !searchableText.includes(
+              query
+            )
+          ) {
+            return false;
+          }
+        }
+
+        const reportType =
+          getReportType(item);
+
+        const status =
+          getStatus(
+            item
+          ).toLowerCase();
+
+        if (
+          statusFilter ===
+          "found"
+        ) {
+          return (
+            reportType ===
+              "found" &&
+            status === "found"
+          );
+        }
+
+        if (
+          statusFilter ===
+          "lost"
+        ) {
+          return (
+            reportType === "lost" &&
+            status === "lost"
+          );
+        }
+
+        if (
+          statusFilter ===
+          "recovered"
+        ) {
+          return (
+            status ===
+            "recovered"
+          );
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        const aTime =
+          new Date(
+            a.created_at ||
+              getEventDate(a) ||
+              0
+          ).getTime();
+
+        const bTime =
+          new Date(
+            b.created_at ||
+              getEventDate(b) ||
+              0
+          ).getTime();
+
+        return sortOrder ===
+          "newest"
+          ? bTime - aTime
+          : aTime - bTime;
+      });
+
+  function renderStatusBadge(
+    item: any
+  ) {
+    const status =
+      getStatus(item);
+
+    const statusLower =
+      status.toLowerCase();
+
+    if (
+      statusLower ===
+      "recovered"
+    ) {
+      return (
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-700 dark:bg-slate-700/60 dark:text-slate-200">
+          Recovered
+        </span>
+      );
+    }
+
+    if (
+      statusLower ===
+      "lost"
+    ) {
+      return (
+        <span className="rounded-full bg-red-100 px-3 py-1 text-[11px] font-semibold text-red-700 dark:bg-red-950/50 dark:text-red-300">
+          Lost
+        </span>
+      );
+    }
+
+    if (
+      statusLower ===
+      "claimed"
+    ) {
+      return (
+        <span className="rounded-full bg-yellow-100 px-3 py-1 text-[11px] font-semibold text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-300">
+          Claimed
+        </span>
+      );
+    }
+
+    return (
+      <span className="rounded-full bg-green-100 px-3 py-1 text-[11px] font-semibold text-green-700 dark:bg-green-950/40 dark:text-green-300">
+        Found
+      </span>
+    );
   }
 
   return (
@@ -3103,334 +3309,506 @@ function StudentLostAndFound() {
         subtitle="Browse found items and lost-item reports recorded by the Security office."
       />
 
-      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-        <div className="flex items-start gap-2">
-          <Shield
-            size={16}
-            className="mt-0.5 flex-shrink-0 text-blue-700"
-          />
-
-          <div>
-            <p className="text-sm font-medium text-blue-900">
-              Lost & Found Procedure
+      {showProcedure && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-4 dark:border-blue-900/70 dark:bg-blue-950/30">
+          <div className="flex items-start justify-between gap-4">
+            <p className="text-sm leading-relaxed text-blue-900 dark:text-blue-200">
+              <span className="font-bold">
+                Procedure:
+              </span>{" "}
+              Found items must be turned over to the Security office before they are recorded. Students can browse and claim, but cannot create reports.
             </p>
 
-            <p className="mt-1 text-xs text-blue-800">
-              Found items must be physically turned over to the Security office before they are recorded. Lost-item reports are also encoded by Security. Students can browse records and claim available found items, but cannot create Lost & Found reports directly.
-            </p>
+            <button
+              type="button"
+              onClick={() =>
+                setShowProcedure(
+                  false
+                )
+              }
+              className="flex-shrink-0 text-sm font-semibold text-blue-800 hover:underline dark:text-blue-300"
+            >
+              Dismiss
+            </button>
           </div>
         </div>
-      </div>
+      )}
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/30 dark:text-red-300">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-900/70 dark:bg-green-950/30 dark:text-green-300">
           {success}
         </div>
       )}
 
+      {/* SUMMARY */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard
-          label="Total Reports"
-          value={String(items.length)}
-          icon={<BookOpen size={20} />}
-          color="#1a3a7b"
-        />
+        <div className="rounded-xl border-2 border-primary bg-card px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Total
+          </p>
+          <p className="mt-1 text-3xl font-bold text-foreground">
+            {items.length}
+          </p>
+        </div>
 
-        <StatCard
-          label="Found Items"
-          value={String(foundCount)}
-          icon={<Package size={20} />}
-          color="#557bdc"
-        />
+        <div className="rounded-xl border border-border bg-card px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-green-700 dark:text-green-300">
+            Found
+          </p>
+          <p className="mt-1 text-3xl font-bold text-foreground">
+            {foundCount}
+          </p>
+        </div>
 
-        <StatCard
-          label="Lost Reports"
-          value={String(lostCount)}
-          icon={<AlertTriangle size={20} />}
-          color="#e74c3c"
-        />
+        <div className="rounded-xl border border-border bg-card px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-red-600 dark:text-red-300">
+            Lost
+          </p>
+          <p className="mt-1 text-3xl font-bold text-foreground">
+            {lostCount}
+          </p>
+        </div>
 
-        <StatCard
-          label="Recovered"
-          value={String(recoveredCount)}
-          icon={<CheckCircle size={20} />}
-          color="#2ecc71"
-        />
+        <div className="rounded-xl border border-border bg-card px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Recovered
+          </p>
+          <p className="mt-1 text-3xl font-bold text-foreground">
+            {recoveredCount}
+          </p>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row">
+      {/* SEARCH + SORT + REFRESH */}
+      <div className="flex flex-col gap-3 lg:flex-row">
         <div className="relative flex-1">
           <Search
-            size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            size={17}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
 
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search item, report type, category, location..."
-            className="w-full rounded-lg border border-[#cfd8e6] bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            onChange={(e) =>
+              setSearch(
+                e.target.value
+              )
+            }
+            placeholder="Search item, category, location..."
+            className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
           />
         </div>
+
+        <select
+          value={sortOrder}
+          onChange={(e) =>
+            setSortOrder(
+              e.target.value as
+                | "newest"
+                | "oldest"
+            )
+          }
+          className="rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary"
+        >
+          <option value="newest">
+            Newest first
+          </option>
+          <option value="oldest">
+            Oldest first
+          </option>
+        </select>
 
         <button
           type="button"
           onClick={loadItems}
           disabled={loading}
-          className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? "Refreshing..." : "Refresh"}
+          {loading
+            ? "Refreshing..."
+            : "Refresh"}
         </button>
       </div>
 
+      {/* FILTERS */}
+      <div className="flex flex-wrap gap-2">
+        {(
+          [
+            [
+              "all",
+              "All",
+            ],
+            [
+              "found",
+              "Found",
+            ],
+            [
+              "lost",
+              "Lost",
+            ],
+            [
+              "recovered",
+              "Recovered",
+            ],
+          ] as const
+        ).map(
+          ([
+            value,
+            label,
+          ]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() =>
+                setStatusFilter(
+                  value
+                )
+              }
+              className={`rounded-full border px-5 py-2 text-sm font-medium transition ${
+                statusFilter ===
+                value
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-foreground hover:bg-muted"
+              }`}
+            >
+              {label}
+            </button>
+          )
+        )}
+      </div>
+
       {loading && (
-        <div className="rounded-lg border border-[#cfd8e6] bg-card p-10 text-center">
+        <div className="rounded-xl border border-border bg-card p-10 text-center">
           <p className="text-sm text-muted-foreground">
-            Loading Lost & Found registry...
-          </p>
-        </div>
-      )}
-
-      {!loading && filteredItems.length === 0 && (
-        <div className="rounded-lg border border-[#cfd8e6] bg-card p-10 text-center">
-          <BookOpen
-            size={32}
-            className="mx-auto mb-3 text-muted-foreground"
-          />
-
-          <p className="text-sm font-medium text-foreground">
-            No Lost & Found records found.
-          </p>
-
-          <p className="mt-1 text-xs text-muted-foreground">
-            Reports recorded by the Security office will appear here.
+            Loading Lost & Found records...
           </p>
         </div>
       )}
 
       {!loading &&
-        filteredItems.map((item) => {
-          const reportType = String(
-            item.report_type ?? "found"
-          ).toLowerCase();
-          const isLostReport = reportType === "lost";
+        visibleItems.length ===
+          0 && (
+          <div className="rounded-xl border border-border bg-card p-10 text-center">
+            <BookOpen
+              size={32}
+              className="mx-auto mb-3 text-muted-foreground"
+            />
 
-          const status = String(
-            item.status ?? (isLostReport ? "Lost" : "Found")
-          );
-          const statusLower = status.toLowerCase();
-          const isFound =
-            !isLostReport && statusLower === "found";
-          const isClaimed = statusLower === "claimed";
-          const isRecovered = statusLower === "recovered";
-          const isLost =
-            isLostReport && statusLower === "lost";
+            <p className="text-sm font-semibold text-foreground">
+              No Lost & Found records found.
+            </p>
 
-          return (
-            <div
-              key={item.id}
-              className="rounded-lg border border-[#cfd8e6] bg-card shadow-sm"
-            >
-              <div className="p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-base font-semibold text-foreground">
-                        {item.item_name}
-                      </h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Try changing your search or filter.
+            </p>
+          </div>
+        )}
 
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          isLostReport
-                            ? "bg-red-100 text-red-700"
-                            : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
-                        {isLostReport
-                          ? "Lost Report"
-                          : "Found Report"}
-                      </span>
+      {/* ITEM CARDS */}
+      {!loading &&
+        visibleItems.length >
+          0 && (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {visibleItems.map(
+              (item) => {
+                const reportType =
+                  getReportType(
+                    item
+                  );
 
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          isRecovered
-                            ? "bg-green-100 text-green-700"
-                            : isClaimed
-                            ? "bg-yellow-100 text-yellow-700"
-                            : isLost
-                            ? "bg-red-100 text-red-700"
-                            : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
-                        {status}
-                      </span>
+                const status =
+                  getStatus(item);
 
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                        Report #{item.id}
-                      </span>
+                const statusLower =
+                  status.toLowerCase();
+
+                const isFound =
+                  reportType ===
+                    "found" &&
+                  statusLower ===
+                    "found";
+
+                const displayName =
+                  item.item_name ||
+                  "Unnamed Item";
+
+                const detailLine = [
+                  item.brand_model,
+                  item.color,
+                  item.category,
+                ]
+                  .filter(Boolean)
+                  .join(" · ");
+
+                return (
+                  <div
+                    key={
+                      item.id
+                    }
+                    className="overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-0.5 hover:shadow-lg"
+                  >
+                    {/* PHOTO */}
+                    <div className="relative flex h-44 items-center justify-center overflow-hidden bg-muted">
+                      {item.photo_url ? (
+                        <img
+                          src={
+                            item.photo_url
+                          }
+                          alt={
+                            displayName
+                          }
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+                          [Item photo]
+                        </div>
+                      )}
                     </div>
 
-                    <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Category
-                        </p>
-                        <p className="font-medium text-foreground">
-                          {item.category || "—"}
-                        </p>
-                      </div>
+                    {/* CARD BODY */}
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="min-w-0 flex-1 truncate text-lg font-bold text-foreground">
+                          {
+                            displayName
+                          }
+                        </h3>
 
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Brand / Model
-                        </p>
-                        <p className="font-medium text-foreground">
-                          {item.brand_model || "—"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Color
-                        </p>
-                        <p className="font-medium text-foreground">
-                          {item.color || "—"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          {isLostReport
-                            ? "Date & Time Lost / Last Seen"
-                            : "Date & Time Found"}
-                        </p>
-                        <p className="font-medium text-foreground">
-                          {formatDate(
-                            isLostReport
-                              ? item.date_lost
-                              : item.date_found
-                          )}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          {isLostReport
-                            ? "Last Seen Location"
-                            : "Location Found"}
-                        </p>
-                        <p className="font-medium text-foreground">
-                          {(isLostReport
-                            ? item.location_lost
-                            : item.location_found) || "—"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          {isLostReport
-                            ? "Reported Lost By"
-                            : "Turned Over By"}
-                        </p>
-                        <p className="font-medium text-foreground">
-                          {isLostReport
-                            ? item.lost_by?.name || "Not specified"
-                            : item.finder?.name || "Not specified"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {isLostReport && isRecovered && (
-                      <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3">
-                        <p className="text-xs font-semibold text-green-800">
-                          Recovery / Turnover Details
-                        </p>
-                        <p className="mt-1 text-sm font-medium text-green-900">
-                          Found / turned over by: {item.finder?.name || "Not available"}
-                        </p>
-                        {item.finder?.username && (
-                          <p className="text-xs text-green-700">
-                            ID: {item.finder.username}
-                          </p>
+                        {renderStatusBadge(
+                          item
                         )}
-                        <p className="mt-1 text-xs text-green-700">
-                          Location: {item.location_found || "—"}
-                        </p>
-                        <p className="text-xs text-green-700">
-                          Date & time: {formatDate(item.date_found)}
-                        </p>
                       </div>
-                    )}
 
-                    {item.description && (
-                      <div className="mt-4 rounded-lg bg-muted/40 p-3">
-                        <p className="text-xs font-medium text-muted-foreground">
-                          Item Description
-                        </p>
-                        <p className="mt-1 text-sm text-foreground">
-                          {item.description}
-                        </p>
-                      </div>
-                    )}
+                      <p className="mt-2 min-h-[20px] text-sm text-muted-foreground">
+                        {detailLine ||
+                          "No additional item details"}
+                      </p>
 
-                    {item.processor && (
-                      <div className="mt-3 text-xs text-muted-foreground">
-                        Processed by Security:{" "}
-                        <span className="font-medium text-foreground">
-                          {item.processor.name}
-                        </span>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {getLocation(
+                          item
+                        )}{" "}
+                        ·{" "}
+                        {formatDate(
+                          getEventDate(
+                            item
+                          )
+                        )}
+                      </p>
+
+                      <div className="mt-4">
+                        {isFound ? (
+                          <button
+                            type="button"
+                            disabled={
+                              claimingId ===
+                              Number(
+                                item.id
+                              )
+                            }
+                            onClick={() =>
+                              handleClaim(
+                                Number(
+                                  item.id
+                                )
+                              )
+                            }
+                            className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {claimingId ===
+                            Number(
+                              item.id
+                            )
+                              ? "Submitting..."
+                              : "Claim Item"}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedItem(
+                                item
+                              )
+                            }
+                            className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
+                          >
+                            View Details
+                          </button>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
+                );
+              }
+            )}
+          </div>
+        )}
 
-                  <div className="flex-shrink-0">
-                    {isFound && (
-                      <button
-                        type="button"
-                        disabled={
-                          claimingId === Number(item.id)
-                        }
-                        onClick={() =>
-                          handleClaim(Number(item.id))
-                        }
-                        className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
-                      >
-                        {claimingId === Number(item.id)
-                          ? "Submitting..."
-                          : "Claim Item"}
-                      </button>
-                    )}
+      {/* DETAILS MODAL */}
+      {selectedItem && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4"
+          onClick={() =>
+            setSelectedItem(
+              null
+            )
+          }
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-card shadow-2xl"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Lost & Found Record
+                </p>
 
-                    {isLost && (
-                      <div className="max-w-xs rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
-                        If you found an item matching this report, turn it over to the Security office.
-                      </div>
-                    )}
+                <h3 className="mt-1 text-lg font-bold text-foreground">
+                  {selectedItem.item_name ||
+                    "Item Details"}
+                </h3>
+              </div>
 
-                    {isClaimed && (
-                      <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
-                        Claim pending Security verification
-                      </div>
-                    )}
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedItem(
+                    null
+                  )
+                }
+                className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-                    {isRecovered && (
-                      <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-800">
-                        Item recovered / returned
-                      </div>
-                    )}
-                  </div>
+            {selectedItem.photo_url && (
+              <div className="border-b border-border bg-muted">
+                <img
+                  src={
+                    selectedItem.photo_url
+                  }
+                  alt={
+                    selectedItem.item_name ||
+                    "Lost and Found item"
+                  }
+                  className="max-h-80 w-full object-contain"
+                />
+              </div>
+            )}
+
+            <div className="grid gap-4 p-5 sm:grid-cols-2">
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Status
+                </p>
+                <div className="mt-1">
+                  {renderStatusBadge(
+                    selectedItem
+                  )}
                 </div>
               </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Report #
+                </p>
+                <p className="mt-1 font-medium text-foreground">
+                  {selectedItem.id}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Category
+                </p>
+                <p className="mt-1 font-medium text-foreground">
+                  {selectedItem.category ||
+                    "—"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Brand / Model
+                </p>
+                <p className="mt-1 font-medium text-foreground">
+                  {selectedItem.brand_model ||
+                    "—"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Color
+                </p>
+                <p className="mt-1 font-medium text-foreground">
+                  {selectedItem.color ||
+                    "—"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Location
+                </p>
+                <p className="mt-1 font-medium text-foreground">
+                  {getLocation(
+                    selectedItem
+                  )}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Date / Time
+                </p>
+                <p className="mt-1 font-medium text-foreground">
+                  {formatDate(
+                    getEventDate(
+                      selectedItem
+                    )
+                  )}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Processed by Security
+                </p>
+                <p className="mt-1 font-medium text-foreground">
+                  {selectedItem.processor?.name ||
+                    "—"}
+                </p>
+              </div>
+
+              {selectedItem.description && (
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-muted-foreground">
+                    Description
+                  </p>
+                  <p className="mt-1 rounded-xl bg-muted p-3 text-sm text-foreground">
+                    {
+                      selectedItem.description
+                    }
+                  </p>
+                </div>
+              )}
             </div>
-          );
-        })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -7402,6 +7780,9 @@ function SecurityLostFound() {
   const [editError, setEditError] =
     useState("");
 
+  const [deletingId, setDeletingId] =
+    useState<number | null>(null);
+
   const [editForm, setEditForm] = useState({
     person_identifier: "",
     item_name: "",
@@ -7428,6 +7809,12 @@ function SecurityLostFound() {
   const [photoPreview, setPhotoPreview] =
     useState("");
 
+  const [fullImage, setFullImage] =
+    useState<{
+      url: string;
+      name: string;
+    } | null>(null);
+
   const [cameraOpen, setCameraOpen] =
     useState(false);
 
@@ -7439,6 +7826,16 @@ function SecurityLostFound() {
 
   const cameraStreamRef =
     useRef<MediaStream | null>(null);
+
+  const photoInputRef =
+    useRef<HTMLInputElement | null>(null);
+
+  const photoUploadButtonRef =
+    useRef<HTMLButtonElement | null>(null);
+
+  const photoScrollTopRef =
+    useRef(0);
+
 
   const [recoveringId, setRecoveringId] =
     useState<number | null>(null);
@@ -7626,9 +8023,7 @@ function SecurityLostFound() {
         }
 
         setPhotoFile(file);
-        setPhotoPreview(
-          URL.createObjectURL(file)
-        );
+        setPhotoPreview("");
         setError("");
         closeCamera();
       },
@@ -7659,6 +8054,47 @@ function SecurityLostFound() {
 
     setPhotoFile(null);
     setPhotoPreview("");
+
+    if (photoInputRef.current) {
+      photoInputRef.current.value = "";
+    }
+  }
+
+  function openPhotoPicker() {
+    const main =
+      document.querySelector("main");
+
+    if (main) {
+      photoScrollTopRef.current =
+        main.scrollTop;
+    }
+
+    if (photoInputRef.current) {
+      photoInputRef.current.value = "";
+      photoInputRef.current.click();
+    }
+  }
+
+  function restorePhotoPickerPosition() {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const main =
+          document.querySelector("main");
+
+        if (main) {
+          main.scrollTop =
+            photoScrollTopRef.current;
+        }
+
+        try {
+          photoUploadButtonRef.current?.focus({
+            preventScroll: true,
+          });
+        } catch {
+          photoUploadButtonRef.current?.focus();
+        }
+      });
+    });
   }
 
   function handlePhotoChange(
@@ -7667,6 +8103,7 @@ function SecurityLostFound() {
     const file = e.target.files?.[0];
 
     if (!file) {
+      restorePhotoPickerPosition();
       return;
     }
 
@@ -7681,6 +8118,7 @@ function SecurityLostFound() {
         "Please select a JPG, JPEG, PNG, or WEBP image."
       );
       e.target.value = "";
+      restorePhotoPickerPosition();
       return;
     }
 
@@ -7689,6 +8127,7 @@ function SecurityLostFound() {
         "The item photo must not be larger than 5 MB."
       );
       e.target.value = "";
+      restorePhotoPickerPosition();
       return;
     }
 
@@ -7698,7 +8137,8 @@ function SecurityLostFound() {
 
     setError("");
     setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
+    setPhotoPreview("");
+    restorePhotoPickerPosition();
   }
 
   function clearForm() {
@@ -7870,6 +8310,99 @@ function SecurityLostFound() {
     );
 
     return local.toISOString().slice(0, 16);
+  }
+
+  async function handleDeleteReport(item: any) {
+    const itemId = Number(item?.id);
+
+    if (!itemId) {
+      setError("Invalid Lost & Found report ID.");
+      return;
+    }
+
+    const status = String(
+      item?.status ?? ""
+    ).toLowerCase();
+
+    if (
+      status === "claimed" ||
+      status === "recovered" ||
+      item?.claimed_by
+    ) {
+      setError(
+        "Claimed or recovered Lost & Found reports cannot be deleted because they must remain in the audit history."
+      );
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete Report #${itemId} (${item?.item_name || "Lost & Found item"})?\n\nThis permanently deletes the report and its uploaded photo. This action cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingId(itemId);
+      setError("");
+      setSuccess("");
+
+      const token =
+        localStorage.getItem("token");
+
+      const response = await fetch(
+        `http://localhost:8000/api/lost-found/${itemId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      let data: any = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            "Failed to delete Lost & Found report."
+        );
+      }
+
+      setSuccess(
+        data?.message ||
+          `Report #${itemId} deleted successfully.`
+      );
+
+      if (
+        editingItem &&
+        Number(editingItem.id) === itemId
+      ) {
+        setEditingItem(null);
+      }
+
+      await loadItems();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 4000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete Lost & Found report."
+      );
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   function openEditReport(item: any) {
@@ -8576,23 +9109,23 @@ function SecurityLostFound() {
                         </div>
 
                         {isLostReport ? (
-                          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3">
+                          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-700/60 dark:bg-red-950/40">
                             <div className="flex items-start gap-2">
                               <User
                                 size={15}
-                                className="mt-0.5 flex-shrink-0 text-red-700"
+                                className="mt-0.5 flex-shrink-0 text-red-700 dark:text-red-300"
                               />
 
                               <div>
-                                <p className="text-xs font-semibold text-red-800">
+                                <p className="text-xs font-semibold text-red-800 dark:text-red-200">
                                   Reported Lost By / Owner
                                 </p>
-                                <p className="mt-1 text-sm font-medium text-red-900">
+                                <p className="mt-1 text-sm font-medium text-red-900 dark:text-red-100">
                                   {item.lost_by?.name ||
                                     "Not available"}
                                 </p>
                                 {item.lost_by?.username && (
-                                  <p className="text-xs text-red-700">
+                                  <p className="text-xs text-red-700 dark:text-red-300">
                                     ID: {item.lost_by.username}
                                   </p>
                                 )}
@@ -8600,23 +9133,23 @@ function SecurityLostFound() {
                             </div>
                           </div>
                         ) : (
-                          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3">
+                          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/40">
                             <div className="flex items-start gap-2">
                               <User
                                 size={15}
-                                className="mt-0.5 flex-shrink-0 text-green-700"
+                                className="mt-0.5 flex-shrink-0 text-green-700 dark:text-emerald-300"
                               />
 
                               <div>
-                                <p className="text-xs font-semibold text-green-800">
+                                <p className="text-xs font-semibold text-green-800 dark:text-emerald-200">
                                   Turned Over By / Finder Credit
                                 </p>
-                                <p className="mt-1 text-sm font-medium text-green-900">
+                                <p className="mt-1 text-sm font-medium text-green-900 dark:text-emerald-100">
                                   {item.finder?.name ||
                                     "Not available"}
                                 </p>
                                 {item.finder?.username && (
-                                  <p className="text-xs text-green-700">
+                                  <p className="text-xs text-green-700 dark:text-emerald-300">
                                     ID: {item.finder.username}
                                   </p>
                                 )}
@@ -8630,24 +9163,24 @@ function SecurityLostFound() {
                             <div className="flex items-start gap-2">
                               <User
                                 size={15}
-                                className="mt-0.5 flex-shrink-0 text-green-700"
+                                className="mt-0.5 flex-shrink-0 text-green-700 dark:text-emerald-300"
                               />
                               <div>
-                                <p className="text-xs font-semibold text-green-800">
+                                <p className="text-xs font-semibold text-green-800 dark:text-emerald-200">
                                   Found / Turned Over By
                                 </p>
-                                <p className="mt-1 text-sm font-medium text-green-900">
+                                <p className="mt-1 text-sm font-medium text-green-900 dark:text-emerald-100">
                                   {item.finder?.name || "Not available"}
                                 </p>
                                 {item.finder?.username && (
-                                  <p className="text-xs text-green-700">
+                                  <p className="text-xs text-green-700 dark:text-emerald-300">
                                     ID: {item.finder.username}
                                   </p>
                                 )}
-                                <p className="mt-2 text-xs text-green-700">
+                                <p className="mt-2 text-xs text-green-700 dark:text-emerald-300">
                                   Turnover location: {item.location_found || "—"}
                                 </p>
-                                <p className="text-xs text-green-700">
+                                <p className="text-xs text-green-700 dark:text-emerald-300">
                                   Turned over: {formatDate(item.date_found)}
                                 </p>
                               </div>
@@ -8655,7 +9188,7 @@ function SecurityLostFound() {
                           </div>
                         )}
 
-                        <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/50 p-3">
+                        <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/50 p-3 dark:border-slate-600 dark:bg-slate-800/90">
                           <p className="text-xs text-muted-foreground">
                             Processed by Security
                           </p>
@@ -8667,20 +9200,20 @@ function SecurityLostFound() {
                         </div>
 
                         {!isLostReport && item.claimant && (
-                          <div className="mt-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
-                            <p className="text-xs font-semibold text-yellow-800">
+                          <div className="mt-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-amber-700/60 dark:bg-amber-950/40">
+                            <p className="text-xs font-semibold text-yellow-800 dark:text-amber-200">
                               Claimant
                             </p>
-                            <p className="mt-1 text-sm font-medium text-yellow-900">
+                            <p className="mt-1 text-sm font-medium text-yellow-900 dark:text-amber-100">
                               {item.claimant.name}
                             </p>
                             {item.claimant.username && (
-                              <p className="text-xs text-yellow-700">
+                              <p className="text-xs text-yellow-700 dark:text-amber-300">
                                 ID: {item.claimant.username}
                               </p>
                             )}
                             {item.claimed_at && (
-                              <p className="mt-1 text-xs text-yellow-700">
+                              <p className="mt-1 text-xs text-yellow-700 dark:text-amber-300">
                                 Claim submitted:{" "}
                                 {formatDate(item.claimed_at)}
                               </p>
@@ -8689,22 +9222,48 @@ function SecurityLostFound() {
                         )}
 
                         {item.photo_url && (
-                          <div className="mt-3 overflow-hidden rounded-lg border border-[#cfd8e6] bg-muted/20 p-3">
+                          <div className="mt-3 rounded-xl border border-[#cfd8e6] bg-muted/20 p-3">
                             <p className="mb-2 text-xs font-medium text-muted-foreground">
                               Item Photo
                             </p>
-                            <a
-                              href={item.photo_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="block"
-                            >
-                              <img
-                                src={item.photo_url}
-                                alt={`${item.item_name || "Lost and Found item"} photo`}
-                                className="max-h-64 w-full rounded-lg border border-[#cfd8e6] bg-background object-contain"
-                              />
-                            </a>
+
+                            <div className="flex flex-col items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setFullImage({
+                                    url: item.photo_url,
+                                    name:
+                                      item.item_name ||
+                                      "Lost and Found item",
+                                  })
+                                }
+                                className="group flex w-full max-w-sm items-center justify-center overflow-hidden rounded-lg border border-[#cfd8e6] bg-background"
+                                style={{ height: "220px" }}
+                                title="View full image"
+                              >
+                                <img
+                                  src={item.photo_url}
+                                  alt={`${item.item_name || "Lost and Found item"} photo`}
+                                  className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+                                />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setFullImage({
+                                    url: item.photo_url,
+                                    name:
+                                      item.item_name ||
+                                      "Lost and Found item",
+                                  })
+                                }
+                                className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium text-primary transition hover:bg-[#eef2fc]"
+                              >
+                                View Full Image
+                              </button>
+                            </div>
                           </div>
                         )}
 
@@ -8730,6 +9289,23 @@ function SecurityLostFound() {
                         >
                           Edit Report
                         </button>
+
+                        {!isClaimed && !isRecovered && (
+                          <button
+                            type="button"
+                            disabled={
+                              deletingId === Number(item.id)
+                            }
+                            onClick={() =>
+                              handleDeleteReport(item)
+                            }
+                            className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-700/70 dark:bg-red-950/35 dark:text-red-300 dark:hover:bg-red-950/55"
+                          >
+                            {deletingId === Number(item.id)
+                              ? "Deleting..."
+                              : "Delete Report"}
+                          </button>
+                        )}
 
                         {(isClaimed || isLost) && !isRecovered && (
                           <button
@@ -9009,13 +9585,15 @@ function SecurityLostFound() {
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row">
-                <label
-                  htmlFor="lost-found-photo"
-                  className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                <button
+                  ref={photoUploadButtonRef}
+                  type="button"
+                  onClick={openPhotoPicker}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
                 >
                   <Upload size={16} />
                   Upload Photo
-                </label>
+                </button>
 
                 <button
                   type="button"
@@ -9031,11 +9609,14 @@ function SecurityLostFound() {
               </div>
 
               <input
+                ref={photoInputRef}
                 id="lost-found-photo"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={handlePhotoChange}
-                className="sr-only"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ display: "none" }}
               />
 
               {cameraOpen && (
@@ -9099,35 +9680,35 @@ function SecurityLostFound() {
                 </div>
               )}
 
-              {photoPreview && (
-                <div className="mt-4">
-                  <p className="mb-2 text-xs font-medium text-muted-foreground">
-                    Photo Preview
-                  </p>
-
-                  <div className="overflow-hidden rounded-lg border border-[#cfd8e6] bg-background p-2">
-                    <img
-                      src={photoPreview}
-                      alt="Selected Lost and Found item preview"
-                      className="max-h-72 w-full rounded-md object-contain"
-                    />
-                  </div>
-
-                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                    <p className="max-w-full truncate text-xs text-muted-foreground">
-                      {photoFile?.name}
-                    </p>
+              <div className="mt-4">
+                {photoFile ? (
+                  <div className="flex flex-col gap-3 rounded-lg border border-green-200 bg-green-50 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-green-900/70 dark:bg-green-950/30">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-green-800 dark:text-green-300">
+                        Photo selected
+                      </p>
+                      <p className="mt-1 truncate text-xs text-green-700 dark:text-green-400">
+                        {photoFile.name}
+                      </p>
+                      <p className="mt-1 text-[11px] text-green-600 dark:text-green-500">
+                        The photo will be uploaded when you submit this report.
+                      </p>
+                    </div>
 
                     <button
                       type="button"
                       onClick={clearPhoto}
-                      className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
+                      className="flex-shrink-0 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50 dark:border-red-900/70 dark:bg-red-950/20 dark:text-red-300 dark:hover:bg-red-950/40"
                     >
                       Remove Photo
                     </button>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="rounded-lg border border-dashed border-[#cfd8e6] bg-background px-4 py-3 text-xs text-muted-foreground">
+                    No photo selected. You may upload a JPG, PNG, or WEBP image up to 5 MB.
+                  </div>
+                )}
+              </div>
             </div>
 
             <div
@@ -9411,6 +9992,47 @@ function SecurityLostFound() {
         </div>
       )}
 
+      {fullImage && (
+        <div
+          className="fixed inset-0 z-[260] flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setFullImage(null)}
+        >
+          <div
+            className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-black/90 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-wide text-white/60">
+                  Item Photo
+                </p>
+                <p className="truncate text-sm font-semibold text-white">
+                  {fullImage.name}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setFullImage(null)}
+                className="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white"
+                aria-label="Close full image"
+                title="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex min-h-0 flex-1 items-center justify-center bg-black p-4">
+              <img
+                src={fullImage.url}
+                alt={`${fullImage.name} full image`}
+                className="max-h-[78vh] max-w-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {recoveringItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-xl border border-[#cfd8e6] bg-card shadow-xl">
@@ -9434,7 +10056,7 @@ function SecurityLostFound() {
                 <p className="mt-1 text-sm font-semibold text-red-900">
                   {recoveringItem.item_name}
                 </p>
-                <p className="text-xs text-red-700">
+                <p className="text-xs text-red-700 dark:text-red-300">
                   Owner: {recoveringItem.lost_by?.name || "Not available"}
                   {recoveringItem.lost_by?.username
                     ? ` (${recoveringItem.lost_by.username})`
@@ -19731,7 +20353,12 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
   const [mode, setMode] = useState<LoginMode>("login");
 
   // Login state
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(() =>
+    localStorage.getItem("qrpass-remembered-id") ?? ""
+  );
+  const [rememberMe, setRememberMe] = useState(() =>
+    Boolean(localStorage.getItem("qrpass-remembered-id"))
+  );
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
@@ -19761,6 +20388,19 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
   // ==========================================================================
   // LOGIN
   // ==========================================================================
+
+  function saveRememberedLoginId() {
+    if (rememberMe) {
+      localStorage.setItem(
+        "qrpass-remembered-id",
+        username.trim()
+      );
+    } else {
+      localStorage.removeItem(
+        "qrpass-remembered-id"
+      );
+    }
+  }
 
   async function handleLogin(
   e: React.FormEvent
@@ -19837,6 +20477,8 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
       data.user?.role ??
         ""
     );
+
+    saveRememberedLoginId();
 
     const userRole =
       data.user?.role as Role;
@@ -20126,6 +20768,8 @@ async function handleTwoFactorSubmit(
       "role",
       userRole
     );
+
+    saveRememberedLoginId();
 
     setTwoFactorChallenge("");
     setTwoFactorCode("");
@@ -21457,226 +22101,248 @@ async function handleTwoFactorSubmit(
         </div>
 
         {/* LOGIN CARD */}
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md p-6">
+        <div
+          className="relative w-full max-w-[430px] overflow-hidden rounded-[20px] border border-[#d7e0ee] bg-white shadow-[0_16px_40px_rgba(30,58,110,0.12)]"
+        >
+          {/* BLUE TOP ACCENT */}
+          <div className="h-1 w-full bg-gradient-to-r from-[#173b7a] via-[#2f5fd6] to-[#7fa1ff]" />
 
-          <form
-            onSubmit={handleLogin}
-            className="space-y-4"
-          >
-
-            {/* LOGIN HEADING */}
-            <div className="text-center mb-5">
-              <h2
-                className="text-xl font-bold text-foreground"
-                style={{
-                  fontFamily:
-                    "Barlow, sans-serif",
-                }}
-              >
-                Sign in
-              </h2>
-
-              <p className="text-xs text-muted-foreground mt-1">
-                Use your institutional account to continue.
-              </p>
-
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Your account access level
-                is identified
-                automatically.
-              </p>
-            </div>
-
-            {/* USERNAME */}
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
-                ID NUMBER
-              </label>
-
-              <div className="relative">
-                <User
-                  size={15}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                />
-
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(
-                      e.target.value
-                    );
-
-                    if (loginError) {
-                      setLoginError("");
-                    }
+          <div className="px-8 pb-8 pt-7 sm:px-9">
+            <form
+              onSubmit={handleLogin}
+              className="space-y-5"
+            >
+              {/* LOGIN HEADING */}
+              <div className="mb-1 text-center">
+                <h2
+                  className="text-[27px] font-bold leading-tight text-[#17336d]"
+                  style={{
+                    fontFamily:
+                      "Barlow, sans-serif",
                   }}
-                  placeholder="Enter Student ID or Employee ID"
-                  required
-                  autoComplete="username"
-                  disabled={isLoggingIn}
-                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors disabled:opacity-60"
-                />
+                >
+                  Sign In
+                </h2>
+
+                <p className="mt-2 text-[14px] leading-5 text-[#66779b]">
+                  Use your institutional account to continue.
+                </p>
+
+                <p className="mt-0.5 text-[13px] leading-5 text-[#7a89a7]">
+                  Your account access level is identified automatically.
+                </p>
               </div>
-            </div>
 
-            {/* PASSWORD */}
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
-                Password
-              </label>
+              {/* USERNAME */}
+              <div>
+                <label className="mb-2 block text-[12px] font-bold uppercase tracking-[0.06em] text-[#17336d]">
+                  ID NUMBER
+                </label>
 
-              <div className="relative">
-                <Lock
-                  size={15}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                />
+                <div className="relative">
+                  <User
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7186b5]"
+                  />
 
-                <input
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(
-                      e.target.value
-                    );
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => {
+                      setUsername(
+                        e.target.value
+                      );
 
-                    if (loginError) {
-                      setLoginError("");
+                      if (loginError) {
+                        setLoginError("");
+                      }
+                    }}
+                    placeholder="Enter your ID number"
+                    required
+                    autoComplete="username"
+                    disabled={isLoggingIn}
+                    className="h-[52px] w-full rounded-xl border border-transparent bg-[#edf3ff] pl-12 pr-4 text-[15px] text-[#172033] outline-none transition-all placeholder:text-[#7c8596] focus:border-[#2f5fd6] focus:bg-white focus:ring-4 focus:ring-[#2f5fd6]/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+                </div>
+              </div>
+
+              {/* PASSWORD */}
+              <div>
+                <label className="mb-2 block text-[12px] font-bold uppercase tracking-[0.06em] text-[#17336d]">
+                  PASSWORD
+                </label>
+
+                <div className="relative">
+                  <Lock
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7186b5]"
+                  />
+
+                  <input
+                    type={
+                      showPassword
+                        ? "text"
+                        : "password"
                     }
-                  }}
-                  placeholder="Enter your password"
-                  required
-                  autoComplete="current-password"
-                  disabled={isLoggingIn}
-                  className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors disabled:opacity-60"
-                />
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(
+                        e.target.value
+                      );
 
-                {/* SHOW / HIDE PASSWORD */}
+                      if (loginError) {
+                        setLoginError("");
+                      }
+                    }}
+                    placeholder="Enter your password"
+                    required
+                    autoComplete="current-password"
+                    disabled={isLoggingIn}
+                    className="h-[52px] w-full rounded-xl border border-transparent bg-[#edf3ff] pl-12 pr-12 text-[15px] text-[#172033] outline-none transition-all placeholder:text-[#7c8596] focus:border-[#2f5fd6] focus:bg-white focus:ring-4 focus:ring-[#2f5fd6]/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+
+                  {/* SHOW / HIDE PASSWORD */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPassword(
+                        (current) =>
+                          !current
+                      )
+                    }
+                    disabled={isLoggingIn}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#7186b5] transition-colors hover:text-[#2f5fd6] disabled:opacity-50"
+                    aria-label={
+                      showPassword
+                        ? "Hide password"
+                        : "Show password"
+                    }
+                    title={
+                      showPassword
+                        ? "Hide password"
+                        : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <EyeOff size={18} />
+                    ) : (
+                      <Eye size={18} />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* REMEMBER ME + FORGOT PASSWORD */}
+              <div className="flex items-center justify-between gap-3">
+                <label className="flex cursor-pointer select-none items-center gap-2 text-[13px] text-[#5e6f8f]">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => {
+                      const checked =
+                        e.target.checked;
+
+                      setRememberMe(
+                        checked
+                      );
+
+                      if (!checked) {
+                        localStorage.removeItem(
+                          "qrpass-remembered-id"
+                        );
+                      }
+                    }}
+                    disabled={isLoggingIn}
+                    className="h-[17px] w-[17px] rounded border-[#aebbd0] accent-[#1a3a7b] disabled:opacity-50"
+                  />
+
+                  <span>Remember me</span>
+                </label>
+
                 <button
                   type="button"
                   onClick={() =>
-                    setShowPassword(
-                      (current) =>
-                        !current
+                    switchMode(
+                      "forgot"
                     )
                   }
                   disabled={isLoggingIn}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
-                  aria-label={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
-                  title={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
+                  className="text-[13px] font-semibold text-[#2f5fd6] transition-colors hover:text-[#173b7a] hover:underline disabled:opacity-50"
                 >
-                  {showPassword ? (
-                    <EyeOff size={16} />
-                  ) : (
-                    <Eye size={16} />
-                  )}
+                  Forgot Password?
                 </button>
               </div>
-            </div>
 
-            {/* FORGOT PASSWORD */}
-            <div className="text-right">
-              <button
-                type="button"
-                onClick={() =>
-                  switchMode(
-                    "forgot"
-                  )
-                }
-                disabled={isLoggingIn}
-                className="text-xs text-primary font-medium hover:underline disabled:opacity-50"
-              >
-                Forgot Password?
-              </button>
-            </div>
-
-            {/* LOGIN ERROR */}
-            {loginError && (
-              <div
-                role="alert"
-                className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5"
-              >
-                <AlertCircle
-                  size={15}
-                  className="mt-0.5 flex-shrink-0 text-red-600"
-                />
-
-                <p className="text-xs leading-relaxed text-red-700">
-                  {loginError}
-                </p>
-              </div>
-            )}
-
-            {/* LOGIN BUTTON */}
-            <button
-              type="submit"
-              disabled={isLoggingIn}
-              className="w-full py-2.5 rounded-md font-semibold text-sm transition-all duration-150 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              style={{
-                backgroundColor:
-                  "#1a3a7b",
-                color: "#fff",
-              }}
-            >
-              {isLoggingIn ? (
-                <>
-                  <RefreshCw
-                    size={15}
-                    className="animate-spin"
+              {/* LOGIN ERROR */}
+              {loginError && (
+                <div
+                  role="alert"
+                  className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3"
+                >
+                  <AlertCircle
+                    size={16}
+                    className="mt-0.5 flex-shrink-0 text-red-600"
                   />
 
-                  Signing in...
-                </>
-              ) : (
-                "Log In"
+                  <p className="text-[13px] leading-relaxed text-red-700">
+                    {loginError}
+                  </p>
+                </div>
               )}
-            </button>
 
-            {/* SECURITY NOTICE */}
-            <div className="bg-blue-50 border border-blue-100 rounded-md px-3 py-2.5">
-              <div className="flex items-start gap-2">
-                <Shield
-                  size={14}
-                  className="text-primary mt-0.5 flex-shrink-0"
-                />
-
-                <p className="text-[10px] leading-relaxed text-blue-800">
-                  Authorized institutional users only. System activity may be recorded for security and auditing purposes.
-                </p>
-              </div>
-            </div>
-          </form>
-
-          {/* REGISTER */}
-          <div className="mt-4 pt-4 border-t border-[#cfd8e6] text-center">
-            <p className="text-xs text-muted-foreground">
-              Don{"'"}t have an
-              account?{" "}
-
+              {/* LOGIN BUTTON */}
               <button
-                type="button"
-                onClick={() =>
-                  switchMode(
-                    "register"
-                  )
-                }
-                className="text-primary font-semibold hover:underline"
+                type="submit"
+                disabled={isLoggingIn}
+                className="flex h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#214a96] to-[#123873] text-[15px] font-bold text-white shadow-[0_8px_18px_rgba(26,58,123,0.22)] transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_10px_22px_rgba(26,58,123,0.28)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Register here
+                {isLoggingIn ? (
+                  <>
+                    <RefreshCw
+                      size={16}
+                      className="animate-spin"
+                    />
+
+                    Signing in...
+                  </>
+                ) : (
+                  "Log In"
+                )}
               </button>
-            </p>
+
+              {/* SECURITY NOTICE */}
+              <div className="rounded-xl border border-[#c9daf8] bg-[#edf4ff] px-4 py-3.5">
+                <div className="flex items-start gap-3">
+                  <Shield
+                    size={16}
+                    className="mt-0.5 flex-shrink-0 text-[#2f5fd6]"
+                  />
+
+                  <p className="text-[12px] leading-[1.5] text-[#37527f]">
+                    Authorized institutional users only. System activity may be recorded for security and auditing purposes.
+                  </p>
+                </div>
+              </div>
+            </form>
+
+            {/* REGISTER */}
+            <div className="mt-5 border-t border-[#d8e1ee] pt-5 text-center">
+              <p className="text-[13px] text-[#6b7b98]">
+                Don{"'"}t have an account?{" "}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    switchMode(
+                      "register"
+                    )
+                  }
+                  className="font-bold text-[#2f5fd6] transition-colors hover:text-[#173b7a] hover:underline"
+                >
+                  Register here
+                </button>
+              </p>
+            </div>
           </div>
         </div>
 
@@ -21717,6 +22383,29 @@ function Dashboard({
 
   const [sidebarOpen, setSidebarOpen] =
     useState(window.innerWidth >= 768);
+
+  // =========================================================
+  // DARK MODE
+  // =========================================================
+
+  const [darkMode, setDarkMode] =
+    useState(() => {
+      const savedTheme =
+        localStorage.getItem("qrpass-theme");
+
+      return savedTheme === "dark";
+    });
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    root.classList.toggle("dark", darkMode);
+
+    localStorage.setItem(
+      "qrpass-theme",
+      darkMode ? "dark" : "light"
+    );
+  }, [darkMode]);
 
   // =========================================================
   // HEADER MENUS
@@ -23132,13 +23821,700 @@ const handleSaveAccountProfile = async () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="h-screen overflow-hidden flex flex-col"
       style={{
-      fontFamily: "Inter, sans-serif",
-      background:
-      "linear-gradient(180deg, #f8fafc 0%, #f4f7fb 100%)",
-}}
+        fontFamily: "Inter, sans-serif",
+        background: darkMode
+          ? "linear-gradient(180deg, #0b1220 0%, #0e1726 100%)"
+          : "linear-gradient(180deg, #f8fafc 0%, #f4f7fb 100%)",
+      }}
     >
+      <style>{`
+        .dark {
+          --background: #0b1220;
+          --foreground: #e8eef7;
+          --card: #111a2b;
+          --card-foreground: #e8eef7;
+          --popover: #111a2b;
+          --popover-foreground: #e8eef7;
+          --primary: #4f7cff;
+          --primary-foreground: #ffffff;
+          --secondary: #17233a;
+          --secondary-foreground: #dbe7ff;
+          --muted: #182437;
+          --muted-foreground: #9eacc0;
+          --accent: #5b82ff;
+          --accent-foreground: #ffffff;
+          --border: #27354a;
+          --input: #33445e;
+          --input-background: #0f1828;
+          --ring: #6f92ff;
+        }
+
+        .dark body {
+          background: #0b1220;
+          color: #e8eef7;
+        }
+
+        .dark header.bg-white {
+          background: rgba(13, 21, 35, 0.97) !important;
+          border-color: #27354a !important;
+          box-shadow: 0 1px 0 rgba(255,255,255,0.03), 0 8px 24px rgba(0,0,0,0.18) !important;
+          backdrop-filter: blur(10px);
+        }
+
+        .dark aside {
+          background: linear-gradient(180deg, #111b2e 0%, #0d1626 100%) !important;
+          border-right-color: #27354a !important;
+        }
+
+        .dark aside nav button:hover {
+          background-color: rgba(91, 130, 255, 0.10) !important;
+        }
+
+        .dark main {
+          background:
+            radial-gradient(circle at 15% 0%, rgba(79, 124, 255, 0.07), transparent 28%),
+            transparent;
+        }
+
+        .dark footer {
+          background-color: #0e1726 !important;
+          border-color: #27354a !important;
+        }
+
+        .dark .bg-white {
+          background-color: var(--card) !important;
+        }
+
+        .dark .bg-card {
+          background-color: var(--card) !important;
+          color: var(--card-foreground) !important;
+        }
+
+        .dark .bg-background {
+          background-color: var(--background) !important;
+        }
+
+        .dark [class~="bg-[#fafbfc]"],
+        .dark [class~="bg-[#fbfcfe]"],
+        .dark [class~="bg-[#f6f8fb]"],
+        .dark [class~="bg-[#f3f5f9]"],
+        .dark [class~="bg-[#f2f5fb]"],
+        .dark [class~="bg-[#f3f5fa]"] {
+          background-color: #162236 !important;
+        }
+
+        .dark [class~="bg-[#eef2fc]"],
+        .dark [class~="bg-[#eef2ff]"] {
+          background-color: #1b2941 !important;
+        }
+
+        .dark [class~="text-[#111827]"],
+        .dark [class~="text-[#334155]"],
+        .dark [class~="text-[#16224b]"] {
+          color: #edf3fb !important;
+        }
+
+        .dark [class~="text-[#64748b]"],
+        .dark [class~="text-[#94a3b8]"],
+        .dark [class~="text-[#52637a]"] {
+          color: #a4b1c4 !important;
+        }
+
+        .dark [class~="text-[#1a3a7b]"] {
+          color: #8eacff !important;
+        }
+
+        .dark [class~="border-[#cfd8e6]"],
+        .dark [class~="border-[#dce3ee]"],
+        .dark [class~="border-[#e5eaf2]"],
+        .dark [class~="border-[#eef2f7]"],
+        .dark [class~="border-[#edf0f5]"],
+        .dark [class~="border-[#c7d2fe]"] {
+          border-color: #2a3a50 !important;
+        }
+
+        .dark .shadow-sm,
+        .dark .shadow-md,
+        .dark .shadow-lg,
+        .dark .shadow-xl {
+          --tw-shadow-color: rgba(0,0,0,0.28) !important;
+        }
+
+        .dark input,
+        .dark select,
+        .dark textarea {
+          background-color: #0f1828 !important;
+          color: #edf3fb !important;
+          border-color: #33445e !important;
+          color-scheme: dark;
+        }
+
+        .dark input:focus,
+        .dark select:focus,
+        .dark textarea:focus {
+          border-color: #6f92ff !important;
+          box-shadow: 0 0 0 3px rgba(111,146,255,0.12) !important;
+        }
+
+        .dark input::placeholder,
+        .dark textarea::placeholder {
+          color: #74849a !important;
+        }
+
+        .dark option {
+          background: #0f1828;
+          color: #edf3fb;
+        }
+
+        .dark table {
+          background: #111a2b;
+        }
+
+        .dark table thead tr {
+          background-color: #192842 !important;
+        }
+
+        .dark table thead th {
+          color: #b8c8df !important;
+          border-color: #2d3f58 !important;
+        }
+
+        .dark table tbody td,
+        .dark table tbody tr {
+          border-color: #26364b !important;
+        }
+
+        .dark table tbody tr {
+          background-color: #111a2b;
+        }
+
+        .dark table tbody tr:nth-child(even) {
+          background-color: #121d30;
+        }
+
+        .dark table tbody tr:hover {
+          background-color: #1a2a45 !important;
+        }
+
+        .dark [class~="hover:bg-[#eef2fc]"]:hover,
+        .dark [class~="hover:bg-[#f6f8fb]"]:hover,
+        .dark [class~="hover:bg-[#fbfcfe]"]:hover,
+        .dark [class~="hover:bg-[#f3f5fa]"]:hover {
+          background-color: #1b2a44 !important;
+        }
+
+        .dark button.border:not([class*="red-"]):not([class*="green-"]):not([class*="yellow-"]):not([class*="orange-"]) {
+          border-color: #32445e !important;
+        }
+
+        .dark button.bg-background:not([class*="red-"]):not([class*="green-"]) {
+          background: #131e31 !important;
+          color: #dbe7f7 !important;
+        }
+
+        .dark button.bg-background:not([class*="red-"]):not([class*="green-"]):hover {
+          background: #1b2a44 !important;
+        }
+
+        .dark .bg-blue-50,
+        .dark .bg-blue-50\/30,
+        .dark .bg-blue-50\/50 {
+          background-color: rgba(79, 124, 255, 0.12) !important;
+        }
+
+        .dark .bg-green-50,
+        .dark .bg-green-50\/30 {
+          background-color: rgba(34, 197, 94, 0.11) !important;
+        }
+
+        .dark .bg-red-50 {
+          background-color: rgba(239, 68, 68, 0.11) !important;
+        }
+
+        .dark .bg-yellow-50 {
+          background-color: rgba(234, 179, 8, 0.11) !important;
+        }
+
+        .dark .bg-orange-50 {
+          background-color: rgba(249, 115, 22, 0.11) !important;
+        }
+
+        .dark .bg-slate-50 {
+          background-color: #182437 !important;
+        }
+
+        .dark .text-blue-900,
+        .dark .text-blue-800,
+        .dark .text-blue-700 {
+          color: #c8d8ff !important;
+        }
+
+        .dark .text-green-900,
+        .dark .text-green-800,
+        .dark .text-green-700 {
+          color: #bbf7d0 !important;
+        }
+
+        .dark .text-red-900,
+        .dark .text-red-800,
+        .dark .text-red-700 {
+          color: #fecaca !important;
+        }
+
+        .dark .text-yellow-900,
+        .dark .text-yellow-800,
+        .dark .text-yellow-700,
+        .dark .text-yellow-600 {
+          color: #fde68a !important;
+        }
+
+        .dark .text-slate-800,
+        .dark .text-slate-700,
+        .dark .text-slate-600 {
+          color: #cbd5e1 !important;
+        }
+
+
+        /* =====================================================
+           GLOBAL DARK MODE READABILITY / CONTRAST FIX
+           Applies across Student, Security, PCO and SysAdmin.
+        ====================================================== */
+
+        .dark {
+          --foreground: #f7f9fc;
+          --card-foreground: #f7f9fc;
+          --popover-foreground: #f7f9fc;
+          --muted-foreground: #b9c5d6;
+          --secondary-foreground: #e7eef9;
+        }
+
+        .dark .text-foreground {
+          color: #f7f9fc !important;
+        }
+
+        .dark .text-muted-foreground {
+          color: #b9c5d6 !important;
+        }
+
+        /* Green / success surfaces */
+        .dark .bg-green-50,
+        .dark .bg-green-100,
+        .dark .bg-green-200,
+        .dark .bg-green-50\/30,
+        .dark .bg-green-50\/40,
+        .dark .bg-green-50\/50 {
+          background-color: #10291d !important;
+        }
+
+        .dark .border-green-100,
+        .dark .border-green-200,
+        .dark .border-green-300,
+        .dark .border-green-900\/70 {
+          border-color: #2d6b4d !important;
+        }
+
+        .dark .text-green-300,
+        .dark .text-green-500,
+        .dark .text-green-600,
+        .dark .text-green-700,
+        .dark .text-green-800,
+        .dark .text-green-900 {
+          color: #bbf7d0 !important;
+        }
+
+        /* Yellow / warning / claimant surfaces */
+        .dark .bg-yellow-50,
+        .dark .bg-yellow-100,
+        .dark .bg-yellow-200,
+        .dark .bg-yellow-50\/30,
+        .dark .bg-yellow-50\/40,
+        .dark .bg-yellow-50\/50 {
+          background-color: #2b2511 !important;
+        }
+
+        .dark .border-yellow-100,
+        .dark .border-yellow-200,
+        .dark .border-yellow-300,
+        .dark .border-yellow-900\/70 {
+          border-color: #806b21 !important;
+        }
+
+        .dark .text-yellow-300,
+        .dark .text-yellow-500,
+        .dark .text-yellow-600,
+        .dark .text-yellow-700,
+        .dark .text-yellow-800,
+        .dark .text-yellow-900 {
+          color: #fde68a !important;
+        }
+
+        /* Red / error / lost surfaces */
+        .dark .bg-red-50,
+        .dark .bg-red-100,
+        .dark .bg-red-200,
+        .dark .bg-red-50\/30,
+        .dark .bg-red-50\/40,
+        .dark .bg-red-50\/50 {
+          background-color: #30191d !important;
+        }
+
+        .dark .border-red-100,
+        .dark .border-red-200,
+        .dark .border-red-300,
+        .dark .border-red-900\/70 {
+          border-color: #7f3f49 !important;
+        }
+
+        .dark .text-red-300,
+        .dark .text-red-500,
+        .dark .text-red-600,
+        .dark .text-red-700,
+        .dark .text-red-800,
+        .dark .text-red-900 {
+          color: #fecaca !important;
+        }
+
+        /* Blue / informational surfaces */
+        .dark .bg-blue-50,
+        .dark .bg-blue-100,
+        .dark .bg-blue-200,
+        .dark .bg-blue-50\/30,
+        .dark .bg-blue-50\/40,
+        .dark .bg-blue-50\/50 {
+          background-color: #13263f !important;
+        }
+
+        .dark .border-blue-100,
+        .dark .border-blue-200,
+        .dark .border-blue-300,
+        .dark .border-blue-900\/70 {
+          border-color: #355b8c !important;
+        }
+
+        .dark .text-blue-300,
+        .dark .text-blue-500,
+        .dark .text-blue-600,
+        .dark .text-blue-700,
+        .dark .text-blue-800,
+        .dark .text-blue-900 {
+          color: #c7d9ff !important;
+        }
+
+        /* Slate / gray / neutral cards */
+        .dark .bg-slate-50,
+        .dark .bg-slate-100,
+        .dark .bg-gray-50,
+        .dark .bg-gray-100 {
+          background-color: #182335 !important;
+        }
+
+        .dark .text-slate-500,
+        .dark .text-slate-600,
+        .dark .text-slate-700,
+        .dark .text-slate-800,
+        .dark .text-gray-500,
+        .dark .text-gray-600,
+        .dark .text-gray-700,
+        .dark .text-gray-800 {
+          color: #c7d2e1 !important;
+        }
+
+        .dark .border-slate-200,
+        .dark .border-slate-300,
+        .dark .border-gray-200,
+        .dark .border-gray-300 {
+          border-color: #33455f !important;
+        }
+
+        /* Common light semi-transparent utility backgrounds */
+        .dark .bg-muted\/20 {
+          background-color: rgba(28, 42, 64, 0.62) !important;
+        }
+
+        .dark .bg-muted\/40 {
+          background-color: rgba(28, 42, 64, 0.82) !important;
+        }
+
+        .dark .bg-white\/5,
+        .dark .bg-white\/10 {
+          background-color: rgba(255, 255, 255, 0.07) !important;
+        }
+
+        /* Ensure disabled and subtle controls remain readable */
+        .dark button:disabled,
+        .dark input:disabled,
+        .dark select:disabled,
+        .dark textarea:disabled {
+          opacity: 0.72 !important;
+        }
+
+        /* Status pills should never become pale-on-pale */
+        .dark .rounded-full.bg-green-100 {
+          background-color: #153723 !important;
+          color: #bbf7d0 !important;
+        }
+
+        .dark .rounded-full.bg-yellow-100 {
+          background-color: #3a3114 !important;
+          color: #fde68a !important;
+        }
+
+        .dark .rounded-full.bg-red-100 {
+          background-color: #3b1d22 !important;
+          color: #fecaca !important;
+        }
+
+        .dark .rounded-full.bg-blue-100 {
+          background-color: #172f52 !important;
+          color: #c7d9ff !important;
+        }
+
+        /* Improve outlines and card separation throughout the app */
+        .dark .border {
+          border-color: #344761;
+        }
+
+        .dark .shadow-sm,
+        .dark .shadow-md,
+        .dark .shadow-lg,
+        .dark .shadow-xl,
+        .dark .shadow-2xl {
+          --tw-shadow-color: rgba(0, 0, 0, 0.44) !important;
+        }
+
+
+        /* =====================================================
+           DARK MODE FINAL CONTRAST SAFETY NET
+           Covers legacy hard-coded utilities throughout QRPass.
+        ====================================================== */
+
+        html.dark body,
+        html.dark #root {
+          color: #f4f7fb;
+        }
+
+        /* Hard-coded dark text that becomes unreadable on dark surfaces */
+        html.dark .text-gray-900,
+        html.dark .text-gray-950,
+        html.dark .text-slate-900,
+        html.dark .text-slate-950,
+        html.dark .text-black,
+        html.dark [class~="text-[#111827]"],
+        html.dark [class~="text-[#0f172a]"],
+        html.dark [class~="text-[#16224b]"],
+        html.dark [class~="text-[#334155]"] {
+          color: #f5f8fd !important;
+        }
+
+        html.dark .text-gray-400,
+        html.dark .text-gray-500,
+        html.dark .text-gray-600,
+        html.dark .text-gray-700,
+        html.dark .text-gray-800,
+        html.dark .text-slate-400,
+        html.dark .text-slate-500,
+        html.dark .text-slate-600,
+        html.dark .text-slate-700,
+        html.dark .text-slate-800,
+        html.dark [class~="text-[#64748b]"],
+        html.dark [class~="text-[#52637a]"] {
+          color: #b8c6d9 !important;
+        }
+
+        html.dark [class~="text-[#1a3a7b]"] {
+          color: #9fc0ff !important;
+        }
+
+        /* Legacy light cards / inputs / table headers */
+        html.dark .bg-white {
+          background-color: #121f32 !important;
+        }
+
+        html.dark .bg-gray-50,
+        html.dark .bg-gray-100,
+        html.dark .bg-slate-50,
+        html.dark .bg-slate-100,
+        html.dark [class~="bg-[#fafbfc]"],
+        html.dark [class~="bg-[#fbfcfe]"],
+        html.dark [class~="bg-[#f8fafc]"],
+        html.dark [class~="bg-[#f3f5f9]"],
+        html.dark [class~="bg-[#f2f5fb]"],
+        html.dark [class~="bg-[#eef2ff]"] {
+          background-color: #17253a !important;
+        }
+
+        html.dark [class~="bg-[#eef2fc]"] {
+          background-color: #1a3154 !important;
+        }
+
+        html.dark .border-gray-100,
+        html.dark .border-gray-200,
+        html.dark .border-gray-300,
+        html.dark .border-slate-100,
+        html.dark .border-slate-200,
+        html.dark .border-slate-300,
+        html.dark [class~="border-[#cfd8e6]"],
+        html.dark [class~="border-[#dce3ee]"],
+        html.dark [class~="border-[#e5eaf2]"],
+        html.dark [class~="border-[#edf0f5]"] {
+          border-color: #354961 !important;
+        }
+
+        /* Catch status variants, including opacity classes */
+        html.dark [class*="bg-green-50"],
+        html.dark [class*="bg-green-100"] {
+          background-color: #102b20 !important;
+        }
+
+        html.dark [class*="text-green-"] {
+          color: #a7f3c6 !important;
+        }
+
+        html.dark [class*="border-green-"] {
+          border-color: #2f7554 !important;
+        }
+
+        html.dark [class*="bg-yellow-50"],
+        html.dark [class*="bg-yellow-100"],
+        html.dark [class*="bg-amber-50"],
+        html.dark [class*="bg-amber-100"] {
+          background-color: #302711 !important;
+        }
+
+        html.dark [class*="text-yellow-"],
+        html.dark [class*="text-amber-"] {
+          color: #fde68a !important;
+        }
+
+        html.dark [class*="border-yellow-"],
+        html.dark [class*="border-amber-"] {
+          border-color: #8a7427 !important;
+        }
+
+        html.dark [class*="bg-red-50"],
+        html.dark [class*="bg-red-100"] {
+          background-color: #341b21 !important;
+        }
+
+        html.dark [class*="text-red-"] {
+          color: #fecaca !important;
+        }
+
+        html.dark [class*="border-red-"] {
+          border-color: #86434d !important;
+        }
+
+        html.dark [class*="bg-blue-50"],
+        html.dark [class*="bg-blue-100"] {
+          background-color: #142b49 !important;
+        }
+
+        html.dark [class*="text-blue-"] {
+          color: #bfd6ff !important;
+        }
+
+        html.dark [class*="border-blue-"] {
+          border-color: #3e6598 !important;
+        }
+
+        /* Tables: ensure data never inherits black/dark text */
+        html.dark table {
+          color: #e5edf8;
+        }
+
+        html.dark table thead th {
+          color: #c4d2e6 !important;
+          border-color: #344860 !important;
+        }
+
+        html.dark table tbody td {
+          color: #e5edf8;
+          border-color: #2e425a !important;
+        }
+
+        html.dark table tbody tr:hover {
+          background-color: #172a45 !important;
+        }
+
+        /* Neutral text inside table cells that used hard-coded black */
+        html.dark table .text-gray-900,
+        html.dark table .text-slate-900,
+        html.dark table [class~="text-[#111827]"] {
+          color: #f7f9fc !important;
+        }
+
+        /* Outline / secondary buttons */
+        html.dark button.bg-white,
+        html.dark a.bg-white {
+          background-color: #17253a !important;
+          color: #dbe7f7 !important;
+          border-color: #405570 !important;
+        }
+
+        html.dark button.bg-white:hover,
+        html.dark a.bg-white:hover {
+          background-color: #203653 !important;
+        }
+
+        /* Common form fields that still carry light hard-coded backgrounds */
+        html.dark input,
+        html.dark select,
+        html.dark textarea {
+          background-color: #111e31 !important;
+          color: #f7f9fc !important;
+          border-color: #405570 !important;
+        }
+
+        html.dark input::placeholder,
+        html.dark textarea::placeholder {
+          color: #91a1b7 !important;
+        }
+
+        /* Keep disabled elements readable instead of nearly disappearing */
+        html.dark button:disabled,
+        html.dark input:disabled,
+        html.dark select:disabled,
+        html.dark textarea:disabled {
+          opacity: 0.78 !important;
+        }
+
+        /* Force generic muted panels to remain separated from the page */
+        html.dark .bg-muted,
+        html.dark .bg-muted\/20,
+        html.dark .bg-muted\/40 {
+          background-color: #17253a !important;
+        }
+
+        .dark ::-webkit-scrollbar {
+          width: 10px;
+          height: 10px;
+        }
+
+        .dark ::-webkit-scrollbar-track {
+          background: #0b1220;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+          background: #33445e;
+          border: 2px solid #0b1220;
+          border-radius: 999px;
+        }
+
+        .dark ::-webkit-scrollbar-thumb:hover {
+          background: #465c7a;
+        }
+
+        img[alt="Selected Lost and Found item preview"] {
+          max-width: 100% !important;
+          max-height: 200px !important;
+          width: auto !important;
+          height: auto !important;
+          object-fit: contain !important;
+        }
+      `}</style>
+
       {/* =====================================================
           HEADER
       ====================================================== */}
@@ -23187,6 +24563,40 @@ const handleSaveAccountProfile = async () => {
         ==================================================== */}
 
         <div className="flex items-center gap-2">
+
+          {/* =================================================
+              DARK MODE TOGGLE
+          ================================================== */}
+
+          <button
+            type="button"
+            onClick={() =>
+              setDarkMode(
+                (current) => !current
+              )
+            }
+            title={
+              darkMode
+                ? "Switch to Light Mode"
+                : "Switch to Dark Mode"
+            }
+            aria-label={
+              darkMode
+                ? "Switch to Light Mode"
+                : "Switch to Dark Mode"
+            }
+            className={`rounded-lg p-1.5 transition-all ${
+              darkMode
+                ? "bg-[#1d2a43] text-yellow-300 ring-1 ring-[#31445f] hover:bg-[#263753]"
+                : "text-[#1a3a7b] hover:text-[#2f5fd6] hover:bg-[#eef2fc]"
+            }`}
+          >
+            {darkMode ? (
+              <Sun size={18} />
+            ) : (
+              <Moon size={18} />
+            )}
+          </button>
 
           {/* =================================================
               NOTIFICATION BELL
@@ -23736,7 +25146,7 @@ const handleSaveAccountProfile = async () => {
           MAIN BODY
       ====================================================== */}
 
-      <div className="flex flex-1 min-h-0 relative">
+      <div className="flex flex-1 min-h-0 relative overflow-hidden">
 
         {/* MOBILE BACKDROP */}
 
@@ -23757,7 +25167,7 @@ const handleSaveAccountProfile = async () => {
         ==================================================== */}
 
         <aside
-          className="flex-col flex-shrink-0 transition-all duration-200 overflow-hidden z-40"
+          className="h-full min-h-0 flex-col flex-shrink-0 transition-all duration-200 overflow-hidden z-40"
           style={{
             position: isMobile
               ? "fixed"
@@ -23849,7 +25259,8 @@ const handleSaveAccountProfile = async () => {
         ==================================================== */}
 
         <main
-          className="flex-1 overflow-auto p-3 md:p-5 min-w-0"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 md:p-5 min-w-0"
+          style={{ overflowAnchor: "none" }}
           onClick={() => {
             setNotificationOpen(false);
             setAccountOpen(false);
