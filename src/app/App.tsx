@@ -5316,69 +5316,116 @@ function SecurityEntryExitLog() {
   }
 
   async function handleResolveIncident(
-    event: React.FormEvent
-  ) {
-    event.preventDefault();
+  event: React.FormEvent
+) {
+  event.preventDefault();
 
-    if (!resolvingIncident) {
-      return;
-    }
-
-    const type =
-      resolutionType.trim();
-
-    const details =
-      resolutionDetails.trim();
-
-    if (!type) {
-      setResolutionError(
-        "Please select a resolution type."
-      );
-      return;
-    }
-
-    if (!details) {
-      setResolutionError(
-        "Please explain how this security incident was resolved."
-      );
-      return;
-    }
-
-    try {
-      setSavingResolution(true);
-      setResolutionError("");
-
-      await resolveSecurityIncident(
-        resolvingIncident.id,
-        type,
-        details
-      );
-
-      setResolvingIncident(null);
-      setSelectedIncident(null);
-      setResolutionType("");
-      setResolutionDetails("");
-
-      await loadData();
-
-      alert(
-        "Security incident resolved successfully."
-      );
-    } catch (error) {
-      console.error(
-        "Failed to resolve incident:",
-        error
-      );
-
-      setResolutionError(
-        error instanceof Error
-          ? error.message
-          : "Failed to resolve security incident."
-      );
-    } finally {
-      setSavingResolution(false);
-    }
+  if (!resolvingIncident) {
+    return;
   }
+
+  const type =
+    resolutionType.trim();
+
+  const details =
+    resolutionDetails.trim();
+
+  if (!type) {
+    setResolutionError(
+      "Please select a resolution type."
+    );
+    return;
+  }
+
+  if (!details) {
+    setResolutionError(
+      "Please explain how this security incident was resolved."
+    );
+    return;
+  }
+
+  try {
+    setSavingResolution(true);
+    setResolutionError("");
+
+    /*
+    |--------------------------------------------------------------------------
+    | SAVE TO BACKEND
+    |--------------------------------------------------------------------------
+    */
+
+    await resolveSecurityIncident(
+      resolvingIncident.id,
+      type,
+      details
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE UI IMMEDIATELY
+    |--------------------------------------------------------------------------
+    |
+    | No loadData() here.
+    | React updates this incident locally and it automatically moves
+    | from the Flagged table to the Resolved table.
+    |
+    */
+
+    setIncidents((currentIncidents) =>
+      currentIncidents.map(
+        (incident) =>
+          Number(incident.id) ===
+          Number(resolvingIncident.id)
+            ? {
+                ...incident,
+
+                status:
+                  "Resolved",
+
+                resolution_type:
+                  type,
+
+                resolution_details:
+                  details,
+
+                resolved_at:
+                  new Date().toISOString(),
+              }
+            : incident
+      )
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | CLOSE RESOLUTION MODAL
+    |--------------------------------------------------------------------------
+    */
+
+    setResolvingIncident(null);
+    setSelectedIncident(null);
+
+    setResolutionType("");
+    setResolutionDetails("");
+    setResolutionError("");
+
+    alert(
+      "Security incident resolved successfully."
+    );
+  } catch (error) {
+    console.error(
+      "Failed to resolve incident:",
+      error
+    );
+
+    setResolutionError(
+      error instanceof Error
+        ? error.message
+        : "Failed to resolve security incident."
+    );
+  } finally {
+    setSavingResolution(false);
+  }
+}
 
   /*
   |--------------------------------------------------------------------------
@@ -5487,11 +5534,37 @@ function SecurityEntryExitLog() {
 
   const scannedToday = todayLogs.length;
 
-  /*
-  |--------------------------------------------------------------------------
-  | EXPORT CSV
-  |--------------------------------------------------------------------------
-  */
+
+/*
+|--------------------------------------------------------------------------
+| FLAGGED / RESOLVED INCIDENT GROUPS
+|--------------------------------------------------------------------------
+*/
+
+const flaggedIncidents =
+  incidents.filter(
+    (incident) =>
+      String(
+        incident.status ?? ""
+      ).toLowerCase() !==
+      "resolved"
+  );
+
+const resolvedIncidents =
+  incidents.filter(
+    (incident) =>
+      String(
+        incident.status ?? ""
+      ).toLowerCase() ===
+      "resolved"
+  );
+
+
+/*
+|--------------------------------------------------------------------------
+| EXPORT CSV
+|--------------------------------------------------------------------------
+*/
 
   function exportCSV() {
     if (
@@ -5633,6 +5706,231 @@ function SecurityEntryExitLog() {
     document.body.removeChild(link);
 
     URL.revokeObjectURL(url);
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | SECURITY INCIDENT TABLE ROWS
+  |--------------------------------------------------------------------------
+  */
+
+  function renderIncidentRows(
+    incidentList: any[],
+    resolvedTable = false
+  ) {
+    if (loading) {
+      return (
+        <tr>
+          <td
+            colSpan={10}
+            className="py-10 text-center text-sm text-slate-500 dark:text-slate-400"
+          >
+            Loading security incidents...
+          </td>
+        </tr>
+      );
+    }
+
+    if (incidentList.length === 0) {
+      return (
+        <tr>
+          <td
+            colSpan={10}
+            className="py-10 text-center text-sm text-slate-500 dark:text-slate-400"
+          >
+            {resolvedTable
+              ? "No resolved incidents found."
+              : "No flagged incidents found."}
+          </td>
+        </tr>
+      );
+    }
+
+    return incidentList.map(
+      (incident) => {
+        const ownerName =
+          incident.owner_name ??
+          incident.item?.user?.name ??
+          "Unknown Owner";
+
+        const ownerId =
+          incident.owner_id_number ??
+          incident.item?.user?.username ??
+          "—";
+
+        const carrierName =
+          incident.carrier_name ??
+          "Unknown";
+
+        const carrierId =
+          incident.carrier_id_number ??
+          "—";
+
+        const itemName =
+          incident.item?.item_name ??
+          incident.item_name ??
+          "Unknown Item";
+
+        const serialNumber =
+          incident.item?.serial_number ??
+          incident.serial_number ??
+          "—";
+
+        return (
+          <tr
+            key={incident.id}
+            className={
+              resolvedTable
+                ? "border-t border-blue-100 bg-white transition-colors hover:bg-blue-50/70 dark:border-[#29415f] dark:bg-transparent dark:hover:bg-[#142b49]"
+                : "border-t border-red-100 bg-white transition-colors hover:bg-red-50/70 dark:border-[#65414e] dark:bg-transparent dark:hover:bg-[#4a202a]"
+            }
+          >
+            {/* DATE / TIME */}
+            <td className="px-3 py-3 whitespace-nowrap">
+              <div className="text-sm font-medium text-slate-800 dark:text-slate-100">
+                {formatDate(
+                  incident.reported_at
+                )}
+              </div>
+
+              <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                {formatTime(
+                  incident.reported_at
+                )}
+              </div>
+            </td>
+
+            {/* CODE */}
+            <td className="px-3 py-3">
+              <div className="font-mono text-xs text-slate-700 dark:text-slate-200">
+                {incident.scanned_code ??
+                  "—"}
+              </div>
+
+              <div
+                className={`mt-1 text-xs font-semibold ${
+                  resolvedTable
+                    ? "text-blue-600 dark:text-blue-300"
+                    : "text-red-600 dark:text-red-300"
+                }`}
+              >
+                {incident.incident_type ??
+                  "Security Incident"}
+              </div>
+            </td>
+
+            {/* ITEM */}
+            <td className="px-3 py-3">
+              <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                {itemName}
+              </div>
+
+              <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                Serial: {serialNumber}
+              </div>
+            </td>
+
+            {/* OWNER */}
+            <td className="px-3 py-3">
+              <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                {ownerName}
+              </div>
+
+              <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                ID: {ownerId}
+              </div>
+            </td>
+
+            {/* PERSON CARRYING */}
+            <td className="px-3 py-3">
+              <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                {carrierName}
+              </div>
+
+              <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                ID: {carrierId}
+              </div>
+            </td>
+
+            {/* DIRECTION */}
+            <td className="px-3 py-3">
+              {incident.direction ? (
+                <span
+                  className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                    incident.direction === "IN"
+                      ? "border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/20 dark:text-blue-200"
+                      : "border-purple-200 bg-purple-100 text-purple-700 dark:border-purple-400/20 dark:bg-purple-500/20 dark:text-purple-200"
+                  }`}
+                >
+                  {incident.direction}
+                </span>
+              ) : (
+                <span className="text-slate-400 dark:text-slate-500">
+                  —
+                </span>
+              )}
+            </td>
+
+            {/* GATE */}
+            <td className="px-3 py-3 text-sm text-slate-700 dark:text-slate-200 whitespace-nowrap">
+              {incident.gate ?? "—"}
+            </td>
+
+            {/* REPORTED BY */}
+            <td className="px-3 py-3 text-sm text-slate-700 dark:text-slate-200">
+              {incident.reporter?.name ??
+                "Security Personnel"}
+            </td>
+
+            {/* STATUS */}
+            <td className="px-3 py-3">
+              {resolvedTable ? (
+                <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-500/15 dark:text-emerald-300">
+                  Resolved
+                </span>
+              ) : (
+                <span className="inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:border-red-400/20 dark:bg-red-500/15 dark:text-red-300">
+                  Flagged
+                </span>
+              )}
+            </td>
+
+            {/* ACTION */}
+            <td className="px-3 py-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedIncident(
+                      incident
+                    )
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-400/30 dark:bg-blue-500/15 dark:text-blue-200 dark:hover:bg-blue-500/25"
+                >
+                  <Eye size={13} />
+                  View
+                </button>
+
+                {!resolvedTable && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openResolveIncident(
+                        incident
+                      )
+                    }
+                    className="rounded-md border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 dark:border-emerald-400/20 dark:hover:bg-emerald-500"
+                  >
+                    Resolve
+                  </button>
+                )}
+              </div>
+            </td>
+          </tr>
+        );
+      }
+    );
   }
 
   return (
@@ -5854,22 +6152,32 @@ function SecurityEntryExitLog() {
         </div>
       </div>
 
-      {/* FLAGGED ITEMS */}
-      <div className="bg-white border border-red-200 rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-red-100 bg-red-50">
-          <h2 className="text-lg font-bold text-red-700">
-            Flagged / Unregistered Items
-          </h2>
+      {/* =========================================================
+          FLAGGED ITEMS
+      ========================================================= */}
 
-          <p className="text-sm text-red-600 mt-1">
-            Failed QR verification attempts that require
-            security attention.
-          </p>
+      <div className="overflow-hidden rounded-xl border border-red-200 bg-white shadow-sm dark:border-[#7c3b49] dark:bg-[#351820]">
+        <div className="border-b border-red-200 bg-red-50 px-5 py-4 dark:border-[#7c3b49] dark:bg-[#421d25]">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-red-800 dark:text-red-200">
+                Flagged / Unregistered Items
+              </h2>
+
+              <p className="mt-1 text-sm text-red-600 dark:text-red-300/80">
+                Failed QR verification attempts that require security attention.
+              </p>
+            </div>
+
+            <span className="rounded-full border border-red-200 bg-red-100 px-3 py-1 text-xs font-bold text-red-700 dark:border-red-400/20 dark:bg-red-500/15 dark:text-red-300">
+              {flaggedIncidents.length} Flagged
+            </span>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1450px]">
-            <thead className="bg-gray-50">
+            <thead className="bg-red-50 dark:bg-[#122642]">
               <tr>
                 {[
                   "Date / Time",
@@ -5882,571 +6190,490 @@ function SecurityEntryExitLog() {
                   "Reported By",
                   "Status",
                   "Action",
-                ].map((heading) => (
-                  <th
-                    key={heading}
-                    className="py-3 px-3 text-left text-xs font-semibold text-gray-600"
-                  >
-                    {heading}
-                  </th>
-                ))}
+                ].map(
+                  (heading) => (
+                    <th
+                      key={heading}
+                      className="px-3 py-3 text-left text-xs font-semibold text-red-800 dark:text-blue-100"
+                    >
+                      {heading}
+                    </th>
+                  )
+                )}
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-gray-100">
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan={10}
-                    className="py-10 text-center text-gray-500"
-                  >
-                    Loading security incidents...
-                  </td>
-                </tr>
-              ) : incidents.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={10}
-                    className="py-10 text-center text-gray-500"
-                  >
-                    No security incidents found.
-                  </td>
-                </tr>
-              ) : (
-                incidents.map((incident) => {
-                  const ownerName =
-                    incident.owner_name ??
-                    incident.item?.user?.name ??
-                    "Unknown Owner";
-
-                  const ownerId =
-                    incident.owner_id_number ??
-                    incident.item?.user?.username ??
-                    "—";
-
-                  const carrierName =
-                    incident.carrier_name ??
-                    "Unknown";
-
-                  const carrierId =
-                    incident.carrier_id_number ??
-                    "—";
-
-                  const itemName =
-                    incident.item?.item_name ??
-                    incident.item_name ??
-                    "Unknown Item";
-
-                  const serialNumber =
-                    incident.item?.serial_number ??
-                    incident.serial_number ??
-                    "—";
-
-                  const resolved =
-                    String(
-                      incident.status ?? ""
-                    ).toLowerCase() ===
-                    "resolved";
-
-                  return (
-                    <tr
-                      key={incident.id}
-                      className="hover:bg-red-50/40"
-                    >
-                      {/* DATE/TIME */}
-                      <td className="py-3 px-3 whitespace-nowrap">
-                        <div className="text-sm text-gray-800">
-                          {formatDate(
-                            incident.reported_at
-                          )}
-                        </div>
-
-                        <div className="text-xs text-gray-500">
-                          {formatTime(
-                            incident.reported_at
-                          )}
-                        </div>
-                      </td>
-
-                      {/* CODE */}
-                      <td className="py-3 px-3">
-                        <span className="text-xs font-mono text-gray-700">
-                          {incident.scanned_code ??
-                            "—"}
-                        </span>
-
-                        <div className="text-xs font-semibold text-red-600 mt-1">
-                          {incident.incident_type ??
-                            "Security Incident"}
-                        </div>
-                      </td>
-
-                      {/* ITEM */}
-                      <td className="py-3 px-3">
-                        <div className="text-sm font-semibold text-gray-900">
-                          {itemName}
-                        </div>
-
-                        <div className="text-xs text-gray-500">
-                          Serial:{" "}
-                          {serialNumber}
-                        </div>
-                      </td>
-
-                      {/* OWNER */}
-                      <td className="py-3 px-3">
-                        <div className="text-sm font-semibold text-gray-900">
-                          {ownerName}
-                        </div>
-
-                        <div className="text-xs text-gray-500">
-                          ID:{" "}
-                          {ownerId}
-                        </div>
-                      </td>
-
-                      {/* CARRIER */}
-                      <td className="py-3 px-3">
-                        <div className="text-sm font-semibold text-gray-900">
-                          {carrierName}
-                        </div>
-
-                        <div className="text-xs text-gray-500">
-                          ID:{" "}
-                          {carrierId}
-                        </div>
-                      </td>
-
-                      {/* DIRECTION */}
-                      <td className="py-3 px-3">
-                        {incident.direction ? (
-                          <span
-                            className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                              incident.direction ===
-                              "IN"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-purple-100 text-purple-700"
-                            }`}
-                          >
-                            {incident.direction}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">
-                            —
-                          </span>
-                        )}
-                      </td>
-
-                      {/* GATE */}
-                      <td className="py-3 px-3 text-sm text-gray-700 whitespace-nowrap">
-                        {incident.gate ??
-                          "—"}
-                      </td>
-
-                      {/* REPORTED BY */}
-                      <td className="py-3 px-3 text-sm text-gray-700">
-                        {incident.reporter?.name ??
-                          "Security Personnel"}
-                      </td>
-
-                      {/* STATUS */}
-                      <td className="py-3 px-3">
-                        {resolved ? (
-                          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                            Resolved
-                          </span>
-                        ) : (
-                          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-                            Flagged
-                          </span>
-                        )}
-                      </td>
-
-                      {/* ACTIONS */}
-                      <td className="py-3 px-3">
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSelectedIncident(
-                                incident
-                              )
-                            }
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-blue-200 text-blue-700 bg-blue-50 rounded-md text-xs font-semibold hover:bg-blue-100"
-                          >
-                            <Eye size={13} />
-                            View
-                          </button>
-
-                          {!resolved && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openResolveIncident(
-                                  incident
-                                )
-                              }
-                              className="px-3 py-1.5 bg-green-600 text-white rounded-md text-xs font-semibold hover:bg-green-700"
-                            >
-                              Resolve
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+            <tbody>
+              {renderIncidentRows(
+                flaggedIncidents,
+                false
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* INCIDENT DETAILS MODAL */}
-      {selectedIncident && (
-        <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
-            {/* MODAL HEADER */}
-            <div className="px-5 py-4 bg-red-50 border-b border-red-200 flex items-start justify-between gap-4">
-              <div className="flex gap-3">
-                <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle
-                    size={20}
-                    className="text-red-600"
-                  />
-                </div>
 
-                <div>
-                  <h2 className="text-lg font-bold text-red-700">
-                    Security Incident Details
-                  </h2>
+      {/* =========================================================
+          RESOLVED ITEMS
+      ========================================================= */}
 
-                  <p className="text-xs text-red-600 mt-0.5">
-                    {selectedIncident.incident_type ??
-                      "Flagged Item"}
-                  </p>
-                </div>
-              </div>
+      <div className="overflow-hidden rounded-xl border border-blue-200 bg-white shadow-sm dark:border-[#28466f] dark:bg-[#0e1f38]">
+        <div className="border-b border-blue-200 bg-blue-50 px-5 py-4 dark:border-[#28466f] dark:bg-[#10294a]">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                Resolved Items
+              </h2>
 
-              <button
-                type="button"
-                onClick={() =>
-                  setSelectedIncident(
-                    null
+              <p className="mt-1 text-sm text-blue-600 dark:text-blue-200/70">
+                Security incidents that have already been reviewed and resolved.
+              </p>
+            </div>
+
+            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-500/15 dark:text-emerald-300">
+              {resolvedIncidents.length} Resolved
+            </span>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1450px]">
+            <thead className="bg-blue-50 dark:bg-[#132c4c]">
+              <tr>
+                {[
+                  "Date / Time",
+                  "Code",
+                  "Item",
+                  "Owner",
+                  "Person Carrying",
+                  "Direction",
+                  "Gate",
+                  "Reported By",
+                  "Status",
+                  "Action",
+                ].map(
+                  (heading) => (
+                    <th
+                      key={heading}
+                      className="px-3 py-3 text-left text-xs font-semibold text-blue-900 dark:text-blue-100"
+                    >
+                      {heading}
+                    </th>
                   )
-                }
-                className="h-8 w-8 rounded-md flex items-center justify-center text-gray-500 hover:bg-red-100 hover:text-red-700"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* MODAL BODY */}
-            <div className="p-5 space-y-5">
-              {/* ITEM */}
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
-                  Item Information
-                </h3>
-
-                <div className="grid md:grid-cols-2 gap-3">
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <p className="text-xs text-gray-500">
-                      Item Name
-                    </p>
-
-                    <p className="text-sm font-semibold mt-1">
-                      {selectedIncident.item?.item_name ??
-                        selectedIncident.item_name ??
-                        "Unknown Item"}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <p className="text-xs text-gray-500">
-                      Serial Number
-                    </p>
-
-                    <p className="text-sm font-mono font-semibold mt-1">
-                      {selectedIncident.item?.serial_number ??
-                        selectedIncident.serial_number ??
-                        "—"}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border border-gray-200 p-3 md:col-span-2">
-                    <p className="text-xs text-gray-500">
-                      Scanned Code
-                    </p>
-
-                    <p className="text-sm font-mono font-semibold mt-1 text-red-700">
-                      {selectedIncident.scanned_code ??
-                        "—"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* OWNER */}
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
-                  Registered / Claimed Owner
-                </h3>
-
-                <div className="grid md:grid-cols-2 gap-3">
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <p className="text-xs text-gray-500">
-                      Owner Name
-                    </p>
-
-                    <p className="text-sm font-semibold mt-1">
-                      {selectedIncident.owner_name ??
-                        selectedIncident.item?.user?.name ??
-                        "Unknown Owner"}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <p className="text-xs text-gray-500">
-                      Owner ID Number
-                    </p>
-
-                    <p className="text-sm font-mono font-semibold mt-1">
-                      {selectedIncident.owner_id_number ??
-                        selectedIncident.item?.user?.username ??
-                        "—"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* CARRIER */}
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
-                  Person Carrying Item
-                </h3>
-
-                <div className="grid md:grid-cols-2 gap-3">
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <p className="text-xs text-gray-500">
-                      Name
-                    </p>
-
-                    <p className="text-sm font-semibold mt-1">
-                      {selectedIncident.carrier_name ??
-                        "Unknown"}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <p className="text-xs text-gray-500">
-                      Student / Employee ID
-                    </p>
-
-                    <p className="text-sm font-mono font-semibold mt-1">
-                      {selectedIncident.carrier_id_number ??
-                        "—"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* INCIDENT */}
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
-                  Incident Information
-                </h3>
-
-                <div className="grid md:grid-cols-2 gap-3">
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <p className="text-xs text-gray-500">
-                      Direction
-                    </p>
-
-                    <p className="text-sm font-semibold mt-1">
-                      {selectedIncident.direction ??
-                        "—"}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <p className="text-xs text-gray-500">
-                      Gate
-                    </p>
-
-                    <p className="text-sm font-semibold mt-1">
-                      {selectedIncident.gate ??
-                        "—"}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <p className="text-xs text-gray-500">
-                      Reported By
-                    </p>
-
-                    <p className="text-sm font-semibold mt-1">
-                      {selectedIncident.reporter?.name ??
-                        "Security Personnel"}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <p className="text-xs text-gray-500">
-                      Date & Time
-                    </p>
-
-                    <p className="text-sm font-semibold mt-1">
-                      {formatDate(
-                        selectedIncident.reported_at
-                      )}{" "}
-                      {formatTime(
-                        selectedIncident.reported_at
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* DESCRIPTION */}
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
-                  Description
-                </h3>
-
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
-                  {selectedIncident.description ||
-                    "No additional description provided."}
-                </div>
-              </div>
-
-              {String(
-                selectedIncident.status ?? ""
-              ).toLowerCase() === "resolved" && (
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wide text-green-700 mb-2">
-                    Resolution Information
-                  </h3>
-
-                  <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div className="rounded-md border border-green-200 bg-white/70 p-3">
-                        <p className="text-xs text-gray-500">
-                          Resolution Type
-                        </p>
-
-                        <p className="mt-1 text-sm font-semibold text-green-900">
-                          {selectedIncident.resolution_type ||
-                            "Not recorded"}
-                        </p>
-                      </div>
-
-                      <div className="rounded-md border border-green-200 bg-white/70 p-3">
-                        <p className="text-xs text-gray-500">
-                          Resolution Status
-                        </p>
-
-                        <p className="mt-1 text-sm font-semibold text-green-900">
-                          Resolved
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <p className="text-xs font-semibold text-green-700">
-                        How the incident was resolved
-                      </p>
-
-                      <p className="mt-1 whitespace-pre-wrap text-sm text-green-900">
-                        {selectedIncident.resolution_details ||
-                          "No resolution details were recorded for this older incident."}
-                      </p>
-                    </div>
-
-                    <div className="mt-4 grid md:grid-cols-2 gap-3">
-                      <div className="rounded-md border border-green-200 bg-white/70 p-3">
-                        <p className="text-xs text-gray-500">
-                          Resolved By
-                        </p>
-
-                        <p className="mt-1 text-sm font-semibold text-gray-800">
-                          {selectedIncident.resolver?.name ??
-                            "Security Personnel"}
-                        </p>
-                      </div>
-
-                      <div className="rounded-md border border-green-200 bg-white/70 p-3">
-                        <p className="text-xs text-gray-500">
-                          Date & Time Resolved
-                        </p>
-
-                        <p className="mt-1 text-sm font-semibold text-gray-800">
-                          {selectedIncident.resolved_at ? (
-                            <>
-                              {formatDate(
-                                selectedIncident.resolved_at
-                              )}{" "}
-                              {formatTime(
-                                selectedIncident.resolved_at
-                              )}
-                            </>
-                          ) : (
-                            "Not recorded"
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* MODAL FOOTER */}
-            <div className="px-5 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
-              <div>
-                {String(
-                  selectedIncident.status ?? ""
-                ).toLowerCase() ===
-                "resolved" ? (
-                  <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                    Resolved
-                  </span>
-                ) : (
-                  <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-                    Flagged
-                  </span>
                 )}
-              </div>
+              </tr>
+            </thead>
 
-              <div className="flex gap-2">
+            <tbody>
+              {renderIncidentRows(
+                resolvedIncidents,
+                true
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* =========================================================
+          INCIDENT / RESOLVED ITEM DETAILS MODAL
+      ========================================================= */}
+
+      {selectedIncident && (
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/70 p-4">
+          <div className="flex min-h-full items-center justify-center">
+            <div className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-[#29415f] dark:bg-[#101f36]">
+
+              {/* MODAL HEADER */}
+              <div
+                className={`flex flex-shrink-0 items-start justify-between gap-4 border-b px-5 py-4 ${
+                  String(
+                    selectedIncident.status ?? ""
+                  ).toLowerCase() === "resolved"
+                    ? "border-emerald-200 bg-emerald-50 dark:border-[#285749] dark:bg-[#12382f]"
+                    : "border-red-200 bg-red-50 dark:border-[#713744] dark:bg-[#421d25]"
+                }`}
+              >
+                <div className="flex gap-3">
+                  <div
+                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
+                      String(
+                        selectedIncident.status ?? ""
+                      ).toLowerCase() === "resolved"
+                        ? "bg-emerald-100 dark:bg-emerald-500/15"
+                        : "bg-red-100 dark:bg-red-500/15"
+                    }`}
+                  >
+                    {String(
+                      selectedIncident.status ?? ""
+                    ).toLowerCase() === "resolved" ? (
+                      <CheckCircle
+                        size={20}
+                        className="text-emerald-700 dark:text-emerald-300"
+                      />
+                    ) : (
+                      <AlertTriangle
+                        size={20}
+                        className="text-red-700 dark:text-red-300"
+                      />
+                    )}
+                  </div>
+
+                  <div>
+                    <h2
+                      className={`text-lg font-bold ${
+                        String(
+                          selectedIncident.status ?? ""
+                        ).toLowerCase() === "resolved"
+                          ? "text-emerald-800 dark:text-emerald-200"
+                          : "text-red-800 dark:text-red-200"
+                      }`}
+                    >
+                      {String(
+                        selectedIncident.status ?? ""
+                      ).toLowerCase() === "resolved"
+                        ? "Resolved Item Details"
+                        : "Security Incident Details"}
+                    </h2>
+
+                    <p
+                      className={`mt-0.5 text-xs ${
+                        String(
+                          selectedIncident.status ?? ""
+                        ).toLowerCase() === "resolved"
+                          ? "text-emerald-700 dark:text-emerald-300/80"
+                          : "text-red-700 dark:text-red-300/80"
+                      }`}
+                    >
+                      {selectedIncident.incident_type ??
+                        "Unregistered Item"}
+                    </p>
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   onClick={() =>
-                    setSelectedIncident(
-                      null
-                    )
+                    setSelectedIncident(null)
                   }
-                  className="px-4 py-2 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-black/5 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
                 >
-                  Close
+                  <X size={18} />
                 </button>
+              </div>
 
+
+              {/* SCROLLABLE MODAL BODY */}
+              <div className="flex-1 space-y-5 overflow-y-auto p-5">
+
+                {/* ITEM INFORMATION */}
+                <div>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-blue-200">
+                    Item Information
+                  </h3>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-[#29415f] dark:bg-[#13243c]">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Item Name
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {selectedIncident.item?.item_name ??
+                          selectedIncident.item_name ??
+                          "Unknown Item"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-[#29415f] dark:bg-[#13243c]">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Serial Number
+                      </p>
+
+                      <p className="mt-1 text-sm font-mono font-semibold text-slate-900 dark:text-slate-100">
+                        {selectedIncident.item?.serial_number ??
+                          selectedIncident.serial_number ??
+                          "—"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 md:col-span-2 dark:border-[#29415f] dark:bg-[#13243c]">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Scanned Code
+                      </p>
+
+                      <p className="mt-1 text-sm font-mono font-semibold text-blue-700 dark:text-blue-200">
+                        {selectedIncident.scanned_code ??
+                          "—"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+
+                {/* REGISTERED / CLAIMED OWNER */}
+                <div>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-blue-200">
+                    Registered / Claimed Owner
+                  </h3>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-[#29415f] dark:bg-[#13243c]">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Owner Name
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {selectedIncident.owner_name ??
+                          selectedIncident.item?.user?.name ??
+                          "Unknown Owner"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-[#29415f] dark:bg-[#13243c]">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Owner ID Number
+                      </p>
+
+                      <p className="mt-1 text-sm font-mono font-semibold text-slate-900 dark:text-slate-100">
+                        {selectedIncident.owner_id_number ??
+                          selectedIncident.item?.user?.username ??
+                          "—"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+
+                {/* PERSON CARRYING ITEM */}
+                <div>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-blue-200">
+                    Person Carrying Item
+                  </h3>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-[#29415f] dark:bg-[#13243c]">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Name
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {selectedIncident.carrier_name ??
+                          "Unknown"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-[#29415f] dark:bg-[#13243c]">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Student / Employee ID
+                      </p>
+
+                      <p className="mt-1 text-sm font-mono font-semibold text-slate-900 dark:text-slate-100">
+                        {selectedIncident.carrier_id_number ??
+                          "—"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+
+                {/* INCIDENT INFORMATION */}
+                <div>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-blue-200">
+                    Incident Information
+                  </h3>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-[#29415f] dark:bg-[#13243c]">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Direction
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {selectedIncident.direction ??
+                          "—"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-[#29415f] dark:bg-[#13243c]">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Gate
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {selectedIncident.gate ??
+                          "—"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-[#29415f] dark:bg-[#13243c]">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Reported By
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {selectedIncident.reporter?.name ??
+                          "Security Personnel"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-[#29415f] dark:bg-[#13243c]">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Date & Time
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {formatDate(
+                          selectedIncident.reported_at
+                        )}{" "}
+                        {formatTime(
+                          selectedIncident.reported_at
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+
+                {/* DESCRIPTION */}
+                <div>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-blue-200">
+                    Description
+                  </h3>
+
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-[#29415f] dark:bg-[#13243c] dark:text-slate-200">
+                    {selectedIncident.description ||
+                      "No additional description provided."}
+                  </div>
+                </div>
+
+
+                {/* RESOLUTION INFORMATION */}
                 {String(
                   selectedIncident.status ?? ""
-                ).toLowerCase() ===
-                  "flagged" && (
+                ).toLowerCase() === "resolved" && (
+                  <div>
+                    <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                      Resolution Information
+                    </h3>
+
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-400/30 dark:bg-emerald-950/30">
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="rounded-lg border border-emerald-200 bg-white p-3 dark:border-emerald-400/20 dark:bg-[#132b2b]">
+                          <p className="text-xs text-slate-500 dark:text-emerald-200/70">
+                            Resolution Type
+                          </p>
+
+                          <p className="mt-1 text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+                            {selectedIncident.resolution_type ||
+                              "Not recorded"}
+                          </p>
+                        </div>
+
+                        <div className="rounded-lg border border-emerald-200 bg-white p-3 dark:border-emerald-400/20 dark:bg-[#132b2b]">
+                          <p className="text-xs text-slate-500 dark:text-emerald-200/70">
+                            Resolution Status
+                          </p>
+
+                          <p className="mt-1 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                            Resolved
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                          How the incident was resolved
+                        </p>
+
+                        <p className="mt-2 whitespace-pre-wrap rounded-lg border border-emerald-200 bg-white p-3 text-sm leading-relaxed text-emerald-900 dark:border-emerald-400/20 dark:bg-[#132b2b] dark:text-emerald-100">
+                          {selectedIncident.resolution_details ||
+                            "No resolution details were recorded for this older incident."}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        <div className="rounded-lg border border-emerald-200 bg-white p-3 dark:border-emerald-400/20 dark:bg-[#132b2b]">
+                          <p className="text-xs text-slate-500 dark:text-emerald-200/70">
+                            Resolved By
+                          </p>
+
+                          <p className="mt-1 text-sm font-semibold text-slate-800 dark:text-emerald-100">
+                            {selectedIncident.resolver?.name ??
+                              "Security Personnel"}
+                          </p>
+                        </div>
+
+                        <div className="rounded-lg border border-emerald-200 bg-white p-3 dark:border-emerald-400/20 dark:bg-[#132b2b]">
+                          <p className="text-xs text-slate-500 dark:text-emerald-200/70">
+                            Date & Time Resolved
+                          </p>
+
+                          <p className="mt-1 text-sm font-semibold text-slate-800 dark:text-emerald-100">
+                            {selectedIncident.resolved_at ? (
+                              <>
+                                {formatDate(
+                                  selectedIncident.resolved_at
+                                )}{" "}
+                                {formatTime(
+                                  selectedIncident.resolved_at
+                                )}
+                              </>
+                            ) : (
+                              "Not recorded"
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+
+              {/* MODAL FOOTER */}
+              <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4 dark:border-[#29415f] dark:bg-[#13243c]">
+                <div>
+                  {String(
+                    selectedIncident.status ?? ""
+                  ).toLowerCase() === "resolved" ? (
+                    <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-500/15 dark:text-emerald-300">
+                      Resolved
+                    </span>
+                  ) : (
+                    <span className="inline-flex rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 dark:border-red-400/20 dark:bg-red-500/15 dark:text-red-300">
+                      Flagged
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() =>
-                      openResolveIncident(
-                        selectedIncident
-                      )
+                      setSelectedIncident(null)
                     }
-                    className="px-4 py-2 bg-green-600 text-white rounded-md text-xs font-semibold hover:bg-green-700"
+                    className="rounded-md border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-[#35506f] dark:bg-[#172a45] dark:text-slate-200 dark:hover:bg-[#1d3556]"
                   >
-                    Resolve Incident
+                    Close
                   </button>
-                )}
+
+                  {String(
+                    selectedIncident.status ?? ""
+                  ).toLowerCase() === "flagged" && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openResolveIncident(
+                          selectedIncident
+                        )
+                      }
+                      className="rounded-md bg-emerald-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 dark:hover:bg-emerald-500"
+                    >
+                      Resolve Incident
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -19815,7 +20042,7 @@ function SysAdminAnnouncementManagement() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-lg border border-[#d7e0f3] bg-[#f8faff] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-3 rounded-lg border border-[#d7e0f3] bg-[#f8faff] p-3 transition-colors sm:flex-row sm:items-center sm:justify-between dark:border-[#263b58] dark:bg-[#0b1930]">
             <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
@@ -19831,15 +20058,15 @@ function SysAdminAnnouncementManagement() {
                     })
                   )
                 }
-                className="mt-0.5 h-4 w-4 accent-[#1a3a7b]"
+                className="mt-0.5 h-4 w-4 accent-[#1a3a7b] dark:accent-[#4f7df3]"
               />
 
               <span>
-                <span className="block text-sm font-semibold text-[#111827]">
+                <span className="block text-sm font-semibold text-[#111827] dark:text-[#e8eef8]">
                   Publish announcement
                 </span>
 
-                <span className="block text-xs text-[#64748b]">
+                <span className="block text-xs text-[#64748b] dark:text-[#94a3b8]">
                   If unchecked, the announcement is saved as a draft and is invisible to users.
                 </span>
               </span>
@@ -19853,7 +20080,7 @@ function SysAdminAnnouncementManagement() {
                     resetForm
                   }
                   disabled={saving}
-                  className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#334155] hover:bg-[#eef2fc] disabled:opacity-50"
+                  className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#334155] transition-colors hover:bg-[#eef2fc] disabled:opacity-50 dark:border-[#29415f] dark:bg-[#13233d] dark:text-[#dbeafe] dark:hover:bg-[#1a2d4a]"
                 >
                   Cancel
                 </button>
@@ -19862,7 +20089,7 @@ function SysAdminAnnouncementManagement() {
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#1a3a7b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#153164] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg bg-[#1a3a7b] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#153164] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#2f5fd6] dark:hover:bg-[#3b6be0]"
               >
                 {saving ? (
                   <RefreshCw
@@ -23296,11 +23523,11 @@ const handleSaveAccountProfile = async () => {
     ) {
       return {
         card:
-          "bg-yellow-50 border-yellow-200",
+          "bg-yellow-50 border-yellow-200 dark:bg-yellow-500/10 dark:border-yellow-400/20",
         icon:
-          "bg-yellow-100 text-yellow-700",
+          "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-300",
         badge:
-          "bg-yellow-100 text-yellow-700",
+          "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-300",
       };
     }
 
@@ -23322,11 +23549,11 @@ const handleSaveAccountProfile = async () => {
     ) {
       return {
         card:
-          "bg-green-50 border-green-200",
+          "bg-green-50 border-green-200 dark:bg-emerald-500/10 dark:border-emerald-400/20",
         icon:
-          "bg-green-100 text-green-700",
+          "bg-green-100 text-green-700 dark:bg-emerald-500/15 dark:text-emerald-300",
         badge:
-          "bg-green-100 text-green-700",
+          "bg-green-100 text-green-700 dark:bg-emerald-500/15 dark:text-emerald-300",
       };
     }
 
@@ -23342,11 +23569,11 @@ const handleSaveAccountProfile = async () => {
     ) {
       return {
         card:
-          "bg-blue-50 border-blue-200",
+          "bg-blue-50 border-blue-200 dark:bg-blue-500/10 dark:border-blue-400/20",
         icon:
-          "bg-blue-100 text-blue-700",
+          "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
         badge:
-          "bg-blue-100 text-blue-700",
+          "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
       };
     }
 
@@ -23369,11 +23596,11 @@ const handleSaveAccountProfile = async () => {
     ) {
       return {
         card:
-          "bg-purple-50 border-purple-200",
+          "bg-purple-50 border-purple-200 dark:bg-purple-500/10 dark:border-purple-400/20",
         icon:
-          "bg-purple-100 text-purple-700",
+          "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
         badge:
-          "bg-purple-100 text-purple-700",
+          "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
       };
     }
 
@@ -23393,11 +23620,11 @@ const handleSaveAccountProfile = async () => {
     ) {
       return {
         card:
-          "bg-cyan-50 border-cyan-200",
+          "bg-cyan-50 border-cyan-200 dark:bg-cyan-500/10 dark:border-cyan-400/20",
         icon:
-          "bg-cyan-100 text-cyan-700",
+          "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300",
         badge:
-          "bg-cyan-100 text-cyan-700",
+          "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300",
       };
     }
 
@@ -23423,21 +23650,21 @@ const handleSaveAccountProfile = async () => {
     ) {
       return {
         card:
-          "bg-red-50 border-red-200",
+          "bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-400/20",
         icon:
-          "bg-red-100 text-red-700",
+          "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
         badge:
-          "bg-red-100 text-red-700",
+          "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
       };
     }
 
     return {
       card:
-        "bg-muted/30 border-[#cfd8e6]",
+        "bg-slate-50 border-slate-200 dark:bg-slate-400/10 dark:border-slate-400/20",
       icon:
-        "bg-muted text-muted-foreground",
+        "bg-slate-100 text-slate-600 dark:bg-slate-400/15 dark:text-slate-300",
       badge:
-        "bg-muted text-muted-foreground",
+        "bg-slate-100 text-slate-600 dark:bg-slate-400/15 dark:text-slate-300",
     };
   }
 
@@ -24519,7 +24746,7 @@ const handleSaveAccountProfile = async () => {
           HEADER
       ====================================================== */}
 
-      <header className="bg-white text-foreground h-12 flex items-center px-3 gap-2 z-50 shadow-sm border-b border-[#cfd8e6] flex-shrink-0 sticky top-0">
+      <header className="bg-white text-foreground h-12 flex items-center px-2 sm:px-3 gap-1.5 sm:gap-2 z-50 shadow-sm border-b border-[#cfd8e6] flex-shrink-0 sticky top-0">
         <button
           onClick={() =>
             setSidebarOpen(
@@ -24562,7 +24789,7 @@ const handleSaveAccountProfile = async () => {
             HEADER RIGHT SIDE
         ==================================================== */}
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
 
           {/* =================================================
               DARK MODE TOGGLE
@@ -24628,158 +24855,185 @@ const handleSaveAccountProfile = async () => {
 
             {notificationOpen && (
               <div
-              className="absolute right-0 top-10 w-[430px] max-w-[94vw] bg-white text-foreground border border-[#dce3ee] rounded-xl overflow-hidden z-[100]"
-              style={{
-                boxShadow: "0 16px 40px rgba(16, 26, 51, 0.16)",
-              }}
->
-
+                className="fixed left-3 right-3 top-14 z-[100] w-auto max-w-none overflow-hidden rounded-xl border border-[#dce3ee] bg-white text-slate-900 sm:absolute sm:left-auto sm:right-0 sm:top-10 sm:w-[430px] sm:max-w-[94vw] dark:border-[#29415f] dark:bg-[#0f1d35] dark:text-slate-100"
+                style={{
+                  boxShadow:
+                    "0 16px 40px rgba(16, 26, 51, 0.22)",
+                }}
+              >
                 {/* HEADER */}
-                  <div className="px-4 py-3 border-b border-[#e5eaf2] bg-[#fbfcfe]">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-[#111827]">
-                          Notifications
-                        </p>
+                <div className="border-b border-[#e5eaf2] bg-[#fbfcfe] px-4 py-3 dark:border-[#29415f] dark:bg-[#13243c]">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">
+                        Notifications
+                      </p>
 
-                        <p className="text-[11px] text-[#64748b] mt-0.5">
-                          {unreadNotificationCount} unread{" "}
-                          {unreadNotificationCount === 1
-                            ? "notification"
-                            : "notifications"}
-                        </p>
-                      </div>
-
-                      {unreadNotificationCount > 0 && (
-                        <button
-                          type="button"
-                          onClick={handleHeaderMarkAllRead}
-                          disabled={markingAllNotifications}
-                          className="text-[11px] text-[#1a3a7b] font-semibold px-2 py-1 rounded-md hover:bg-[#eef2fc] transition-colors disabled:opacity-50 whitespace-nowrap"
-                        >
-                          {markingAllNotifications
-                            ? "Saving..."
-                            : "Mark all as read"}
-                        </button>
-                      )}
+                      <p className="mt-0.5 text-[11px] text-[#64748b] dark:text-slate-400">
+                        {unreadNotificationCount} unread{" "}
+                        {unreadNotificationCount === 1
+                          ? "notification"
+                          : "notifications"}
+                      </p>
                     </div>
 
-                    {/* COUNTS / FILTERS */}
-                    <div className="grid grid-cols-3 gap-2 mt-3">
+                    {unreadNotificationCount > 0 && (
                       <button
                         type="button"
-                        onClick={() =>
-                          setNotificationFilter("all")
+                        onClick={handleHeaderMarkAllRead}
+                        disabled={
+                          markingAllNotifications
                         }
-                        className={`rounded-lg border px-3 py-2 text-left transition-all ${
-                          notificationFilter === "all"
-                            ? "border-[#2f5fd6] bg-[#eef2fc] shadow-sm"
-                            : "border-[#dce3ee] bg-white hover:bg-[#f6f8fb] hover:border-[#c7d2e5]"
-                        }`}
+                        className="whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-semibold text-[#1a3a7b] transition-colors hover:bg-[#eef2fc] disabled:opacity-50 dark:text-blue-300 dark:hover:bg-blue-500/10"
                       >
-                        <p className="text-[10px] uppercase tracking-wide text-[#64748b] font-semibold">
-                          All
-                        </p>
-
-                        <p
-                          className={`text-sm font-bold mt-0.5 ${
-                            notificationFilter === "all"
-                              ? "text-[#1a3a7b]"
-                              : "text-[#111827]"
-                          }`}
-                        >
-                          {headerNotifications.length}
-                        </p>
+                        {markingAllNotifications
+                          ? "Saving..."
+                          : "Mark all as read"}
                       </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setNotificationFilter("unread")
-                        }
-                        className={`rounded-lg border px-3 py-2 text-left transition-all ${
-                          notificationFilter === "unread"
-                            ? "border-[#2f5fd6] bg-[#eef2fc] shadow-sm"
-                            : "border-[#dce3ee] bg-white hover:bg-[#f6f8fb] hover:border-[#c7d2e5]"
-                        }`}
-                      >
-                        <p className="text-[10px] uppercase tracking-wide text-[#64748b] font-semibold">
-                          Unread
-                        </p>
-
-                        <p
-                          className={`text-sm font-bold mt-0.5 ${
-                            notificationFilter === "unread"
-                              ? "text-[#1a3a7b]"
-                              : "text-[#111827]"
-                          }`}
-                        >
-                          {unreadNotificationCount}
-                        </p>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setNotificationFilter("read")
-                        }
-                        className={`rounded-lg border px-3 py-2 text-left transition-all ${
-                          notificationFilter === "read"
-                            ? "border-[#2f5fd6] bg-[#eef2fc] shadow-sm"
-                            : "border-[#dce3ee] bg-white hover:bg-[#f6f8fb] hover:border-[#c7d2e5]"
-                        }`}
-                      >
-                        <p className="text-[10px] uppercase tracking-wide text-[#64748b] font-semibold">
-                          Read
-                        </p>
-
-                        <p
-                          className={`text-sm font-bold mt-0.5 ${
-                            notificationFilter === "read"
-                              ? "text-[#1a3a7b]"
-                              : "text-[#111827]"
-                          }`}
-                        >
-                          {readNotificationCount}
-                        </p>
-                      </button>
-                    </div>
+                    )}
                   </div>
 
-                {/* NOTIFICATION LIST */}
+                  {/* COUNTS / FILTERS */}
+                  <div className="mt-3 grid grid-cols-3 gap-2">
 
-                <div className="max-h-[470px] overflow-y-auto p-2 space-y-2">
+                    {/* ALL */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNotificationFilter(
+                          "all"
+                        )
+                      }
+                      className={`rounded-lg border px-3 py-2 text-left transition-all ${
+                        notificationFilter ===
+                        "all"
+                          ? "border-[#2f5fd6] bg-[#eef2fc] shadow-sm dark:border-blue-400/40 dark:bg-blue-500/15"
+                          : "border-[#dce3ee] bg-white hover:border-[#c7d2e5] hover:bg-[#f6f8fb] dark:border-[#29415f] dark:bg-[#101f36] dark:hover:border-[#355575] dark:hover:bg-[#172a45]"
+                      }`}
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748b] dark:text-slate-400">
+                        All
+                      </p>
+
+                      <p
+                        className={`mt-0.5 text-sm font-bold ${
+                          notificationFilter ===
+                          "all"
+                            ? "text-[#1a3a7b] dark:text-blue-300"
+                            : "text-[#111827] dark:text-slate-100"
+                        }`}
+                      >
+                        {
+                          headerNotifications.length
+                        }
+                      </p>
+                    </button>
+
+
+                    {/* UNREAD */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNotificationFilter(
+                          "unread"
+                        )
+                      }
+                      className={`rounded-lg border px-3 py-2 text-left transition-all ${
+                        notificationFilter ===
+                        "unread"
+                          ? "border-[#2f5fd6] bg-[#eef2fc] shadow-sm dark:border-blue-400/40 dark:bg-blue-500/15"
+                          : "border-[#dce3ee] bg-white hover:border-[#c7d2e5] hover:bg-[#f6f8fb] dark:border-[#29415f] dark:bg-[#101f36] dark:hover:border-[#355575] dark:hover:bg-[#172a45]"
+                      }`}
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748b] dark:text-slate-400">
+                        Unread
+                      </p>
+
+                      <p
+                        className={`mt-0.5 text-sm font-bold ${
+                          notificationFilter ===
+                          "unread"
+                            ? "text-[#1a3a7b] dark:text-blue-300"
+                            : "text-[#111827] dark:text-slate-100"
+                        }`}
+                      >
+                        {
+                          unreadNotificationCount
+                        }
+                      </p>
+                    </button>
+
+
+                    {/* READ */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNotificationFilter(
+                          "read"
+                        )
+                      }
+                      className={`rounded-lg border px-3 py-2 text-left transition-all ${
+                        notificationFilter ===
+                        "read"
+                          ? "border-[#2f5fd6] bg-[#eef2fc] shadow-sm dark:border-blue-400/40 dark:bg-blue-500/15"
+                          : "border-[#dce3ee] bg-white hover:border-[#c7d2e5] hover:bg-[#f6f8fb] dark:border-[#29415f] dark:bg-[#101f36] dark:hover:border-[#355575] dark:hover:bg-[#172a45]"
+                      }`}
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748b] dark:text-slate-400">
+                        Read
+                      </p>
+
+                      <p
+                        className={`mt-0.5 text-sm font-bold ${
+                          notificationFilter ===
+                          "read"
+                            ? "text-[#1a3a7b] dark:text-blue-300"
+                            : "text-[#111827] dark:text-slate-100"
+                        }`}
+                      >
+                        {
+                          readNotificationCount
+                        }
+                      </p>
+                    </button>
+                  </div>
+                </div>
+
+
+                {/* NOTIFICATION LIST */}
+                <div className="max-h-[52vh] space-y-2 overflow-y-auto bg-[#f8fafc] p-2 sm:max-h-[470px] dark:bg-[#0b172a]">
+
                   {notificationsLoading &&
                   headerNotifications.length ===
                     0 ? (
-                    <div className="py-10 text-center text-xs text-muted-foreground">
+                    <div className="py-10 text-center text-xs text-slate-500 dark:text-slate-400">
                       Loading notifications...
                     </div>
                   ) : headerNotifications.length ===
                     0 ? (
-                    <div className="py-10 px-4 text-center">
+                    <div className="px-4 py-10 text-center">
                       <Bell
                         size={26}
-                        className="mx-auto mb-2 text-muted-foreground"
+                        className="mx-auto mb-2 text-slate-400"
                       />
 
-                      <p className="text-sm font-semibold">
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
                         No notifications
                       </p>
 
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         You are all caught up.
                       </p>
                     </div>
                   ) : filteredHeaderNotifications.length ===
                     0 ? (
-                    <div className="py-10 px-4 text-center">
+                    <div className="px-4 py-10 text-center">
                       <FileText
                         size={26}
-                        className="mx-auto mb-2 text-muted-foreground"
+                        className="mx-auto mb-2 text-slate-400"
                       />
 
-                      <p className="text-sm font-semibold">
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
                         No{" "}
                         {notificationFilter ===
                         "unread"
@@ -24788,7 +25042,7 @@ const handleSaveAccountProfile = async () => {
                         notifications
                       </p>
 
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         Try another notification
                         filter.
                       </p>
@@ -24812,9 +25066,12 @@ const handleSaveAccountProfile = async () => {
                                 notification
                               )
                             }
-                            onKeyDown={(event) => {
+                            onKeyDown={(
+                              event
+                            ) => {
                               if (
-                                event.key === "Enter" ||
+                                event.key ===
+                                  "Enter" ||
                                 event.key === " "
                               ) {
                                 event.preventDefault();
@@ -24824,19 +25081,19 @@ const handleSaveAccountProfile = async () => {
                                 );
                               }
                             }}
-                            className={`rounded-xl border p-3 transition-all cursor-pointer hover:-translate-y-[1px] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#2f5fd6]/25 ${
+                            className={`cursor-pointer rounded-xl border p-3 transition-all hover:-translate-y-[1px] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#2f5fd6]/25 ${
                               notification.is_read
-                                ? "bg-white border-[#e5eaf2] hover:bg-[#fbfcfe]"
+                                ? "border-[#e5eaf2] bg-white hover:bg-[#fbfcfe] dark:border-[#29415f] dark:bg-[#13243c] dark:hover:bg-[#172a45]"
                                 : `${style.card} shadow-sm`
                             }`}
                           >
                             <div className="flex gap-3">
-                              {/* ICON */}
 
+                              {/* ICON */}
                               <div
-                                className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${
                                   notification.is_read
-                                    ? "bg-[#f3f5f9] text-[#94a3b8]"
+                                    ? "bg-[#f3f5f9] text-[#94a3b8] dark:bg-slate-400/10 dark:text-slate-400"
                                     : style.icon
                                 }`}
                               >
@@ -24845,37 +25102,37 @@ const handleSaveAccountProfile = async () => {
                                 )}
                               </div>
 
-                              <div className="flex-1 min-w-0">
+
+                              <div className="min-w-0 flex-1">
 
                                 {/* TITLE + NEW BADGE */}
-
                                 <div className="flex items-start gap-2">
-                                  <p className="text-xs font-semibold flex-1 leading-5">
+                                  <p className="flex-1 text-xs font-semibold leading-5 text-slate-900 dark:text-slate-100">
                                     {notification.title ??
                                       "QRPass Notification"}
                                   </p>
 
                                   {!notification.is_read && (
-                                    <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[#2f5fd6] text-white flex-shrink-0">
+                                    <span className="flex-shrink-0 rounded-full bg-[#2f5fd6] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white dark:bg-blue-500">
                                       New
                                     </span>
                                   )}
                                 </div>
 
-                                {/* MESSAGE */}
 
-                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed break-words">
+                                {/* MESSAGE */}
+                                <p className="mt-1 break-words text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                                   {notification.message ??
                                     "You have a new QRPass notification."}
                                 </p>
 
-                                {/* TYPE */}
 
+                                {/* TYPE */}
                                 <div className="mt-2">
                                   <span
                                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-semibold ${
                                       notification.is_read
-                                        ? "bg-gray-100 text-gray-600"
+                                        ? "bg-gray-100 text-gray-600 dark:bg-slate-400/10 dark:text-slate-300"
                                         : style.badge
                                     }`}
                                   >
@@ -24885,24 +25142,26 @@ const handleSaveAccountProfile = async () => {
                                   </span>
                                 </div>
 
-                                {/* DATE + ACTION */}
 
-                                <div className="flex items-end justify-between gap-2 mt-2">
+                                {/* DATE + ACTION */}
+                                <div className="mt-2 flex items-end justify-between gap-2">
                                   <div>
-                                    <p className="text-[10px] text-muted-foreground">
+                                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
                                       {formatNotificationDate(
                                         notification.created_at
                                       )}
                                     </p>
 
-                                    <p className="text-[9px] mt-0.5 text-muted-foreground">
+                                    <p className="mt-0.5 text-[9px] text-slate-500 dark:text-slate-400">
                                       {notification.is_read
                                         ? "Read"
                                         : "Unread"}
+
                                       <span className="mx-1">
                                         •
                                       </span>
-                                      <span className="text-primary font-semibold">
+
+                                      <span className="font-semibold text-[#1a3a7b] dark:text-blue-300">
                                         Click to open
                                       </span>
                                     </p>
@@ -24911,7 +25170,9 @@ const handleSaveAccountProfile = async () => {
                                   {!notification.is_read && (
                                     <button
                                       type="button"
-                                      onClick={(event) => {
+                                      onClick={(
+                                        event
+                                      ) => {
                                         event.stopPropagation();
 
                                         handleHeaderMarkRead(
@@ -24922,7 +25183,7 @@ const handleSaveAccountProfile = async () => {
                                         markingNotificationId ===
                                         notification.id
                                       }
-                                      className="text-[10px] text-primary font-semibold hover:underline disabled:opacity-50 whitespace-nowrap"
+                                      className="whitespace-nowrap text-[10px] font-semibold text-[#1a3a7b] hover:underline disabled:opacity-50 dark:text-blue-300"
                                     >
                                       {markingNotificationId ===
                                       notification.id
@@ -24940,40 +25201,50 @@ const handleSaveAccountProfile = async () => {
                   )}
                 </div>
 
+
                 {/* NOTIFICATION FOOTER */}
+                <div className="flex items-center justify-between gap-3 border-t border-[#e5eaf2] bg-[#fbfcfe] px-4 py-2.5 dark:border-[#29415f] dark:bg-[#13243c]">
+                  <span className="text-[10px] text-[#64748b] dark:text-slate-400">
+                    Showing{" "}
+                    <span className="font-semibold text-[#111827] dark:text-slate-100">
+                      {
+                        filteredHeaderNotifications.length
+                      }
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-[#111827] dark:text-slate-100">
+                      {
+                        headerNotifications.length
+                      }
+                    </span>
+                  </span>
 
-                    <div className="px-4 py-2.5 bg-[#fbfcfe] border-t border-[#e5eaf2] flex items-center justify-between gap-3">
-                      <span className="text-[10px] text-[#64748b]">
-                        Showing{" "}
-                        <span className="font-semibold text-[#111827]">
-                          {filteredHeaderNotifications.length}
-                        </span>{" "}
-                        of{" "}
-                        <span className="font-semibold text-[#111827]">
-                          {headerNotifications.length}
-                        </span>
-                      </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      loadHeaderNotifications(
+                        true
+                      )
+                    }
+                    disabled={
+                      notificationsLoading
+                    }
+                    className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-semibold text-[#1a3a7b] transition-colors hover:bg-[#eef2fc] disabled:opacity-50 dark:text-blue-300 dark:hover:bg-blue-500/10"
+                  >
+                    <RefreshCw
+                      size={11}
+                      className={
+                        notificationsLoading
+                          ? "animate-spin"
+                          : ""
+                      }
+                    />
 
-                      <button
-                        type="button"
-                        onClick={() => loadHeaderNotifications(true)}
-                        disabled={notificationsLoading}
-                        className="text-[10px] flex items-center gap-1.5 px-2 py-1 rounded-md text-[#1a3a7b] font-semibold hover:bg-[#eef2fc] transition-colors disabled:opacity-50"
-                      >
-                        <RefreshCw
-                          size={11}
-                          className={
-                            notificationsLoading
-                              ? "animate-spin"
-                              : ""
-                          }
-                        />
-
-                        {notificationsLoading
-                          ? "Refreshing..."
-                          : "Refresh"}
-                      </button>
-                    </div>
+                    {notificationsLoading
+                      ? "Refreshing..."
+                      : "Refresh"}
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -25023,14 +25294,14 @@ const handleSaveAccountProfile = async () => {
 
             {accountOpen && (
               <div
-                  className="absolute right-0 top-10 w-72 bg-white text-foreground rounded-xl border border-[#dce3ee] overflow-hidden z-[100]"
+                  className="fixed left-3 right-3 top-14 z-[100] w-auto overflow-hidden rounded-xl border border-[#dce3ee] bg-white text-foreground sm:absolute sm:left-auto sm:right-0 sm:top-10 sm:w-72 dark:border-[#29415f] dark:bg-[#0f1d35] dark:text-slate-100"
                   style={{
                     boxShadow: "0 16px 40px rgba(16, 26, 51, 0.16)",
                   }}
                 >
 
                 {/* PROFILE */}
-                <div className="px-4 py-4 border-b border-[#e5eaf2] bg-[#fbfcfe]">
+                <div className="px-4 py-4 border-b border-[#e5eaf2] bg-[#fbfcfe] dark:border-[#29415f] dark:bg-[#13243c]">
                   <div className="flex items-center gap-3">
                     <div
                         className="w-11 h-11 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
@@ -25056,12 +25327,12 @@ const handleSaveAccountProfile = async () => {
                       </div>
 
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#111827] truncate">
+                      <p className="text-sm font-semibold text-[#111827] truncate dark:text-slate-100">
                         {currentUser?.name ??
                           roleInfo.label}
                       </p>
 
-                      <p className="text-xs text-[#64748b] truncate mt-0.5">
+                      <p className="text-xs text-[#64748b] truncate mt-0.5 dark:text-slate-400">
                         {currentUser?.username ??
                           "QRPass User"}
                       </p>
@@ -25070,48 +25341,48 @@ const handleSaveAccountProfile = async () => {
                 </div>
 
                 {/* INFORMATION */}
-                <div className="px-4 py-3 space-y-3 bg-white">
+                <div className="px-4 py-3 space-y-3 bg-white dark:bg-[#0f1d35]">
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-[#94a3b8] font-semibold">
+                    <p className="text-[10px] uppercase tracking-wide text-[#94a3b8] font-semibold dark:text-slate-400">
                       Account ID
                     </p>
 
-                    <p className="text-xs font-medium text-[#111827] mt-0.5">
+                    <p className="text-xs font-medium text-[#111827] mt-0.5 dark:text-slate-100">
                       {currentUser?.username ?? "—"}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-[#94a3b8] font-semibold">
+                    <p className="text-[10px] uppercase tracking-wide text-[#94a3b8] font-semibold dark:text-slate-400">
                       Role
                     </p>
 
-                    <span className="inline-flex items-center mt-1 px-2 py-1 rounded-full bg-[#eef2fc] text-[#1a3a7b] text-[11px] font-semibold">
+                    <span className="inline-flex items-center mt-1 px-2 py-1 rounded-full bg-[#eef2fc] text-[#1a3a7b] text-[11px] font-semibold dark:bg-blue-500/15 dark:text-blue-300">
                       {roleInfo.label}
                     </span>
                   </div>
 
                   {currentUser?.email && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-wide text-[#94a3b8] font-semibold">
+                      <p className="text-[10px] uppercase tracking-wide text-[#94a3b8] font-semibold dark:text-slate-400">
                         Email
                       </p>
 
-                      <p className="text-xs font-medium text-[#111827] mt-0.5 break-all">
+                      <p className="text-xs font-medium text-[#111827] mt-0.5 break-all dark:text-slate-100">
                         {currentUser.email}
                       </p>
                     </div>
                   )}
                 </div>
                   {/* ACCOUNT SETTINGS */}
-                  <div className="border-t border-[#e5eaf2] p-2 bg-white">
+                  <div className="border-t border-[#e5eaf2] p-2 bg-white dark:border-[#29415f] dark:bg-[#0f1d35]">
                     <button
                       type="button"
                       onClick={() => {
                         setAccountOpen(false);
                         setAccountSettingsOpen(true);
                       }}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-[#334155] hover:bg-[#eef2fc] hover:text-[#1a3a7b] transition-colors"
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-[#334155] hover:bg-[#eef2fc] hover:text-[#1a3a7b] transition-colors dark:text-slate-200 dark:hover:bg-[#172a45] dark:hover:text-blue-300"
                     >
                       <div className="flex items-center gap-2">
                         <Settings size={15} />
@@ -25125,11 +25396,11 @@ const handleSaveAccountProfile = async () => {
                     </button>
                   </div>
                 {/* LOGOUT */}
-                <div className="border-t border-[#e5eaf2] p-2 bg-[#fbfcfe]">
+                <div className="border-t border-[#e5eaf2] p-2 bg-white dark:border-[#29415f] dark:bg-[#0f1d35]">
                   <button
                     type="button"
                     onClick={onLogout}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[#334155] hover:bg-[#eef2fc] hover:text-[#1a3a7b] transition-colors dark:text-slate-200 dark:hover:bg-[#172a45] dark:hover:text-blue-300"
                   >
                     <LogOut size={15} />
 
