@@ -70,6 +70,8 @@ import {
 // =========================================================
 
 import {
+  API_URL,
+
   login,
   register,
   logout,
@@ -8579,7 +8581,7 @@ function SecurityLostFound() {
         localStorage.getItem("token");
 
       const response = await fetch(
-        `http://localhost:8000/api/lost-found/${itemId}`,
+        `${API_URL}/lost-found/${itemId}`,
         {
           method: "DELETE",
           headers: {
@@ -25637,7 +25639,7 @@ const handleSaveAccountProfile = async () => {
                     }
 
                     const response = await fetch(
-                      `http://localhost:8000/api/announcements/${announcementId}/view`,
+                      `${API_URL}/announcements/${announcementId}/view`,
                       {
                         method: "PUT",
                         headers: {
