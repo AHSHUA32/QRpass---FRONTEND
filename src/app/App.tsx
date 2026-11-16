@@ -43,6 +43,7 @@ import {
   Menu,
   Moon,
   Sun,
+  Trash2,
   Monitor,
   Camera,
   Smartphone,
@@ -70,13 +71,12 @@ import {
 // =========================================================
 
 import {
-  API_URL,
-
   login,
   register,
   logout,
 
   createItem,
+  deleteRegisteredItem,
   getItems,
   getMyQRCodes,
   getPendingItems,
@@ -221,15 +221,17 @@ function StatCard({
   value,
   icon,
   color,
+  className = "",
 }: {
   label: string;
   value: string;
   icon: React.ReactNode;
   color: string;
+  className?: string;
 }) {
   return (
     <div
-      className="bg-white border border-[#dce3ee] flex items-center gap-4 p-4"
+      className={`bg-white border border-[#dce3ee] flex items-center gap-4 p-4 ${className}`}
       style={{
         borderRadius: "14px",
         boxShadow: "0 6px 18px rgba(16, 26, 51, 0.08)",
@@ -395,8 +397,8 @@ function Card({
         boxShadow: "0 8px 24px rgba(16, 26, 51, 0.10)",
       }}
     >
-      <div className="px-4 py-3 border-b border-[#dce3ee] bg-white flex items-center justify-between">
-        <h3 className="font-semibold text-sm text-[#111827]">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-[#dce3ee] bg-white px-4 py-3">
+        <h3 className="min-w-0 break-words font-semibold text-sm text-[#111827]">
           {title}
         </h3>
 
@@ -418,7 +420,7 @@ function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between mb-5 gap-4">
+    <div className="flex min-w-0 flex-wrap items-start justify-between gap-3 mb-5 sm:gap-4">
       <div className="min-w-0">
         <h2
           className="text-xl font-bold text-[#111827] tracking-tight"
@@ -501,34 +503,199 @@ function RegistrationField({
   );
 }
 
-function RegistrationPermitValidUntilField({
+function RegistrationQuantityField({
   value,
   onChange,
 }: {
   value: string;
   onChange: (value: string) => void;
 }) {
+  const currentValue =
+    Math.max(
+      1,
+      Number.parseInt(
+        value || "1",
+        10
+      ) || 1
+    );
+
+  function handleChange(
+    rawValue: string
+  ) {
+    if (
+      rawValue === ""
+    ) {
+      onChange("");
+      return;
+    }
+
+    const digitsOnly =
+      rawValue.replace(
+        /\D/g,
+        ""
+      );
+
+    if (
+      digitsOnly === ""
+    ) {
+      onChange("");
+      return;
+    }
+
+    onChange(
+      String(
+        Math.max(
+          1,
+          Number.parseInt(
+            digitsOnly,
+            10
+          ) || 1
+        )
+      )
+    );
+  }
+
+  function increaseQuantity() {
+    onChange(
+      String(
+        currentValue + 1
+      )
+    );
+  }
+
+  function decreaseQuantity() {
+    onChange(
+      String(
+        Math.max(
+          1,
+          currentValue - 1
+        )
+      )
+    );
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-foreground mb-1.5">
+        Quantity
+      </label>
+
+      <div className="flex h-[42px] w-full items-center overflow-hidden rounded-lg border border-[#c7d2fe] bg-[#eef2ff] transition-colors focus-within:border-[#2f5fd6] focus-within:ring-2 focus-within:ring-[#2f5fd6]/15">
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={value}
+          onChange={(e) => handleChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowUp") {
+              e.preventDefault();
+              increaseQuantity();
+            } else if (e.key === "ArrowDown") {
+              e.preventDefault();
+              decreaseQuantity();
+            } else if (e.key.length === 1 && !/[0-9]/.test(e.key) && !(e.ctrlKey || e.metaKey || e.altKey)) {
+              e.preventDefault();
+            }
+          }}
+          onBlur={() => {
+            if (value === "" || Number(value) < 1) onChange("1");
+          }}
+          className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-[#111827] outline-none"
+          placeholder="1"
+          aria-label="Quantity"
+        />
+        <div className="mr-1.5 flex h-[34px] w-9 shrink-0 flex-col overflow-hidden rounded-md border border-[#c7d2fe] bg-white shadow-sm">
+          <button
+            type="button"
+            onClick={increaseQuantity}
+            className="flex h-1/2 items-center justify-center border-b border-[#dce3ee] text-[#1a3a7b] transition-colors hover:bg-[#e6edff] active:bg-[#d6e3ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2f5fd6]"
+            aria-label="Increase quantity"
+            title="Increase quantity"
+          >
+            <span className="text-[12px] font-bold leading-none">▲</span>
+          </button>
+          <button
+            type="button"
+            onClick={decreaseQuantity}
+            disabled={currentValue <= 1}
+            className="flex h-1/2 items-center justify-center text-[#1a3a7b] transition-colors hover:bg-[#e6edff] active:bg-[#d6e3ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2f5fd6] disabled:cursor-not-allowed disabled:opacity-35"
+            aria-label="Decrease quantity"
+            title="Decrease quantity"
+          >
+            <span className="text-[12px] font-bold leading-none">▼</span>
+          </button>
+        </div>
+      </div>
+
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        Numbers only. Minimum quantity is 1.
+      </p>
+    </div>
+  );
+}
+
+
+// PDF-based choices for the four specified registration groups.
+// A custom value is stored directly in the existing form field when Others is chosen.
+const COMMON_ITEM_COLORS = [
+  "Black", "White", "Gray", "Silver", "Blue", "Red",
+  "Green", "Yellow", "Orange", "Pink", "Purple", "Brown",
+  "Gold", "Beige", "Multicolor",
+];
+
+function RegistrationDropdown({
+  label,
+  field,
+  value,
+  options,
+  onChange,
+  optional = false,
+}: {
+  label: string;
+  field: string;
+  value: string;
+  options: string[];
+  onChange: (field: string, value: string) => void;
+  optional?: boolean;
+}) {
+  const isOther = value === "__OTHER__" || (value !== "" && !options.includes(value));
+  const selectValue = isOther ? "__OTHER__" : value;
   const fieldClass =
     "w-full px-3 py-2.5 text-sm border border-[#c7d2fe] rounded-lg bg-[#eef2ff] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15";
 
   return (
-    <div className="md:col-span-2">
+    <div>
       <label className="block text-xs font-semibold text-foreground mb-1.5">
-        Permit Valid Until
+        {label}
+        {optional && (
+          <span className="ml-1 text-[11px] font-normal text-muted-foreground">
+            (Optional)
+          </span>
+        )}
       </label>
-
-      <input
-        type="datetime-local"
-        value={value}
-        onChange={(e) =>
-          onChange(e.target.value)
-        }
+      <select
+        value={selectValue}
+        onChange={(e) => onChange(field, e.target.value)}
         className={fieldClass}
-      />
-
-      <p className="text-[11px] text-muted-foreground mt-1.5">
-        This is retained for QRPass permit validity and QR expiration.
-      </p>
+        aria-label={label}
+      >
+        <option value="" disabled hidden>Select {label}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+        <option value="__OTHER__">Others (Specify)</option>
+      </select>
+      {isOther && (
+        <input
+          className={`${fieldClass} mt-2`}
+          type="text"
+          value={value === "__OTHER__" ? "" : value}
+          placeholder={`Specify ${label.toLowerCase()}`}
+          onChange={(e) => onChange(field, e.target.value || "__OTHER__")}
+          aria-label={`Specify ${label}`}
+        />
+      )}
     </div>
   );
 }
@@ -549,7 +716,6 @@ function StudentRegisterItem() {
     color: string;
     purpose: string;
     accessories_included: string;
-    valid_until: string;
 
     quantity: string;
     complete_description: string;
@@ -567,7 +733,6 @@ function StudentRegisterItem() {
     unit_type: string;
     power_source: string;
     lens_attachment: string;
-    condition: string;
 
     storage_capacity: string;
 
@@ -644,7 +809,6 @@ function StudentRegisterItem() {
       color: "",
       purpose: "",
       accessories_included: "",
-      valid_until: "",
 
       quantity: "1",
       complete_description: "",
@@ -662,7 +826,6 @@ function StudentRegisterItem() {
       unit_type: "",
       power_source: "",
       lens_attachment: "",
-      condition: "",
 
       storage_capacity: "",
 
@@ -678,17 +841,8 @@ function StudentRegisterItem() {
   const [selectedGroup, setSelectedGroup] =
     useState<RegistrationGroupId | null>(null);
 
-  const [showTypeMenu, setShowTypeMenu] =
-    useState(false);
-
   const [submitting, setSubmitting] =
     useState(false);
-
-  const [items, setItems] =
-    useState<any[]>([]);
-
-  const [loadingItems, setLoadingItems] =
-    useState(true);
 
   const [form, setForm] =
     useState<RegistrationForm>(emptyForm());
@@ -736,51 +890,15 @@ function StudentRegisterItem() {
     }));
   }
 
-  async function loadItems() {
-    try {
-      setLoadingItems(true);
-
-      const data = await getItems();
-
-      const loadedItems =
-        Array.isArray(data?.items)
-          ? data.items
-          : [];
-
-      setItems(
-        [...loadedItems].sort(
-          (a, b) =>
-            Number(b?.id ?? 0) -
-            Number(a?.id ?? 0)
-        )
-      );
-    } catch (error) {
-      console.error(
-        "Failed to load items:",
-        error
-      );
-
-      setItems([]);
-    } finally {
-      setLoadingItems(false);
-    }
-  }
-
-  useEffect(() => {
-    loadItems();
-  }, []);
-
   function selectGroup(
     groupId: RegistrationGroupId
   ) {
     setSelectedGroup(groupId);
-    setShowTypeMenu(false);
     setForm(emptyForm());
   }
 
   function backToSelection() {
     setSelectedGroup(null);
-    setShowTypeMenu(false);
     setForm(emptyForm());
   }
 
@@ -789,10 +907,6 @@ function StudentRegisterItem() {
       [
         "Purpose / Reason for Bringing",
         form.purpose,
-      ],
-      [
-        "Permit Valid Until",
-        form.valid_until,
       ],
     ];
 
@@ -833,7 +947,6 @@ function StudentRegisterItem() {
           "Power Source / Cable",
           form.power_source,
         ],
-        ["Condition", form.condition]
       );
     }
 
@@ -864,7 +977,6 @@ function StudentRegisterItem() {
           form.equipment_type,
         ],
         ["Quantity", form.quantity],
-        ["Condition", form.condition]
       );
     }
 
@@ -881,7 +993,7 @@ function StudentRegisterItem() {
     return required
       .filter(
         ([, value]) =>
-          !String(value ?? "").trim()
+          (!String(value ?? "").trim() || value === "__OTHER__")
       )
       .map(([label]) => label);
   }
@@ -905,7 +1017,18 @@ function StudentRegisterItem() {
       "Other Equipment";
 
     let quantity =
-      form.quantity.trim() || "1";
+      String(
+        Math.max(
+          1,
+          Number.parseInt(
+            form.quantity.replace(
+              /\D/g,
+              ""
+            ),
+            10
+          ) || 1
+        )
+      );
 
     let computerType = "";
     let processor = "";
@@ -955,8 +1078,7 @@ function StudentRegisterItem() {
 
       detailParts.push(
         `Unit Type: ${form.unit_type.trim()}`,
-        `Power Source / Cable: ${form.power_source.trim()}`,
-        `Condition: ${form.condition.trim()}`
+        `Power Source / Cable: ${form.power_source.trim()}`
       );
 
       if (
@@ -1019,9 +1141,6 @@ function StudentRegisterItem() {
       serialNumber = "";
       color = "N/A";
 
-      detailParts.push(
-        `Condition: ${form.condition.trim()}`
-      );
     }
 
     if (selectedGroup === "other") {
@@ -1034,6 +1153,21 @@ function StudentRegisterItem() {
       brandModel = "N/A";
       serialNumber = "";
       color = "N/A";
+    }
+
+    // Include all PDF dropdown specifications in the existing description payload.
+    // This keeps the original form fields and API request format intact.
+    if (selectedGroup === "computer") {
+      detailParts.push(
+        `Computer / Laptop Type: ${form.computer_type.trim()}`,
+        `Processor: ${form.processor.trim()}`,
+        `Motherboard: ${form.motherboard.trim()}`,
+        `Memory / RAM: ${form.memory.trim()}`,
+        `Hard Drive / Storage: ${form.hard_drive.trim()}`,
+        `Monitor: ${form.monitor.trim()}`,
+        `Casing: ${form.casing.trim()}`,
+        `Operating System: ${form.operating_system.trim()}`
+      );
     }
 
     if (
@@ -1076,8 +1210,6 @@ function StudentRegisterItem() {
       accessories_included:
         form.accessories_included.trim(),
 
-      valid_until:
-        form.valid_until,
     };
   }
 
@@ -1119,9 +1251,6 @@ function StudentRegisterItem() {
 
       setForm(emptyForm());
       setSelectedGroup(null);
-      setShowTypeMenu(false);
-
-      await loadItems();
     } catch (error) {
       alert(
         error instanceof Error
@@ -1148,7 +1277,7 @@ function StudentRegisterItem() {
               "0 8px 24px rgba(16, 26, 51, 0.10)",
           }}
         >
-          <div className="px-5 py-4 border-b border-[#dce3ee] flex items-center gap-3">
+          <div className="flex items-center gap-3 border-b border-[#dce3ee] px-3 py-4 sm:px-5">
             <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-[#f2f5fb] border border-[#dce3ee] text-[#16224b]">
               {getRegistrationGroupIcon(activeGroup.id, 20)}
             </div>
@@ -1166,14 +1295,14 @@ function StudentRegisterItem() {
 
           <form
             onSubmit={handleItemSubmit}
-            className="p-5"
+            className="p-3 sm:p-5"
           >
             {/* COMPUTER EQUIPMENT */}
             {selectedGroup ===
               "computer" && (
               <>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <RegistrationField
+                  <RegistrationDropdown
   label="Item Name"
   field="item_name"
   value={form.item_name}
@@ -1183,11 +1312,11 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Laptop"
+options={["Laptop"]}
 />
 
-                  <RegistrationField
-  label="Brand & Model"
+                  <RegistrationDropdown
+  label="Brand"
   field="brand_model"
   value={form.brand_model}
   onChange={(field, value) =>
@@ -1196,7 +1325,7 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Dell XPS 15 9530"
+options={["Acer", "ASUS", "Dell", "HP", "Lenovo", "Apple", "MSI"]}
 />
 
                   <RegistrationField
@@ -1212,7 +1341,7 @@ function StudentRegisterItem() {
   placeholder="e.g. SN-00000"
 />
 
-                  <RegistrationField
+                  <RegistrationDropdown
   label="Color"
   field="color"
   value={form.color}
@@ -1222,7 +1351,7 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Silver"
+  options={COMMON_ITEM_COLORS}
 />
 
                   <RegistrationField
@@ -1265,7 +1394,7 @@ function StudentRegisterItem() {
                   </div>
 
                   <div className="p-4 grid md:grid-cols-2 gap-4 bg-blue-50/30">
-                    <RegistrationField
+                    <RegistrationDropdown
   label="Computer / Laptop Type"
   field="computer_type"
   value={form.computer_type}
@@ -1275,10 +1404,10 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Laptop, Desktop, Gaming Laptop"
+options={["Desktop", "Laptop", "All-in-One"]}
 />
 
-                    <RegistrationField
+                    <RegistrationDropdown
   label="Processor"
   field="processor"
   value={form.processor}
@@ -1288,10 +1417,10 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Intel Core i5 / Ryzen 5"
+options={["Intel Core i3", "Intel Core i5", "Intel Core i7", "Intel Core i9", "AMD Ryzen 3", "AMD Ryzen 5", "AMD Ryzen 7", "AMD Ryzen 9", "Apple M-Series"]}
 />
 
-                    <RegistrationField
+                    <RegistrationDropdown
   label="Motherboard"
   field="motherboard"
   value={form.motherboard}
@@ -1301,10 +1430,10 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. ASUS B550M / Built-in"
+options={["ASUS", "MSI", "Gigabyte", "ASRock"]}
 />
 
-                    <RegistrationField
+                    <RegistrationDropdown
   label="Memory / RAM"
   field="memory"
   value={form.memory}
@@ -1314,10 +1443,10 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. 16 GB DDR4"
+options={["4GB", "8GB", "16GB", "32GB", "64GB"]}
 />
 
-                    <RegistrationField
+                    <RegistrationDropdown
   label="Hard Drive / Storage"
   field="hard_drive"
   value={form.hard_drive}
@@ -1327,10 +1456,10 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. 512 GB SSD"
+options={["256GB SSD", "512GB SSD", "1TB SSD", "500GB HDD", "1TB HDD", "2TB HDD"]}
 />
 
-                    <RegistrationField
+                    <RegistrationDropdown
   label="Monitor"
   field="monitor"
   value={form.monitor}
@@ -1340,10 +1469,10 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Built-in 15.6 inch"
+options={["19-inch", "21.5-inch", "24-inch", "27-inch", "32-inch"]}
 />
 
-                    <RegistrationField
+                    <RegistrationDropdown
   label="Casing"
   field="casing"
   value={form.casing}
@@ -1353,7 +1482,7 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Black chassis / Built-in"
+options={["Mid Tower", "Full Tower", "Mini Tower", "Micro-ATX", "Mini-ITX", "Laptop Built-in"]}
 />
 
                     <RegistrationField
@@ -1371,7 +1500,7 @@ function StudentRegisterItem() {
 />
 
                     <div className="md:col-span-2">
-                      <RegistrationField
+                      <RegistrationDropdown
   label="Operating System"
   field="operating_system"
   value={form.operating_system}
@@ -1381,22 +1510,13 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Windows 11 Pro"
+options={["Windows 10", "Windows 11", "macOS", "Linux"]}
 />
                     </div>
                   </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4 mt-4">
-                  <RegistrationPermitValidUntilField
-  value={form.valid_until}
-  onChange={(value) =>
-    updateField(
-      "valid_until",
-      value
-    )
-  }
-/>
                 </div>
               </>
             )}
@@ -1406,7 +1526,7 @@ function StudentRegisterItem() {
               "highvalue" && (
               <>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <RegistrationField
+                  <RegistrationDropdown
   label="Item Name"
   field="item_name"
   value={form.item_name}
@@ -1416,10 +1536,10 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Projector"
+options={["Desktop Computer", "Smart TV", "Projector", "Digital Camera", "Drone", "Professional Video Camera", "3D Printer", "Graphics Tablet", "Monitor"]}
 />
 
-                  <RegistrationField
+                  <RegistrationDropdown
   label="Brand & Model"
   field="brand_model"
   value={form.brand_model}
@@ -1429,7 +1549,7 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Epson EB-X51"
+options={["Samsung", "LG", "Sony", "ASUS", "Acer", "Lenovo", "HP", "Dell", "Canon", "Nikon", "Epson", "BenQ", "DJI", "Apple"]}
 />
 
                   <RegistrationField
@@ -1445,7 +1565,7 @@ function StudentRegisterItem() {
   placeholder="e.g. SN-00000"
 />
 
-                  <RegistrationField
+                  <RegistrationDropdown
   label="Color"
   field="color"
   value={form.color}
@@ -1455,7 +1575,7 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. White"
+  options={COMMON_ITEM_COLORS}
 />
 
                   <RegistrationField
@@ -1498,7 +1618,7 @@ function StudentRegisterItem() {
                   </div>
 
                   <div className="p-4 grid md:grid-cols-2 gap-4 bg-[#fafbfc]">
-                    <RegistrationField
+                    <RegistrationDropdown
   label="Unit Type"
   field="unit_type"
   value={form.unit_type}
@@ -1508,10 +1628,10 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. DSLR Camera, Projector, Printer"
+options={["Piece (pc)", "Set", "Unit", "Pair"]}
 />
 
-                    <RegistrationField
+                    <RegistrationDropdown
   label="Power Source / Cable"
   field="power_source"
   value={form.power_source}
@@ -1521,7 +1641,7 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. AC Adapter, Battery Pack"
+options={["AC Power Cable", "DC Power Adapter", "USB Cable", "USB-C Cable", "HDMI Cable", "Power Cord", "Battery Powered", "Rechargeable Battery", "Built-in Battery"]}
 />
 
                     <RegistrationField
@@ -1537,32 +1657,10 @@ function StudentRegisterItem() {
   placeholder="e.g. 18-55mm kit lens"
   optional
 />
-
-                    <RegistrationField
-  label="Condition"
-  field="condition"
-  value={form.condition}
-  onChange={(field, value) =>
-    updateField(
-      field as keyof RegistrationForm,
-      value
-    )
-  }
-  placeholder="e.g. Good, Minor scratches"
-/>
                   </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4 mt-4">
-                  <RegistrationPermitValidUntilField
-  value={form.valid_until}
-  onChange={(value) =>
-    updateField(
-      "valid_until",
-      value
-    )
-  }
-/>
                 </div>
               </>
             )}
@@ -1611,7 +1709,7 @@ function StudentRegisterItem() {
   optional
 />
 
-                <RegistrationField
+                <RegistrationDropdown
   label="Color"
   field="color"
   value={form.color}
@@ -1621,7 +1719,7 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Black"
+  options={COMMON_ITEM_COLORS}
 />
 
                 <RegistrationField
@@ -1666,16 +1764,6 @@ function StudentRegisterItem() {
 />
 
                 <div />
-
-                <RegistrationPermitValidUntilField
-  value={form.valid_until}
-  onChange={(value) =>
-    updateField(
-      "valid_until",
-      value
-    )
-  }
-/>
               </div>
             )}
 
@@ -1683,7 +1771,7 @@ function StudentRegisterItem() {
             {selectedGroup ===
               "musical" && (
               <div className="grid md:grid-cols-2 gap-4">
-                <RegistrationField
+                <RegistrationDropdown
   label="Item Name"
   field="item_name"
   value={form.item_name}
@@ -1693,10 +1781,10 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Acoustic Guitar"
+options={["Acoustic Guitar", "Electric Guitar", "Bass Guitar", "Keyboard", "Drum Set", "Snare Drum", "Violin", "Ukelele", "Flute"]}
 />
 
-                <RegistrationField
+                <RegistrationDropdown
   label="Brand"
   field="brand"
   value={form.brand}
@@ -1706,7 +1794,7 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Yamaha"
+options={["Fender", "Casio", "Roland", "Gibson", "Ibanez", "Korg", "Pearl", "Suzuki"]}
 />
 
                 <RegistrationField
@@ -1763,7 +1851,7 @@ function StudentRegisterItem() {
   optional
 />
 
-                <RegistrationField
+                <RegistrationDropdown
   label="Material / Body"
   field="material_body"
   value={form.material_body}
@@ -1773,7 +1861,7 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Spruce top, mahogany body"
+options={["Mahogany", "Spruce", "Maple", "Rosewood", "Metal", "Aluminum", "Steel"]}
 />
 
                 <RegistrationField
@@ -1789,16 +1877,6 @@ function StudentRegisterItem() {
   placeholder="e.g. Full size, 4/4"
   optional
 />
-
-                <RegistrationPermitValidUntilField
-  value={form.valid_until}
-  onChange={(value) =>
-    updateField(
-      "valid_until",
-      value
-    )
-  }
-/>
               </div>
             )}
 
@@ -1806,7 +1884,7 @@ function StudentRegisterItem() {
             {selectedGroup ===
               "sports" && (
               <div className="grid md:grid-cols-2 gap-4">
-                <RegistrationField
+                <RegistrationDropdown
   label="Equipment Type"
   field="equipment_type"
   value={form.equipment_type}
@@ -1816,10 +1894,10 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Basketball, Badminton Racket"
+options={["Basketball", "Volleyball", "Soccer Ball", "Badminton Racket", "Speak Takraw Ball", "Boxing Gloves"]}
 />
 
-                <RegistrationField
+                <RegistrationDropdown
   label="Brand"
   field="brand"
   value={form.brand}
@@ -1829,35 +1907,18 @@ function StudentRegisterItem() {
       value
     )
   }
-  placeholder="e.g. Molten, Yonex"
   optional
+options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "Puma"]}
 />
 
-                <RegistrationField
-  label="Quantity"
-  field="quantity"
+                <RegistrationQuantityField
   value={form.quantity}
-  onChange={(field, value) =>
+  onChange={(value) =>
     updateField(
-      field as keyof RegistrationForm,
+      "quantity",
       value
     )
   }
-  placeholder="e.g. 2"
-  type="number"
-/>
-
-                <RegistrationField
-  label="Condition"
-  field="condition"
-  value={form.condition}
-  onChange={(field, value) =>
-    updateField(
-      field as keyof RegistrationForm,
-      value
-    )
-  }
-  placeholder="e.g. Good, Used"
 />
 
                 <div className="md:col-span-2">
@@ -1874,16 +1935,6 @@ function StudentRegisterItem() {
   placeholder="e.g. Varsity practice"
 />
                 </div>
-
-                <RegistrationPermitValidUntilField
-  value={form.valid_until}
-  onChange={(value) =>
-    updateField(
-      "valid_until",
-      value
-    )
-  }
-/>
               </div>
             )}
 
@@ -1906,18 +1957,14 @@ function StudentRegisterItem() {
 />
                 </div>
 
-                <RegistrationField
-  label="Quantity"
-  field="quantity"
+                <RegistrationQuantityField
   value={form.quantity}
-  onChange={(field, value) =>
+  onChange={(value) =>
     updateField(
-      field as keyof RegistrationForm,
+      "quantity",
       value
     )
   }
-  placeholder="e.g. 3"
-  type="number"
 />
 
                 <RegistrationField
@@ -1931,16 +1978,6 @@ function StudentRegisterItem() {
     )
   }
   placeholder="e.g. Org event"
-/>
-
-                <RegistrationPermitValidUntilField
-  value={form.valid_until}
-  onChange={(value) =>
-    updateField(
-      "valid_until",
-      value
-    )
-  }
 />
               </div>
             )}
@@ -1984,212 +2021,174 @@ function StudentRegisterItem() {
     <div className="space-y-5">
       <PageHeader
         title="Register Item"
-        subtitle={
-          selectedGroup
-            ? "Complete the form below. It will be submitted to PCO for approval."
-            : "Submit a new item for QR code registration. Items must be approved by PCO before a QR code is issued."
-        }
-        action={
-          !selectedGroup ? (
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() =>
-                  setShowTypeMenu(
-                    (current) => !current
-                  )
-                }
-                className="flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-3 py-2 rounded-md hover:opacity-90 transition-opacity"
-              >
-                <Plus size={13} />
-                New Registration
-              </button>
-
-              {showTypeMenu && (
-                <div className="absolute right-0 top-full mt-2 z-50 w-[340px] max-w-[90vw] rounded-xl border border-[#dce3ee] bg-white p-2 shadow-xl">
-                  <div className="px-3 py-2 text-xs font-bold text-foreground border-b border-[#edf0f5] mb-1">
-                    Select item type
-                  </div>
-
-                  {registrationGroups.map(
-                    (group) => (
-                      <button
-                        key={group.id}
-                        type="button"
-                        onClick={() =>
-                          selectGroup(
-                            group.id
-                          )
-                        }
-                        className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[#f3f5fa]"
-                      >
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#f2f5fb] border border-[#dce3ee] text-[#16224b]">
-                          {getRegistrationGroupIcon(group.id, 18)}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-foreground">
-                            {group.name}
-                          </p>
-
-                          <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                            {group.types}
-                          </p>
-                        </div>
-
-                        <ChevronRight
-                          size={15}
-                          className="text-muted-foreground"
-                        />
-                      </button>
-                    )
-                  )}
-                </div>
-              )}
-            </div>
-          ) : undefined
-        }
+        subtitle="Register an item for campus entry and exit verification. PCO approval is required before a QR code is issued."
       />
 
       {selectedGroup ? (
         renderSelectedForm()
       ) : (
-        <Card
-          title="Registered Items"
-          action={
-            <button
-              onClick={loadItems}
-              className="text-xs flex items-center gap-1 text-primary font-medium"
-            >
-              <RefreshCw size={12} />
-              Refresh
-            </button>
-          }
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-[#fafbfc]">
-                  {[
-                    "Item ID",
-                    "Item",
-                    "Type",
-                    "Serial No.",
-                    "Status",
-                    "Date Filed",
-                  ].map((heading) => (
-                    <th
-                      key={heading}
-                      className="text-left py-2 px-3 text-xs text-muted-foreground font-medium"
-                    >
-                      {heading}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
+        <div className="space-y-5">
+          <div className="rounded-xl border border-[#cfd8e6] bg-card overflow-hidden">
+            <div className="border-b border-[#cfd8e6] px-5 py-4">
+              <h3 className="text-sm font-semibold text-foreground">
+                Select an Item Category
+              </h3>
 
-              <tbody>
-                {loadingItems ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="text-center py-6 text-sm text-muted-foreground"
-                    >
-                      Loading items...
-                    </td>
-                  </tr>
-                ) : items.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="text-center py-8 text-sm text-muted-foreground"
-                    >
-                      No registered items yet. Click
-                      <strong> New Registration </strong>
-                      to choose an item type.
-                    </td>
-                  </tr>
-                ) : (
-                  items.map((item) => {
-                    const rawStatus =
-                      String(
-                        item.status ?? ""
-                      );
+              <p className="mt-1 text-xs text-muted-foreground">
+                Choose the category that best matches the item you want to register.
+              </p>
+            </div>
 
-                    const displayStatus =
-                      rawStatus
-                        ? rawStatus
-                            .charAt(0)
-                            .toUpperCase() +
-                          rawStatus.slice(1)
-                        : "Pending";
+            <div className="divide-y divide-[#dce3ee]">
+              {[
+                {
+                  key: "computer",
+                  title: "Computer Equipment",
+                  description:
+                    "Laptops, desktop computers, and similar computer equipment.",
+                  icon: <Monitor size={18} />,
+                },
+                {
+                  key: "highvalue",
+                  title: "High-Value Electronics",
+                  description:
+                    "DSLR cameras, projectors, printers, and similar electronics.",
+                  icon: <Camera size={18} />,
+                },
+                {
+                  key: "musical",
+                  title: "Musical Instrument",
+                  description:
+                    "Guitars, keyboards, and other musical instruments.",
+                  icon: <Music2 size={18} />,
+                },
+                {
+                  key: "sports",
+                  title: "Sports Equipment",
+                  description:
+                    "Balls, rackets, training gear, and other sports equipment.",
+                  icon: <Globe2 size={18} />,
+                },
+                {
+                  key: "other",
+                  title: "Other Equipment",
+                  description:
+                    "Equipment that does not belong to the other registration groups.",
+                  icon: <Package size={18} />,
+                },
+              ].map((category) => (
+                <button
+                  key={category.key}
+                  type="button"
+                  onClick={() =>
+                    setSelectedGroup(
+                      category.key as RegistrationGroupId
+                    )
+                  }
+                  className="group flex w-full min-w-0 items-center gap-3 px-3 py-4 text-left transition-colors hover:bg-[#eef2fc]/10 sm:gap-4 sm:px-5"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#d6dde8] bg-white text-[#1a3a7b]">
+                    {category.icon}
+                  </div>
 
-                    return (
-                      <tr
-                        key={item.id}
-                        className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
-                      >
-                        <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
-                          ITEM-
-                          {String(
-                            item.id
-                          ).padStart(
-                            3,
-                            "0"
-                          )}
-                        </td>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      {category.title}
+                    </p>
 
-                        <td className="py-2.5 px-3 text-sm text-foreground font-medium">
-                          {item.item_name}
-                        </td>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {category.description}
+                    </p>
+                  </div>
 
-                        <td className="py-2.5 px-3 text-xs text-muted-foreground">
-                          {item.item_type}
-                        </td>
-
-                        <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
-                          {item.serial_number ||
-                            "—"}
-                        </td>
-
-                        <td className="py-2.5 px-3">
-                          <StatusBadge
-                            status={
-                              displayStatus
-                            }
-                          />
-                        </td>
-
-                        <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                          {item.created_at
-                            ? new Date(
-                                item.created_at
-                              ).toLocaleDateString(
-                                "en-PH",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )
-                            : "—"}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                  <ChevronRight
+                    size={17}
+                    className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
+                  />
+                </button>
+              ))}
+            </div>
           </div>
-        </Card>
+
+          <div className="rounded-xl border border-[#cfd8e6] bg-card p-5">
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-foreground">
+                How Registration Works
+              </h3>
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                From registration to QR verification in three simple steps.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="rounded-lg border border-[#dce3ee] bg-[#f8fafc] p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                    1
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">
+                      Register
+                    </p>
+
+                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                      Select a category, complete the required details, and submit your request.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-[#dce3ee] bg-[#f8fafc] p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                    2
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">
+                      PCO Approval
+                    </p>
+
+                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                      Your request appears in Permit Status while PCO reviews the submitted information.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-[#dce3ee] bg-[#f8fafc] p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                    3
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">
+                      QR Code
+                    </p>
+
+                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                      Once approved, the active permit becomes available in QR Codes for campus verification.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
+
 function StudentMyQRCodes() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [qrSearch, setQrSearch] = useState("");
+  const [qrSortOrder, setQrSortOrder] = useState<"newest" | "oldest">("newest");
   const [qrModalItem, setQrModalItem] = useState<any | null>(null);
   const [downloadingQrId, setDownloadingQrId] =
     useState<number | string | null>(null);
@@ -2205,11 +2204,37 @@ function StudentMyQRCodes() {
         : [];
 
       setItems(
-        [...loadedItems].sort(
-          (a, b) =>
-            Number(b?.id ?? 0) -
-            Number(a?.id ?? 0)
-        )
+        [...loadedItems]
+          .filter((item) => {
+            const expiresAt =
+              item.qr_expires_at
+                ? new Date(
+                    item.qr_expires_at
+                  ).getTime()
+                : null;
+
+            const expired =
+              expiresAt !== null &&
+              !Number.isNaN(
+                expiresAt
+              ) &&
+              expiresAt <=
+                Date.now();
+
+            return (
+              item.status ===
+                "approved" &&
+              Boolean(
+                item.qr_code
+              ) &&
+              !expired
+            );
+          })
+          .sort(
+            (a, b) =>
+              Number(b?.id ?? 0) -
+              Number(a?.id ?? 0)
+          )
       );
     } catch (error) {
       console.error("Failed to load QR codes:", error);
@@ -2233,12 +2258,23 @@ function StudentMyQRCodes() {
   const approvedItems = items.filter(
     (item) =>
       item.status === "approved" &&
-      item.qr_code
+      item.qr_code &&
+      !isExpired(item)
   );
 
-  const pendingItems = items.filter(
-    (item) => item.status === "pending"
-  );
+  const visibleQrItems = approvedItems
+    .filter((item) => {
+      const query = qrSearch.trim().toLowerCase();
+      if (!query) return true;
+      return [item.item_name, item.item_type, item.serial_number, item.qr_code,
+        item.brand_model, item.id ? `ITEM-${String(item.id).padStart(3, "0")}` : ""]
+        .filter(Boolean).join(" ").toLowerCase().includes(query);
+    })
+    .sort((a, b) => {
+      const aTime = new Date(a.created_at || 0).getTime() || 0;
+      const bTime = new Date(b.created_at || 0).getTime() || 0;
+      return qrSortOrder === "newest" ? bTime - aTime : aTime - bTime;
+    });
 
   function isExpired(item: any) {
     return Boolean(
@@ -2445,21 +2481,47 @@ function StudentMyQRCodes() {
         }
       />
 
+      {/* Same search and sort controls as Lost & Found */}
+      <div className="flex flex-col gap-3 lg:flex-row">
+        <div className="relative flex-1">
+          <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            aria-label="Search QR codes"
+            value={qrSearch}
+            onChange={(e) => setQrSearch(e.target.value)}
+            placeholder="Search item, category, serial number, QR ID..."
+            className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+          />
+        </div>
+        <select
+          aria-label="Sort QR codes"
+          value={qrSortOrder}
+          onChange={(e) => setQrSortOrder(e.target.value as "newest" | "oldest")}
+          className="rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary"
+        >
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+        <button type="button" onClick={loadMyItems} disabled={loading}
+          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50">
+          {loading ? "Refreshing..." : "Refresh"}
+        </button>
+      </div>
+
       {loading ? (
         <div className="text-center py-10 text-sm text-muted-foreground">
           Loading QR codes...
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-4">
-          {approvedItems.map((item) => {
-            const expired = isExpired(item);
-
+        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+          {visibleQrItems.map((item) => {
             return (
               <div
                 key={item.id}
-                className="bg-card rounded-lg border border-[#dce3ee] transition-all hover:shadow-md overflow-hidden"
+                className="min-w-0 overflow-hidden rounded-xl border border-border bg-card transition hover:shadow-md sm:rounded-lg sm:border-[#dce3ee]"
               >
-                <div className="p-4 flex gap-4 items-start">
+                <div className="flex min-w-0 items-start gap-3 p-3 sm:gap-4 sm:p-4">
                   <div
                     id={`qr-source-${item.id}`}
                     className="flex-shrink-0"
@@ -2485,7 +2547,7 @@ function StudentMyQRCodes() {
                           Serial:
                         </span>
 
-                        <span className="font-mono text-foreground">
+                        <span className="break-all font-mono text-foreground">
                           {item.serial_number || "—"}
                         </span>
                       </div>
@@ -2495,7 +2557,7 @@ function StudentMyQRCodes() {
                           QR ID:
                         </span>
 
-                        <span className="font-mono text-foreground">
+                        <span className="break-all font-mono text-foreground">
                           {item.qr_code}
                         </span>
                       </div>
@@ -2517,7 +2579,7 @@ function StudentMyQRCodes() {
 
                         <span
                           className={
-                            expired
+                            isExpired(item)
                               ? "font-medium text-red-600"
                               : "text-foreground"
                           }
@@ -2531,17 +2593,13 @@ function StudentMyQRCodes() {
 
                     <div className="mt-2">
                       <StatusBadge
-                        status={
-                          expired
-                            ? "Expired"
-                            : "Approved"
-                        }
+                        status="Approved"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="border-t border-[#dce3ee] bg-[#fafbfc] px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/30 px-3 py-3 sm:px-4">
                   <p className="text-xs text-muted-foreground">
                     QR ID:
                     <span className="font-mono text-primary ml-2">
@@ -2549,7 +2607,7 @@ function StudentMyQRCodes() {
                     </span>
                   </p>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() =>
@@ -2585,44 +2643,9 @@ function StudentMyQRCodes() {
             );
           })}
 
-          {pendingItems.map((item) => (
-            <div
-              key={item.id}
-              className="bg-card rounded-lg border border-dashed border-yellow-300 p-4 flex gap-4 items-center opacity-70"
-            >
-              <div className="w-[88px] h-[88px] bg-yellow-50 border border-yellow-200 rounded-md flex flex-col items-center justify-center gap-1 flex-shrink-0">
-                <Clock
-                  size={22}
-                  className="text-yellow-500"
-                />
-
-                <span className="text-xs text-yellow-600 font-medium">
-                  Pending
-                </span>
-              </div>
-
-              <div>
-                <p className="font-semibold text-sm text-foreground">
-                  {item.item_name}
-                </p>
-
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {item.item_type} ·{" "}
-                  {item.serial_number ||
-                    "No serial number"}
-                </p>
-
-                <p className="text-xs text-yellow-600 mt-2">
-                  Awaiting PCO approval — QR code will be issued upon approval.
-                </p>
-              </div>
-            </div>
-          ))}
-
-          {approvedItems.length === 0 &&
-            pendingItems.length === 0 && (
+          {visibleQrItems.length === 0 && (
               <div className="md:col-span-2 text-center py-10 text-sm text-muted-foreground">
-                You don't have any registered items yet.
+                {qrSearch.trim() ? "No QR codes match your search." : "You don't have any approved QR codes yet."}
               </div>
             )}
         </div>
@@ -2735,8 +2758,22 @@ function StudentMyQRCodes() {
 }
 
 function StudentPermitStatus() {
+  type PermitFilter =
+    | "all"
+    | "approved"
+    | "pending"
+    | "expired";
+
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [permitSearch, setPermitSearch] = useState("");
+  const [permitSortOrder, setPermitSortOrder] = useState<"newest" | "oldest">("newest");
+  const [selectedItem, setSelectedItem] =
+    useState<any | null>(null);
+  const [permitFilter, setPermitFilter] =
+    useState<PermitFilter>("all");
+  const [deletingItemId, setDeletingItemId] =
+    useState<number | null>(null);
 
   async function loadItems() {
     try {
@@ -2746,7 +2783,10 @@ function StudentPermitStatus() {
 
       setItems(data.items ?? []);
     } catch (error) {
-      console.error("Failed to load permit status:", error);
+      console.error(
+        "Failed to load permit status:",
+        error
+      );
     } finally {
       setLoading(false);
     }
@@ -2756,77 +2796,504 @@ function StudentPermitStatus() {
     loadItems();
   }, []);
 
-  const pendingCount = items.filter(
-    (item) => item.status === "pending"
-  ).length;
+  async function handleDeletePermit(
+    item: any
+  ) {
+    const displayStatus =
+      permitDisplayStatus(
+        item
+      );
 
-  const approvedCount = items.filter(
-    (item) => item.status === "approved"
-  ).length;
+    if (
+      displayStatus !==
+        "Pending" &&
+      displayStatus !==
+        "Expired"
+    ) {
+      window.alert(
+        "Only Pending or Expired permits can be deleted."
+      );
+      return;
+    }
 
+    const confirmed =
+      window.confirm(
+        displayStatus ===
+          "Pending"
+          ? `Delete the pending request for "${item.item_name}"? This cannot be undone.`
+          : `Delete the expired permit for "${item.item_name}"? This cannot be undone.`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingItemId(
+        item.id
+      );
+
+      await deleteRegisteredItem(
+        item.id
+      );
+
+      if (
+        selectedItem?.id ===
+        item.id
+      ) {
+        setSelectedItem(
+          null
+        );
+      }
+
+      await loadItems();
+    } catch (error) {
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete permit."
+      );
+    } finally {
+      setDeletingItemId(
+        null
+      );
+    }
+  }
+
+  function isPermitExpired(item: any) {
+    if (
+      item.status !== "approved" ||
+      !item.qr_expires_at
+    ) {
+      return false;
+    }
+
+    const expiresAt =
+      new Date(
+        item.qr_expires_at
+      ).getTime();
+
+    return (
+      !Number.isNaN(
+        expiresAt
+      ) &&
+      expiresAt <=
+        Date.now()
+    );
+  }
+
+  function permitDisplayStatus(
+    item: any
+  ):
+    | "Approved"
+    | "Pending"
+    | "Expired" {
+    if (
+      isPermitExpired(
+        item
+      )
+    ) {
+      return "Expired";
+    }
+
+    if (
+      item.status ===
+      "approved"
+    ) {
+      return "Approved";
+    }
+
+    return "Pending";
+  }
+
+  const approvedCount =
+    items.filter(
+      (item) =>
+        item.status ===
+          "approved" &&
+        !isPermitExpired(
+          item
+        )
+    ).length;
+
+  const pendingCount =
+    items.filter(
+      (item) =>
+        item.status ===
+        "pending"
+    ).length;
+
+  const expiredCount =
+    items.filter(
+      (item) =>
+        isPermitExpired(
+          item
+        )
+    ).length;
+
+  const visibleItems =
+    items.filter(
+      (item) => {
+        const query = permitSearch.trim().toLowerCase();
+        if (query) {
+          const searchableText = [
+            item.item_name, item.item_type, item.serial_number, item.qr_code,
+            item.brand_model, item.status, permitDisplayStatus(item),
+            item.id ? `ITEM-${String(item.id).padStart(3, "0")}` : "",
+          ].filter(Boolean).join(" ").toLowerCase();
+          if (!searchableText.includes(query)) return false;
+        }
+
+        if (
+          permitFilter ===
+          "all"
+        ) {
+          return true;
+        }
+
+        if (
+          permitFilter ===
+          "approved"
+        ) {
+          return (
+            item.status ===
+              "approved" &&
+            !isPermitExpired(
+              item
+            )
+          );
+        }
+
+        if (
+          permitFilter ===
+          "pending"
+        ) {
+          return (
+            item.status ===
+            "pending"
+          );
+        }
+
+        return isPermitExpired(
+          item
+        );
+      }
+    ).sort((a, b) => {
+      const aTime = new Date(a.created_at || 0).getTime() || 0;
+      const bTime = new Date(b.created_at || 0).getTime() || 0;
+      return permitSortOrder === "newest" ? bTime - aTime : aTime - bTime;
+    });
+
+  function formatDate(
+    value: string | null | undefined
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "—";
+    }
+
+    return date.toLocaleDateString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }
+    );
+  }
+
+  function formatDateTime(
+    value: string | null | undefined
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "—";
+    }
+
+    return date.toLocaleString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    );
+  }
 
   return (
     <div className="space-y-5">
       <PageHeader
         title="Permit Status"
-        subtitle="Track the approval status of your registered items."
+        subtitle="Track all of your item registration requests and permit details."
         action={
           <button
             onClick={loadItems}
-            className="text-xs flex items-center gap-1 text-primary font-medium"
+            disabled={loading}
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
           >
-            <RefreshCw size={12} />
-            Refresh
+            <RefreshCw
+              size={12}
+            />
+            {loading
+              ? "Refreshing..."
+              : "Refresh"}
           </button>
         }
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* SUMMARY */}
+      <div className="qr-student-summary grid grid-cols-2 gap-3 lg:grid-cols-4 max-[430px]:[&>div]:gap-2 max-[430px]:[&>div]:p-3 max-[430px]:[&>div>div:first-child]:h-9 max-[430px]:[&>div>div:first-child]:w-9">
         <StatCard
-          label="Total Requests"
-          value={String(items.length)}
-          icon={<Package size={20} />}
+          label="All"
+          value={String(
+            items.length
+          )}
+          icon={
+            <Package
+              size={20}
+            />
+          }
           color="#1a3a7b"
         />
 
         <StatCard
+          label="Approved"
+          value={String(
+            approvedCount
+          )}
+          icon={
+            <CheckCircle
+              size={20}
+            />
+          }
+          color="#2ecc71"
+        />
+
+        <StatCard
           label="Pending"
-          value={String(pendingCount)}
-          icon={<Clock size={20} />}
+          value={String(
+            pendingCount
+          )}
+          icon={
+            <Clock
+              size={20}
+            />
+          }
           color="#2f5fd6"
         />
 
         <StatCard
-          label="Approved"
-          value={String(approvedCount)}
-          icon={<CheckCircle size={20} />}
-          color="#2ecc71"
+          label="Expired"
+          value={String(
+            expiredCount
+          )}
+          icon={
+            <AlertCircle
+              size={20}
+            />
+          }
+          color="#64748b"
         />
-
-      
       </div>
 
-      <Card title="My Item Permit Requests">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      {/* Search and sorting use the same design as Lost & Found */}
+      <div className="flex flex-col gap-3 lg:flex-row">
+        <div className="relative flex-1">
+          <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            aria-label="Search permit requests"
+            value={permitSearch}
+            onChange={(e) => setPermitSearch(e.target.value)}
+            placeholder="Search item, category, serial number, QR ID..."
+            className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+          />
+        </div>
+        <select
+          aria-label="Sort permit requests"
+          value={permitSortOrder}
+          onChange={(e) => setPermitSortOrder(e.target.value as "newest" | "oldest")}
+          className="rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary"
+        >
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+        <button type="button" onClick={loadItems} disabled={loading}
+          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50">
+          {loading ? "Refreshing..." : "Refresh"}
+        </button>
+      </div>
+
+      {/* FILTERS — four equal-width buttons on mobile; natural width on desktop */}
+      <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
+        {(
+          [
+            [
+              "all",
+              "All",
+            ],
+            [
+              "approved",
+              "Approved",
+            ],
+            [
+              "pending",
+              "Pending",
+            ],
+            [
+              "expired",
+              "Expired",
+            ],
+          ] as const
+        ).map(
+          ([
+            value,
+            label,
+          ]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() =>
+                setPermitFilter(
+                  value
+                )
+              }
+              className={`min-w-0 whitespace-nowrap rounded-full border px-1 py-2 text-[11px] font-medium transition sm:px-5 sm:text-sm ${
+                permitFilter ===
+                value
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-foreground hover:bg-muted"
+              }`}
+            >
+              {label}
+            </button>
+          )
+        )}
+      </div>
+
+      <Card
+        title={
+          permitFilter ===
+          "all"
+            ? "All Permit Requests"
+            : permitFilter ===
+              "approved"
+            ? "Approved Permit Requests"
+            : permitFilter ===
+              "pending"
+            ? "Pending Permit Requests"
+            : "Expired Permit Requests"
+        }
+      >
+        {/* Phones: readable request cards, not a cropped desktop table. */}
+        <div className="divide-y divide-border lg:hidden">
+          {loading ? (
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">Loading permit requests...</p>
+          ) : visibleItems.length === 0 ? (
+            <div className="px-4 py-8 text-center">
+              <FileText size={28} className="mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm font-semibold text-foreground">No permit requests found.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Try another search or filter.</p>
+            </div>
+          ) : (
+            visibleItems.map((item) => {
+              const status = permitDisplayStatus(item);
+              const pending = status === "Pending";
+              return (
+                <article key={item.id} className="min-w-0 space-y-3 p-4">
+                  <div className="flex min-w-0 items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words text-sm font-semibold text-foreground">{item.item_name || "Unnamed item"}</p>
+                      <p className="mt-1 text-[11px] font-mono text-muted-foreground">ITEM-{String(item.id).padStart(3, "0")}</p>
+                    </div>
+                    <div className="shrink-0"><StatusBadge status={status} /></div>
+                  </div>
+                  <dl className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3 text-xs">
+                    <div className="min-w-0">
+                      <dt className="text-muted-foreground">Category</dt>
+                      <dd className="mt-1 break-words font-medium text-foreground">{item.item_type || "—"}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-muted-foreground">Submitted</dt>
+                      <dd className="mt-1 font-medium text-foreground">{formatDate(item.created_at)}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-muted-foreground">QR ID</dt>
+                      <dd className="mt-1 break-all font-mono font-medium text-primary">{!pending && item.qr_code ? item.qr_code : "—"}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-muted-foreground">Permit expiration</dt>
+                      <dd className="mt-1 break-words font-medium text-foreground">{!pending ? formatDateTime(item.qr_expires_at) : "—"}</dd>
+                    </div>
+                  </dl>
+                  <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+                    <button type="button" onClick={() => setSelectedItem(item)}
+                      className="inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-primary hover:bg-muted">
+                      <Eye size={14} /> View Details
+                    </button>
+                    {(status === "Pending" || status === "Expired") && (
+                      <button type="button" onClick={() => handleDeletePermit(item)} disabled={deletingItemId === item.id}
+                        className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-50 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+                        <Trash2 size={14} /> {deletingItemId === item.id ? "Deleting..." : "Delete"}
+                      </button>
+                    )}
+                  </div>
+                </article>
+              );
+            })
+          )}
+        </div>
+        {/* Tablets and desktop retain the full data table. */}
+        <div className="hidden overflow-x-auto lg:block">
+          <table className="w-full min-w-[900px]">
             <thead>
               <tr className="bg-[#fafbfc]">
                 {[
                   "Item",
                   "Type",
-                  "Brand / Model",
-                  "Serial Number",
-                  "Date Registered",
-                  "QR ID",
+                  "Date Submitted",
                   "Status",
-                ].map((heading) => (
-                  <th
-                    key={heading}
-                    className="text-left py-2 px-3 text-xs text-muted-foreground font-medium"
-                  >
-                    {heading}
-                  </th>
-                ))}
+                  "QR ID",
+                  "Permit Expiration",
+                  "Action",
+                ].map(
+                  (
+                    heading
+                  ) => (
+                    <th
+                      key={
+                        heading
+                      }
+                      className="text-left py-2 px-3 text-xs text-muted-foreground font-medium"
+                    >
+                      {
+                        heading
+                      }
+                    </th>
+                  )
+                )}
               </tr>
             </thead>
 
@@ -2834,76 +3301,400 @@ function StudentPermitStatus() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={
+                      7
+                    }
                     className="text-center py-8 text-sm text-muted-foreground"
                   >
                     Loading permit requests...
                   </td>
                 </tr>
-              ) : items.length === 0 ? (
+              ) : visibleItems.length ===
+                0 ? (
                 <tr>
                   <td
-                    colSpan={7}
-                    className="text-center py-8 text-sm text-muted-foreground"
+                    colSpan={
+                      7
+                    }
+                    className="text-center py-10"
                   >
-                    You have no registered items yet.
+                    <FileText
+                      size={
+                        30
+                      }
+                      className="mx-auto mb-3 text-muted-foreground"
+                    />
+
+                    <p className="text-sm font-semibold text-foreground">
+                      {permitSearch.trim()
+                        ? "No permit requests match your search."
+                        : permitFilter === "all"
+                        ? "No permit requests found."
+                        : permitFilter ===
+                          "approved"
+                        ? "No approved permit requests found."
+                        : permitFilter ===
+                          "pending"
+                        ? "No pending permit requests found."
+                        : "No expired permit requests found."}
+                    </p>
+
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {permitSearch.trim()
+                        ? "Try another item name, QR ID, or category."
+                        : permitFilter === "all"
+                        ? "Register an item to create your first permit request."
+                        : "Try selecting a different filter."}
+                    </p>
                   </td>
                 </tr>
               ) : (
-                items.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-t border-[#cfd8e6] hover:bg-[#eef2fc]"
-                  >
-                    <td className="py-3 px-3 text-sm font-medium">
-                      {item.item_name}
-                    </td>
+                visibleItems.map(
+                  (
+                    item
+                  ) => {
+                    const displayStatus =
+                      permitDisplayStatus(
+                        item
+                      );
 
-                    <td className="py-3 px-3 text-xs text-muted-foreground">
-                      {item.item_type}
-                    </td>
+                    const isPending =
+                      displayStatus ===
+                      "Pending";
 
-                    <td className="py-3 px-3 text-xs text-muted-foreground">
-                      {item.brand_model || "—"}
-                    </td>
-
-                    <td className="py-3 px-3 text-xs font-mono">
-                      {item.serial_number}
-                    </td>
-
-                    <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(
-                        item.created_at
-                      ).toLocaleDateString("en-PH", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
-
-                    <td className="py-3 px-3 text-xs font-mono text-primary">
-                      {item.qr_code || "Not issued yet"}
-                    </td>
-
-                    <td className="py-3 px-3">
-                      <StatusBadge
-                        status={
-                          item.status === "approved"
-                            ? "Approved"
-                            : "Pending"
+                    return (
+                      <tr
+                        key={
+                          item.id
                         }
-                      />
-                    </td>
-                  </tr>
-                ))
+                        className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
+                      >
+                        <td className="py-3 px-3 min-w-[170px]">
+                          <div className="text-sm font-medium text-foreground">
+                            {
+                              item.item_name
+                            }
+                          </div>
+
+                          <div className="mt-0.5 text-[11px] font-mono text-muted-foreground">
+                            ITEM-
+                            {String(
+                              item.id
+                            ).padStart(
+                              3,
+                              "0"
+                            )}
+                          </div>
+                        </td>
+
+                        <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {item.item_type ||
+                            "—"}
+                        </td>
+
+                        <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDate(
+                            item.created_at
+                          )}
+                        </td>
+
+                        <td className="py-3 px-3">
+                          <StatusBadge
+                            status={
+                              displayStatus
+                            }
+                          />
+                        </td>
+
+                        <td className="py-3 px-3 text-xs font-mono whitespace-nowrap">
+                          {!isPending &&
+                          item.qr_code ? (
+                            <span className="text-primary font-semibold">
+                              {
+                                item.qr_code
+                              }
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              —
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {!isPending
+                            ? formatDateTime(
+                                item.qr_expires_at
+                              )
+                            : "—"}
+                        </td>
+
+                        <td className="py-3 px-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedItem(
+                                  item
+                                )
+                              }
+                              className="inline-flex items-center gap-1.5 rounded-md border border-[#cfd8e6] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#1a3a7b] hover:bg-[#eef2fc] transition-colors whitespace-nowrap"
+                            >
+                              <Eye
+                                size={
+                                  13
+                                }
+                              />
+                              View Details
+                            </button>
+
+                            {(displayStatus ===
+                              "Pending" ||
+                              displayStatus ===
+                                "Expired") && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDeletePermit(
+                                    item
+                                  )
+                                }
+                                disabled={
+                                  deletingItemId ===
+                                  item.id
+                                }
+                                className="inline-flex items-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap"
+                              >
+                                <Trash2
+                                  size={
+                                    13
+                                  }
+                                />
+                                {deletingItemId ===
+                                item.id
+                                  ? "Deleting..."
+                                  : "Delete"}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
+                )
               )}
             </tbody>
           </table>
         </div>
       </Card>
+
+      {selectedItem && (
+        <div
+          className="fixed inset-0 z-[300] flex items-center justify-center p-4"
+          style={{
+            background:
+              "rgba(15, 23, 42, 0.55)",
+            backdropFilter:
+              "blur(4px)",
+          }}
+          onMouseDown={(
+            event
+          ) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              setSelectedItem(
+                null
+              );
+            }
+          }}
+        >
+          <div
+            className="w-full max-w-2xl overflow-hidden rounded-2xl border border-[#dce3ee] bg-white"
+            style={{
+              boxShadow:
+                "0 24px 70px rgba(16, 26, 51, 0.25)",
+            }}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-[#e5eaf2] bg-[#fbfcfe] px-5 py-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <FileText
+                    size={
+                      17
+                    }
+                    className="text-[#1a3a7b]"
+                  />
+
+                  <h2 className="text-base font-semibold text-foreground">
+                    Permit Request Details
+                  </h2>
+                </div>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  ITEM-
+                  {String(
+                    selectedItem.id
+                  ).padStart(
+                    3,
+                    "0"
+                  )}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedItem(
+                    null
+                  )
+                }
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-[#eef2fc] hover:text-foreground"
+                title="Close"
+              >
+                <X
+                  size={
+                    17
+                  }
+                />
+              </button>
+            </div>
+
+            <div className="p-5">
+              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Registered Item
+                  </p>
+
+                  <h3 className="mt-1 text-lg font-bold text-foreground">
+                    {
+                      selectedItem.item_name
+                    }
+                  </h3>
+
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {selectedItem.item_type ||
+                      "—"}
+                  </p>
+                </div>
+
+                <StatusBadge
+                  status={permitDisplayStatus(
+                    selectedItem
+                  )}
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  [
+                    "Brand / Model",
+                    selectedItem.brand_model ||
+                      "—",
+                  ],
+                  [
+                    "Serial Number",
+                    selectedItem.serial_number ||
+                      "—",
+                  ],
+                  [
+                    "Purpose / Reason",
+                    selectedItem.purpose ||
+                      "—",
+                  ],
+                  [
+                    "Date Submitted",
+                    formatDateTime(
+                      selectedItem.created_at
+                    ),
+                  ],
+                  [
+                    "QR ID",
+                    selectedItem.status ===
+                      "approved"
+                      ? selectedItem.qr_code ||
+                        "—"
+                      : "Not issued yet",
+                  ],
+                  [
+                    "Permit Expiration",
+                    selectedItem.status ===
+                      "approved"
+                      ? formatDateTime(
+                          selectedItem.qr_expires_at
+                        )
+                      : "Assigned after approval",
+                  ],
+                ].map(
+                  ([
+                    label,
+                    value,
+                  ]) => (
+                    <div
+                      key={
+                        label
+                      }
+                      className="rounded-lg border border-[#dce3ee] bg-[#fbfcfe] p-3"
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {
+                          label
+                        }
+                      </p>
+
+                      <p className="mt-1 text-sm text-foreground break-words">
+                        {
+                          value
+                        }
+                      </p>
+                    </div>
+                  )
+                )}
+              </div>
+
+              {selectedItem.status ===
+                "pending" && (
+                <div className="mt-4 rounded-lg border border-[#d7e0f3] bg-[#eef2fc] px-3 py-2.5">
+                  <p className="text-xs text-[#1a3a7b] leading-relaxed">
+                    This request is waiting for PCO approval.
+                    The QR ID and permit expiration will be generated only after approval.
+                  </p>
+                </div>
+              )}
+
+              {isPermitExpired(
+                selectedItem
+              ) && (
+                <div className="mt-4 rounded-lg border border-[#e5e7eb] bg-[#f3f4f6] px-3 py-2.5">
+                  <p className="text-xs text-[#6b7280] leading-relaxed">
+                    This permit has expired and is no longer available in the QR Codes module.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end border-t border-[#e5eaf2] bg-[#fbfcfe] px-5 py-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedItem(
+                    null
+                  )
+                }
+                className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#334155] hover:bg-[#eef2fc]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 // ── Shared Lost & Found store (module-level for demo) ─────────────────────
 type LFItem = {
@@ -2965,13 +3756,10 @@ function StudentLostAndFound() {
     useState<number | null>(null);
 
   const [statusFilter, setStatusFilter] =
-    useState<"all" | "found" | "lost" | "recovered">("all");
+    useState<"all" | "found" | "lost" | "pending" | "recovered">("all");
 
   const [sortOrder, setSortOrder] =
     useState<"newest" | "oldest">("newest");
-
-  const [showProcedure, setShowProcedure] =
-    useState(true);
 
   const [selectedItem, setSelectedItem] =
     useState<any | null>(null);
@@ -3005,7 +3793,7 @@ function StudentLostAndFound() {
 
   async function handleClaim(id: number) {
     const confirmed = window.confirm(
-      "Submit a claim for this found item? You will still need to visit the Security office for ownership verification."
+      "Submit a claim request? Your claim will remain PENDING until CSU verifies your ownership at the Security office."
     );
 
     if (!confirmed) {
@@ -3022,7 +3810,7 @@ function StudentLostAndFound() {
 
       setSuccess(
         result?.message ||
-          "Claim submitted successfully."
+          "Claim request submitted. Status: Pending CSU Verification."
       );
 
       await loadItems();
@@ -3146,6 +3934,10 @@ function StudentLostAndFound() {
       );
     }).length;
 
+  const pendingCount = items.filter(
+    (item) => getStatus(item).trim().toLowerCase() === "pending"
+  ).length;
+
   const recoveredCount =
     items.filter(
       (item) =>
@@ -3222,6 +4014,10 @@ function StudentLostAndFound() {
           );
         }
 
+        if (statusFilter === "pending") {
+          return status === "pending";
+        }
+
         if (
           statusFilter ===
           "recovered"
@@ -3288,10 +4084,21 @@ function StudentLostAndFound() {
 
     if (
       statusLower ===
+      "pending"
+    ) {
+      return (
+        <span className="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+          Pending Verification
+        </span>
+      );
+    }
+
+    if (
+      statusLower ===
       "claimed"
     ) {
       return (
-        <span className="rounded-full bg-yellow-100 px-3 py-1 text-[11px] font-semibold text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-300">
+        <span className="rounded-full bg-green-100 px-3 py-1 text-[11px] font-semibold text-green-700 dark:bg-green-950/40 dark:text-green-300">
           Claimed
         </span>
       );
@@ -3309,32 +4116,18 @@ function StudentLostAndFound() {
       <PageHeader
         title="Lost & Found"
         subtitle="Browse found items and lost-item reports recorded by the Security office."
+        action={
+          <button
+            type="button"
+            onClick={loadItems}
+            disabled={loading}
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+          >
+            <RefreshCw size={12} />
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+        }
       />
-
-      {showProcedure && (
-        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-4 dark:border-blue-900/70 dark:bg-blue-950/30">
-          <div className="flex items-start justify-between gap-4">
-            <p className="text-sm leading-relaxed text-blue-900 dark:text-blue-200">
-              <span className="font-bold">
-                Procedure:
-              </span>{" "}
-              Found items must be turned over to the Security office before they are recorded. Students can browse and claim, but cannot create reports.
-            </p>
-
-            <button
-              type="button"
-              onClick={() =>
-                setShowProcedure(
-                  false
-                )
-              }
-              className="flex-shrink-0 text-sm font-semibold text-blue-800 hover:underline dark:text-blue-300"
-            >
-              Dismiss
-            </button>
-          </div>
-        </div>
-      )}
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/30 dark:text-red-300">
@@ -3348,43 +4141,39 @@ function StudentLostAndFound() {
         </div>
       )}
 
-      {/* SUMMARY */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="rounded-xl border-2 border-primary bg-card px-5 py-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Total
-          </p>
-          <p className="mt-1 text-3xl font-bold text-foreground">
-            {items.length}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card px-5 py-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-green-700 dark:text-green-300">
-            Found
-          </p>
-          <p className="mt-1 text-3xl font-bold text-foreground">
-            {foundCount}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card px-5 py-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-red-600 dark:text-red-300">
-            Lost
-          </p>
-          <p className="mt-1 text-3xl font-bold text-foreground">
-            {lostCount}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card px-5 py-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Recovered
-          </p>
-          <p className="mt-1 text-3xl font-bold text-foreground">
-            {recoveredCount}
-          </p>
-        </div>
+      {/* Summary cards match Permit Status on desktop and mobile. */}
+      <div className="qr-student-summary grid grid-cols-2 gap-3 lg:grid-cols-5 max-[430px]:[&>div]:gap-2 max-[430px]:[&>div]:p-3 max-[430px]:[&>div>div:first-child]:h-9 max-[430px]:[&>div>div:first-child]:w-9">
+        <StatCard
+          label="All"
+          value={String(items.length)}
+          icon={<Package size={20} />}
+          color="#1a3a7b"
+        />
+        <StatCard
+          label="Found"
+          value={String(foundCount)}
+          icon={<CheckCircle size={20} />}
+          color="#16a34a"
+        />
+        <StatCard
+          label="Lost"
+          value={String(lostCount)}
+          icon={<AlertCircle size={20} />}
+          color="#dc2626"
+        />
+        <StatCard
+          label="Pending"
+          value={String(pendingCount)}
+          icon={<Clock size={20} />}
+          color="#d97706"
+        />
+        <StatCard
+          label="Recovered"
+          value={String(recoveredCount)}
+          icon={<CheckCircle size={20} />}
+          color="#64748b"
+          className="col-span-2 lg:col-span-1 min-w-0 w-[calc(50%_-_0.375rem)] max-[360px]:w-full lg:w-full justify-self-center"
+        />
       </div>
 
       {/* SEARCH + SORT + REFRESH */}
@@ -3440,7 +4229,7 @@ function StudentLostAndFound() {
       </div>
 
       {/* FILTERS */}
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-5 gap-1 sm:flex sm:flex-wrap sm:gap-2">
         {(
           [
             [
@@ -3454,6 +4243,10 @@ function StudentLostAndFound() {
             [
               "lost",
               "Lost",
+            ],
+            [
+              "pending",
+              "Pending",
             ],
             [
               "recovered",
@@ -3473,7 +4266,7 @@ function StudentLostAndFound() {
                   value
                 )
               }
-              className={`rounded-full border px-5 py-2 text-sm font-medium transition ${
+              className={`min-w-0 whitespace-nowrap rounded-full border px-0.5 py-2 text-[10px] font-medium transition sm:px-5 sm:text-sm ${
                 statusFilter ===
                 value
                   ? "border-primary bg-primary text-primary-foreground"
@@ -3517,7 +4310,7 @@ function StudentLostAndFound() {
       {!loading &&
         visibleItems.length >
           0 && (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
             {visibleItems.map(
               (item) => {
                 const reportType =
@@ -3554,10 +4347,10 @@ function StudentLostAndFound() {
                     key={
                       item.id
                     }
-                    className="overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-0.5 hover:shadow-lg"
+                    className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-lg sm:hover:-translate-y-0.5"
                   >
                     {/* PHOTO */}
-                    <div className="relative flex h-44 items-center justify-center overflow-hidden bg-muted">
+                    <div className="relative flex h-36 items-center justify-center overflow-hidden bg-muted sm:h-44">
                       {item.photo_url ? (
                         <img
                           src={
@@ -8554,12 +9347,13 @@ function SecurityLostFound() {
     ).toLowerCase();
 
     if (
+      status === "pending" ||
       status === "claimed" ||
       status === "recovered" ||
       item?.claimed_by
     ) {
       setError(
-        "Claimed or recovered Lost & Found reports cannot be deleted because they must remain in the audit history."
+        "Pending, claimed, or recovered reports cannot be deleted because they must remain in the audit history."
       );
       return;
     }
@@ -8581,7 +9375,7 @@ function SecurityLostFound() {
         localStorage.getItem("token");
 
       const response = await fetch(
-        `${API_URL}/lost-found/${itemId}`,
+        `http://localhost:8000/api/lost-found/${itemId}`,
         {
           method: "DELETE",
           headers: {
@@ -8841,7 +9635,7 @@ function SecurityLostFound() {
 
     // Found reports keep the existing claim-verification workflow.
     const confirmed = window.confirm(
-      "Confirm that Security has verified the claimant's ownership and the found item has been returned to the rightful owner?"
+      "CSU verification: Have you checked the student's ownership evidence and confirmed the item will be released to the rightful owner? This will change the status from Pending to Claimed."
     );
 
     if (!confirmed) {
@@ -9006,10 +9800,10 @@ function SecurityLostFound() {
         "lost"
   ).length;
 
-  const claimedCount = items.filter(
+  const pendingClaimsCount = items.filter(
     (item) =>
-      String(item.status ?? "").toLowerCase() ===
-      "claimed"
+      String(item.report_type ?? "found").toLowerCase() === "found" &&
+      String(item.status ?? "").toLowerCase() === "pending"
   ).length;
 
   const recoveredCount = items.filter(
@@ -9045,8 +9839,12 @@ function SecurityLostFound() {
       return "bg-green-100 text-green-700";
     }
 
+    if (normalized === "pending") {
+      return "bg-amber-100 text-amber-800";
+    }
+
     if (normalized === "claimed") {
-      return "bg-yellow-100 text-yellow-700";
+      return "bg-green-100 text-green-700";
     }
 
     if (normalized === "lost") {
@@ -9118,7 +9916,7 @@ function SecurityLostFound() {
 
         <StatCard
           label="Pending Claims"
-          value={String(claimedCount)}
+          value={String(pendingClaimsCount)}
           icon={<Clock size={20} />}
           color="#2f5fd6"
         />
@@ -9227,6 +10025,7 @@ function SecurityLostFound() {
                   (isLostReport ? "Lost" : "Found")
               );
               const statusLower = status.toLowerCase();
+              const isPending = statusLower === "pending";
               const isClaimed = statusLower === "claimed";
               const isRecovered =
                 statusLower === "recovered";
@@ -9519,7 +10318,7 @@ function SecurityLostFound() {
                           Edit Report
                         </button>
 
-                        {!isClaimed && !isRecovered && (
+                        {!isPending && !isClaimed && !isRecovered && (
                           <button
                             type="button"
                             disabled={
@@ -9536,7 +10335,7 @@ function SecurityLostFound() {
                           </button>
                         )}
 
-                        {(isClaimed || isLost) && !isRecovered && (
+                        {(isPending || isLost) && !isRecovered && (
                           <button
                             type="button"
                             disabled={
@@ -9551,8 +10350,14 @@ function SecurityLostFound() {
                               ? "Processing..."
                               : isLostReport
                               ? "Record Recovery"
-                              : "Verify & Mark Recovered"}
+                              : "Verify Claim & Mark Claimed"}
                           </button>
+                        )}
+
+                        {isClaimed && (
+                          <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
+                            CSU verified ownership — Item Claimed
+                          </div>
                         )}
 
                         {isRecovered && (
@@ -10383,9 +11188,64 @@ function SecurityLostFound() {
 // ══════════════════════════════════════════════════════════════════════════════
 // PCO PAGES
 // ══════════════════════════════════════════════════════════════════════════════
+// PCO pages reuse the Student search/sort/refresh layout on desktop and mobile.
+function PCOResponsiveToolbar({
+  search,
+  onSearchChange,
+  sort,
+  onSortChange,
+  onRefresh,
+  loading,
+  placeholder,
+  sortLabels = ["Newest first", "Oldest first"],
+}: {
+  search: string;
+  onSearchChange: (value: string) => void;
+  sort: string;
+  onSortChange: (value: string) => void;
+  onRefresh: () => void;
+  loading: boolean;
+  placeholder: string;
+  sortLabels?: [string, string];
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-3 lg:flex-row">
+      <div className="relative min-w-0 flex-1">
+        <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="search"
+          aria-label={placeholder}
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder={placeholder}
+          className="w-full min-w-0 rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+        />
+      </div>
+      <select
+        aria-label="Sort results"
+        value={sort}
+        onChange={(e) => onSortChange(e.target.value)}
+        className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary lg:w-auto"
+      >
+        <option value="newest">{sortLabels[0]}</option>
+        <option value="oldest">{sortLabels[1]}</option>
+      </select>
+      <button
+        type="button"
+        onClick={onRefresh}
+        disabled={loading}
+        className="w-full rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 lg:w-auto"
+      >
+        {loading ? "Refreshing..." : "Refresh"}
+      </button>
+    </div>
+  );
+}
+
 function PCOPermitRequests() {
+  const [requestSearch, setRequestSearch] = useState("");
+  const [requestSort, setRequestSort] = useState<"newest" | "oldest">("newest");
   const [pending, setPending] = useState<any[]>([]);
-  const [approved, setApproved] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [error, setError] = useState("");
@@ -10428,7 +11288,7 @@ function PCOPermitRequests() {
     try {
       setApprovingId(item.id);
 
-      const data = await approveItem(item.id);
+      await approveItem(item.id);
 
       alert("Item approved and QR code issued successfully!");
 
@@ -10436,20 +11296,6 @@ function PCOPermitRequests() {
         prev.filter((p) => p.id !== item.id)
       );
 
-      setApproved((prev) => [
-        {
-          ...item,
-          ...data.item,
-          approvedAt: new Date().toLocaleString("en-PH", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        },
-        ...prev,
-      ]);
     } catch (error) {
       alert(
         error instanceof Error
@@ -10460,6 +11306,25 @@ function PCOPermitRequests() {
       setApprovingId(null);
     }
   }
+
+  const matchesRequest = (item: any) => {
+    const keyword = requestSearch.trim().toLowerCase();
+    if (!keyword) return true;
+    return [
+      item.id ? `REQ-${String(item.id).padStart(3, "0")}` : "",
+      item.user?.name, item.user?.username, item.item_name,
+      item.complete_description, item.item_type, item.serial_number,
+      item.purpose, item.qr_code,
+    ].filter(Boolean).join(" ").toLowerCase().includes(keyword);
+  };
+  const sortRequests = (records: any[]) => [...records]
+    .filter(matchesRequest)
+    .sort((x, y) => {
+      const xDate = new Date(x.created_at || 0).getTime() || 0;
+      const yDate = new Date(y.created_at || 0).getTime() || 0;
+      return requestSort === "newest" ? yDate - xDate : xDate - yDate;
+    });
+  const pendingResults = sortRequests(pending);
 
   return (
     <div className="space-y-5">
@@ -10472,11 +11337,6 @@ function PCOPermitRequests() {
             className="text-xs flex items-center gap-1 text-primary font-medium"
           >
 
-            {error && (
-              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                {error}
-              </div>
-            )}
             <RefreshCw size={12} />
             Refresh
           </button>
@@ -10484,38 +11344,72 @@ function PCOPermitRequests() {
         
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+      )}
+      {/* Requests is the pending approval queue; issued QR codes belong in Registered Items. */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
         <StatCard
           label="Pending Review"
           value={String(pending.length)}
           icon={<Clock size={20} />}
           color="#2f5fd6"
         />
-
-        <StatCard
-          label="Approved This Session"
-          value={String(approved.length)}
-          icon={<CheckCircle size={20} />}
-          color="#1a3a7b"
-        />
-
-        <StatCard
-          label="QR Codes Issued"
-          value={String(approved.length)}
-          icon={<QrCode size={20} />}
-          color="#557bdc"
-        />
       </div>
+
+      <PCOResponsiveToolbar
+        search={requestSearch}
+        onSearchChange={setRequestSearch}
+        sort={requestSort}
+        onSortChange={(value) => setRequestSort(value as "newest" | "oldest")}
+        onRefresh={loadPendingItems}
+        loading={loading}
+        placeholder="Search student, item, category, serial number..."
+      />
 
       <Card
         title="Pending Requests"
         action={
           <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">
-            {pending.length} pending
+            {pendingResults.length} pending
           </span>
         }
       >
-        <div className="overflow-x-auto">
+        {/* Mobile: show all important request fields, not a clipped ten-column table. */}
+        <div className="divide-y divide-border lg:hidden">
+          {loading ? (
+            <p className="p-6 text-center text-sm text-muted-foreground">Loading pending requests...</p>
+          ) : pendingResults.length === 0 ? (
+            <p className="p-6 text-center text-sm text-muted-foreground">No matching pending requests.</p>
+          ) : pendingResults.map((item) => (
+            <article key={item.id} className="min-w-0 space-y-3 p-4">
+              <div className="flex min-w-0 items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-semibold text-foreground">{item.item_name || "Unnamed item"}</p>
+                  <p className="mt-1 text-[11px] font-mono text-muted-foreground">REQ-{String(item.id).padStart(3, "0")}</p>
+                </div>
+              </div>
+              <dl className="grid min-w-0 grid-cols-2 gap-3 text-xs">
+                <div className="min-w-0"><dt className="text-muted-foreground">Student</dt><dd className="mt-1 break-words font-medium">{item.user?.name || "Unknown"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Student ID</dt><dd className="mt-1 break-words font-medium">{item.user?.username || "—"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Category</dt><dd className="mt-1 break-words font-medium">{item.item_type || "—"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Quantity</dt><dd className="mt-1 font-medium">{item.quantity ?? "—"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Serial number</dt><dd className="mt-1 break-all font-mono">{item.serial_number || "—"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Date filed</dt><dd className="mt-1 font-medium">{item.created_at ? new Date(item.created_at).toLocaleDateString("en-PH", {month:"short",day:"numeric",year:"numeric"}) : "—"}</dd></div>
+              </dl>
+              {item.complete_description && String(item.complete_description).trim().toLowerCase() !== String(item.item_name || "").trim().toLowerCase() && (
+                <p className="break-words text-xs text-muted-foreground">{item.complete_description}</p>
+              )}
+              <p className="break-words text-xs text-muted-foreground"><span className="font-semibold text-foreground">Purpose:</span> {item.purpose || "—"}</p>
+              <button type="button" onClick={() => handleApprove(item)} disabled={approvingId === item.id}
+                className="inline-flex w-full items-center justify-center gap-1 rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50">
+                <CheckCircle size={14} />
+                {approvingId === item.id ? "Approving..." : "Approve & Issue QR"}
+              </button>
+            </article>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto lg:block">
           <table className="w-full">
             <thead>
               <tr className="bg-[#fafbfc]">
@@ -10528,7 +11422,6 @@ function PCOPermitRequests() {
                   "Qty",
                   "Serial No.",
                   "Purpose / Reason",
-                  "Permit Valid Until",
                   "Date Filed",
                   "Action",
                 ].map((h) => (
@@ -10546,23 +11439,23 @@ function PCOPermitRequests() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={10}
                     className="text-center py-8 text-sm text-muted-foreground"
                   >
                     Loading pending requests...
                   </td>
                 </tr>
-              ) : pending.length === 0 ? (
+              ) : pendingResults.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={10}
                     className="text-center py-8 text-sm text-muted-foreground"
                   >
                     No pending item registration requests.
                   </td>
                 </tr>
               ) : (
-                pending.map((item) => (
+                pendingResults.map((item) => (
                   <tr
                     key={item.id}
                     className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
@@ -10610,17 +11503,6 @@ function PCOPermitRequests() {
                       {item.purpose || "—"}
                     </td>
 
-                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                      {item.qr_expires_at
-                        ? new Date(item.qr_expires_at).toLocaleString("en-PH", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })
-                        : "—"}
-                    </td>
 
                     <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(
@@ -10636,8 +11518,9 @@ function PCOPermitRequests() {
                       <button
                         onClick={() => handleApprove(item)}
                         disabled={approvingId === item.id}
-                        className="text-xs bg-primary text-white px-3 py-1.5 rounded font-semibold hover:opacity-90 whitespace-nowrap disabled:opacity-50"
+                        className="inline-flex items-center justify-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 whitespace-nowrap disabled:opacity-50"
                       >
+                        <CheckCircle size={12} />
                         {approvingId === item.id
                           ? "Approving..."
                           : "Approve & Issue QR"}
@@ -10651,71 +11534,6 @@ function PCOPermitRequests() {
         </div>
       </Card>
 
-      {approved.length > 0 && (
-        <Card title="Approved Requests">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-[#fafbfc]">
-                  {[
-                    "Ref #",
-                    "Student",
-                    "Item",
-                    "Serial No.",
-                    "QR Code",
-                    "Status",
-                    "Approved At",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      className="text-left py-2 px-3 text-xs text-muted-foreground font-medium"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody>
-                {approved.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-t border-[#cfd8e6]"
-                  >
-                    <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
-                      REQ-{String(item.id).padStart(3, "0")}
-                    </td>
-
-                    <td className="py-2.5 px-3 text-sm font-medium">
-                      {item.user?.name ?? "Unknown"}
-                    </td>
-
-                    <td className="py-2.5 px-3 text-sm">
-                      {item.item_name}
-                    </td>
-
-                    <td className="py-2.5 px-3 text-xs font-mono">
-                      {item.serial_number}
-                    </td>
-
-                    <td className="py-2.5 px-3 text-xs font-mono text-primary">
-                      {item.qr_code}
-                    </td>
-
-                    <td className="py-2.5 px-3">
-                      <StatusBadge status="Approved" />
-                    </td>
-
-                    <td className="py-2.5 px-3 text-xs text-green-600 whitespace-nowrap">
-                      {item.approvedAt}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
     </div>
   );
 }
@@ -10724,6 +11542,8 @@ function PCOItemRegistry() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "expired">("all");
   const [selectedItem, setSelectedItem] =
     useState<any | null>(null);
 
@@ -10745,137 +11565,36 @@ function PCOItemRegistry() {
     loadItems();
   }, []);
 
-  // SEARCH
-  const filteredItems = items.filter((item) => {
-    const keyword = search.toLowerCase().trim();
+  // Keep the approval queue separate from the PCO registered-items view.
+  // Flagged incidents remain in the security/incident records, not this registry page.
+  const registeredItems = items.filter(
+    (item) => String(item.status ?? "").toLowerCase() === "approved" && !item.is_flagged
+  );
 
-    return (
-      item.item_name?.toLowerCase().includes(keyword) ||
-      item.brand_model?.toLowerCase().includes(keyword) ||
-      item.serial_number?.toLowerCase().includes(keyword) ||
-      item.qr_code?.toLowerCase().includes(keyword) ||
-      item.item_type?.toLowerCase().includes(keyword) ||
-      item.user?.name?.toLowerCase().includes(keyword) ||
-      item.user?.username?.toLowerCase().includes(keyword)
-    );
+  const registryStatus = (item: any) => item.is_expired ? "Expired" : "Active";
+
+  const filteredItems = registeredItems.filter((item) => {
+    const keyword = search.toLowerCase().trim();
+    const searchable = [item.item_name, item.brand_model, item.serial_number,
+      item.qr_code, item.item_type, item.user?.name, item.user?.username,
+      registryStatus(item), item.id ? `ITEM-${String(item.id).padStart(3, "0")}` : ""
+    ].filter(Boolean).join(" ").toLowerCase();
+    return (!keyword || searchable.includes(keyword)) &&
+      (statusFilter === "all" || registryStatus(item).toLowerCase() === statusFilter);
+  }).sort((x, y) => {
+    const xTime = new Date(x.created_at || 0).getTime() || 0;
+    const yTime = new Date(y.created_at || 0).getTime() || 0;
+    return sortOrder === "newest" ? yTime - xTime : xTime - yTime;
   });
 
   // SUMMARY
-  const activeQrCount = items.filter(
+  const activeQrCount = registeredItems.filter(
     (item) => item.is_active_qr === true
   ).length;
-  
-  const expiredCount = items.filter(
+
+  const expiredCount = registeredItems.filter(
     (item) => item.is_expired === true
   ).length;
-  
-  const flaggedCount = items.filter(
-    (item) => item.is_flagged === true
-  ).length;
-
-  // EXPORT FULL ITEM REGISTRY
-  function handleExportRegistry() {
-  if (items.length === 0) {
-    alert("There are no item records to export.");
-    return;
-  }
-
-  const headers = [
-    "Owner",
-    "Owner ID",
-    "Item",
-    "Type",
-    "Brand / Model",
-    "Serial Number",
-    "Color",
-    "Purpose",
-    "QR ID",
-    "QR Expiration",
-    "Date Registered",
-    "Status",
-  ];
-
-  function escapeCSV(value: any) {
-    const text = String(value ?? "");
-
-    return `"${text.replace(/"/g, '""')}"`;
-  }
-
-  const rows = items.map((item) => [
-    item.user?.name ?? "Unknown",
-    item.user?.username ?? "—",
-    item.item_name ?? "—",
-    item.item_type ?? "—",
-    item.brand_model ?? "—",
-    item.serial_number ?? "—",
-    item.color ?? "—",
-    item.purpose ?? "—",
-    item.qr_code ?? "Not issued",
-
-    item.qr_expires_at
-      ? new Date(
-          item.qr_expires_at
-        ).toLocaleString("en-PH", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-        })
-      : "No expiration",
-
-    item.created_at
-      ? new Date(
-          item.created_at
-        ).toLocaleDateString("en-PH", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })
-      : "—",
-
-    item.registry_status ??
-      item.status ??
-      "Unknown",
-  ]);
-
-  const csvContent = [
-    headers.map(escapeCSV).join(","),
-    ...rows.map((row) =>
-      row.map(escapeCSV).join(",")
-    ),
-  ].join("\n");
-
-  const blob = new Blob(
-    ["\uFEFF" + csvContent],
-    {
-      type: "text/csv;charset=utf-8;",
-    }
-  );
-
-  const url =
-    URL.createObjectURL(blob);
-
-  const link =
-    document.createElement("a");
-
-  const fileDate = new Date()
-    .toISOString()
-    .split("T")[0];
-
-  link.href = url;
-
-  link.download =
-    `QRPass-Registered-Items-${fileDate}.csv`;
-
-  document.body.appendChild(link);
-
-  link.click();
-
-  document.body.removeChild(link);
-
-  URL.revokeObjectURL(url);
-}
 
   return (
     <div className="space-y-5">
@@ -10898,10 +11617,10 @@ function PCOItemRegistry() {
       />
 
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
   <StatCard
-    label="Total Registered"
-    value={String(items.length)}
+    label="ALL"
+    value={String(registeredItems.length)}
     icon={<Package size={20} />}
     color="#1a3a7b"
   />
@@ -10913,64 +11632,78 @@ function PCOItemRegistry() {
     color="#2ecc71"
   />
 
-  <StatCard
-    label="Expired"
-    value={String(expiredCount)}
-    icon={<Clock size={20} />}
-    color="#2f5fd6"
-  />
+  <div className="col-span-2 min-w-0 md:col-span-1">
+    <StatCard
+      label="Expired"
+      value={String(expiredCount)}
+      icon={<Clock size={20} />}
+      color="#2f5fd6"
+    />
+  </div>
 
-  <StatCard
-    label="Flagged"
-    value={String(flaggedCount)}
-    icon={<AlertTriangle size={20} />}
-    color="#d32f2f"
-  />
 </div>
 
-      <Card
-        title="Registered Items"
-        action={
-          <button
-            onClick={handleExportRegistry}
-            disabled={items.length === 0}
-            className="text-xs flex items-center gap-1 bg-primary text-white px-3 py-1.5 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
-          >
-            <Download size={12} />
-            Export CSV
-          </button>
-        }
+      <PCOResponsiveToolbar
+        search={search}
+        onSearchChange={setSearch}
+        sort={sortOrder}
+        onSortChange={(value) => setSortOrder(value as "newest" | "oldest")}
+        onRefresh={loadItems}
+        loading={loading}
+        placeholder="Search item, owner, serial number, QR ID..."
+      />
+      <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+        {([ ["all", "All"], ["active", "Active"], ["expired", "Expired"] ] as const)
+          .map(([value, label]) => (
+            <button key={value} type="button" onClick={() => setStatusFilter(value)}
+              className={`min-w-0 whitespace-nowrap rounded-full border px-2 py-2 text-xs font-medium transition sm:px-5 sm:text-sm ${
+                statusFilter === value ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:bg-muted"
+              }`}>{label}</button>
+          ))}
+      </div>
+
+      <Card title="Registered Items"
       >
-        {/* SEARCH */}
-        <div className="mb-4">
-          <div className="relative w-full md:max-w-md">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-
-            <input
-              type="text"
-              value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
-              placeholder="Search item, owner, serial number, or QR ID..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-muted/30 focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-            />
-          </div>
-        </div>
-
         {/* RESULT COUNT */}
         {search && !loading && (
           <div className="mb-3 text-xs text-muted-foreground">
             Showing {filteredItems.length} of{" "}
-            {items.length} item(s)
+            {registeredItems.length} item(s)
           </div>
         )}
 
-        {/* TABLE */}
-        <div className="overflow-x-auto">
+        {/* Mobile: summary item cards keep owner, QR, status and details visible. */}
+        <div className="divide-y divide-border lg:hidden">
+          {loading ? (
+            <p className="p-6 text-center text-sm text-muted-foreground">Loading registered items...</p>
+          ) : filteredItems.length === 0 ? (
+            <p className="p-6 text-center text-sm text-muted-foreground">No matching registered items.</p>
+          ) : filteredItems.map((item) => (
+            <article key={item.id} className="min-w-0 space-y-3 p-4">
+              <div className="flex min-w-0 items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="break-words text-sm font-semibold text-foreground">{item.item_name || "Unnamed item"}</p>
+                  <p className="mt-1 text-[11px] font-mono text-muted-foreground">ITEM-{String(item.id).padStart(3, "0")}</p>
+                </div>
+                <div className="shrink-0"><StatusBadge status={registryStatus(item)} /></div>
+              </div>
+              <dl className="grid min-w-0 grid-cols-2 gap-3 text-xs">
+                <div className="min-w-0"><dt className="text-muted-foreground">Owner</dt><dd className="mt-1 break-words font-medium">{item.user?.name || "Unknown"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Owner ID</dt><dd className="mt-1 break-all font-mono">{item.user?.username || "—"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Category</dt><dd className="mt-1 break-words">{item.item_type || "—"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Registered</dt><dd className="mt-1">{item.created_at ? new Date(item.created_at).toLocaleDateString("en-PH", {month:"short",day:"numeric",year:"numeric"}) : "—"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Serial number</dt><dd className="mt-1 break-all font-mono">{item.serial_number || "—"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">QR ID</dt><dd className="mt-1 break-all font-mono text-primary">{item.qr_code || "Not issued"}</dd></div>
+              </dl>
+              <button type="button" onClick={() => setSelectedItem(item)}
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground hover:bg-muted">
+                <Eye size={14} className="mr-2 inline" />View Details
+              </button>
+            </article>
+          ))}
+        </div>
+        {/* Desktop: retain the full sortable/searchable records table. */}
+        <div className="hidden overflow-x-auto lg:block">
           <table className="w-full">
             <thead>
               <tr className="bg-[#fafbfc]">
@@ -11072,17 +11805,7 @@ function PCOItemRegistry() {
                     {/* STATUS */}
                     <td className="py-3 px-3">
                       <StatusBadge
-                        status={
-                          item.is_flagged
-                            ? "Flagged"
-                            : item.is_expired
-                            ? "Expired"
-                            : item.is_active_qr
-                            ? "Active"
-                            : item.status === "pending"
-                            ? "Pending"
-                            : item.registry_status || "Unknown"
-                        }
+                        status={registryStatus(item)}
                       />
                     </td>
 
@@ -11116,7 +11839,7 @@ function PCOItemRegistry() {
                                 }
                               >
                                 <div
-                                  className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+                                  className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-card shadow-2xl"
                                   onClick={(e) =>
                                     e.stopPropagation()
                                   }
@@ -11145,7 +11868,7 @@ function PCOItemRegistry() {
                                   </div>
 
                                   {/* CONTENT */}
-                                  <div className="max-h-[70vh] overflow-y-auto p-5">
+                                  <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                       <div className="rounded-lg border border-[#dce3ee] p-3">
                                         <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -11442,7 +12165,7 @@ function PCOItemRegistry() {
                                   </div>
 
                                   {/* FOOTER */}
-                                  <div className="flex justify-end border-t border-[#dce3ee] bg-[#fafbfc] px-5 py-4">
+                                  <div className="shrink-0 flex justify-end border-t border-border bg-card px-4 py-3 sm:px-5">
                                     <button
                                       type="button"
                                       onClick={() =>
@@ -12225,77 +12948,6 @@ function PCOItemRegistry() {
                               </div>
                             )}
                       
-                            {/* STATISTICS */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                              <StatCard
-                                label="Total Registered"
-                                value={
-                                  loading
-                                    ? "..."
-                                    : String(
-                                        totalRegistered
-                                      )
-                                }
-                                icon={
-                                  <Package
-                                    size={20}
-                                  />
-                                }
-                                color="#1a3a7b"
-                              />
-                      
-                              <StatCard
-                                label="Approved Items"
-                                value={
-                                  loading
-                                    ? "..."
-                                    : String(
-                                        approvedCount
-                                      )
-                                }
-                                icon={
-                                  <CheckCircle
-                                    size={20}
-                                  />
-                                }
-                                color="#2ecc71"
-                              />
-                      
-                              <StatCard
-                                label="QR Codes Issued"
-                                value={
-                                  loading
-                                    ? "..."
-                                    : String(
-                                        qrIssuedCount
-                                      )
-                                }
-                                icon={
-                                  <QrCode
-                                    size={20}
-                                  />
-                                }
-                                color="#557bdc"
-                              />
-                      
-                              <StatCard
-                                label="Pending"
-                                value={
-                                  loading
-                                    ? "..."
-                                    : String(
-                                        pendingCount
-                                      )
-                                }
-                                icon={
-                                  <Clock
-                                    size={20}
-                                  />
-                                }
-                                color="#2f5fd6"
-                              />
-                            </div>
-                      
                             {/* AVAILABLE REPORTS */}
                             <Card title="Available Reports">
                               <div className="divide-y divide-border">
@@ -12305,10 +12957,10 @@ function PCOItemRegistry() {
                                       key={
                                         report.name
                                       }
-                                      className="flex items-center justify-between px-4 py-3 hover:bg-[#eef2fc] transition-colors"
+                                      className="flex min-w-0 flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-muted sm:flex-row sm:items-center sm:justify-between"
                                     >
-                                      <div>
-                                        <p className="text-sm text-foreground font-medium">
+                                      <div className="min-w-0 flex-1">
+                                        <p className="break-words text-sm font-medium text-foreground">
                                           {
                                             report.name
                                           }
@@ -12321,27 +12973,17 @@ function PCOItemRegistry() {
                                         </p>
                                       </div>
                       
-                                      <button
-                                        onClick={() =>
-                                          handleReportDownload(
-                                            report.name
-                                          )
-                                        }
-                                        disabled={
-                                          loading ||
-                                          items.length ===
-                                            0
-                                        }
-                                        className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline disabled:opacity-50"
-                                      >
-                                        <Download
-                                          size={13}
-                                        />
-                      
-                                        {
-                                          report.format
-                                        }
-                                      </button>
+                                      <div className="flex shrink-0 items-center sm:w-[128px] sm:justify-end sm:border-l sm:border-border sm:pl-4">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleReportDownload(report.name)}
+                                          disabled={loading || items.length === 0}
+                                          className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-primary transition-colors hover:bg-muted disabled:opacity-50"
+                                        >
+                                          <Download size={13} />
+                                          {report.format}
+                                        </button>
+                                      </div>
                                     </div>
                                   )
                                 )}
@@ -22302,21 +22944,108 @@ async function handleTwoFactorSubmit(
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="min-h-screen flex flex-col qrpass-login-viewport"
       style={{
         fontFamily:
           "Inter, sans-serif",
         background: "#f6f8fb",
       }}
     >
+      {/* Keep the sign-in page fixed within a desktop viewport. Small screens can scroll. */}
+      <style>{`
+        @media (min-width: 768px) and (min-height: 680px) {
+          .qrpass-login-viewport {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100dvh;
+            min-height: 0;
+            max-height: 100dvh;
+            overflow: hidden;
+            box-sizing: border-box;
+          }
+          .qrpass-login-viewport > .qrpass-login-body {
+            flex: 1 1 0;
+            min-height: 0;
+            overflow: hidden;
+            padding: 8px 16px;
+            gap: 0;
+          }
+          .qrpass-login-brand { margin-bottom: 10px; flex-shrink: 0; }
+          .qrpass-login-brand img { width: 76px !important; }
+          .qrpass-login-brand p { margin-top: 4px; font-size: 11px; line-height: 1.3; }
+          .qrpass-login-card { flex-shrink: 0; }
+          .qrpass-login-card-content { padding-top: 14px; padding-bottom: 14px; }
+          .qrpass-login-form { row-gap: 11px; }
+          .qrpass-login-form input[type="text"],
+          .qrpass-login-form input[type="password"] { height: 42px; }
+          .qrpass-login-form button[type="submit"] { height: 42px; }
+          .qrpass-login-card-content > div:last-child { margin-top: 10px; padding-top: 10px; }
+          .qrpass-login-footer { margin-top: 10px; flex-shrink: 0; }
+        }
+        @media (max-width: 767px), (max-height: 679px) {
+          .qrpass-login-body { justify-content: flex-start; }
+        }
+        /* Mobile login: fit the complete card into standard phone viewports. */
+        @media (max-width: 767px) {
+          .qrpass-login-viewport {
+            width: 100%;
+            min-height: 100dvh;
+          }
+          .qrpass-login-body {
+            padding: 10px 12px 12px;
+            justify-content: center;
+          }
+          .qrpass-login-brand { margin-bottom: 12px; flex-shrink: 0; }
+          .qrpass-login-brand img { width: 70px !important; }
+          .qrpass-login-brand p {
+            max-width: 300px;
+            margin-top: 5px;
+            font-size: 11px;
+            line-height: 1.3;
+          }
+          .qrpass-login-card { max-width: 360px; flex-shrink: 0; }
+          .qrpass-login-card-content { padding: 15px 18px 16px; }
+          .qrpass-login-form { row-gap: 11px; }
+          .qrpass-login-form h2 { font-size: 23px; }
+          .qrpass-login-form > div:first-child p { font-size: 11px; line-height: 1.35; }
+          .qrpass-login-form label { margin-bottom: 5px; font-size: 11px; }
+          .qrpass-login-form input[type="text"],
+          .qrpass-login-form input[type="password"] { height: 42px; font-size: 13px; }
+          .qrpass-login-form button[type="submit"] { height: 42px; }
+          .qrpass-login-card-content > div:last-child { margin-top: 11px; padding-top: 11px; }
+          .qrpass-login-footer { margin-top: 10px; font-size: 10px; flex-shrink: 0; }
+        }
+        /* Lock scrolling only when a full-height mobile layout can actually fit. */
+        @media (max-width: 767px) and (min-height: 700px) {
+          .qrpass-login-viewport {
+            position: fixed;
+            inset: 0;
+            height: 100dvh;
+            min-height: 0;
+            max-height: 100dvh;
+            overflow: hidden;
+          }
+          .qrpass-login-body {
+            flex: 1 1 0;
+            min-height: 0;
+            overflow: auto;
+          }
+        }
+        /* Short phones, landscape, zoom and opened keyboards must keep inputs reachable. */
+        @media (max-width: 767px) and (max-height: 699px) {
+          .qrpass-login-viewport { position: relative; min-height: 100dvh; height: auto; overflow: visible; }
+          .qrpass-login-body { justify-content: flex-start; }
+        }
+      `}</style>
       {TopBar}
 
       {NavBar}
 
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-10 qrpass-login-body">
 
         {/* QRPass LOGO */}
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-8 qrpass-login-brand">
           <QRpassLogo
             size={120}
             showText
@@ -22331,15 +23060,15 @@ async function handleTwoFactorSubmit(
 
         {/* LOGIN CARD */}
         <div
-          className="relative w-full max-w-[430px] overflow-hidden rounded-[20px] border border-[#d7e0ee] bg-white shadow-[0_16px_40px_rgba(30,58,110,0.12)]"
+          className="relative w-full max-w-[430px] overflow-hidden rounded-[20px] border border-[#d7e0ee] bg-white shadow-[0_16px_40px_rgba(30,58,110,0.12)] qrpass-login-card"
         >
           {/* BLUE TOP ACCENT */}
           <div className="h-1 w-full bg-gradient-to-r from-[#173b7a] via-[#2f5fd6] to-[#7fa1ff]" />
 
-          <div className="px-8 pb-8 pt-7 sm:px-9">
+          <div className="px-8 pb-8 pt-7 sm:px-9 qrpass-login-card-content">
             <form
               onSubmit={handleLogin}
-              className="space-y-5"
+              className="space-y-5 qrpass-login-form"
             >
               {/* LOGIN HEADING */}
               <div className="mb-1 text-center">
@@ -22576,7 +23305,7 @@ async function handleTwoFactorSubmit(
         </div>
 
         {/* FOOTER */}
-        <p className="mt-8 text-xs text-muted-foreground text-center">
+        <p className="mt-8 text-xs text-muted-foreground text-center qrpass-login-footer">
           © 2026 QRpass System
 
           <span className="mx-2">
@@ -22634,6 +23363,11 @@ function Dashboard({
       "qrpass-theme",
       darkMode ? "dark" : "light"
     );
+
+    // Dashboard-only dark mode: restore the normal light theme on logout.
+    return () => {
+      root.classList.remove("dark");
+    };
   }, [darkMode]);
 
   // =========================================================
@@ -24050,15 +24784,66 @@ const handleSaveAccountProfile = async () => {
 
   return (
     <div
-      className="h-screen overflow-hidden flex flex-col"
+      className="qrpass-dashboard-root h-screen overflow-hidden flex flex-col"
       style={{
         fontFamily: "Inter, sans-serif",
         background: darkMode
-          ? "linear-gradient(180deg, #0b1220 0%, #0e1726 100%)"
+          ? "#000000"
           : "linear-gradient(180deg, #f8fafc 0%, #f4f7fb 100%)",
       }}
     >
       <style>{`
+
+        /* QRPass cross-role responsive foundation: Student / PCO / CSU / Admin */
+        .qrpass-dashboard-root {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+        }
+        @supports (height: 100dvh) {
+          .qrpass-dashboard-root { height: 100dvh; }
+        }
+        .qrpass-dashboard-root .qrpass-main,
+        .qrpass-dashboard-root .qrpass-main > div,
+        .qrpass-dashboard-root .qrpass-main .grid > * {
+          min-width: 0;
+          max-width: 100%;
+        }
+        .qrpass-dashboard-root .qrpass-main .overflow-x-auto {
+          max-width: 100%;
+          overscroll-behavior-x: contain;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: thin;
+        }
+        .qrpass-dashboard-root .qrpass-main img,
+        .qrpass-dashboard-root .qrpass-main video,
+        .qrpass-dashboard-root .qrpass-main canvas {
+          max-width: 100%;
+        }
+        .qrpass-dashboard-root .qrpass-main textarea,
+        .qrpass-dashboard-root .qrpass-main select,
+        .qrpass-dashboard-root .qrpass-main input {
+          min-width: 0;
+          box-sizing: border-box;
+        }
+        @media (max-width: 767px) {
+          .qrpass-dashboard-root .qrpass-main { padding: 12px; }
+          .qrpass-dashboard-root .qrpass-main input:not([type="checkbox"]):not([type="radio"]),
+          .qrpass-dashboard-root .qrpass-main select,
+          .qrpass-dashboard-root .qrpass-main textarea {
+            max-width: 100%;
+            font-size: 16px;
+          }
+          .qrpass-dashboard-root .qrpass-main button,
+          .qrpass-dashboard-root header button,
+          .qrpass-dashboard-root aside button {
+            touch-action: manipulation;
+          }
+          .qrpass-dashboard-root .qrpass-main .overflow-x-auto > table {
+            width: max-content;
+            min-width: 100%;
+          }
+        }
         .dark {
           --background: #0b1220;
           --foreground: #e8eef7;
@@ -24742,7 +25527,185 @@ const handleSaveAccountProfile = async () => {
           height: auto !important;
           object-fit: contain !important;
         }
-      `}</style>
+      
+
+        /* ==========================================================
+           QRPASS LIGHTS OUT — X-inspired black surfaces + QRPass blue
+           Dark mode only; keeps existing light mode and app logic.
+           ========================================================== */
+        html.dark {
+          color-scheme: dark;
+          --background: #000000;
+          --foreground: #f7f9f9;
+          --card: #080a0e;
+          --card-foreground: #f7f9f9;
+          --popover: #080a0e;
+          --popover-foreground: #f7f9f9;
+          --primary: #3b82f6;
+          --primary-foreground: #ffffff;
+          --secondary: #16181c;
+          --secondary-foreground: #e7edf5;
+          --muted: #16181c;
+          --muted-foreground: #9ca9b8;
+          --accent: #3b82f6;
+          --accent-foreground: #ffffff;
+          --border: #30353b;
+          --input: #3b4250;
+          --input-background: #101419;
+          --ring: #60a5fa;
+          --sidebar: #05080e;
+          --sidebar-foreground: #f7f9f9;
+          --sidebar-accent: #11213c;
+          --sidebar-accent-foreground: #f7f9f9;
+          --sidebar-border: #30353b;
+          --qrpass-table-header: #101419;
+          --qrpass-table-alternate: #0b0e13;
+          --qrpass-table-hover: #15253c;
+        }
+        html.dark body,
+        html.dark main,
+        html.dark .bg-background {
+          background: #000000 !important;
+          color: #f7f9f9;
+        }
+        html.dark main {
+          background-image: none !important;
+        }
+        html.dark header,
+        html.dark header.bg-white,
+        html.dark footer {
+          background: #080a0e !important;
+          border-color: #30353b !important;
+          box-shadow: none !important;
+        }
+        html.dark aside {
+          background: #05080e !important;
+          border-color: #30353b !important;
+        }
+        html.dark aside nav button:hover {
+          background: #15253c !important;
+        }
+        html.dark .bg-white,
+        html.dark .bg-card,
+        html.dark [class~="bg-[#ffffff]"] {
+          background-color: #080a0e !important;
+        }
+        html.dark [class~="bg-[#fafbfc]"],
+        html.dark [class~="bg-[#fbfcfe]"],
+        html.dark [class~="bg-[#f6f8fb]"],
+        html.dark [class~="bg-[#f3f5f9]"],
+        html.dark [class~="bg-[#f2f5fb]"],
+        html.dark [class~="bg-[#f3f5fa]"],
+        html.dark .bg-muted,
+        html.dark .bg-slate-50,
+        html.dark .bg-slate-100 {
+          background-color: #101419 !important;
+        }
+        html.dark [class~="bg-[#eef2fc]"],
+        html.dark [class~="bg-[#eef2ff]"] {
+          background-color: #161e2a !important;
+        }
+        html.dark [class~="text-[#111827]"],
+        html.dark [class~="text-[#334155]"],
+        html.dark [class~="text-[#16224b]"],
+        html.dark .text-foreground {
+          color: #f7f9f9 !important;
+        }
+        html.dark [class~="text-[#64748b]"],
+        html.dark [class~="text-[#94a3b8]"],
+        html.dark [class~="text-[#52637a]"],
+        html.dark .text-muted-foreground {
+          color: #a3afbd !important;
+        }
+        html.dark [class~="text-[#1a3a7b]"] {
+          color: #75b1ff !important;
+        }
+        html.dark [class~="border-[#cfd8e6]"],
+        html.dark [class~="border-[#dce3ee]"],
+        html.dark [class~="border-[#e5eaf2]"],
+        html.dark [class~="border-[#eef2f7]"],
+        html.dark [class~="border-[#edf0f5]"],
+        html.dark [class~="border-[#c7d2fe]"],
+        html.dark .border-slate-200,
+        html.dark .border-slate-300 {
+          border-color: #30353b !important;
+        }
+        html.dark input,
+        html.dark select,
+        html.dark textarea {
+          background-color: #101419 !important;
+          color: #f7f9f9 !important;
+          border-color: #3b4250 !important;
+          color-scheme: dark;
+        }
+        html.dark input:focus,
+        html.dark select:focus,
+        html.dark textarea:focus {
+          border-color: #60a5fa !important;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.17) !important;
+        }
+        html.dark input::placeholder,
+        html.dark textarea::placeholder {
+          color: #8996a5 !important;
+        }
+        html.dark select option {
+          background-color: #101419 !important;
+          color: #f7f9f9 !important;
+        }
+        html.dark table {
+          background: #080a0e !important;
+          color: #f7f9f9;
+        }
+        html.dark table thead tr {
+          background: #101419 !important;
+        }
+        html.dark table thead th,
+        html.dark table tbody td {
+          border-color: #30353b !important;
+        }
+        html.dark table thead th {
+          color: #bac5d1 !important;
+        }
+        html.dark table tbody tr {
+          background-color: #080a0e !important;
+        }
+        html.dark table tbody tr:nth-child(even) {
+          background-color: #0b0e13 !important;
+        }
+        html.dark table tbody tr:hover {
+          background-color: #15253c !important;
+        }
+        html.dark button.bg-primary {
+          background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
+          border-color: #2563eb !important;
+          color: #ffffff !important;
+        }
+        html.dark button.bg-primary:hover {
+          background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%) !important;
+        }
+        html.dark button.bg-background:not([class*="red-"]):not([class*="green-"]),
+        html.dark button.bg-white:not([class*="red-"]):not([class*="green-"]) {
+          background: #101419 !important;
+          border-color: #3b4250 !important;
+          color: #e7edf5 !important;
+        }
+        html.dark button.bg-background:hover,
+        html.dark button.bg-white:hover {
+          background: #182235 !important;
+        }
+        html.dark [class~="hover:bg-[#eef2fc]"]:hover,
+        html.dark [class~="hover:bg-[#f6f8fb]"]:hover,
+        html.dark [class~="hover:bg-[#fbfcfe]"]:hover,
+        html.dark [class~="hover:bg-[#f3f5fa]"]:hover {
+          background-color: #15253c !important;
+        }
+        html.dark ::-webkit-scrollbar-track {background: #000000;}
+        html.dark ::-webkit-scrollbar-thumb {
+          background: #30353b;
+          border-color: #000000;
+        }
+        html.dark ::-webkit-scrollbar-thumb:hover {background: #4b5563;}
+`}</style>
 
       {/* =====================================================
           HEADER
@@ -25532,7 +26495,7 @@ const handleSaveAccountProfile = async () => {
         ==================================================== */}
 
         <main
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 md:p-5 min-w-0"
+          className="qrpass-main flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden p-3 md:p-5"
           style={{ overflowAnchor: "none" }}
           onClick={() => {
             setNotificationOpen(false);
@@ -25639,7 +26602,7 @@ const handleSaveAccountProfile = async () => {
                     }
 
                     const response = await fetch(
-                      `${API_URL}/announcements/${announcementId}/view`,
+                      `http://localhost:8000/api/announcements/${announcementId}/view`,
                       {
                         method: "PUT",
                         headers: {

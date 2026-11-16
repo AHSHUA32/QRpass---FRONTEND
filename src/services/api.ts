@@ -380,6 +380,42 @@ export async function createItem(item: {
 
 }
 
+export async function deleteRegisteredItem(
+  id: number
+) {
+  const token =
+    localStorage.getItem(
+      "token"
+    );
+
+  const response =
+    await qrFetch(
+      `${API_URL}/items/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Accept:
+            "application/json",
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to delete permit."
+    );
+  }
+
+  return data;
+}
+
+
 export async function getPendingItems() {
 
   const token = localStorage.getItem("token");
@@ -786,54 +822,55 @@ export async function createSecurityIncident(data: {
   return responseData;
 }
 
-export async function resolveSecurityIncident(id: number) {
-
+export async function resolveSecurityIncident(
+  id: number,
+  resolutionType: string,
+  resolutionDetails: string
+) {
   const token = localStorage.getItem("token");
 
-
-
   const response = await fetch(
-
     `${API_URL}/security-incidents/${id}/resolve`,
-
     {
-
       method: "PUT",
-
       headers: {
-
         Accept: "application/json",
-
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-
       },
-
+      body: JSON.stringify({
+        resolution_type: resolutionType,
+        resolution_details: resolutionDetails,
+      }),
     }
-
   );
-
-
 
   const data = await response.json();
 
-
-
   if (!response.ok) {
+    if (data.errors) {
+      const firstError = Object.values(
+        data.errors
+      )[0];
+
+      if (
+        Array.isArray(firstError) &&
+        firstError.length > 0
+      ) {
+        throw new Error(
+          String(firstError[0])
+        );
+      }
+    }
 
     throw new Error(
-
-      data.message || "Failed to resolve security incident."
-
+      data.message ||
+        "Failed to resolve security incident."
     );
-
   }
 
-
-
   return data;
-
 }
-
 
 
 export async function getLostFoundItems() {
@@ -1859,149 +1896,192 @@ export async function logout() {
 
 
 export async function createLostFoundItem(data: {
-
   report_type: "found" | "lost";
 
-
-
   // Found report
-
   found_by_identifier?: string;
-
   location_found?: string;
-
   date_found?: string;
 
-
-
   // Lost report
-
   lost_by_identifier?: string;
-
   location_lost?: string;
-
   date_lost?: string;
 
-
-
   // Shared item details
-
   item_name: string;
-
   category?: string;
-
   brand_model?: string;
-
   color?: string;
-
   description?: string;
 
+  // Optional photo
+  photo?: File | null;
 }) {
+  const token = localStorage.getItem("token");
 
-  const token =
+  const formData = new FormData();
 
-    localStorage.getItem("token");
-
-
-
-  const response = await fetch(
-
-    `${API_URL}/lost-found`,
-
-    {
-
-      method: "POST",
-
-
-
-      headers: {
-
-        Accept: "application/json",
-
-        "Content-Type":
-
-          "application/json",
-
-        Authorization:
-
-          `Bearer ${token}`,
-
-      },
-
-
-
-      body: JSON.stringify(data),
-
-    }
-
+  formData.append(
+    "report_type",
+    data.report_type
   );
 
+  formData.append(
+    "item_name",
+    data.item_name
+  );
 
-
-  const result =
-
-    await response.json();
-
-
-
-  if (!response.ok) {
-
-    if (result.errors) {
-
-      const firstError =
-
-        Object.values(
-
-          result.errors
-
-        )[0];
-
-
-
-      if (
-
-        Array.isArray(
-
-          firstError
-
-        ) &&
-
-        firstError.length > 0
-
-      ) {
-
-        throw new Error(
-
-          String(
-
-            firstError[0]
-
-          )
-
-        );
-
-      }
-
-    }
-
-
-
-    throw new Error(
-
-      result.message ||
-
-        "Failed to save Lost & Found report."
-
+  if (data.category) {
+    formData.append(
+      "category",
+      data.category
     );
-
   }
 
+  if (data.brand_model) {
+    formData.append(
+      "brand_model",
+      data.brand_model
+    );
+  }
 
+  if (data.color) {
+    formData.append(
+      "color",
+      data.color
+    );
+  }
+
+  if (data.description) {
+    formData.append(
+      "description",
+      data.description
+    );
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | FOUND REPORT
+  |--------------------------------------------------------------------------
+  */
+
+  if (
+    data.report_type === "found"
+  ) {
+    if (
+      data.found_by_identifier
+    ) {
+      formData.append(
+        "found_by_identifier",
+        data.found_by_identifier
+      );
+    }
+
+    if (data.location_found) {
+      formData.append(
+        "location_found",
+        data.location_found
+      );
+    }
+
+    if (data.date_found) {
+      formData.append(
+        "date_found",
+        data.date_found
+      );
+    }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOST REPORT
+  |--------------------------------------------------------------------------
+  */
+
+  if (
+    data.report_type === "lost"
+  ) {
+    if (
+      data.lost_by_identifier
+    ) {
+      formData.append(
+        "lost_by_identifier",
+        data.lost_by_identifier
+      );
+    }
+
+    if (data.location_lost) {
+      formData.append(
+        "location_lost",
+        data.location_lost
+      );
+    }
+
+    if (data.date_lost) {
+      formData.append(
+        "date_lost",
+        data.date_lost
+      );
+    }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | PHOTO
+  |--------------------------------------------------------------------------
+  */
+
+  if (data.photo) {
+    formData.append(
+      "photo",
+      data.photo
+    );
+  }
+
+  const response = await fetch(
+    `${API_URL}/lost-found`,
+    {
+      method: "POST",
+
+      headers: {
+        Accept: "application/json",
+        Authorization:
+          `Bearer ${token}`,
+      },
+
+      body: formData,
+    }
+  );
+
+  const result =
+    await response.json();
+
+  if (!response.ok) {
+    if (result.errors) {
+      const firstError =
+        Object.values(
+          result.errors
+        )[0];
+
+      if (
+        Array.isArray(firstError) &&
+        firstError.length > 0
+      ) {
+        throw new Error(
+          String(firstError[0])
+        );
+      }
+    }
+
+    throw new Error(
+      result.message ||
+        "Failed to save Lost & Found report."
+    );
+  }
 
   return result;
-
 }
-
 
 
 export async function updateLostFoundItem(
