@@ -5347,14 +5347,14 @@ function SecurityScanVerify() {
   }, []);
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 space-y-5">
       <PageHeader
         title="Scan & Verify"
         subtitle="Scan an item's QR code or manually enter the QR ID or serial number."
       />
 
       {/* SCANNER */}
-      <div className="bg-card rounded-lg border border-[#cfd8e6] p-5 shadow-sm">
+      <div className="w-full min-w-0 rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
         <div className="flex flex-col items-center gap-4">
           {/* GATE SELECTION */}
           <div className="w-full max-w-md">
@@ -5367,7 +5367,7 @@ function SecurityScanVerify() {
               onChange={(e) =>
                 setGate(e.target.value)
               }
-              className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
               <option value="Gate 1">
                 Gate 1
@@ -5391,13 +5391,13 @@ function SecurityScanVerify() {
           <div className="w-full max-w-md">
             <div
               id="qr-reader"
-              className="w-full"
+              className="w-full min-w-0 max-w-full overflow-hidden rounded-xl"
             />
           </div>
 
           {/* MANUAL INPUT */}
-          <div className="w-full max-w-sm flex gap-2">
-            <div className="relative flex-1">
+          <div className="flex w-full max-w-md min-w-0 flex-col gap-2 sm:flex-row">
+            <div className="relative min-w-0 flex-1">
               <QrCode
                 size={14}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
@@ -5414,14 +5414,14 @@ function SecurityScanVerify() {
                   }
                 }}
                 placeholder="QR ID or serial number..."
-                className="w-full pl-8 pr-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                className="h-11 w-full min-w-0 rounded-xl border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
               />
             </div>
 
             <button
               onClick={doScan}
               disabled={verifying}
-              className="bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+              className="h-11 w-full shrink-0 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 sm:w-auto"
             >
               {verifying
                 ? "Verifying..."
@@ -5431,7 +5431,7 @@ function SecurityScanVerify() {
 
           {/* VERIFICATION ERROR */}
           {verifyError && (
-            <div className="w-full max-w-md bg-red-50 border border-red-200 text-red-700 rounded-md p-3">
+            <div className="w-full max-w-md rounded-xl border border-red-200 bg-red-50 p-3 text-red-700">
               <div className="flex items-start gap-2">
                 <AlertCircle
                   size={17}
@@ -5455,7 +5455,7 @@ function SecurityScanVerify() {
           {pendingIncident && (
             <form
               onSubmit={submitSecurityIncident}
-              className="w-full max-w-2xl bg-orange-50 border-2 border-orange-300 rounded-lg p-4"
+              className="w-full min-w-0 max-w-2xl rounded-xl border border-orange-300 bg-orange-50 p-4 sm:p-5"
             >
               <div className="flex items-start gap-3 mb-4">
                 <AlertTriangle
@@ -5482,7 +5482,7 @@ function SecurityScanVerify() {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {/* ITEM NAME */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-gray-800 mb-1">
@@ -5650,7 +5650,7 @@ function SecurityScanVerify() {
                     setSameAsOwner(false);
                   }}
                   disabled={savingIncident}
-                  className="px-4 py-2 text-xs font-semibold border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  className="h-10 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -5658,7 +5658,7 @@ function SecurityScanVerify() {
                 <button
                   type="submit"
                   disabled={savingIncident}
-                  className="px-4 py-2 text-xs font-semibold rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                  className="h-10 rounded-xl bg-red-600 px-4 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                 >
                   {savingIncident
                     ? "Saving Flagged Item..."
@@ -5670,7 +5670,7 @@ function SecurityScanVerify() {
 
           {/* FLAGGED INCIDENT */}
           {incidentMessage && (
-            <div className="w-full max-w-md bg-red-50 border-2 border-red-300 rounded-md p-4">
+            <div className="w-full max-w-md rounded-xl border border-red-300 bg-red-50 p-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle
                   size={20}
@@ -5700,14 +5700,14 @@ function SecurityScanVerify() {
 
       {/* VERIFIED ITEM */}
       {scanResult && (
-        <div className="bg-card rounded-lg border-2 border-green-400 p-5 shadow-sm">
-          <div className="flex items-start gap-4">
+        <div className="w-full min-w-0 rounded-xl border border-emerald-300 bg-card p-4 shadow-sm sm:p-6">
+          <div className="flex min-w-0 flex-col items-center gap-4 sm:flex-row sm:items-start">
             <QRCodeDisplay
               value={scanResult.qr_code}
               size={90}
             />
 
-            <div className="flex-1">
+            <div className="w-full min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle
                   size={18}
@@ -5720,7 +5720,7 @@ function SecurityScanVerify() {
               </div>
 
               {/* ITEM INFORMATION */}
-              <div className="grid md:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+              <div className="grid grid-cols-1 gap-x-6 gap-y-3 text-xs sm:grid-cols-2">
                 <div>
                   <span className="text-muted-foreground">
                     Item:{" "}
@@ -5838,13 +5838,13 @@ function SecurityScanVerify() {
                   Entry / Exit Log
                 </p>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                   <button
                     onClick={() =>
                       handleLog("IN")
                     }
                     disabled={logging}
-                    className="text-xs bg-green-600 text-white px-5 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+                    className="h-10 w-full rounded-xl bg-green-600 px-5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50 sm:w-auto"
                   >
                     {logging
                       ? "Saving..."
@@ -5856,7 +5856,7 @@ function SecurityScanVerify() {
                       handleLog("OUT")
                     }
                     disabled={logging}
-                    className="text-xs bg-blue-600 text-white px-5 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+                    className="h-10 w-full rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50 sm:w-auto"
                   >
                     {logging
                       ? "Saving..."
@@ -5883,8 +5883,8 @@ function SecurityScanVerify() {
           </button>
         }
       >
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="w-full max-w-full overflow-x-auto overscroll-x-contain rounded-lg border border-border">
+          <table className="w-full min-w-[760px]">
             <thead>
               <tr className="bg-[#fafbfc]">
                 {[
@@ -6701,7 +6701,7 @@ const resolvedIncidents =
                       incident
                     )
                   }
-                  className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-400/30 dark:bg-blue-500/15 dark:text-blue-200 dark:hover:bg-blue-500/25"
+                  className="inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-border bg-card px-3 text-xs font-semibold text-primary transition-colors hover:bg-muted"
                 >
                   <Eye size={13} />
                   View
@@ -6715,7 +6715,7 @@ const resolvedIncidents =
                         incident
                       )
                     }
-                    className="rounded-md border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 dark:border-emerald-400/20 dark:hover:bg-emerald-500"
+                    className="h-9 whitespace-nowrap rounded-xl border border-emerald-600 bg-emerald-600 px-3 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
                   >
                     Resolve
                   </button>
@@ -6729,25 +6729,25 @@ const resolvedIncidents =
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 space-y-5 sm:space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-foreground">
             Entry / Exit Log
           </h1>
 
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             Monitor verified item scans and security
             incidents.
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
           <button
             onClick={loadData}
             disabled={loading}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+            className="h-10 w-full rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-50 sm:w-auto"
           >
             {loading
               ? "Refreshing..."
@@ -6756,7 +6756,7 @@ const resolvedIncidents =
 
           <button
             onClick={exportCSV}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700"
+            className="h-10 w-full rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:w-auto"
           >
             Export CSV
           </button>
@@ -6764,61 +6764,61 @@ const resolvedIncidents =
       </div>
 
       {/* SUMMARY */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4 xl:gap-4">
+        <div className="min-w-0 rounded-xl border border-border bg-card p-3 shadow-sm sm:p-5">
           <p className="text-sm text-gray-500">
             Scanned Today
           </p>
 
-          <p className="text-3xl font-bold text-gray-900 mt-2">
+          <p className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">
             {scannedToday}
           </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="min-w-0 rounded-xl border border-border bg-card p-3 shadow-sm sm:p-5">
           <p className="text-sm text-gray-500">
             Verified
           </p>
 
-          <p className="text-3xl font-bold text-green-600 mt-2">
+          <p className="mt-2 text-2xl font-bold text-green-600 sm:text-3xl">
             {verifiedCount}
           </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="min-w-0 rounded-xl border border-border bg-card p-3 shadow-sm sm:p-5">
           <p className="text-sm text-gray-500">
             Flagged
           </p>
 
-          <p className="text-3xl font-bold text-red-600 mt-2">
+          <p className="mt-2 text-2xl font-bold text-red-600 sm:text-3xl">
             {flaggedCount}
           </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="min-w-0 rounded-xl border border-border bg-card p-3 shadow-sm sm:p-5">
           <p className="text-sm text-gray-500">
             Unique Students
           </p>
 
-          <p className="text-3xl font-bold text-blue-600 mt-2">
+          <p className="mt-2 text-2xl font-bold text-primary sm:text-3xl">
             {uniqueStudents}
           </p>
         </div>
       </div>
 
       {/* SUCCESSFUL ENTRY / EXIT */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="px-5 py-4 border-b border-gray-200">
           <h2 className="text-lg font-bold text-gray-900">
             Entry / Exit Records
           </h2>
 
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             Successful QR verification records.
           </p>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="w-full max-w-full overflow-x-auto overscroll-x-contain">
           <table className="w-full min-w-[1050px]">
             <thead className="bg-gray-50">
               <tr>
@@ -6951,10 +6951,10 @@ const resolvedIncidents =
           FLAGGED ITEMS
       ========================================================= */}
 
-      <div className="overflow-hidden rounded-xl border border-red-200 bg-white shadow-sm dark:border-[#7c3b49] dark:bg-[#351820]">
+      <div className="w-full min-w-0 overflow-hidden rounded-xl border border-red-200 bg-card shadow-sm dark:border-red-700/40">
         <div className="border-b border-red-200 bg-red-50 px-5 py-4 dark:border-[#7c3b49] dark:bg-[#421d25]">
-          <div className="flex items-center justify-between gap-3">
-            <div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <h2 className="text-lg font-bold text-red-800 dark:text-red-200">
                 Flagged / Unregistered Items
               </h2>
@@ -6970,7 +6970,7 @@ const resolvedIncidents =
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="w-full max-w-full overflow-x-auto overscroll-x-contain">
           <table className="w-full min-w-[1450px]">
             <thead className="bg-red-50 dark:bg-[#122642]">
               <tr>
@@ -7013,10 +7013,10 @@ const resolvedIncidents =
           RESOLVED ITEMS
       ========================================================= */}
 
-      <div className="overflow-hidden rounded-xl border border-blue-200 bg-white shadow-sm dark:border-[#28466f] dark:bg-[#0e1f38]">
+      <div className="w-full min-w-0 overflow-hidden rounded-xl border border-blue-200 bg-card shadow-sm dark:border-blue-700/40">
         <div className="border-b border-blue-200 bg-blue-50 px-5 py-4 dark:border-[#28466f] dark:bg-[#10294a]">
-          <div className="flex items-center justify-between gap-3">
-            <div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <h2 className="text-lg font-bold text-blue-900 dark:text-blue-100">
                 Resolved Items
               </h2>
@@ -7032,7 +7032,7 @@ const resolvedIncidents =
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="w-full max-w-full overflow-x-auto overscroll-x-contain">
           <table className="w-full min-w-[1450px]">
             <thead className="bg-blue-50 dark:bg-[#132c4c]">
               <tr>
@@ -7077,7 +7077,7 @@ const resolvedIncidents =
       {selectedIncident && (
         <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/70 p-4">
           <div className="flex min-h-full items-center justify-center">
-            <div className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-[#29415f] dark:bg-[#101f36]">
+            <div className="flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
 
               {/* MODAL HEADER */}
               <div
@@ -7478,7 +7478,7 @@ const resolvedIncidents =
       {/* RESOLVE INCIDENT MODAL */}
       {resolvingIncident && (
         <div
-          className="fixed inset-0 z-[10000] bg-black/55 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[10000] flex items-start justify-center overflow-y-auto bg-black/55 p-3 sm:items-center sm:p-4"
           onClick={() => {
             if (!savingResolution) {
               setResolvingIncident(null);
@@ -7493,7 +7493,7 @@ const resolvedIncidents =
             onClick={(event) =>
               event.stopPropagation()
             }
-            className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+            className="my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-lg flex-col overflow-y-auto rounded-2xl bg-card shadow-2xl sm:max-h-[calc(100dvh-2rem)]"
           >
             <div className="flex items-start justify-between gap-4 border-b border-green-200 bg-green-50 px-5 py-4">
               <div className="flex gap-3">
@@ -7685,7 +7685,7 @@ const resolvedIncidents =
               )}
             </div>
 
-            <div className="flex justify-end gap-2 border-t border-gray-200 bg-gray-50 px-5 py-4">
+            <div className="flex flex-wrap justify-end gap-2 border-t border-border bg-muted/30 px-4 py-4 sm:px-5">
               <button
                 type="button"
                 disabled={savingResolution}
@@ -8628,6 +8628,14 @@ function SecurityReports() {
         currentWeekLabel,
       format: "PDF",
     },
+
+    {
+      name:
+        "Monthly Item Registration Summary",
+      period:
+        currentMonth,
+      format: "PDF",
+    },
   ];
 
   // =========================================================
@@ -8635,7 +8643,7 @@ function SecurityReports() {
   // =========================================================
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 space-y-5">
       <PageHeader
         title="Reports"
         subtitle="Security inspection and QR verification reports."
@@ -8665,7 +8673,7 @@ function SecurityReports() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label="Inspections Done"
           value={
@@ -8743,7 +8751,7 @@ function SecurityReports() {
                 key={
                   report.name
                 }
-                className="flex items-center justify-between px-4 py-3 hover:bg-[#eef2fc] transition-colors"
+                className="flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <p className="text-sm text-foreground font-medium">
@@ -8767,7 +8775,7 @@ function SecurityReports() {
                     )
                   }
                   disabled={loading}
-                  className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-primary hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:w-32"
                 >
                   <Download
                     size={13}
@@ -8821,6 +8829,487 @@ function SecurityLostFound() {
 
   const [reportMode, setReportMode] =
     useState<"found" | "lost">("found");
+
+  // Mirror the five category cards shown in Student Register Item.
+  type CSUReportGroupId = "computer" | "highvalue" | "musical" | "sports" | "other";
+  const [selectedReportGroup, setSelectedReportGroup] =
+    useState<CSUReportGroupId | null>(null);
+
+  const reportCategories: {
+    id: CSUReportGroupId;
+    name: string;
+    description: string;
+    icon: React.ReactNode;
+  }[] = [
+    {
+      id: "computer",
+      name: "Computer Equipment",
+      description: "Laptops, desktop computers, and similar computer equipment.",
+      icon: <Monitor size={18} />,
+    },
+    {
+      id: "highvalue",
+      name: "High-Value Electronics",
+      description: "DSLR cameras, projectors, printers, and similar electronics.",
+      icon: <Camera size={18} />,
+    },
+    {
+      id: "musical",
+      name: "Musical Instrument",
+      description: "Guitars, keyboards, and other musical instruments.",
+      icon: <Music2 size={18} />,
+    },
+    {
+      id: "sports",
+      name: "Sports Equipment",
+      description: "Balls, rackets, training gear, and other sports equipment.",
+      icon: <Globe2 size={18} />,
+    },
+    {
+      id: "other",
+      name: "Other Equipment",
+      description: "Equipment that does not belong to the other registration groups, including personal items.",
+      icon: <Package size={18} />,
+    },
+  ];
+
+  const activeReportCategory =
+    reportCategories.find((c) => c.id === selectedReportGroup) ?? null;
+
+  function chooseReportCategory(group: CSUReportGroupId) {
+    const category = reportCategories.find((c) => c.id === group);
+    if (!category) return;
+    setSelectedReportGroup(group);
+    setForm((current) => ({
+      ...current,
+      item_name: "",
+      category: category.name,
+      brand_model: "",
+      color: "",
+      description: "",
+    }));
+    setItemSpecs({ quantity: "1" });
+    setError("");
+    setSuccess("");
+  }
+
+  // Student Registration fields and dropdowns, with the same category-specific layout.
+  // Finder/owner, location, dates and photo remain managed by the CSU report form.
+  function renderStudentStyleReportFields() {
+    const selectedGroup = selectedReportGroup;
+    const values: Record<string, string> = {
+      ...itemSpecs,
+      item_name: form.item_name,
+      brand_model: form.brand_model,
+      color: form.color,
+      quantity: itemSpecs.quantity ?? "1",
+    };
+
+    function updateField(field: string, value: string) {
+      if (field === "item_name" || field === "brand_model" || field === "color") {
+        setForm((current) => ({ ...current, [field]: value }));
+      } else {
+        setItemSpecs((current) => ({ ...current, [field]: value }));
+      }
+    }
+
+    return (
+      <>
+            {/* COMPUTER EQUIPMENT */}
+            {selectedGroup ===
+              "computer" && (
+              <>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <RegistrationDropdown
+  label="Item Name"
+  field="item_name"
+  value={values.item_name}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+options={["Laptop"]}
+/>
+
+                  <RegistrationDropdown
+  label="Brand"
+  field="brand_model"
+  value={values.brand_model}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+options={["Acer", "ASUS", "Dell", "HP", "Lenovo", "Apple", "MSI"]}
+/>
+
+                  <RegistrationField
+  label="Serial Number"
+  field="serial_number"
+  value={values.serial_number}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="e.g. SN-00000"
+/>
+
+                  <RegistrationDropdown
+  label="Color"
+  field="color"
+  value={values.color}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  options={COMMON_ITEM_COLORS}
+/>
+
+                  <RegistrationField
+  label="Purpose / Intended Use"
+  field="purpose"
+  value={values.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="e.g. Academic use, thesis documentation"
+/>
+
+                  <RegistrationField
+  label="Accessories Included"
+  field="accessories_included"
+  value={values.accessories_included}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="e.g. Charger, mouse, laptop bag"
+  optional
+/>
+                </div>
+
+
+
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                </div>
+              </>
+            )}
+
+            {/* HIGH-VALUE ELECTRONICS */}
+            {selectedGroup ===
+              "highvalue" && (
+              <>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <RegistrationDropdown
+  label="Item Name"
+  field="item_name"
+  value={values.item_name}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+options={["Desktop Computer", "Smart TV", "Projector", "Digital Camera", "Drone", "Professional Video Camera", "3D Printer", "Graphics Tablet", "Monitor"]}
+/>
+
+                  <RegistrationDropdown
+  label="Brand & Model"
+  field="brand_model"
+  value={values.brand_model}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+options={["Samsung", "LG", "Sony", "ASUS", "Acer", "Lenovo", "HP", "Dell", "Canon", "Nikon", "Epson", "BenQ", "DJI", "Apple"]}
+/>
+
+                  <RegistrationField
+  label="Serial Number"
+  field="serial_number"
+  value={values.serial_number}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="e.g. SN-00000"
+/>
+
+                  <RegistrationDropdown
+  label="Color"
+  field="color"
+  value={values.color}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  options={COMMON_ITEM_COLORS}
+/>
+
+                  <RegistrationField
+  label="Purpose / Intended Use"
+  field="purpose"
+  value={values.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="e.g. Classroom presentation"
+/>
+
+                  <RegistrationField
+  label="Accessories Included"
+  field="accessories_included"
+  value={values.accessories_included}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="e.g. Power cable, remote, bag"
+  optional
+/>
+                </div>
+
+                
+
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                </div>
+              </>
+            )}
+
+            {/* MUSICAL INSTRUMENT */}
+            {selectedGroup ===
+              "musical" && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <RegistrationDropdown
+  label="Item Name"
+  field="item_name"
+  value={values.item_name}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+options={["Acoustic Guitar", "Electric Guitar", "Bass Guitar", "Keyboard", "Drum Set", "Snare Drum", "Violin", "Ukelele", "Flute"]}
+/>
+
+                <RegistrationDropdown
+  label="Brand"
+  field="brand"
+  value={values.brand}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+options={["Fender", "Casio", "Roland", "Gibson", "Ibanez", "Korg", "Pearl", "Suzuki"]}
+/>
+
+                <RegistrationField
+  label="Model No."
+  field="model_no"
+  value={values.model_no}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="e.g. F310"
+/>
+
+                <RegistrationField
+  label="Serial Number"
+  field="serial_number"
+  value={values.serial_number}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="Leave blank if none"
+  optional
+/>
+
+                <RegistrationField
+  label="Purpose / Intended Use"
+  field="purpose"
+  value={values.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="e.g. Band rehearsal"
+/>
+
+                <RegistrationField
+  label="Accessories Included"
+  field="accessories_included"
+  value={values.accessories_included}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="e.g. Case, strap, picks"
+  optional
+/>
+
+                <RegistrationDropdown
+  label="Material / Body"
+  field="material_body"
+  value={values.material_body}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+options={["Mahogany", "Spruce", "Maple", "Rosewood", "Metal", "Aluminum", "Steel"]}
+/>
+
+                <RegistrationField
+  label="Size"
+  field="size"
+  value={values.size}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="e.g. Full size, 4/4"
+  optional
+/>
+              </div>
+            )}
+
+            {/* SPORTS EQUIPMENT */}
+            {selectedGroup ===
+              "sports" && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <RegistrationDropdown
+  label="Equipment Type"
+  field="equipment_type"
+  value={values.equipment_type}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+options={["Basketball", "Volleyball", "Soccer Ball", "Badminton Racket", "Speak Takraw Ball", "Boxing Gloves"]}
+/>
+
+                <RegistrationDropdown
+  label="Brand"
+  field="brand"
+  value={values.brand}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  optional
+options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "Puma"]}
+/>
+
+                <RegistrationQuantityField
+  value={values.quantity}
+  onChange={(value) =>
+    updateField(
+      "quantity",
+      value
+    )
+  }
+/>
+
+                <div className="md:col-span-2">
+                  <RegistrationField
+  label="Purpose / Intended Use"
+  field="purpose"
+  value={values.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="e.g. Varsity practice"
+/>
+                </div>
+              </div>
+            )}
+
+            {/* OTHER EQUIPMENT */}
+            {selectedGroup ===
+              "other" && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <RegistrationField
+  label="Item/s with Complete Description"
+  field="complete_description"
+  value={values.complete_description}
+  onChange={(field, value) =>
+    updateField(
+      field,
+      value
+    )
+  }
+  placeholder="e.g. 2x extension cords, 1x megaphone"
+/>
+                </div>
+
+                <RegistrationQuantityField
+  value={values.quantity}
+  onChange={(value) =>
+    updateField(
+      "quantity",
+      value
+    )
+  }
+/>
+
+
+              </div>
+            )}
+
+
+        <div className="mt-5 rounded-lg border border-[#dce3ee] border-l-4 border-l-[#64748b] bg-[#f8fafc] p-3 text-xs leading-relaxed text-[#475569]">
+          <strong>Note:</strong> The fields match Student Registration. For lost or found items, enter all information known to the reporting person. Leave unknown specifications blank rather than guessing. CSU still requires the reporting ID, location and date.
+        </div>
+      </>
+    );
+  }
 
   const [submitting, setSubmitting] =
     useState(false);
@@ -8886,6 +9375,86 @@ function SecurityLostFound() {
     color: "",
     description: "",
   });
+
+  // Additional item-identification fields mirror Student Item Registration.
+  // The Lost & Found API currently accepts these details through description.
+  const [itemSpecs, setItemSpecs] = useState<Record<string, string>>({
+    quantity: "1",
+  });
+
+  const commonSpecFields = [
+    { key: "serial_number", label: "Serial Number" },
+    { key: "quantity", label: "Quantity" },
+    { key: "purpose", label: "Purpose / Reason for Bringing" },
+    { key: "accessories_included", label: "Accessories Included" },
+  ];
+
+  const specificSpecFields: Record<string, { key: string; label: string }[]> = {
+    "Computer Equipment": [
+      { key: "computer_type", label: "Computer / Laptop Type" },
+      { key: "processor", label: "Processor" },
+      { key: "motherboard", label: "Motherboard" },
+      { key: "memory", label: "Memory / RAM" },
+      { key: "hard_drive", label: "Hard Drive / Storage" },
+      { key: "monitor", label: "Monitor" },
+      { key: "casing", label: "Casing" },
+      { key: "cd_dvd_rom", label: "CD / DVD ROM" },
+      { key: "operating_system", label: "Operating System" },
+    ],
+    "High-Value Electronics": [
+      { key: "unit_type", label: "Unit Type" },
+      { key: "power_source", label: "Power Source / Cable" },
+      { key: "lens_attachment", label: "Lens / Attachment Included" },
+    ],
+    "Mobile / Personal Electronics": [
+      { key: "storage_capacity", label: "Storage / Capacity" },
+    ],
+    "Musical Instrument": [
+      { key: "brand", label: "Brand" },
+      { key: "model_no", label: "Model No." },
+      { key: "material_body", label: "Material / Body" },
+      { key: "size", label: "Size" },
+    ],
+    "Sports Equipment": [
+      { key: "equipment_type", label: "Equipment Type" },
+      { key: "brand", label: "Brand" },
+      { key: "size", label: "Size" },
+    ],
+    "Other Equipment": [
+      { key: "complete_description", label: "Item/s with Complete Description" },
+    ],
+    "Laptop": [
+      { key: "computer_type", label: "Computer / Laptop Type" },
+      { key: "processor", label: "Processor" },
+      { key: "memory", label: "Memory / RAM" },
+      { key: "hard_drive", label: "Hard Drive / Storage" },
+      { key: "operating_system", label: "Operating System" },
+    ],
+    "Mobile Phone": [
+      { key: "storage_capacity", label: "Storage / Capacity" },
+    ],
+    "Tablet": [
+      { key: "storage_capacity", label: "Storage / Capacity" },
+    ],
+    "Other": [
+      { key: "complete_description", label: "Item/s with Complete Description" },
+    ],
+  };
+
+  const currentExtraFields = specificSpecFields[form.category] ?? [];
+
+  function buildLostFoundDescription() {
+    const details = [...commonSpecFields, ...currentExtraFields]
+      .map(({ key, label }) => {
+        const value = String(itemSpecs[key] ?? "").trim();
+        return value && value !== "__OTHER__" ? `${label}: ${value}` : "";
+      })
+      .filter(Boolean);
+
+    return [form.description.trim(), details.join("\n")]
+      .filter(Boolean)
+      .join("\n\n");
+  }
 
   async function loadItems() {
     try {
@@ -9063,6 +9632,10 @@ function SecurityLostFound() {
   ) {
     const { name, value } = e.target;
 
+    if (name === "category") {
+      setItemSpecs({ quantity: "1" });
+    }
+
     setForm((current) => ({
       ...current,
       [name]: value,
@@ -9180,6 +9753,8 @@ function SecurityLostFound() {
       description: "",
     });
 
+    setItemSpecs({ quantity: "1" });
+    setSelectedReportGroup(null);
     clearPhoto();
   }
 
@@ -9191,8 +9766,47 @@ function SecurityLostFound() {
     setError("");
     setSuccess("");
 
-    if (!form.item_name.trim()) {
-      setEditError("Please enter the item name.");
+    const reportItemName =
+      selectedReportGroup === "sports"
+        ? String(itemSpecs.equipment_type ?? "").trim()
+        : selectedReportGroup === "other"
+        ? String(itemSpecs.complete_description ?? "").trim().slice(0, 255)
+        : form.item_name.trim();
+
+    // Student's Musical/Sports forms use Brand and Model fields rather than Brand / Model.
+    const reportBrandModel =
+      form.brand_model.trim() ||
+      [itemSpecs.brand, itemSpecs.model_no].filter(Boolean).join(" ").trim();
+
+    if (!selectedReportGroup) {
+      setError("Please choose an item category first.");
+      return;
+    }
+
+    if (!reportItemName || reportItemName === "__OTHER__") {
+      setError("Please complete the item name or equipment description.");
+      return;
+    }
+
+    if (!form.category.trim()) {
+      setError("Please select an item category.");
+      return;
+    }
+
+    const quantity = Number(itemSpecs.quantity ?? "1");
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 9999) {
+      setError("Quantity must be a whole number between 1 and 9999.");
+      return;
+    }
+
+    if (Object.values(itemSpecs).some((value) => value === "__OTHER__")) {
+      setError("Please specify a value for each selected Others option.");
+      return;
+    }
+
+    const itemDescription = buildLostFoundDescription();
+    if (itemDescription.length > 2000) {
+      setError("Item specifications and description must not exceed 2,000 characters combined.");
       return;
     }
 
@@ -9250,18 +9864,18 @@ function SecurityLostFound() {
           report_type: "found",
           found_by_identifier:
             form.found_by_identifier.trim(),
-          item_name: form.item_name.trim(),
+          item_name: reportItemName,
           category:
             form.category.trim() || undefined,
           brand_model:
-            form.brand_model.trim() || undefined,
+            reportBrandModel || undefined,
           color:
             form.color.trim() || undefined,
           location_found:
             form.location_found.trim(),
           date_found: form.date_found,
           description:
-            form.description.trim() || undefined,
+            itemDescription || undefined,
           photo: photoFile,
         });
 
@@ -9274,18 +9888,18 @@ function SecurityLostFound() {
           report_type: "lost",
           lost_by_identifier:
             form.lost_by_identifier.trim(),
-          item_name: form.item_name.trim(),
+          item_name: reportItemName,
           category:
             form.category.trim() || undefined,
           brand_model:
-            form.brand_model.trim() || undefined,
+            reportBrandModel || undefined,
           color:
             form.color.trim() || undefined,
           location_lost:
             form.location_lost.trim(),
           date_lost: form.date_lost,
           description:
-            form.description.trim() || undefined,
+            itemDescription || undefined,
           photo: photoFile,
         });
 
@@ -9855,7 +10469,7 @@ function SecurityLostFound() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 space-y-5">
       <PageHeader
         title="Lost & Found"
         subtitle="Manage found and lost item reports in one registry, credit finders, identify owners, and process recoveries."
@@ -9921,22 +10535,24 @@ function SecurityLostFound() {
           color="#2f5fd6"
         />
 
+        <div className="col-span-2 md:col-span-1">
         <StatCard
           label="Recovered"
           value={String(recoveredCount)}
           icon={<CheckCircle size={20} />}
           color="#2ecc71"
         />
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-b border-[#cfd8e6] pb-3">
+      <div className="grid grid-cols-2 gap-2 border-b border-border pb-3 sm:flex sm:flex-wrap">
         <button
           type="button"
           onClick={() => {
             setTab("registry");
             setError("");
           }}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+          className={`min-h-11 w-full rounded-xl px-3 py-2 text-xs font-semibold transition-colors sm:w-auto sm:px-4 sm:text-sm ${
             tab === "registry"
               ? "bg-primary text-primary-foreground"
               : "bg-muted text-muted-foreground hover:text-foreground"
@@ -9952,7 +10568,7 @@ function SecurityLostFound() {
             setError("");
             setSuccess("");
           }}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+          className={`min-h-11 w-full rounded-xl px-3 py-2 text-xs font-semibold transition-colors sm:w-auto sm:px-4 sm:text-sm ${
             tab === "report"
               ? "bg-primary text-primary-foreground"
               : "bg-muted text-muted-foreground hover:text-foreground"
@@ -9964,8 +10580,8 @@ function SecurityLostFound() {
 
       {tab === "registry" && (
         <div className="space-y-4">
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <div className="relative flex-1">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 flex-1">
               <Search
                 size={15}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
@@ -9976,7 +10592,7 @@ function SecurityLostFound() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search report, item, owner/finder, claimant, location..."
-                className="w-full rounded-lg border border-[#cfd8e6] bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className="h-11 w-full rounded-xl border border-border bg-card py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -9984,7 +10600,7 @@ function SecurityLostFound() {
               type="button"
               onClick={loadItems}
               disabled={loading}
-              className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-11 w-full rounded-xl border border-border bg-card px-4 text-sm font-semibold hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               {loading ? "Refreshing..." : "Refresh"}
             </button>
@@ -10035,7 +10651,7 @@ function SecurityLostFound() {
               return (
                 <div
                   key={item.id}
-                  className="rounded-lg border border-[#cfd8e6] bg-card shadow-sm"
+                  className="w-full min-w-0 rounded-xl border border-border bg-card shadow-sm"
                 >
                   <div className="p-4">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -10300,7 +10916,7 @@ function SecurityLostFound() {
                             <p className="text-xs font-medium text-muted-foreground">
                               Description
                             </p>
-                            <p className="mt-1 text-sm text-foreground">
+                            <p className="mt-1 whitespace-pre-wrap break-words text-sm text-foreground">
                               {item.description}
                             </p>
                           </div>
@@ -10375,8 +10991,11 @@ function SecurityLostFound() {
       )}
 
       {tab === "report" && (
-        <div className="rounded-lg border border-[#cfd8e6] bg-card shadow-sm">
-          <div className="border-b border-[#cfd8e6] px-4 py-4">
+        <div className="w-full min-w-0 rounded-xl border border-border bg-card shadow-sm">
+          {selectedReportGroup ? (
+            <>
+          <div className="flex flex-col gap-3 border-b border-[#cfd8e6] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
             <h3 className="font-semibold text-foreground">
               {reportMode === "found"
                 ? "Report Found Item"
@@ -10388,6 +11007,17 @@ function SecurityLostFound() {
                 ? "Use this form after a found item has been physically surrendered to the Security office."
                 : "Use this form when a student or employee reports an item as lost or missing."}
             </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedReportGroup(null);
+                setError("");
+              }}
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-[#cfd8e6] bg-white px-4 text-xs font-semibold text-primary hover:bg-[#eef2fc]"
+            >
+              Change Category
+            </button>
           </div>
 
           <form
@@ -10470,74 +11100,25 @@ function SecurityLostFound() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-foreground">
-                  Item Name *
-                </label>
-                <input
-                  type="text"
-                  name="item_name"
-                  value={form.item_name}
-                  onChange={handleFormChange}
-                  required
-                  placeholder="Example: Laptop"
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                />
+            {/* Same five category-specific forms and controls as Student Register Item. */}
+            <section className="overflow-hidden rounded-[14px] border border-[#dce3ee] bg-white">
+              <div className="flex items-center gap-3 border-b border-[#dce3ee] px-3 py-4 sm:px-5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#dce3ee] bg-[#f2f5fb] text-[#16224b]">
+                  {activeReportCategory?.icon}
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">
+                    {activeReportCategory?.name}
+                  </h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Item Identification &amp; Specifications
+                  </p>
+                </div>
               </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-medium text-foreground">
-                  Category
-                </label>
-                <select
-                  name="category"
-                  value={form.category}
-                  onChange={handleFormChange}
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="">Select category</option>
-                  <option value="Laptop">Laptop</option>
-                  <option value="Mobile Phone">Mobile Phone</option>
-                  <option value="Tablet">Tablet</option>
-                  <option value="Bag">Bag</option>
-                  <option value="Wallet">Wallet</option>
-                  <option value="ID / Card">ID / Card</option>
-                  <option value="Accessories">Accessories</option>
-                  <option value="Other">Other</option>
-                </select>
+              <div className="p-3 sm:p-5">
+                {renderStudentStyleReportFields()}
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-foreground">
-                  Brand / Model
-                </label>
-                <input
-                  type="text"
-                  name="brand_model"
-                  value={form.brand_model}
-                  onChange={handleFormChange}
-                  placeholder="Example: Acer Aspire 5"
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-medium text-foreground">
-                  Color
-                </label>
-                <input
-                  type="text"
-                  name="color"
-                  value={form.color}
-                  onChange={handleFormChange}
-                  placeholder="Example: Black"
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-            </div>
+            </section>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
@@ -10618,7 +11199,7 @@ function SecurityLostFound() {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <button
                   ref={photoUploadButtonRef}
                   type="button"
@@ -10792,12 +11373,83 @@ function SecurityLostFound() {
               </button>
             </div>
           </form>
+            </>
+          ) : (
+            <div className="space-y-5">
+              <div className="overflow-hidden rounded-xl border border-[#cfd8e6] bg-card">
+                <div className="border-b border-[#cfd8e6] px-5 py-4">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Select an Item Category
+                  </h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Choose the category that best matches the lost or found item.
+                  </p>
+                </div>
+                <div className="divide-y divide-[#dce3ee]">
+                  {reportCategories.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => chooseReportCategory(category.id)}
+                      className="group flex w-full min-w-0 items-center gap-3 px-3 py-4 text-left transition-colors hover:bg-[#eef2fc]/10 sm:gap-4 sm:px-5"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#d6dde8] bg-white text-[#1a3a7b]">
+                        {category.icon}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground">
+                          {category.name}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {category.description}
+                        </p>
+                      </div>
+                      <ChevronRight
+                        size={17}
+                        className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[#cfd8e6] bg-card p-5">
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    How Lost &amp; Found Reporting Works
+                  </h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Three simple steps for recording a lost or found item.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  {[
+                    ["1", "Choose Category", "Select the matching item category."],
+                    ["2", "Complete Details", "Enter known item specifications and the finder/owner information."],
+                    ["3", "Save the Report", "Security records the item and manages recovery or claims."],
+                  ].map(([number, title, description]) => (
+                    <div key={number} className="rounded-lg border border-[#dce3ee] bg-[#f8fafc] p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                          {number}
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-foreground">{title}</p>
+                          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {editingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[#cfd8e6] bg-card shadow-xl">
+          <div className="max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-border bg-card shadow-xl">
             <div className="flex items-start justify-between gap-4 border-b border-[#cfd8e6] px-5 py-4">
               <div>
                 <h3 className="font-semibold text-foreground">
@@ -10907,14 +11559,24 @@ function SecurityLostFound() {
                     className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="">Select category</option>
-                    <option value="Laptop">Laptop</option>
-                    <option value="Mobile Phone">Mobile Phone</option>
-                    <option value="Tablet">Tablet</option>
-                    <option value="Bag">Bag</option>
-                    <option value="Wallet">Wallet</option>
-                    <option value="ID / Card">ID / Card</option>
-                    <option value="Accessories">Accessories</option>
-                    <option value="Other">Other</option>
+                    <optgroup label="Student Registration Categories">
+                      <option value="Computer Equipment">Computer Equipment</option>
+                      <option value="High-Value Electronics">High-Value Electronics</option>
+                      <option value="Mobile / Personal Electronics">Mobile / Personal Electronics</option>
+                      <option value="Musical Instrument">Musical Instrument</option>
+                      <option value="Sports Equipment">Sports Equipment</option>
+                      <option value="Other Equipment">Other Equipment</option>
+                    </optgroup>
+                    <optgroup label="Common Lost & Found Items">
+                      <option value="Laptop">Laptop</option>
+                      <option value="Mobile Phone">Mobile Phone</option>
+                      <option value="Tablet">Tablet</option>
+                      <option value="Bag">Bag</option>
+                      <option value="Wallet">Wallet</option>
+                      <option value="ID / Card">ID / Card</option>
+                      <option value="Accessories">Accessories</option>
+                      <option value="Other">Other</option>
+                    </optgroup>
                   </select>
                 </div>
               </div>
@@ -11069,7 +11731,7 @@ function SecurityLostFound() {
 
       {recoveringItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-xl border border-[#cfd8e6] bg-card shadow-xl">
+          <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-xl border border-border bg-card shadow-xl">
             <div className="border-b border-[#cfd8e6] px-5 py-4">
               <h3 className="font-semibold text-foreground">
                 Record Lost Item Recovery
@@ -11189,6 +11851,7 @@ function SecurityLostFound() {
 // PCO PAGES
 // ══════════════════════════════════════════════════════════════════════════════
 // PCO pages reuse the Student search/sort/refresh layout on desktop and mobile.
+
 function PCOResponsiveToolbar({
   search,
   onSearchChange,
