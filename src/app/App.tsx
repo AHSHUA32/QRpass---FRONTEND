@@ -21719,8 +21719,9 @@ async function handleTwoFactorSubmit(
     <>
       <div className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-[#cfd8e6] shadow-sm">
         <div className="flex items-center gap-2.5">
-          <QRpassLogo size={90} showText />
+          {mode !== "login" && <QRpassLogo size={90} showText />}
 
+          {mode !== "login" && (
           <div>
             <p
               className="text-xs font-semibold text-primary"
@@ -21735,11 +21736,16 @@ async function handleTwoFactorSubmit(
               Campus Item Registration & Verification System
             </p>
           </div>
+          )}
         </div>
 
         <div className="text-xs text-muted-foreground">
-          V1.0
-          &nbsp;|&nbsp;
+          {mode !== "login" && (
+            <>
+              V1.0
+              &nbsp;|&nbsp;
+            </>
+          )}
 
           <button
             type="button"
@@ -22953,110 +22959,185 @@ async function handleTwoFactorSubmit(
     >
       {/* Keep the sign-in page fixed within a desktop viewport. Small screens can scroll. */}
       <style>{`
-        @media (min-width: 768px) and (min-height: 680px) {
+        /* QRPASS LOGIN LAYOUT CLEAN V11 - single source of truth */
+        .qrpass-login-viewport {
+          width: 100%;
+          min-height: 100dvh;
+          display: flex;
+          flex-direction: column;
+          box-sizing: border-box;
+        }
+        .qrpass-login-body {
+          width: 100%;
+          min-width: 0;
+          min-height: 0;
+          flex: 1 1 auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          background:
+            radial-gradient(ellipse at 15% 35%, rgba(53, 107, 213, 0.07), transparent 43%),
+            radial-gradient(ellipse at 87% 70%, rgba(67, 119, 219, 0.06), transparent 40%),
+            #f4f7fc;
+        }
+        .qrpass-login-card {
+          width: 100% !important;
+          max-width: 400px !important;
+          min-width: 0;
+          min-height: 0 !important;
+          height: auto !important;
+          flex: 0 0 auto;
+          overflow: hidden;
+          border-radius: 20px !important;
+          box-shadow: 0 18px 42px rgba(23, 55, 113, 0.11) !important;
+        }
+        .qrpass-login-card > .qrpass-login-card-content {
+          padding: 27px 29px 23px !important;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+        .qrpass-login-form {
+          display: flex;
+          flex-direction: column;
+          gap: 18px !important;
+          margin: 0;
+        }
+        .qrpass-login-form > * + * {
+          margin-top: 0 !important;
+        }
+        .qrpass-login-card-logo {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 0 -8px !important;
+        }
+        .qrpass-login-card-logo img {
+          width: 96px !important;
+          max-width: 100%;
+          height: auto !important;
+          object-fit: contain;
+        }
+        .qrpass-login-form > .qrpass-login-card-logo + div {
+          margin: 0 0 3px !important;
+          text-align: center;
+        }
+        .qrpass-login-form h2 {
+          font-size: 27px !important;
+          line-height: 1.2 !important;
+          font-weight: 700 !important;
+          letter-spacing: -0.025em;
+        }
+        .qrpass-login-form label { margin-bottom: 8px !important; }
+        .qrpass-login-form input[type="text"],
+        .qrpass-login-form input[type="password"] {
+          height: 50px !important;
+          font-size: 15px !important;
+          border-radius: 14px;
+        }
+        .qrpass-login-form button[type="submit"] {
+          height: 50px !important;
+          font-size: 16px !important;
+          border-radius: 14px;
+        }
+        .qrpass-login-card-content > div:last-child {
+          margin-top: 19px !important;
+          padding-top: 16px !important;
+        }
+        .qrpass-login-viewport > .flex.h-2 {
+          height: 5px !important;
+          background: linear-gradient(90deg, #173b7a, #3563c8, #7c9cf6) !important;
+        }
+        .qrpass-login-viewport > .flex.h-2 > div {
+          background: transparent !important;
+        }
+        /* Keep the desktop sign-in visible and centered at normal zoom. */
+        @media (min-width: 768px) and (min-height: 700px) {
           .qrpass-login-viewport {
             position: fixed;
             inset: 0;
-            width: 100%;
             height: 100dvh;
             min-height: 0;
             max-height: 100dvh;
             overflow: hidden;
-            box-sizing: border-box;
           }
-          .qrpass-login-viewport > .qrpass-login-body {
+          .qrpass-login-body {
             flex: 1 1 0;
-            min-height: 0;
-            overflow: hidden;
-            padding: 8px 16px;
-            gap: 0;
+            overflow-y: auto;
+            padding: 16px 24px;
           }
-          .qrpass-login-brand { margin-bottom: 10px; flex-shrink: 0; }
-          .qrpass-login-brand img { width: 76px !important; }
-          .qrpass-login-brand p { margin-top: 4px; font-size: 11px; line-height: 1.3; }
-          .qrpass-login-card { flex-shrink: 0; }
-          .qrpass-login-card-content { padding-top: 14px; padding-bottom: 14px; }
-          .qrpass-login-form { row-gap: 11px; }
-          .qrpass-login-form input[type="text"],
-          .qrpass-login-form input[type="password"] { height: 42px; }
-          .qrpass-login-form button[type="submit"] { height: 42px; }
-          .qrpass-login-card-content > div:last-child { margin-top: 10px; padding-top: 10px; }
-          .qrpass-login-footer { margin-top: 10px; flex-shrink: 0; }
+          .qrpass-login-card {
+            min-height: min(560px, calc(100dvh - 135px)) !important;
+          }
         }
-        @media (max-width: 767px), (max-height: 679px) {
-          .qrpass-login-body { justify-content: flex-start; }
+        /* At high zoom or short windows, prioritize usable inputs over hiding content. */
+        @media (min-width: 768px) and (max-height: 699px) {
+          .qrpass-login-viewport {
+            position: relative;
+            height: auto;
+            max-height: none;
+            min-height: 100dvh;
+            overflow: visible;
+          }
+          .qrpass-login-body { padding: 24px 20px; }
         }
-        /* Mobile login: fit the complete card into standard phone viewports. */
+        /* Mobile: leave comfortable spacing at both screen edges. */
         @media (max-width: 767px) {
           .qrpass-login-viewport {
-            width: 100%;
+            position: relative;
+            inset: auto;
+            height: auto;
             min-height: 100dvh;
+            max-height: none;
+            overflow: visible;
           }
           .qrpass-login-body {
-            padding: 10px 12px 12px;
-            justify-content: center;
+            min-height: 0;
+            padding: 22px clamp(18px, 6vw, 28px) 26px !important;
           }
-          .qrpass-login-brand { margin-bottom: 12px; flex-shrink: 0; }
-          .qrpass-login-brand img { width: 70px !important; }
-          .qrpass-login-brand p {
-            max-width: 300px;
-            margin-top: 5px;
-            font-size: 11px;
-            line-height: 1.3;
+          .qrpass-login-card {
+            width: 100% !important;
+            max-width: 370px !important;
+            min-height: 0 !important;
+            border-radius: 19px !important;
           }
-          .qrpass-login-card { max-width: 360px; flex-shrink: 0; }
-          .qrpass-login-card-content { padding: 15px 18px 16px; }
-          .qrpass-login-form { row-gap: 11px; }
-          .qrpass-login-form h2 { font-size: 23px; }
-          .qrpass-login-form > div:first-child p { font-size: 11px; line-height: 1.35; }
-          .qrpass-login-form label { margin-bottom: 5px; font-size: 11px; }
+          .qrpass-login-card > .qrpass-login-card-content {
+            padding: 22px 21px 20px !important;
+          }
+          .qrpass-login-form { gap: 15px !important; }
+          .qrpass-login-card-logo { margin-bottom: -6px !important; }
+          .qrpass-login-card-logo img { width: 90px !important; }
+          .qrpass-login-form h2 { font-size: 24px !important; }
           .qrpass-login-form input[type="text"],
-          .qrpass-login-form input[type="password"] { height: 42px; font-size: 13px; }
-          .qrpass-login-form button[type="submit"] { height: 42px; }
-          .qrpass-login-card-content > div:last-child { margin-top: 11px; padding-top: 11px; }
-          .qrpass-login-footer { margin-top: 10px; font-size: 10px; flex-shrink: 0; }
-        }
-        /* Lock scrolling only when a full-height mobile layout can actually fit. */
-        @media (max-width: 767px) and (min-height: 700px) {
-          .qrpass-login-viewport {
-            position: fixed;
-            inset: 0;
-            height: 100dvh;
-            min-height: 0;
-            max-height: 100dvh;
-            overflow: hidden;
-          }
-          .qrpass-login-body {
-            flex: 1 1 0;
-            min-height: 0;
-            overflow: auto;
+          .qrpass-login-form input[type="password"],
+          .qrpass-login-form button[type="submit"] { height: 47px !important; }
+          .qrpass-login-card-content > div:last-child {
+            margin-top: 16px !important;
+            padding-top: 13px !important;
           }
         }
-        /* Short phones, landscape, zoom and opened keyboards must keep inputs reachable. */
-        @media (max-width: 767px) and (max-height: 699px) {
-          .qrpass-login-viewport { position: relative; min-height: 100dvh; height: auto; overflow: visible; }
+        @media (max-width: 360px) {
+          .qrpass-login-body { padding-left: 16px !important; padding-right: 16px !important; }
+          .qrpass-login-card > .qrpass-login-card-content {
+            padding-left: 18px !important;
+            padding-right: 18px !important;
+          }
+          .qrpass-login-form { gap: 13px !important; }
+        }
+        @media (max-height: 610px) {
           .qrpass-login-body { justify-content: flex-start; }
         }
-      `}</style>
+`}</style>
       {TopBar}
 
       {NavBar}
 
-      <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-10 qrpass-login-body">
 
-        {/* QRPass LOGO */}
-        <div className="flex flex-col items-center mb-8 qrpass-login-brand">
-          <QRpassLogo
-            size={120}
-            showText
-          />
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-10 qrpass-login-body">
 
-          <p className="text-sm text-muted-foreground mt-3 text-center max-w-sm">
-            Enhancing Campus Security
-            Through QR-Based Item
-            Registration & Verification
-          </p>
-        </div>
+
 
         {/* LOGIN CARD */}
         <div
@@ -23070,6 +23151,11 @@ async function handleTwoFactorSubmit(
               onSubmit={handleLogin}
               className="space-y-5 qrpass-login-form"
             >
+              {/* QRPass logo inside the white login card */}
+              <div className="flex items-center justify-center qrpass-login-card-logo">
+                <QRpassLogo size={100} showText />
+              </div>
+
               {/* LOGIN HEADING */}
               <div className="mb-1 text-center">
                 <h2
@@ -23082,13 +23168,7 @@ async function handleTwoFactorSubmit(
                   Sign In
                 </h2>
 
-                <p className="mt-2 text-[14px] leading-5 text-[#66779b]">
-                  Use your institutional account to continue.
-                </p>
 
-                <p className="mt-0.5 text-[13px] leading-5 text-[#7a89a7]">
-                  Your account access level is identified automatically.
-                </p>
               </div>
 
               {/* USERNAME */}
@@ -23268,20 +23348,7 @@ async function handleTwoFactorSubmit(
                 )}
               </button>
 
-              {/* SECURITY NOTICE */}
-              <div className="rounded-xl border border-[#c9daf8] bg-[#edf4ff] px-4 py-3.5">
-                <div className="flex items-start gap-3">
-                  <Shield
-                    size={16}
-                    className="mt-0.5 flex-shrink-0 text-[#2f5fd6]"
-                  />
-
-                  <p className="text-[12px] leading-[1.5] text-[#37527f]">
-                    Authorized institutional users only. System activity may be recorded for security and auditing purposes.
-                  </p>
-                </div>
-              </div>
-            </form>
+              </form>
 
             {/* REGISTER */}
             <div className="mt-5 border-t border-[#d8e1ee] pt-5 text-center">
@@ -23304,16 +23371,6 @@ async function handleTwoFactorSubmit(
           </div>
         </div>
 
-        {/* FOOTER */}
-        <p className="mt-8 text-xs text-muted-foreground text-center qrpass-login-footer">
-          © 2026 QRpass System
-
-          <span className="mx-2">
-            |
-          </span>
-
-          QRpass V1.0
-        </p>
       </div>
 
       {BottomColorStrip}
