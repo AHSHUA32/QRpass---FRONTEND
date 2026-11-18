@@ -5275,6 +5275,11 @@ function SecurityScanVerify() {
     try {
       setLogging(true);
 
+      if (verifying) {
+        alert("Verification is still in progress. Please try again.");
+        return;
+      }
+
       await createScanLog(
         scanResult.id,
         gate,
@@ -5369,10 +5374,7 @@ function SecurityScanVerify() {
               }
               className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
-              <option value="Gate 1">
-                Gate 1
-              </option>
-
+              
               <option value="Gate 2">
                 Gate 2
               </option>
@@ -5843,7 +5845,7 @@ function SecurityScanVerify() {
                     onClick={() =>
                       handleLog("IN")
                     }
-                    disabled={logging}
+                    disabled={logging || verifying}
                     className="h-10 w-full rounded-xl bg-green-600 px-5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50 sm:w-auto"
                   >
                     {logging
@@ -5855,7 +5857,7 @@ function SecurityScanVerify() {
                     onClick={() =>
                       handleLog("OUT")
                     }
-                    disabled={logging}
+                    disabled={logging || verifying}
                     className="h-10 w-full rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50 sm:w-auto"
                   >
                     {logging
@@ -5995,6 +5997,11 @@ function SecurityEntryExitLog() {
   const [logs, setLogs] = useState<any[]>([]);
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Show only the selected CSU entry / exit or incident section.
+  const [entryExitTab, setEntryExitTab] = useState<
+    "all" | "entry" | "exit" | "flagged" | "resolved"
+  >("all");
 
   const [selectedIncident, setSelectedIncident] =
     useState<any | null>(null);
@@ -6354,6 +6361,28 @@ const resolvedIncidents =
       "resolved"
   );
 
+const entryLogs = logs.filter(
+  (log) => String(log.direction ?? "").toUpperCase() === "IN"
+);
+const exitLogs = logs.filter(
+  (log) => String(log.direction ?? "").toUpperCase() === "OUT"
+);
+const visibleLogs = entryExitTab === "entry"
+  ? entryLogs
+  : entryExitTab === "exit"
+    ? exitLogs
+    : logs;
+
+// CSV export matches what the user selected in the tabs.
+const exportLogs = entryExitTab === "flagged" || entryExitTab === "resolved"
+  ? []
+  : visibleLogs;
+const exportIncidents = entryExitTab === "flagged"
+  ? flaggedIncidents
+  : entryExitTab === "resolved"
+    ? resolvedIncidents
+    : [];
+
 
 /*
 |--------------------------------------------------------------------------
@@ -6363,11 +6392,11 @@ const resolvedIncidents =
 
   function exportCSV() {
     if (
-      logs.length === 0 &&
-      incidents.length === 0
+      exportLogs.length === 0 &&
+      exportIncidents.length === 0
     ) {
       alert(
-        "There are no entry / exit records to export."
+        "There are no records in the selected tab to export."
       );
 
       return;
@@ -6391,7 +6420,7 @@ const resolvedIncidents =
       "Scanned / Reported By",
     ];
 
-    const scanRows = logs.map((log) => [
+    const scanRows = exportLogs.map((log) => [
       "Entry/Exit Scan",
       formatDate(log.scanned_at),
       formatTime(log.scanned_at),
@@ -6409,7 +6438,7 @@ const resolvedIncidents =
       log.scanner?.name ?? "",
     ]);
 
-    const incidentRows = incidents.map(
+    const incidentRows = exportIncidents.map(
       (incident) => [
         "Security Incident",
         formatDate(incident.reported_at),
@@ -6490,7 +6519,7 @@ const resolvedIncidents =
     link.href = url;
 
     link.download =
-      `qrpass-entry-exit-${new Date()
+      `qrpass-${entryExitTab}-records-${new Date()
         .toISOString()
         .slice(0, 10)}.csv`;
 
@@ -6806,11 +6835,41 @@ const resolvedIncidents =
         </div>
       </div>
 
+      {/* LOST & FOUND STYLE TABS: ONLY ONE SECTION VISIBLE AT A TIME */}
+      <div className="grid grid-cols-2 gap-2 border-b border-border pb-3 sm:flex sm:flex-wrap">
+        {([
+          { key: "all" as const, label: "All Records", count: logs.length },
+          { key: "entry" as const, label: "Entry", count: entryLogs.length },
+          { key: "exit" as const, label: "Exit", count: exitLogs.length },
+          { key: "flagged" as const, label: "Flagged", count: flaggedIncidents.length },
+          { key: "resolved" as const, label: "Resolved", count: resolvedIncidents.length },
+        ]).map(({ key, label, count }) => (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={entryExitTab === key}
+            onClick={() => setEntryExitTab(key)}
+            className={`min-h-11 w-full rounded-xl px-3 py-2 text-xs font-semibold transition-colors sm:w-auto sm:px-4 sm:text-sm ${
+              entryExitTab === key
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {label} ({count})
+          </button>
+        ))}
+      </div>
+
       {/* SUCCESSFUL ENTRY / EXIT */}
+      {(entryExitTab === "all" || entryExitTab === "entry" || entryExitTab === "exit") && (
       <div className="w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="px-5 py-4 border-b border-gray-200">
           <h2 className="text-lg font-bold text-gray-900">
-            Entry / Exit Records
+            {entryExitTab === "entry"
+              ? "Entry Records"
+              : entryExitTab === "exit"
+                ? "Exit Records"
+                : "Entry / Exit Records"}
           </h2>
 
           <p className="mt-1 text-sm text-muted-foreground">
@@ -6853,7 +6912,7 @@ const resolvedIncidents =
                     Loading entry / exit records...
                   </td>
                 </tr>
-              ) : logs.length === 0 ? (
+              ) : visibleLogs.length === 0 ? (
                 <tr>
                   <td
                     colSpan={9}
@@ -6863,7 +6922,7 @@ const resolvedIncidents =
                   </td>
                 </tr>
               ) : (
-                logs.map((log) => (
+                visibleLogs.map((log) => (
                   <tr
                     key={log.id}
                     className="hover:bg-gray-50"
@@ -6946,11 +7005,13 @@ const resolvedIncidents =
           </table>
         </div>
       </div>
+      )}
 
       {/* =========================================================
           FLAGGED ITEMS
       ========================================================= */}
 
+      {entryExitTab === "flagged" && (
       <div className="w-full min-w-0 overflow-hidden rounded-xl border border-red-200 bg-card shadow-sm dark:border-red-700/40">
         <div className="border-b border-red-200 bg-red-50 px-5 py-4 dark:border-[#7c3b49] dark:bg-[#421d25]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -7007,12 +7068,13 @@ const resolvedIncidents =
           </table>
         </div>
       </div>
-
+      )}
 
       {/* =========================================================
           RESOLVED ITEMS
       ========================================================= */}
 
+      {entryExitTab === "resolved" && (
       <div className="w-full min-w-0 overflow-hidden rounded-xl border border-blue-200 bg-card shadow-sm dark:border-blue-700/40">
         <div className="border-b border-blue-200 bg-blue-50 px-5 py-4 dark:border-[#28466f] dark:bg-[#10294a]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -7069,6 +7131,7 @@ const resolvedIncidents =
           </table>
         </div>
       </div>
+      )}
 
       {/* =========================================================
           INCIDENT / RESOLVED ITEM DETAILS MODAL
@@ -8354,14 +8417,15 @@ function SecurityReports() {
 
   async function downloadMonthlyRegistrationPDF() {
     try {
+      // CSU's authorized reporting endpoint, not the PCO/System Admin registry.
       const response =
-        await getAllItems();
+        await getSecurityReports();
 
       const allItems =
         Array.isArray(
-          response?.items
+          response?.registered_items
         )
-          ? response.items
+          ? response.registered_items
           : [];
 
       const now = new Date();
@@ -8385,32 +8449,32 @@ function SecurityReports() {
           );
         });
 
-      if (
-        monthlyItems.length === 0
-      ) {
+      if (!Array.isArray(response?.monthly_registration_summary) ||
+          !Array.isArray(response?.registered_items)) {
+        throw new Error("CSU monthly registration data is unavailable. Install the updated ReportController.php in the backend.");
+      }
+
+      const monthlySummary = response.monthly_registration_summary;
+
+      const totalRegistrations = monthlySummary.reduce(
+        (total: number, entry: any) => total + Number(entry.total ?? 0),
+        0
+      );
+
+      if (totalRegistrations === 0) {
         alert(
           "There are no item registrations for this month."
         );
         return;
       }
 
-      const approvedCount =
-        monthlyItems.filter(
-        (item: any) =>
-            String(
-              item.status ?? ""
-            ).toLowerCase() ===
-            "approved"
-        ).length;
+      const countFor = (status: string) =>
+        monthlySummary
+          .filter((entry: any) => String(entry.status ?? "").toLowerCase() === status)
+          .reduce((count: number, entry: any) => count + Number(entry.total ?? 0), 0);
 
-      const pendingCount =
-        monthlyItems.filter(
-          (item: any) =>
-            String(
-              item.status ?? ""
-            ).toLowerCase() ===
-            "pending"
-        ).length;
+      const approvedCount = countFor("approved");
+      const pendingCount = countFor("pending");
 
       const qrIssuedCount =
         monthlyItems.filter(
@@ -8456,7 +8520,7 @@ function SecurityReports() {
       );
 
       doc.text(
-        `Total Registrations: ${monthlyItems.length}`,
+        `Total Registrations: ${totalRegistrations}`,
         14,
         38
       );
@@ -8516,8 +8580,11 @@ function SecurityReports() {
           ]
         );
 
+      doc.setFontSize(8);
+      doc.text("Item-level details below are limited to approved registrations for gate verification.", 14, 49);
+
       autoTable(doc, {
-        startY: 51,
+        startY: 54,
 
         head: [
           [
@@ -8794,6 +8861,95 @@ function SecurityReports() {
   );
 }
 
+// Campus location picker shared by CSU Lost, Found, Edit, and Recovery forms.
+// Values remain strings to match existing Laravel location_found/location_lost fields.
+const QR_CAMPUS_FLOORS: Record<string, string[]> = {
+  "Engineering Building": ["Main Ground", ...Array.from({length: 12}, (_, i) => `${i+1}${i===0?'st':i===1?'nd':i===2?'rd':'th'} Floor`)],
+  "Main Building": Array.from({length: 7}, (_, i) => `${i+1}${i===0?'st':i===1?'nd':i===2?'rd':'th'} Floor`),
+  "High School Building": Array.from({length: 7}, (_, i) => `${i+1}${i===0?'st':i===1?'nd':i===2?'rd':'th'} Floor`),
+};
+
+function isCompleteCSULocation(value: string) {
+  const location = value.trim();
+  if (!location) return false;
+  if (location.startsWith("Other Campus Area - ")) {
+    return location.substring("Other Campus Area - ".length).trim().length > 0;
+  }
+  return Object.entries(QR_CAMPUS_FLOORS).some(([building, floors]) =>
+    floors.some(floor => location === `${building} - ${floor}`)
+  );
+}
+
+function CSULocationPicker({
+  label,
+  value,
+  onChange,
+  required = true,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+}) {
+  const knownBuilding = Object.keys(QR_CAMPUS_FLOORS).find(b => value.startsWith(`${b} - `));
+  const building = knownBuilding ?? (value ? "Other Campus Area" : "");
+  const floor = knownBuilding ? value.slice(`${knownBuilding} - `.length) : "";
+  const custom = building === "Other Campus Area"
+    ? value.startsWith("Other Campus Area - ")
+      ? value.slice("Other Campus Area - ".length)
+      : value
+    : "";
+  const inputStyle = "w-full min-w-0 rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20";
+
+  return (
+    <div className="min-w-0 space-y-2">
+      <label className="block text-xs font-medium text-foreground">{label}{required ? " *" : ""}</label>
+      <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
+        <select
+          aria-label={`${label} building`}
+          value={building}
+          onChange={e => onChange(e.target.value === "Other Campus Area"
+            ? "Other Campus Area - "
+            : e.target.value ? `${e.target.value} - ` : "")}
+          className={inputStyle}
+          required={required}
+        >
+          <option value="">Select building</option>
+          {Object.keys(QR_CAMPUS_FLOORS).map(b => <option value={b} key={b}>{b}</option>)}
+          <option value="Other Campus Area">Other Campus Area</option>
+        </select>
+        {building && building !== "Other Campus Area" ? (
+          <select
+            aria-label={`${label} floor`}
+            value={floor}
+            onChange={e => onChange(`${building} - ${e.target.value}`)}
+            className={inputStyle}
+            required={required}
+          >
+            <option value="">Select floor</option>
+            {QR_CAMPUS_FLOORS[building].map(f => <option value={f} key={f}>{f}</option>)}
+          </select>
+        ) : building === "Other Campus Area" ? (
+          <input
+            aria-label={`${label} other campus area`}
+            value={custom}
+            onChange={e => onChange(`Other Campus Area - ${e.target.value}`)}
+            className={inputStyle}
+            placeholder="e.g. SAO / Library / Canteen"
+            maxLength={235}
+            required={required}
+          />
+        ) : (
+          <div className="flex items-center rounded-lg border border-dashed border-[#cfd8e6] bg-muted/20 px-3 py-2 text-xs text-muted-foreground">Choose a building to see its floors.</div>
+        )}
+      </div>
+      {isCompleteCSULocation(value) && (
+        <p className="text-[11px] text-muted-foreground">Selected: {value}</p>
+      )}
+    </div>
+  );
+}
+
 function SecurityLostFound() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -8826,6 +8982,8 @@ function SecurityLostFound() {
 
   const [tab, setTab] =
     useState<"registry" | "report">("registry");
+  // Help is hidden by default; CSU can expand it when needed.
+  const [showLostFoundGuide, setShowLostFoundGuide] = useState(false);
 
   const [reportMode, setReportMode] =
     useState<"found" | "lost">("found");
@@ -8867,8 +9025,8 @@ function SecurityLostFound() {
     },
     {
       id: "other",
-      name: "Other Equipment",
-      description: "Equipment that does not belong to the other registration groups, including personal items.",
+      name: "Personal Belongings & Other Items",
+      description: "Bags, wallets, IDs, keys, umbrellas, and other personal belongings.",
       icon: <Package size={18} />,
     },
   ];
@@ -8888,426 +9046,85 @@ function SecurityLostFound() {
       color: "",
       description: "",
     }));
-    setItemSpecs({ quantity: "1" });
+    setItemSpecs({});
     setError("");
     setSuccess("");
   }
 
-  // Student Registration fields and dropdowns, with the same category-specific layout.
-  // Finder/owner, location, dates and photo remain managed by the CSU report form.
+  // Lost & Found needs recognizable identity, not student permit specifications.
+  // These fields are common to every category; the report's category was selected above.
   function renderStudentStyleReportFields() {
-    const selectedGroup = selectedReportGroup;
-    const values: Record<string, string> = {
-      ...itemSpecs,
-      item_name: form.item_name,
-      brand_model: form.brand_model,
-      color: form.color,
-      quantity: itemSpecs.quantity ?? "1",
+    const suggestions: Record<CSUReportGroupId, string[]> = {
+      computer: ["Laptop", "Desktop Computer", "Tablet", "Computer Mouse", "Keyboard", "Charger"],
+      highvalue: ["Mobile Phone", "Digital Camera", "Projector", "Printer", "Smartwatch", "Drone", "Headphones"],
+      musical: ["Acoustic Guitar", "Electric Guitar", "Keyboard", "Ukulele", "Violin", "Drum", "Flute"],
+      sports: ["Basketball", "Volleyball", "Soccer Ball", "Racket", "Sports Bag", "Training Gear"],
+      other: ["Backpack", "Wallet", "School ID", "Keys", "Eyeglasses", "Umbrella", "Tumbler", "Notebook"],
     };
-
-    function updateField(field: string, value: string) {
-      if (field === "item_name" || field === "brand_model" || field === "color") {
-        setForm((current) => ({ ...current, [field]: value }));
-      } else {
-        setItemSpecs((current) => ({ ...current, [field]: value }));
-      }
-    }
-
+    const categoryNames = selectedReportGroup ? suggestions[selectedReportGroup] : [];
     return (
-      <>
-            {/* COMPUTER EQUIPMENT */}
-            {selectedGroup ===
-              "computer" && (
-              <>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <RegistrationDropdown
-  label="Item Name"
-  field="item_name"
-  value={values.item_name}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-options={["Laptop"]}
-/>
-
-                  <RegistrationDropdown
-  label="Brand"
-  field="brand_model"
-  value={values.brand_model}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-options={["Acer", "ASUS", "Dell", "HP", "Lenovo", "Apple", "MSI"]}
-/>
-
-                  <RegistrationField
-  label="Serial Number"
-  field="serial_number"
-  value={values.serial_number}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="e.g. SN-00000"
-/>
-
-                  <RegistrationDropdown
-  label="Color"
-  field="color"
-  value={values.color}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  options={COMMON_ITEM_COLORS}
-/>
-
-                  <RegistrationField
-  label="Purpose / Intended Use"
-  field="purpose"
-  value={values.purpose}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="e.g. Academic use, thesis documentation"
-/>
-
-                  <RegistrationField
-  label="Accessories Included"
-  field="accessories_included"
-  value={values.accessories_included}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="e.g. Charger, mouse, laptop bag"
-  optional
-/>
-                </div>
-
-
-
-                <div className="grid md:grid-cols-2 gap-4 mt-4">
-                </div>
-              </>
-            )}
-
-            {/* HIGH-VALUE ELECTRONICS */}
-            {selectedGroup ===
-              "highvalue" && (
-              <>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <RegistrationDropdown
-  label="Item Name"
-  field="item_name"
-  value={values.item_name}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-options={["Desktop Computer", "Smart TV", "Projector", "Digital Camera", "Drone", "Professional Video Camera", "3D Printer", "Graphics Tablet", "Monitor"]}
-/>
-
-                  <RegistrationDropdown
-  label="Brand & Model"
-  field="brand_model"
-  value={values.brand_model}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-options={["Samsung", "LG", "Sony", "ASUS", "Acer", "Lenovo", "HP", "Dell", "Canon", "Nikon", "Epson", "BenQ", "DJI", "Apple"]}
-/>
-
-                  <RegistrationField
-  label="Serial Number"
-  field="serial_number"
-  value={values.serial_number}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="e.g. SN-00000"
-/>
-
-                  <RegistrationDropdown
-  label="Color"
-  field="color"
-  value={values.color}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  options={COMMON_ITEM_COLORS}
-/>
-
-                  <RegistrationField
-  label="Purpose / Intended Use"
-  field="purpose"
-  value={values.purpose}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="e.g. Classroom presentation"
-/>
-
-                  <RegistrationField
-  label="Accessories Included"
-  field="accessories_included"
-  value={values.accessories_included}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="e.g. Power cable, remote, bag"
-  optional
-/>
-                </div>
-
-                
-
-                <div className="grid md:grid-cols-2 gap-4 mt-4">
-                </div>
-              </>
-            )}
-
-            {/* MUSICAL INSTRUMENT */}
-            {selectedGroup ===
-              "musical" && (
-              <div className="grid md:grid-cols-2 gap-4">
-                <RegistrationDropdown
-  label="Item Name"
-  field="item_name"
-  value={values.item_name}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-options={["Acoustic Guitar", "Electric Guitar", "Bass Guitar", "Keyboard", "Drum Set", "Snare Drum", "Violin", "Ukelele", "Flute"]}
-/>
-
-                <RegistrationDropdown
-  label="Brand"
-  field="brand"
-  value={values.brand}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-options={["Fender", "Casio", "Roland", "Gibson", "Ibanez", "Korg", "Pearl", "Suzuki"]}
-/>
-
-                <RegistrationField
-  label="Model No."
-  field="model_no"
-  value={values.model_no}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="e.g. F310"
-/>
-
-                <RegistrationField
-  label="Serial Number"
-  field="serial_number"
-  value={values.serial_number}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="Leave blank if none"
-  optional
-/>
-
-                <RegistrationField
-  label="Purpose / Intended Use"
-  field="purpose"
-  value={values.purpose}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="e.g. Band rehearsal"
-/>
-
-                <RegistrationField
-  label="Accessories Included"
-  field="accessories_included"
-  value={values.accessories_included}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="e.g. Case, strap, picks"
-  optional
-/>
-
-                <RegistrationDropdown
-  label="Material / Body"
-  field="material_body"
-  value={values.material_body}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-options={["Mahogany", "Spruce", "Maple", "Rosewood", "Metal", "Aluminum", "Steel"]}
-/>
-
-                <RegistrationField
-  label="Size"
-  field="size"
-  value={values.size}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="e.g. Full size, 4/4"
-  optional
-/>
-              </div>
-            )}
-
-            {/* SPORTS EQUIPMENT */}
-            {selectedGroup ===
-              "sports" && (
-              <div className="grid md:grid-cols-2 gap-4">
-                <RegistrationDropdown
-  label="Equipment Type"
-  field="equipment_type"
-  value={values.equipment_type}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-options={["Basketball", "Volleyball", "Soccer Ball", "Badminton Racket", "Speak Takraw Ball", "Boxing Gloves"]}
-/>
-
-                <RegistrationDropdown
-  label="Brand"
-  field="brand"
-  value={values.brand}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  optional
-options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "Puma"]}
-/>
-
-                <RegistrationQuantityField
-  value={values.quantity}
-  onChange={(value) =>
-    updateField(
-      "quantity",
-      value
-    )
-  }
-/>
-
-                <div className="md:col-span-2">
-                  <RegistrationField
-  label="Purpose / Intended Use"
-  field="purpose"
-  value={values.purpose}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="e.g. Varsity practice"
-/>
-                </div>
-              </div>
-            )}
-
-            {/* OTHER EQUIPMENT */}
-            {selectedGroup ===
-              "other" && (
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <RegistrationField
-  label="Item/s with Complete Description"
-  field="complete_description"
-  value={values.complete_description}
-  onChange={(field, value) =>
-    updateField(
-      field,
-      value
-    )
-  }
-  placeholder="e.g. 2x extension cords, 1x megaphone"
-/>
-                </div>
-
-                <RegistrationQuantityField
-  value={values.quantity}
-  onChange={(value) =>
-    updateField(
-      "quantity",
-      value
-    )
-  }
-/>
-
-
-              </div>
-            )}
-
-
-        <div className="mt-5 rounded-lg border border-[#dce3ee] border-l-4 border-l-[#64748b] bg-[#f8fafc] p-3 text-xs leading-relaxed text-[#475569]">
-          <strong>Note:</strong> The fields match Student Registration. For lost or found items, enter all information known to the reporting person. Leave unknown specifications blank rather than guessing. CSU still requires the reporting ID, location and date.
+      <div className="space-y-4">
+        <p className="text-xs text-muted-foreground">
+          Describe only what can help identify the missing or surrendered item. Unknown details may be left blank.
+        </p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-foreground">Item Name *</label>
+            <input
+              list="csu-lost-found-item-suggestions"
+              value={form.item_name}
+              onChange={e => setForm(current => ({...current, item_name: e.target.value}))}
+              maxLength={255}
+              placeholder="e.g. Black laptop, school ID, blue umbrella"
+              required
+              className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            />
+            <datalist id="csu-lost-found-item-suggestions">
+              {categoryNames.map(name => <option key={name} value={name}/>)}
+            </datalist>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-foreground">Brand / Model (if known)</label>
+            <input
+              value={form.brand_model}
+              onChange={e => setForm(current => ({...current, brand_model: e.target.value}))}
+              maxLength={255}
+              placeholder="e.g. Acer Aspire, Casio, Nike"
+              className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-foreground">Color (if known)</label>
+            <input
+              value={form.color}
+              onChange={e => setForm(current => ({...current, color: e.target.value}))}
+              maxLength={100}
+              placeholder="e.g. Black, navy blue, silver"
+              className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-foreground">Serial / Identification No. (optional)</label>
+            <input
+              value={itemSpecs.serial_number ?? ""}
+              onChange={e => setItemSpecs(current => ({...current, serial_number: e.target.value}))}
+              maxLength={255}
+              placeholder="Enter only if available"
+              className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="mb-1 block text-xs font-medium text-foreground">Identifying Features / Accessories (optional)</label>
+            <input
+              value={itemSpecs.accessories_included ?? ""}
+              onChange={e => setItemSpecs(current => ({...current, accessories_included: e.target.value}))}
+              maxLength={600}
+              placeholder="e.g. Sticker on the lid, scratches, carrying case, charger, keychain"
+              className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -9376,84 +9193,15 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
     description: "",
   });
 
-  // Additional item-identification fields mirror Student Item Registration.
-  // The Lost & Found API currently accepts these details through description.
-  const [itemSpecs, setItemSpecs] = useState<Record<string, string>>({
-    quantity: "1",
-  });
-
-  const commonSpecFields = [
-    { key: "serial_number", label: "Serial Number" },
-    { key: "quantity", label: "Quantity" },
-    { key: "purpose", label: "Purpose / Reason for Bringing" },
-    { key: "accessories_included", label: "Accessories Included" },
-  ];
-
-  const specificSpecFields: Record<string, { key: string; label: string }[]> = {
-    "Computer Equipment": [
-      { key: "computer_type", label: "Computer / Laptop Type" },
-      { key: "processor", label: "Processor" },
-      { key: "motherboard", label: "Motherboard" },
-      { key: "memory", label: "Memory / RAM" },
-      { key: "hard_drive", label: "Hard Drive / Storage" },
-      { key: "monitor", label: "Monitor" },
-      { key: "casing", label: "Casing" },
-      { key: "cd_dvd_rom", label: "CD / DVD ROM" },
-      { key: "operating_system", label: "Operating System" },
-    ],
-    "High-Value Electronics": [
-      { key: "unit_type", label: "Unit Type" },
-      { key: "power_source", label: "Power Source / Cable" },
-      { key: "lens_attachment", label: "Lens / Attachment Included" },
-    ],
-    "Mobile / Personal Electronics": [
-      { key: "storage_capacity", label: "Storage / Capacity" },
-    ],
-    "Musical Instrument": [
-      { key: "brand", label: "Brand" },
-      { key: "model_no", label: "Model No." },
-      { key: "material_body", label: "Material / Body" },
-      { key: "size", label: "Size" },
-    ],
-    "Sports Equipment": [
-      { key: "equipment_type", label: "Equipment Type" },
-      { key: "brand", label: "Brand" },
-      { key: "size", label: "Size" },
-    ],
-    "Other Equipment": [
-      { key: "complete_description", label: "Item/s with Complete Description" },
-    ],
-    "Laptop": [
-      { key: "computer_type", label: "Computer / Laptop Type" },
-      { key: "processor", label: "Processor" },
-      { key: "memory", label: "Memory / RAM" },
-      { key: "hard_drive", label: "Hard Drive / Storage" },
-      { key: "operating_system", label: "Operating System" },
-    ],
-    "Mobile Phone": [
-      { key: "storage_capacity", label: "Storage / Capacity" },
-    ],
-    "Tablet": [
-      { key: "storage_capacity", label: "Storage / Capacity" },
-    ],
-    "Other": [
-      { key: "complete_description", label: "Item/s with Complete Description" },
-    ],
-  };
-
-  const currentExtraFields = specificSpecFields[form.category] ?? [];
+  // Optional identifying information is serialized into the existing description field.
+  const [itemSpecs, setItemSpecs] = useState<Record<string, string>>({});
 
   function buildLostFoundDescription() {
-    const details = [...commonSpecFields, ...currentExtraFields]
-      .map(({ key, label }) => {
-        const value = String(itemSpecs[key] ?? "").trim();
-        return value && value !== "__OTHER__" ? `${label}: ${value}` : "";
-      })
-      .filter(Boolean);
-
-    return [form.description.trim(), details.join("\n")]
-      .filter(Boolean)
-      .join("\n\n");
+    const identifying = [
+      itemSpecs.serial_number?.trim() ? `Serial / Identification No.: ${itemSpecs.serial_number.trim()}` : "",
+      itemSpecs.accessories_included?.trim() ? `Identifying Features / Accessories: ${itemSpecs.accessories_included.trim()}` : "",
+    ].filter(Boolean);
+    return [form.description.trim(), identifying.join("\n")].filter(Boolean).join("\n\n");
   }
 
   async function loadItems() {
@@ -9633,7 +9381,7 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
     const { name, value } = e.target;
 
     if (name === "category") {
-      setItemSpecs({ quantity: "1" });
+      setItemSpecs({});
     }
 
     setForm((current) => ({
@@ -9753,7 +9501,7 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
       description: "",
     });
 
-    setItemSpecs({ quantity: "1" });
+    setItemSpecs({});
     setSelectedReportGroup(null);
     clearPhoto();
   }
@@ -9766,17 +9514,8 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
     setError("");
     setSuccess("");
 
-    const reportItemName =
-      selectedReportGroup === "sports"
-        ? String(itemSpecs.equipment_type ?? "").trim()
-        : selectedReportGroup === "other"
-        ? String(itemSpecs.complete_description ?? "").trim().slice(0, 255)
-        : form.item_name.trim();
-
-    // Student's Musical/Sports forms use Brand and Model fields rather than Brand / Model.
-    const reportBrandModel =
-      form.brand_model.trim() ||
-      [itemSpecs.brand, itemSpecs.model_no].filter(Boolean).join(" ").trim();
+    const reportItemName = form.item_name.trim();
+    const reportBrandModel = form.brand_model.trim();
 
     if (!selectedReportGroup) {
       setError("Please choose an item category first.");
@@ -9793,20 +9532,15 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
       return;
     }
 
-    const quantity = Number(itemSpecs.quantity ?? "1");
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 9999) {
-      setError("Quantity must be a whole number between 1 and 9999.");
-      return;
-    }
-
-    if (Object.values(itemSpecs).some((value) => value === "__OTHER__")) {
-      setError("Please specify a value for each selected Others option.");
-      return;
-    }
-
     const itemDescription = buildLostFoundDescription();
     if (itemDescription.length > 2000) {
-      setError("Item specifications and description must not exceed 2,000 characters combined.");
+      setError("The item description and identifying details must not exceed 2,000 characters combined.");
+      return;
+    }
+
+    const selectedLocation = reportMode === "found" ? form.location_found : form.location_lost;
+    if (!isCompleteCSULocation(selectedLocation)) {
+      setError("Please choose the building and floor (or specify another campus area).");
       return;
     }
 
@@ -10142,6 +9876,11 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
       return;
     }
 
+    if (!isCompleteCSULocation(editForm.location)) {
+      setEditError("Please select a campus building and floor (or another campus area).");
+      return;
+    }
+
     if (!editForm.date_time) {
       setEditError(
         reportType === "lost"
@@ -10299,6 +10038,11 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
       setError(
         "Please enter the Student/Employee ID of the person who found or returned the item."
       );
+      return;
+    }
+
+    if (!isCompleteCSULocation(recoveryForm.location_found)) {
+      setError("Please select a campus building and floor for this recovery.");
       return;
     }
 
@@ -10475,25 +10219,6 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
         subtitle="Manage found and lost item reports in one registry, credit finders, identify owners, and process recoveries."
       />
 
-      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-        <div className="flex items-start gap-3">
-          <Shield
-            size={18}
-            className="mt-0.5 flex-shrink-0 text-blue-700"
-          />
-
-          <div>
-            <p className="text-sm font-semibold text-blue-900">
-              Lost & Found Procedure
-            </p>
-
-            <p className="mt-1 text-xs leading-relaxed text-blue-800">
-              Use Found Item when an item has been physically surrendered to Security. Use Lost Item when a student or employee reports an item missing. Security records and processes both report types in QRPass.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
@@ -10576,7 +10301,64 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
         >
           + Record Lost / Found Item
         </button>
+      <button
+        type="button"
+        onClick={() => setShowLostFoundGuide((visible) => !visible)}
+        aria-expanded={showLostFoundGuide}
+        aria-controls="csu-lost-found-guide"
+        className="col-span-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-primary transition-colors hover:bg-muted sm:ml-auto sm:w-auto sm:text-sm"
+      >
+        <BookOpen size={15} />
+        {showLostFoundGuide ? "Hide guide" : "How it works"}
+        <ChevronRight
+          size={14}
+          className={`transition-transform ${showLostFoundGuide ? "rotate-90" : ""}`}
+        />
+      </button>
       </div>
+
+      {showLostFoundGuide && (
+        <div
+          id="csu-lost-found-guide"
+          className="rounded-xl border border-[#cfd8e6] bg-card p-4 sm:p-5"
+        >
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-foreground">
+              {tab === "registry" ? "How Lost & Found Reports Work" : "How Lost & Found Reporting Works"}
+            </h3>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {tab === "registry"
+                ? "View existing records, check the status of an item, and manage recovery or claims. Found Item is for an item surrendered to Security; Lost Item is for an item reported missing."
+                : "Choose a category, enter the known item details, and save the report. Use Found Item for an item surrendered to Security and Lost Item for a missing-item report."}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            {(tab === "registry"
+              ? [
+                  ["1", "Find a Report", "Use Search or Refresh to locate an existing Lost or Found record."],
+                  ["2", "Review Details", "Check the item, finder or owner, location, and recovery status."],
+                  ["3", "Manage the Case", "Use Edit Report or the available recovery and claim actions as appropriate."],
+                ]
+              : [
+                  ["1", "Choose Category", "Select the matching item category."],
+                  ["2", "Complete Details", "Enter identifying details, finder/owner ID, building, floor and date."],
+                  ["3", "Save the Report", "Security records the item and manages recovery or claims."],
+                ]).map(([number, title, description]) => (
+              <div key={number} className="rounded-lg border border-[#dce3ee] bg-[#f8fafc] p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                    {number}
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">{title}</p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {tab === "registry" && (
         <div className="space-y-4">
@@ -11100,7 +10882,7 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
               </div>
             )}
 
-            {/* Same five category-specific forms and controls as Student Register Item. */}
+            {/* Simple item identification fields. No permit-only specifications. */}
             <section className="overflow-hidden rounded-[14px] border border-[#dce3ee] bg-white">
               <div className="flex items-center gap-3 border-b border-[#dce3ee] px-3 py-4 sm:px-5">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#dce3ee] bg-[#f2f5fb] text-[#16224b]">
@@ -11111,7 +10893,7 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
                     {activeReportCategory?.name}
                   </h3>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    Item Identification &amp; Specifications
+                    Item Identification Details
                   </p>
                 </div>
               </div>
@@ -11122,31 +10904,13 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-medium text-foreground">
-                  {reportMode === "found"
-                    ? "Location Found *"
-                    : "Last Seen Location *"}
-                </label>
-                <input
-                  type="text"
-                  name={
-                    reportMode === "found"
-                      ? "location_found"
-                      : "location_lost"
-                  }
-                  value={
-                    reportMode === "found"
-                      ? form.location_found
-                      : form.location_lost
-                  }
-                  onChange={handleFormChange}
-                  required
-                  placeholder={
-                    reportMode === "found"
-                      ? "Example: 4th Floor Computer Laboratory"
-                      : "Example: Library, 2nd Floor"
-                  }
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                <CSULocationPicker
+                  label={reportMode === "found" ? "Location Found" : "Last Seen Location"}
+                  value={reportMode === "found" ? form.location_found : form.location_lost}
+                  onChange={value => setForm(current => ({
+                    ...current,
+                    [reportMode === "found" ? "location_found" : "location_lost"]: value,
+                  }))}
                 />
               </div>
 
@@ -11413,35 +11177,6 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[#cfd8e6] bg-card p-5">
-                <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    How Lost &amp; Found Reporting Works
-                  </h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Three simple steps for recording a lost or found item.
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                  {[
-                    ["1", "Choose Category", "Select the matching item category."],
-                    ["2", "Complete Details", "Enter known item specifications and the finder/owner information."],
-                    ["3", "Save the Report", "Security records the item and manages recovery or claims."],
-                  ].map(([number, title, description]) => (
-                    <div key={number} className="rounded-lg border border-[#dce3ee] bg-[#f8fafc] p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-                          {number}
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-foreground">{title}</p>
-                          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{description}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           )}
         </div>
@@ -11559,13 +11294,14 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
                     className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="">Select category</option>
-                    <optgroup label="Student Registration Categories">
+                    <optgroup label="Campus Item Categories">
                       <option value="Computer Equipment">Computer Equipment</option>
                       <option value="High-Value Electronics">High-Value Electronics</option>
                       <option value="Mobile / Personal Electronics">Mobile / Personal Electronics</option>
                       <option value="Musical Instrument">Musical Instrument</option>
                       <option value="Sports Equipment">Sports Equipment</option>
-                      <option value="Other Equipment">Other Equipment</option>
+                      <option value="Other Equipment">Other Equipment (legacy)</option>
+                      <option value="Personal Belongings & Other Items">Personal Belongings &amp; Other Items</option>
                     </optgroup>
                     <optgroup label="Common Lost & Found Items">
                       <option value="Laptop">Laptop</option>
@@ -11611,20 +11347,10 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-foreground">
-                    {String(
-                      editingItem.report_type ?? "found"
-                    ).toLowerCase() === "lost"
-                      ? "Last Seen Location *"
-                      : "Location Found *"}
-                  </label>
-                  <input
-                    type="text"
-                    name="location"
+                  <CSULocationPicker
+                    label={String(editingItem.report_type ?? "found").toLowerCase() === "lost" ? "Last Seen Location" : "Location Found"}
                     value={editForm.location}
-                    onChange={handleEditFormChange}
-                    required
-                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    onChange={value => setEditForm(current => ({...current, location: value}))}
                   />
                 </div>
 
@@ -11780,21 +11506,10 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-foreground">
-                  Location Found / Turned Over *
-                </label>
-                <input
-                  type="text"
+                <CSULocationPicker
+                  label="Location Found / Turned Over"
                   value={recoveryForm.location_found}
-                  onChange={(e) =>
-                    setRecoveryForm((current) => ({
-                      ...current,
-                      location_found: e.target.value,
-                    }))
-                  }
-                  placeholder="Example: Security Office / Library"
-                  required
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  onChange={value => setRecoveryForm(current => ({...current, location_found: value}))}
                 />
               </div>
 
@@ -14257,7 +13972,7 @@ function AdminDashboard() {
       <div className="space-y-5">
         <PageHeader
           title="Overview Dashboard"
-          subtitle="System-wide summary of QRpass operations."
+          subtitle="Campus-wide operations, registrations, security and recovery at a glance."
         />
 
         <div className="bg-white border border-[#cfd8e6] rounded-lg p-10 text-center text-sm text-muted-foreground">
@@ -14272,7 +13987,7 @@ function AdminDashboard() {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <PageHeader
           title="Overview Dashboard"
-          subtitle="System-wide summary of QRpass operations."
+          subtitle="Campus-wide operations, registrations, security and recovery at a glance."
         />
 
         <button
@@ -14294,7 +14009,7 @@ function AdminDashboard() {
       )}
 
       {/* MAIN STATISTICS */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <StatCard
           label="Total Items"
           value={String(stats.total_items)}
@@ -14340,7 +14055,7 @@ function AdminDashboard() {
         />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* ITEM TYPES */}
         <Card title="Registered Items by Type">
           <div className="p-4">
@@ -14497,6 +14212,7 @@ function AdminRecords() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
+  const [periodFilter, setPeriodFilter] = useState<"all" | "day" | "week" | "month">("all");
 
   async function loadRecords() {
     try {
@@ -14583,6 +14299,20 @@ function AdminRecords() {
         return false;
       }
 
+      if (periodFilter !== "all") {
+        const date = new Date(record.date ?? "");
+        if (Number.isNaN(date.getTime())) return false;
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (periodFilter === "week") start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+        if (periodFilter === "month") start.setDate(1);
+        const end = new Date(start);
+        if (periodFilter === "day") end.setDate(end.getDate() + 1);
+        if (periodFilter === "week") end.setDate(end.getDate() + 7);
+        if (periodFilter === "month") end.setMonth(end.getMonth() + 1);
+        if (date < start || date >= end) return false;
+      }
+
       if (!query) {
         return true;
       }
@@ -14663,7 +14393,7 @@ function AdminRecords() {
 
     link.href = url;
 
-    link.download = `qrpass-system-records-${new Date()
+    link.download = `qrpass-system-records-${periodFilter}-${new Date()
       .toISOString()
       .slice(0, 10)}.csv`;
 
@@ -14783,7 +14513,7 @@ function AdminRecords() {
 
       {/* SEARCH AND FILTER */}
       <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_200px_200px] gap-3">
           <input
             type="text"
             value={search}
@@ -14816,7 +14546,19 @@ function AdminRecords() {
               )
             )}
           </select>
+          <select
+            value={periodFilter}
+            onChange={(event) => setPeriodFilter(event.target.value as "all" | "day" | "week" | "month")}
+            className="w-full px-3 py-2.5 border border-[#cfd8e6] rounded-md text-sm bg-white"
+            aria-label="Record date range"
+          >
+            <option value="all">All Dates</option>
+            <option value="day">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+          </select>
         </div>
+        <p className="text-[11px] text-slate-500 mt-2">Export CSV uses the selected record type, search and date range.</p>
       </div>
 
       {/* RECORDS TABLE */}
@@ -15181,6 +14923,184 @@ async function downloadQrScanActivityExcel() {
     );
   }
 }
+// =========================================================
+// SYSTEM ADMIN - LOST REPORTS / CLAIM MANAGEMENT
+// Administrator oversight is read-only. CSU verifies and releases items.
+// =========================================================
+function SysAdminLostFound() {
+  const [items, setItems] = useState<any[]>([]);
+  const [tab, setTab] = useState<"reports" | "claims">("reports");
+  const [status, setStatus] = useState("all");
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [limitedDetails, setLimitedDetails] = useState(false);
+
+  async function loadItems() {
+    try {
+      setLoading(true);
+      setError("");
+      const data = await getSystemRecords();
+      if (Array.isArray(data?.lost_found_items)) {
+        setItems(data.lost_found_items);
+        setLimitedDetails(false);
+      } else {
+        // Compatibility with older SystemRecordController.php.
+        const fallback = (data?.records ?? [])
+          .filter((r: any) => r.record_type === "Lost & Found")
+          .map((r: any) => ({
+            id: r.reference_id,
+            item_name: r.title,
+            status: r.status,
+            reported_at: r.date,
+            reporter: { name: r.user_name, username: r.user_id },
+            category: r.details?.category,
+            brand_model: r.details?.brand_model,
+            color: r.details?.color,
+            location_found: r.details?.location_found,
+            claimant: r.details?.claimed_by ? { name: r.details.claimed_by } : null,
+          }));
+        setItems(fallback);
+        setLimitedDetails(true);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load Lost & Found records.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { loadItems(); }, []);
+
+  function formattedDate(value: string | null | undefined) {
+    if (!value) return "—";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("en-PH", {dateStyle:"medium", timeStyle:"short"});
+  }
+  function csvCell(value: unknown) {
+    return `"${String(value ?? "").replace(/"/g, '""')}"`;
+  }
+  const counts = {
+    reports: items.length,
+    pending: items.filter(i => String(i.status ?? "").toLowerCase() === "pending").length,
+    claimed: items.filter(i => String(i.status ?? "").toLowerCase() === "claimed").length,
+    recovered: items.filter(i => String(i.status ?? "").toLowerCase() === "recovered").length,
+  };
+  const filtered = items.filter(item => {
+    const stat = String(item.status ?? "").toLowerCase();
+    if (tab === "claims" && !["pending", "claimed"].includes(stat) && !item.claimed_by && !item.claimant) return false;
+    if (status !== "all" && stat !== status) return false;
+    const searchText = [item.item_name, item.category, item.brand_model, item.color,
+      item.reporter?.name, item.reporter?.username, item.finder?.name,
+      item.lost_by?.name, item.lostBy?.name, item.claimant?.name,
+      item.location_found, item.location_lost, item.status].join(" ").toLowerCase();
+    return searchText.includes(query.toLowerCase().trim());
+  });
+  function exportCSV() {
+    if (!filtered.length) { alert("No matching Lost & Found records to export."); return; }
+    const rows = [
+      ["Report ID", "Item", "Report Type", "Category", "Status", "Reporter", "Owner", "Finder", "Claimant", "Location", "Reported At", "Claimed At"],
+      ...filtered.map(i => [i.id, i.item_name, i.report_type, i.category, i.status,
+        i.reporter?.name, i.lost_by?.name ?? i.lostBy?.name, i.finder?.name,
+        i.claimant?.name, i.location_found ?? i.location_lost, i.created_at ?? i.reported_at, i.claimed_at])
+    ];
+    const csv = "\uFEFF" + rows.map(row => row.map(csvCell).join(",")).join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], {type: "text/csv;charset=utf-8;"}));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `QRPass-Admin-${tab}-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(link); link.click(); link.remove();
+    URL.revokeObjectURL(url);
+  }
+  const statusClass = (value: string) => {
+    const s = value.toLowerCase();
+    if (["recovered", "claimed"].includes(s)) return "bg-green-50 text-green-700 border-green-200";
+    if (s === "pending") return "bg-amber-50 text-amber-700 border-amber-200";
+    if (s === "lost") return "bg-red-50 text-red-700 border-red-200";
+    return "bg-blue-50 text-blue-700 border-blue-200";
+  };
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PageHeader title="Lost & Found Management" subtitle="Monitor lost item reports, claims and recoveries across campus." />
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={loadItems} disabled={loading} className="px-4 py-2 rounded-lg border border-[#cfd8e6] bg-white text-sm font-medium disabled:opacity-50"><RefreshCw size={14} className="inline mr-2" />Refresh</button>
+          <button type="button" onClick={exportCSV} className="px-4 py-2 rounded-lg bg-[#17336d] text-white text-sm font-semibold"><Download size={14} className="inline mr-2" />Export CSV</button>
+        </div>
+      </div>
+      {error && <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm">{error}</div>}
+      {limitedDetails && <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 text-xs">Detailed claim fields require the accompanying SystemRecordController.php update. Basic system records are displayed meanwhile.</div>}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard label="Total Reports" value={String(counts.reports)} icon={<BookOpen size={20}/>} color="#1a3a7b" />
+        <StatCard label="Pending Claims" value={String(counts.pending)} icon={<Clock size={20}/>} color="#cf8c1e" />
+        <StatCard label="Claimed" value={String(counts.claimed)} icon={<CheckCircle size={20}/>} color="#269a5b" />
+        <StatCard label="Recovered" value={String(counts.recovered)} icon={<Package size={20}/>} color="#2f5fd6" />
+      </div>
+      <div className="bg-white rounded-xl border border-[#cfd8e6] overflow-hidden">
+        <div className="p-4 border-b border-[#cfd8e6] flex flex-wrap items-center gap-2">
+          {([{id:"reports",name:"Lost Reports"},{id:"claims",name:"Claim Management"}] as const).map(opt => (
+            <button key={opt.id} type="button" onClick={() => {setTab(opt.id);setStatus("all");setSelectedItem(null);}}
+              className={`rounded-full px-4 py-2 text-xs font-semibold ${tab===opt.id?"bg-[#17336d] text-white":"bg-[#f4f6fa] text-slate-600 hover:bg-[#e9eef9]"}`}>
+              {opt.name}
+            </button>
+          ))}
+          <span className="ml-auto text-xs text-slate-500">{filtered.length} matching records</span>
+        </div>
+        <div className="p-4 flex flex-col md:flex-row gap-3 border-b border-[#cfd8e6]">
+          <div className="relative flex-1"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search item, reporter, claimant or location..." className="w-full rounded-lg border border-[#cfd8e6] py-2.5 pl-9 pr-3 text-sm" />
+          </div>
+          <select value={status} onChange={e=>setStatus(e.target.value)} className="rounded-lg border border-[#cfd8e6] px-3 py-2.5 text-sm bg-white" aria-label="Filter claim or report status">
+            <option value="all">All Statuses</option>
+            {(tab === "claims" ? ["pending","claimed"] : ["lost","found","pending","claimed","recovered"]).map(v => <option key={v} value={v}>{v[0].toUpperCase()+v.slice(1)}</option>)}
+          </select>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[780px] text-sm">
+            <thead className="bg-slate-50 text-xs text-slate-500 border-b border-[#cfd8e6]"><tr>
+              {(["Item / Category","Report Type","Reported By","Location","Status",tab==="claims"?"Claimant":"Date","Details"]).map(h=><th key={h} className="text-left px-4 py-3 font-semibold">{h}</th>)}
+            </tr></thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">Loading records...</td></tr> : filtered.length===0 ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">No {tab === "claims" ? "claims" : "reports"} match the selected filters.</td></tr> : filtered.map(item => (
+                <tr key={item.id} className="hover:bg-blue-50/40">
+                  <td className="px-4 py-3"><p className="font-semibold text-slate-800">{item.item_name ?? "Unnamed Item"}</p><p className="text-xs text-slate-500">{item.category ?? "Other"}</p></td>
+                  <td className="px-4 py-3 capitalize">{item.report_type ?? "—"}</td>
+                  <td className="px-4 py-3">{item.reporter?.name ?? "—"}</td>
+                  <td className="px-4 py-3">{item.location_found ?? item.location_lost ?? "—"}</td>
+                  <td className="px-4 py-3"><span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusClass(String(item.status ?? ""))}`}>{item.status ?? "Unknown"}</span></td>
+                  <td className="px-4 py-3">{tab === "claims" ? (item.claimant?.name ?? "—") : formattedDate(item.created_at ?? item.reported_at)}</td>
+                  <td className="px-4 py-3"><button type="button" onClick={()=>setSelectedItem(item)} className="text-blue-800 font-semibold hover:underline">View</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="p-3 bg-slate-50 text-xs text-slate-500">Admin monitoring is read-only. Claim approval and item release are handled by CSU after ownership verification.</div>
+      </div>
+      {selectedItem && <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4" onClick={()=>setSelectedItem(null)}>
+        <div role="dialog" aria-modal="true" aria-label="Lost and Found report details" className="bg-white rounded-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-xl p-5 space-y-4" onClick={e=>e.stopPropagation()}>
+          <div className="flex justify-between items-center"><h2 className="font-bold text-lg text-[#17336d]">Lost & Found Report Details</h2><button type="button" aria-label="Close details" onClick={()=>setSelectedItem(null)}><X size={20}/></button></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            {([
+              ["Item",selectedItem.item_name],["Category",selectedItem.category],["Report Type",selectedItem.report_type],
+              ["Status",selectedItem.status],["Brand / Model",selectedItem.brand_model],["Color",selectedItem.color],
+              ["Reported by",selectedItem.reporter?.name],["Owner",selectedItem.lost_by?.name ?? selectedItem.lostBy?.name],
+              ["Finder",selectedItem.finder?.name],["Claimant",selectedItem.claimant?.name],
+              ["Found at",selectedItem.location_found],["Last seen at",selectedItem.location_lost],
+              ["Reported at",formattedDate(selectedItem.created_at ?? selectedItem.reported_at)],
+              ["Claimed at",formattedDate(selectedItem.claimed_at)],
+            ] as [string, any][]).map(([label,value]) => <div key={label}><p className="text-xs text-slate-500">{label}</p><p className="font-medium break-words">{value ?? "—"}</p></div>)}
+          </div>
+          {selectedItem.description && <div><p className="text-xs font-semibold text-slate-600">Description</p><p className="whitespace-pre-wrap text-sm mt-1">{selectedItem.description}</p></div>}
+          {selectedItem.photo_url && <img src={selectedItem.photo_url} alt="Reported item" className="max-h-52 rounded-lg border object-contain" />}
+          <div className="text-right"><button type="button" onClick={()=>setSelectedItem(null)} className="px-4 py-2 rounded-lg bg-[#17336d] text-white text-sm">Close</button></div>
+        </div>
+      </div>}
+    </div>
+  );
+}
+
 function AdminAnalytics() {
   const [reportData, setReportData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -16130,6 +16050,52 @@ async function downloadGateEntryExitPDF() {
   }
 }
 
+  // Custom period reports: scans and registrations for the current day, week or month.
+  async function downloadPeriodPDF(period: "day" | "week" | "month", source: "scan" | "registration") {
+    try {
+      const now = new Date();
+      const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (period === "week") from.setDate(from.getDate() - ((from.getDay() + 6) % 7));
+      if (period === "month") from.setDate(1);
+      const to = new Date(from);
+      if (period === "day") to.setDate(to.getDate() + 1);
+      if (period === "week") to.setDate(to.getDate() + 7);
+      if (period === "month") to.setMonth(to.getMonth() + 1);
+      const data = source === "scan" ? await getScanLogs() : await getAllItems();
+      const all = source === "scan" ? (data?.logs ?? []) : (data?.items ?? []);
+      const rows = all.filter((item: any) => {
+        const raw = source === "scan" ? item.scanned_at : item.created_at;
+        if (!raw) return false;
+        const date = new Date(raw);
+        return !Number.isNaN(date.getTime()) && date >= from && date < to;
+      });
+      if (!rows.length) { alert(`No ${source === "scan" ? "QR scans" : "registrations"} for the selected ${period}.`); return; }
+      const doc = new jsPDF({orientation:"landscape"});
+      doc.setFontSize(17);
+      doc.text(`QRPass ${period.toUpperCase()} ${source === "scan" ? "QR Scan Report" : "Item Registration Report"}`, 14, 18);
+      doc.setFontSize(10);
+      doc.text("University of Cebu — Main Campus",14,25);
+      doc.text(`Period: ${from.toLocaleDateString("en-PH")} to ${new Date(to.getTime()-1).toLocaleDateString("en-PH")} | Records: ${rows.length}`,14,32);
+      const head = source === "scan" ?
+        ["Date/Time","Item","Owner","QR Code","Gate","Direction","Result","Scanned By"] :
+        ["Date Registered","Item","Owner","Type","Brand / Model","Serial No.","Status"];
+      const body = rows.map((r:any) => source === "scan" ? [
+        new Date(r.scanned_at).toLocaleString("en-PH"), r.item?.item_name ?? "—",
+        r.item?.user?.name ?? "—", r.qr_code ?? "—", r.gate ?? "—",
+        r.direction ?? "—", r.result ?? "—", r.scanner?.name ?? "—",
+      ] : [
+        new Date(r.created_at).toLocaleString("en-PH"),r.item_name ?? "—",
+        r.user?.name ?? "—",r.item_type ?? "—",r.brand_model ?? "—",r.serial_number ?? "—",r.status ?? "—",
+      ]);
+      autoTable(doc,{startY:40,head:[head],body,styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:[26,58,123]},alternateRowStyles:{fillColor:[245,247,250]}});
+      const name=`QRPass-${source}-${period}-${from.toISOString().slice(0,10)}.pdf`;
+      doc.save(name);
+    } catch (err) {
+      console.error("Admin report export failed",err);
+      alert(err instanceof Error ? err.message : "Could not generate report.");
+    }
+  }
+
 return (
     <div className="space-y-5">
       {/* HEADER */}
@@ -16164,6 +16130,22 @@ return (
           </p>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          {(["scan", "registration"] as const).map(source => (
+            <div key={source} className="border border-slate-200 rounded-lg p-3 space-y-2">
+              <p className="text-xs font-bold text-[#17336d]">{source === "scan" ? "QR Scan Reports" : "Item Registration Reports"}</p>
+              <div className="flex flex-wrap gap-2">
+                {(["day", "week", "month"] as const).map(period => (
+                  <button key={period} type="button" onClick={() => downloadPeriodPDF(period, source)}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-[#17336d] hover:bg-blue-100">
+                    <Download size={13}/>{period === "day" ? "Daily" : period === "week" ? "Weekly" : "Monthly"} PDF
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="mb-3 text-[11px] text-slate-500">Reports cover the current calendar day, Monday-to-Sunday week, or month. Downloads use actual database records.</p>
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -16220,7 +16202,7 @@ return (
       )}
 
       {/* MAIN SUMMARY */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <StatCard
           label="Registered Items"
           value={String(
@@ -16778,6 +16760,8 @@ function SysAdminUserAccounts() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [search, setSearch] = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState("all");
+  const [userStatusFilter, setUserStatusFilter] = useState("all");
 
   const [updatingId, setUpdatingId] =
     useState<number | null>(null);
@@ -17238,11 +17222,15 @@ function SysAdminUserAccounts() {
           .trim()
           .toLowerCase();
 
-      if (!keyword) {
-        return true;
-      }
+        if (userRoleFilter !== "all" && String(user.role ?? "").toLowerCase() !== userRoleFilter) return false;
+        const active = String(user.status ?? "").toLowerCase() === "approved";
+        if (userStatusFilter === "active" && !active) return false;
+        if (userStatusFilter === "inactive" && active) return false;
+        if (!keyword) {
+          return true;
+        }
 
-      const searchableText = [
+        const searchableText = [
         user.name,
         user.username,
         user.email,
@@ -17651,7 +17639,7 @@ function SysAdminUserAccounts() {
       )}
 
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3">
         <StatCard
           label="Total Users"
           value={String(
@@ -17776,6 +17764,15 @@ function SysAdminUserAccounts() {
           </div>
         }
       >
+        <div className="px-4 py-3 border-b border-[#cfd8e6] flex flex-wrap gap-2 items-center">
+          <span className="text-xs font-semibold text-slate-500">Filter users:</span>
+          {([{"key":"all","label":"All Roles"},{"key":"student","label":"Students"},{"key":"security","label":"CSU"},{"key":"pco","label":"PCO"},{"key":"sysadmin","label":"Admins"}] as const).map(option => (
+            <button key={option.key} type="button" onClick={()=>setUserRoleFilter(option.key)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${userRoleFilter===option.key?"bg-[#17336d] text-white":"bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{option.label}</button>
+          ))}
+          <select value={userStatusFilter} onChange={e=>setUserStatusFilter(e.target.value)} aria-label="User account status" className="rounded-lg border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs ml-auto">
+            <option value="all">All Statuses</option><option value="active">Active</option><option value="inactive">Disabled</option>
+          </select>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px]">
             <thead>
@@ -18400,6 +18397,7 @@ function SysAdminAuditLogs() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [actionFilter, setActionFilter] = useState("all");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -18470,6 +18468,7 @@ function SysAdminAuditLogs() {
   function clearFilters() {
     setSearch("");
     setStatusFilter("");
+    setActionFilter("all");
     setDateFilter("");
 
     loadAuditLogs("", "", "");
@@ -18580,6 +18579,25 @@ function SysAdminAuditLogs() {
     return "bg-primary/10 text-primary";
   }
 
+  const actionTabs = [
+    {id:"all",label:"All Activity"},{id:"login",label:"Login"},
+    {id:"logout",label:"Logout"},{id:"changes",label:"Data Changes"},
+    {id:"qr_scan",label:"QR Scans"},{id:"errors",label:"Errors"},
+  ];
+  const visibleAuditLogs = logs.filter((log:any) => {
+    const event = String(log.event_type ?? "").toLowerCase();
+    const action = String(log.action ?? "").toLowerCase();
+    const text = `${event} ${action}`;
+    const status = String(log.status ?? "").toLowerCase();
+    if (actionFilter === "all") return true;
+    if (actionFilter === "login") return text.includes("login") || text.includes("log in") || text.includes("sign in");
+    if (actionFilter === "logout") return text.includes("logout") || text.includes("log out") || text.includes("sign out");
+    if (actionFilter === "changes") return ["create","update","delete","approval","status_change"].some(x=>text.includes(x));
+    if (actionFilter === "qr_scan") return text.includes("qr_scan") || text.includes("qr scan") || text.includes("scan") || String(log.module ?? "").toLowerCase().includes("qr verification");
+    if (actionFilter === "errors") return ["error","failed","warning"].includes(status);
+    return true;
+  });
+
   function exportAuditLogsExcel() {
     if (logs.length === 0) {
       alert(
@@ -18588,7 +18606,7 @@ function SysAdminAuditLogs() {
       return;
     }
 
-    const rows = logs.map(
+    const rows = visibleAuditLogs.map(
       (log: any) => ({
         Date: formatAuditDate(
           log.created_at
@@ -18718,6 +18736,12 @@ function SysAdminAuditLogs() {
         />
       </div>
 
+      <div className="rounded-xl border border-[#cfd8e6] bg-white px-4 py-3 flex flex-wrap items-center gap-2">
+        {actionTabs.map(tab => (
+          <button type="button" key={tab.id} onClick={()=>setActionFilter(tab.id)} className={`rounded-full px-3 py-2 text-xs font-semibold ${actionFilter===tab.id?"bg-[#17336d] text-white":"bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{tab.label}</button>
+        ))}
+        <span className="ml-auto text-xs text-slate-500">{visibleAuditLogs.length} matching events</span>
+      </div>
       <Card title="Audit Log Records">
         <div className="p-4 border-b border-[#cfd8e6]">
           <form
@@ -18821,7 +18845,7 @@ function SysAdminAuditLogs() {
           <div className="p-8 text-center text-sm text-muted-foreground">
             Loading audit logs...
           </div>
-        ) : logs.length === 0 ? (
+        ) : visibleAuditLogs.length === 0 ? (
           <div className="p-8 text-center">
             <ClipboardList
               size={32}
@@ -18838,7 +18862,7 @@ function SysAdminAuditLogs() {
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {logs.map(
+            {visibleAuditLogs.map(
               (log: any) => {
                 const actor =
                   log.actor_name ??
@@ -21635,6 +21659,177 @@ function SysAdminAnnouncementManagement() {
 }
 
 
+
+// =========================================================
+// CSU OVERVIEW - read-only operational statistics
+// =========================================================
+function SecurityOverview() {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [incidents, setIncidents] = useState<any[]>([]);
+  const [foundItems, setFoundItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function refresh() {
+    setLoading(true);
+    setError("");
+    const results = await Promise.allSettled([
+      getScanLogs(), getSecurityIncidents(), getLostFoundItems(),
+    ]);
+    const [scanResult, incidentResult, foundResult] = results;
+    if (scanResult.status === "fulfilled") {
+      setLogs(Array.isArray(scanResult.value?.logs) ? scanResult.value.logs : []);
+    }
+    if (incidentResult.status === "fulfilled") {
+      setIncidents(Array.isArray(incidentResult.value?.incidents) ? incidentResult.value.incidents : []);
+    }
+    if (foundResult.status === "fulfilled") {
+      setFoundItems(Array.isArray(foundResult.value?.items) ? foundResult.value.items : []);
+    }
+    const failures = results.filter(result => result.status === "rejected");
+    if (failures.length > 0) {
+      setError("Some security information could not be loaded. Check the backend and your account permissions.");
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => { void refresh(); }, []);
+
+  const isToday = (date: string | null | undefined) => {
+    if (!date) return false;
+    const parsed = new Date(date);
+    const today = new Date();
+    return !Number.isNaN(parsed.getTime()) && parsed.toDateString() === today.toDateString();
+  };
+  const todaysScans = logs.filter(log => isToday(log.scanned_at));
+  const flagged = incidents.filter(incident => String(incident.status ?? "").toLowerCase() !== "resolved");
+  const resolved = incidents.filter(incident => String(incident.status ?? "").toLowerCase() === "resolved");
+  const found = foundItems.filter(item => String(item.report_type ?? "").toLowerCase() === "found" && String(item.status ?? "").toLowerCase() !== "claimed");
+
+  return (
+    <div className="w-full min-w-0 space-y-5">
+      <PageHeader title="CSU Overview" subtitle="Operational summary for campus gate verification and item recovery." action={
+        <button type="button" onClick={refresh} disabled={loading} className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-primary hover:bg-muted disabled:opacity-50"><RefreshCw size={14}/>{loading ? "Refreshing..." : "Refresh"}</button>
+      } />
+      {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard label="Scans Today" value={loading ? "..." : String(todaysScans.length)} icon={<ScanLine size={20}/>} color="#1a3a7b"/>
+        <StatCard label="Open Incidents" value={loading ? "..." : String(flagged.length)} icon={<AlertTriangle size={20}/>} color="#dc2626"/>
+        <StatCard label="Incidents Resolved" value={loading ? "..." : String(resolved.length)} icon={<CheckCircle size={20}/>} color="#15803d"/>
+        <StatCard label="Found Reports" value={loading ? "..." : String(found.length)} icon={<Package size={20}/>} color="#557bdc"/>
+      </div>
+      <Card title="Recent Gate Activity">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full min-w-[680px] text-sm">
+            <thead className="bg-muted/40 text-left text-xs text-muted-foreground"><tr><th className="p-3">Scanned</th><th className="p-3">Item</th><th className="p-3">Owner</th><th className="p-3">Gate</th><th className="p-3">Direction</th></tr></thead>
+            <tbody className="divide-y divide-border">
+              {logs.slice(0, 8).map(log => <tr key={log.id} className="hover:bg-muted/30"><td className="p-3 whitespace-nowrap">{log.scanned_at ? new Date(log.scanned_at).toLocaleString("en-PH") : "—"}</td><td className="p-3">{log.item?.item_name ?? "—"}</td><td className="p-3">{log.item?.user?.name ?? "—"}</td><td className="p-3">{log.gate ?? "—"}</td><td className="p-3 font-semibold">{log.direction ?? "—"}</td></tr>)}
+              {!loading && logs.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No recent gate activity recorded.</td></tr>}
+              {loading && <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Loading recent activity...</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+      <Card title="Open Security Alerts">
+        <div className="divide-y divide-border">
+          {flagged.slice(0, 5).map(incident => <div key={incident.id} className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="text-sm font-semibold text-foreground">{incident.item_name ?? incident.item?.item_name ?? incident.incident_type ?? "Security Incident"}</p><p className="mt-1 text-xs text-muted-foreground">{incident.gate ?? "Unknown gate"} · {incident.reported_at ? new Date(incident.reported_at).toLocaleString("en-PH") : "—"}</p></div><span className="w-fit rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">Flagged</span></div>)}
+          {!loading && flagged.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">No open security incidents.</p>}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// =========================================================
+// CSU READ-ONLY ITEM REGISTRY - approved items only
+// Data is returned by the role-restricted /security-reports endpoint.
+// =========================================================
+function SecurityItemRegistry() {
+  const [items, setItems] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function refresh() {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await getSecurityReports();
+      if (!Array.isArray(response?.registered_items)) {
+        setItems([]);
+        setError("The CSU item registry is not enabled in the backend. Install the provided ReportController.php update.");
+        return;
+      }
+      setItems(response.registered_items);
+    } catch (err) {
+      setItems([]);
+      setError(err instanceof Error ? err.message : "Failed to load the CSU registry.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { void refresh(); }, []);
+
+  const itemStatus = (item: any) => {
+    if (item.is_flagged) return "Flagged";
+    const expired = item.qr_expires_at && new Date(item.qr_expires_at).getTime() < Date.now();
+    return expired ? "Expired" : item.qr_code ? "Active" : "No QR";
+  };
+  const visible = items.filter(item => {
+    if (statusFilter !== "all" && itemStatus(item).toLowerCase() !== statusFilter) return false;
+    const haystack = [item.item_name, item.item_type, item.serial_number, item.qr_code, item.brand_model, item.user?.name, item.user?.username].map(value => String(value ?? "").toLowerCase()).join(" ");
+    return haystack.includes(search.trim().toLowerCase());
+  });
+  function downloadCsv() {
+    if (visible.length === 0) { alert("There are no registered items to export."); return; }
+    const escape = (value: unknown) => {
+      const raw = String(value ?? "").replace(/^([=+\-@])/, "'$1");
+      return `"${raw.replace(/"/g, '""')}"`;
+    };
+    const data = [
+      ["Item", "Category", "Brand / Model", "Serial No.", "Owner", "Owner ID", "QR ID", "Valid Until", "QR Status"],
+      ...visible.map(item => [item.item_name, item.item_type, item.brand_model, item.serial_number, item.user?.name, item.user?.username, item.qr_code, item.qr_expires_at, itemStatus(item)]),
+    ];
+    const blob = new Blob(["\uFEFF" + data.map(row => row.map(escape).join(",")).join("\r\n")], {type: "text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `QRPass-CSU-Registered-Items-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+  return (
+    <div className="w-full min-w-0 space-y-5">
+      <PageHeader title="Registered Items" subtitle="Read-only approved item registry for gate personnel. Pending and rejected applications remain restricted to PCO and System Admin."/>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <StatCard label="Approved Items" value={loading ? "..." : String(items.length)} icon={<Package size={20}/>} color="#1a3a7b"/>
+        <StatCard label="Active QR" value={loading ? "..." : String(items.filter(item => itemStatus(item) === "Active").length)} icon={<QrCode size={20}/>} color="#15803d"/>
+        <div className="col-span-2 lg:col-span-1"><StatCard label="Expired QR" value={loading ? "..." : String(items.filter(item => itemStatus(item) === "Expired").length)} icon={<Clock size={20}/>} color="#d97706"/></div>
+      </div>
+      <Card title="Approved Item Registry">
+        <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center">
+          <label className="relative min-w-0 flex-1"><Search size={15} className="pointer-events-none absolute left-3 top-3 text-muted-foreground"/><input aria-label="Search approved items" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search item, owner, QR ID or serial..." className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-primary"/></label>
+          <select aria-label="Filter QR status" value={statusFilter} onChange={event => setStatusFilter(event.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm"><option value="all">All QR Statuses</option><option value="active">Active</option><option value="expired">Expired</option><option value="flagged">Flagged</option><option value="no qr">No QR</option></select>
+          <button type="button" onClick={refresh} disabled={loading} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-primary disabled:opacity-50"><RefreshCw size={14}/>Refresh</button>
+          <button type="button" onClick={downloadCsv} disabled={loading || visible.length === 0} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-semibold text-white disabled:opacity-50"><Download size={14}/>Export CSV</button>
+        </div>
+        {error && <p role="alert" className="m-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}</p>}
+        <div className="w-full overflow-x-auto"><table className="w-full min-w-[900px] text-sm"><thead className="bg-muted/40 text-left text-xs text-muted-foreground"><tr>{["Item", "Owner", "Serial No.", "QR ID", "Expiration", "Status"].map(label => <th key={label} className="px-4 py-3">{label}</th>)}</tr></thead><tbody className="divide-y divide-border">
+          {visible.map(item => <tr key={item.id} className="hover:bg-muted/30"><td className="px-4 py-3"><span className="font-semibold">{item.item_name ?? "—"}</span><p className="text-xs text-muted-foreground">{item.item_type ?? "—"}</p></td><td className="px-4 py-3">{item.user?.name ?? "—"}<p className="text-xs text-muted-foreground">{item.user?.username ?? ""}</p></td><td className="px-4 py-3 font-mono text-xs">{item.serial_number ?? "—"}</td><td className="px-4 py-3 font-mono text-xs">{item.qr_code ?? "—"}</td><td className="px-4 py-3 whitespace-nowrap">{item.qr_expires_at ? new Date(item.qr_expires_at).toLocaleDateString("en-PH") : "—"}</td><td className="px-4 py-3"><span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${itemStatus(item) === "Active" ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>{itemStatus(item)}</span></td></tr>)}
+          {!loading && visible.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">No approved items match your search.</td></tr>}
+          {loading && <tr><td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">Loading approved item registry...</td></tr>}
+        </tbody></table></div>
+      </Card>
+    </div>
+  );
+}
+
+// =========================================================
+// CSU NOTIFICATIONS - same authenticated notifications API as header
+// =========================================================
 const PAGES: Record<Role, React.ComponentType[]> = {
   student: [
     StudentRegisterItem,
@@ -21644,8 +21839,10 @@ const PAGES: Record<Role, React.ComponentType[]> = {
   ],
 
   security: [
+    SecurityOverview,
     SecurityScanVerify,
     SecurityEntryExitLog,
+    SecurityItemRegistry,
     SecurityLostFound,
     SecurityReports,
   ],
@@ -21660,13 +21857,12 @@ const PAGES: Record<Role, React.ComponentType[]> = {
     AdminDashboard,
     PCOItemRegistry,
     AdminRecords,
+    SysAdminLostFound,
     AdminAnalytics,
     SysAdminUserAccounts,
     SysAdminSettings,
     SysAdminAuditLogs,
     SysAdminActiveSessions,
-    SysAdminPerformance,
-    SysAdminSecurityConfig,
     SysAdminAnnouncementManagement,
   ],
 };
@@ -21699,22 +21895,12 @@ const NAV: Record<
   ],
 
   security: [
-    {
-      icon: <ScanLine size={16} />,
-      label: "Scan & Verify",
-    },
-    {
-      icon: <Map size={16} />,
-      label: "Entry / Exit Log",
-    },
-    {
-      icon: <BookOpen size={16} />,
-      label: "Lost & Found",
-    },
-    {
-      icon: <BarChart2 size={16} />,
-      label: "Reports",
-    },
+    {icon: <BarChart2 size={16}/>, label: "CSU Overview"},
+    {icon: <ScanLine size={16}/>, label: "Scan & Verify"},
+    {icon: <Map size={16}/>, label: "Entry / Exit Log"},
+    {icon: <Layers size={16}/>, label: "Registered Items"},
+    {icon: <BookOpen size={16}/>, label: "Lost & Found"},
+    {icon: <BarChart2 size={16}/>, label: "Reports"},
   ],
 
   pco: [
@@ -21746,6 +21932,10 @@ const NAV: Record<
       label: "System Records",
     },
     {
+      icon: <BookOpen size={16} />,
+      label: "Lost & Found",
+    },
+    {
       icon: <FileText size={16} />,
       label: "Reports & Analytics",
     },
@@ -21764,14 +21954,6 @@ const NAV: Record<
     {
       icon: <Eye size={16} />,
       label: "Active Sessions",
-    },
-    {
-      icon: <BarChart2 size={16} />,
-      label: "Performance",
-    },
-    {
-      icon: <Shield size={16} />,
-      label: "Security Config",
     },
     {
       icon: <Bell size={16} />,
@@ -25304,38 +25486,12 @@ const handleSaveAccountProfile = async () => {
     */
   
     if (role === "security") {
-      if (
-        normalizedType.includes("lost_found") ||
-        normalizedType.includes("lost") ||
-        normalizedType.includes("found")
-      ) {
-        return 2; // Lost & Found
-      }
-  
-      if (
-        normalizedType.includes("incident") ||
-        normalizedType.includes("flagged") ||
-        normalizedType.includes("warning") ||
-        normalizedType.includes("scan") ||
-        normalizedType.includes("security_item_ready") ||
-        normalizedType.includes("item_approved") ||
-        normalizedType.includes("qr")
-      ) {
-        return 0; // Scan & Verify
-      }
-  
-      if (
-        normalizedType.includes("entry") ||
-        normalizedType.includes("exit")
-      ) {
-        return 1; // Entry / Exit Log
-      }
-  
-      if (normalizedType.includes("report")) {
-        return 3; // Reports
-      }
-  
-      return 0; // Scan & Verify
+      if (normalizedType.includes("lost_found") || normalizedType.includes("lost") || normalizedType.includes("found")) return 4; // Lost & Found
+      if (normalizedType.includes("entry") || normalizedType.includes("exit")) return 2; // Entry/Exit
+      if (normalizedType.includes("report")) return 5; // Reports
+      if (normalizedType.includes("registry") || normalizedType.includes("registered_item")) return 3; // Registry
+      if (normalizedType.includes("incident") || normalizedType.includes("flagged") || normalizedType.includes("warning") || normalizedType.includes("scan") || normalizedType.includes("security_item_ready") || normalizedType.includes("item_approved") || normalizedType.includes("qr")) return 1; // Scan & Verify
+      return 0; // CSU Overview (there is no separate Notifications page)
     }
   
     /*
@@ -25346,14 +25502,12 @@ const handleSaveAccountProfile = async () => {
     | 0 = Overview Dashboard
     | 1 = Registered Items
     | 2 = System Records
-    | 3 = Reports & Analytics
-    | 4 = User Accounts
-    | 5 = System Settings
-    | 6 = Audit Logs
-    | 7 = Active Sessions
-    | 8 = Performance
-    | 9 = Security Config
-    | 10 = Announcement Management
+    | 4 = Reports & Analytics
+    | 5 = User Accounts
+    | 6 = System Settings
+    | 7 = Audit Logs
+    | 8 = Active Sessions
+    | 9 = Announcement Management
     |
     */
   
@@ -25363,18 +25517,18 @@ const handleSaveAccountProfile = async () => {
         normalizedType.includes("user") ||
         normalizedType.includes("account")
       ) {
-        return 4; // User Accounts
+        return 5; // User Accounts
       }
   
       if (
         normalizedType.includes("security_config") ||
         normalizedType.includes("permission")
       ) {
-        return 9; // Security Config
+        return 6; // System Settings (Security Config no longer appears in sidebar)
       }
   
       if (normalizedType.includes("setting")) {
-        return 5; // System Settings
+        return 6; // System Settings
       }
   
       if (
@@ -25384,11 +25538,11 @@ const handleSaveAccountProfile = async () => {
         normalizedType.includes("failed") ||
         normalizedType.includes("warning")
       ) {
-        return 6; // Audit Logs
+        return 7; // Audit Logs
       }
   
       if (normalizedType.includes("report")) {
-        return 3; // Reports & Analytics
+        return 4; // Reports & Analytics
       }
   
       if (
@@ -25396,7 +25550,7 @@ const handleSaveAccountProfile = async () => {
         normalizedType.includes("lost") ||
         normalizedType.includes("found")
       ) {
-        return 2; // System Records
+        return 3; // Lost & Found
       }
   
       if (
