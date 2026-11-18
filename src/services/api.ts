@@ -162,7 +162,13 @@ export async function register(
 
   password: string,
 
-  role: string
+  role: string,
+
+  college: string,
+
+  yearLevel: string,
+
+  contactNumber: string
 
 ) {
 
@@ -189,6 +195,9 @@ export async function register(
       password,
 
       role,
+      college,
+      year_level: yearLevel,
+      contact_number: contactNumber,
 
     }),
 

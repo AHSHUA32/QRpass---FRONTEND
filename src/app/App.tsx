@@ -5374,7 +5374,10 @@ function SecurityScanVerify() {
               }
               className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
-              
+              <option value="Gate 1">
+                Gate 1
+              </option>
+
               <option value="Gate 2">
                 Gate 2
               </option>
@@ -8935,7 +8938,7 @@ function CSULocationPicker({
             value={custom}
             onChange={e => onChange(`Other Campus Area - ${e.target.value}`)}
             className={inputStyle}
-            placeholder="e.g. SAO / Library / Canteen"
+            placeholder="e.g. Security Office / Library / Gym"
             maxLength={235}
             required={required}
           />
@@ -21967,11 +21970,22 @@ const NAV: Record<
 const REG_FIELDS: Record<Role, { label: string; type: string; placeholder: string; options?: string[] }[]> = {
   student: [
     { label: "Full Name", type: "text", placeholder: "e.g. Juan Dela Cruz" },
-    { label: "Student ID No.", type: "text", placeholder: "e.g. 22-1234" },
+    { label: "Student ID No.", type: "text", placeholder: "e.g. 221234" },
     { label: "Email Address", type: "email", placeholder: "e.g. juan@uc.edu.ph" },
-    { label: "Contact Number", type: "text", placeholder: "e.g. 09XX-XXX-XXXX" },
-    { label: "Course / Program", type: "text", placeholder: "e.g. BS Information Technology" },
-    { label: "Year Level", type: "select", placeholder: "", options: ["1st Year", "2nd Year", "3rd Year", "4th Year"] },
+    { label: "Contact Number", type: "text", placeholder: "e.g. 09123456789" },
+    { label: "Year Level", type: "select", placeholder: "", options: ["Senior High School", "1st Year", "2nd Year", "3rd Year", "4th Year"] },
+    { label: "College / Department", type: "select", placeholder: "", options: [
+      "College of Allied Engineering",
+      "College of Arts and Sciences",
+      "College of Business and Accountancy",
+      "College of Computer Studies",
+      "College of Criminal Justice",
+      "College of Customs Administration",
+      "College of Hospitality Management",
+      "College of Nursing",
+      "College of Social Work",
+      "College of Teacher Education",
+    ] },
     { label: "Password", type: "password", placeholder: "Create a password" },
     { label: "Confirm Password", type: "password", placeholder: "Repeat password" },
   ],
@@ -22054,7 +22068,6 @@ type LoginMode =
 
 function LoginPage({ onLogin }: { onLogin: (role: Role) => void }) {
   // Two-factor authentication state
-const [showHelp, setShowHelp] = useState(false);
 const [twoFactorChallenge, setTwoFactorChallenge] =
   useState("");
 
@@ -22083,6 +22096,9 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
   // Registration state
   const [regRole, setRegRole] = useState<Role | null>(null);
   const [regFields, setRegFields] = useState<Record<string, string>>({});
+  // QRPass student form validation v3
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
   const [regSubmitted, setRegSubmitted] = useState(false);
 
   // Forgot password state
@@ -22245,7 +22261,7 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
   ) {
     e.preventDefault();
 
-    if (!regRole) {
+    if (regRole !== "student") {
       return;
     }
 
@@ -22256,9 +22272,7 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
       regFields["Email Address"]?.trim();
 
     const registrationUsername =
-      regRole === "student"
-        ? regFields["Student ID No."]?.trim()
-        : regFields["Employee ID"]?.trim();
+      regFields["Student ID No."]?.trim();
 
     const registrationPassword =
       regFields["Password"] ?? "";
@@ -22266,15 +22280,34 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
     const confirmPassword =
       regFields["Confirm Password"] ?? "";
 
+    const college = regFields["Year Level"] === "Senior High School" ? "" : (regFields["College / Department"] ?? "");
+    const yearLevel = regFields["Year Level"] ?? "";
+    const contactNumber = regFields["Contact Number"]?.trim() ?? "";
+
     if (
       !name ||
       !email ||
       !registrationUsername ||
-      !registrationPassword
+      !registrationPassword ||
+      (!college && yearLevel !== "Senior High School") ||
+      !yearLevel
     ) {
       alert(
         "Please complete all required fields."
       );
+      return;
+    }
+
+    if (/[0-9]/.test(name)) {
+      alert("Full Name must not contain numbers.");
+      return;
+    }
+    if (!/^[0-9]+$/.test(registrationUsername)) {
+      alert("Student ID No. must contain numbers only.");
+      return;
+    }
+    if (contactNumber && !/^[0-9]+$/.test(contactNumber)) {
+      alert("Contact Number must contain numbers only.");
       return;
     }
 
@@ -22294,7 +22327,10 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
         email,
         registrationUsername,
         registrationPassword,
-        regRole
+        "student",
+        college,
+        yearLevel,
+        contactNumber
       );
 
       setRegSubmitted(true);
@@ -22516,7 +22552,7 @@ async function handleTwoFactorSubmit(
     setMode(newMode);
 
     setRegSubmitted(false);
-    setRegRole(null);
+    setRegRole(newMode === "register" ? "student" : null);
     setRegFields({});
 
     setForgotEmail("");
@@ -22561,209 +22597,23 @@ async function handleTwoFactorSubmit(
   // ==========================================================================
 
   const NavBar = (
-    <>
-      <div className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-[#cfd8e6] shadow-sm">
-        <div className="flex items-center gap-2.5">
-          {mode !== "login" && <QRpassLogo size={90} showText />}
-
-          {mode !== "login" && (
-          <div>
-            <p
-              className="text-xs font-semibold text-primary"
-              style={{
-                fontFamily: "Barlow, sans-serif",
-              }}
-            >
-              QRpass
-            </p>
-
-            <p className="text-xs text-muted-foreground">
-              Campus Item Registration & Verification System
-            </p>
-          </div>
-          )}
-        </div>
-
-        <div className="text-xs text-muted-foreground">
-          {mode !== "login" && (
-            <>
-              V1.0
-              &nbsp;|&nbsp;
-            </>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setShowHelp(true)}
-            className="text-primary font-medium cursor-pointer hover:underline bg-transparent border-0 p-0"
+    <div className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-[#cfd8e6] shadow-sm">
+      <div className="flex items-center gap-2.5">
+        <QRpassLogo size={90} showText />
+        <div>
+          <p
+            className="text-xs font-semibold text-primary"
+            style={{ fontFamily: "Barlow, sans-serif" }}
           >
-            Help
-          </button>
+            QRpass
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Campus Item Registration & Verification System
+          </p>
         </div>
       </div>
-
-      {showHelp && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4"
-          onClick={() => setShowHelp(false)}
-        >
-          <div
-            className="w-full max-w-md rounded-xl bg-white border border-[#dce3ee] shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#dce3ee]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#eef2fc] flex items-center justify-center">
-                  <BookOpen
-                    size={20}
-                    className="text-primary"
-                  />
-                </div>
-
-                <div>
-                  <h2 className="text-base font-bold text-[#111827]">
-                    QRPass Help
-                  </h2>
-
-                  <p className="text-xs text-muted-foreground">
-                    Campus Item Registration & Verification System
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowHelp(false)}
-                className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                aria-label="Close Help"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-4">
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <div className="flex items-start gap-3">
-                  <Shield
-                    size={18}
-                    className="text-blue-700 mt-0.5 flex-shrink-0"
-                  />
-
-                  <div>
-                    <p className="text-sm font-semibold text-blue-900">
-                      Need Assistance?
-                    </p>
-
-                    <p className="text-xs text-blue-800 mt-1 leading-relaxed">
-                      If you need assistance using QRPass, encounter an
-                      unexpected problem, or have questions about your account,
-                      item registration, QR codes, or verification, please
-                      contact the QRPass System Administrator.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-md bg-[#eef2fc] flex items-center justify-center flex-shrink-0">
-                    <User
-                      size={16}
-                      className="text-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold text-[#111827]">
-                      Account Assistance
-                    </p>
-
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Contact the System Administrator for login, account,
-                      password, or access-related concerns.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-md bg-[#eef2fc] flex items-center justify-center flex-shrink-0">
-                    <Package
-                      size={16}
-                      className="text-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold text-[#111827]">
-                      Item Registration
-                    </p>
-
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Register your item and wait for the required approval
-                      before a QR code is issued.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-md bg-[#eef2fc] flex items-center justify-center flex-shrink-0">
-                    <QrCode
-                      size={16}
-                      className="text-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold text-[#111827]">
-                      QR Code Assistance
-                    </p>
-
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      For problems with QR code viewing, scanning, or
-                      verification, contact the QRPass System Administrator.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-md bg-[#eef2fc] flex items-center justify-center flex-shrink-0">
-                    <Shield
-                      size={16}
-                      className="text-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold text-[#111827]">
-                      Security Concerns
-                    </p>
-
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Report suspicious activity, verification issues, or
-                      security-related concerns to authorized QRPass personnel.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between px-5 py-3 border-t border-[#dce3ee] bg-[#fafbfc] rounded-b-xl">
-              <p className="text-xs text-muted-foreground">
-                QRPass System • V1.0
-              </p>
-
-              <button
-                type="button"
-                onClick={() => setShowHelp(false)}
-                className="text-xs font-semibold bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 transition-opacity"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+      <span className="text-xs text-muted-foreground">V1.0</span>
+    </div>
   );
 
   // ==========================================================================
@@ -22806,6 +22656,119 @@ async function handleTwoFactorSubmit(
   // SHARED PAGE SHELL
   // ==========================================================================
 
+  // Visual-only styling shared by Register, Forgot Password, verification and reset screens.
+  const AuthThemeStyles = (
+    <style>{`
+      /* QRPASS UNIFIED AUTH THEME - register and password recovery */
+      .qrpass-auth-page {
+        width: 100%;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow-x: hidden;
+        box-sizing: border-box;
+        background-color: #f4f7fc !important;
+        background-image: url("/qrpass-login-background.png") !important;
+        background-position: center center !important;
+        background-size: cover !important;
+        background-repeat: no-repeat !important;
+      }
+      .qrpass-auth-content {
+        width: 100%;
+        min-height: 100vh;
+        min-height: 100dvh;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px clamp(16px, 4vw, 36px) !important;
+      }
+      .qrpass-auth-logo {
+        margin-bottom: 13px !important;
+      }
+      .qrpass-auth-card {
+        width: 100%;
+        min-width: 0;
+        border: 1px solid #d7e0ee !important;
+        border-radius: 20px !important;
+        background: #ffffff !important;
+        overflow: hidden;
+        box-shadow: 0 18px 42px rgba(23, 55, 113, .11) !important;
+      }
+      /* Matching the light lavender QRPass item form dropdowns */
+      .qrpass-auth-register-card select {
+        background-color: #eef2ff !important;
+        border-color: #c7d2fe !important;
+        color: #17336d !important;
+      }
+      .qrpass-auth-register-card select option {
+        background-color: #eef2ff;
+        color: #17336d;
+      }
+      .qrpass-auth-register-card > .p-5 {
+      }
+      .qrpass-auth-card > .bg-primary {
+        background: white !important;
+        border-top: 4px solid #2f5fd6 !important;
+        border-bottom: 1px solid #e8edf5;
+        padding: 20px 24px 16px !important;
+      }
+      .qrpass-auth-card > .bg-primary h2 {
+        color: #17336d !important;
+        font-size: 21px !important;
+        line-height: 1.25 !important;
+      }
+      .qrpass-auth-card > .bg-primary p {
+        color: #687b99 !important;
+        line-height: 1.5;
+      }
+      .qrpass-auth-card input:not([type="checkbox"]),
+      .qrpass-auth-card select {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+        min-height: 44px;
+        font-size: 16px !important;
+        border-radius: 11px;
+      }
+      .qrpass-auth-card button[type="submit"] {
+        min-height: 44px;
+        border-radius: 11px;
+        touch-action: manipulation;
+      }
+      /* Do not repeat the old version footer on the redesigned auth pages. */
+      .qrpass-auth-content > p.mt-8,
+      .qrpass-auth-register-content > p.mt-6 {
+        display: none;
+      }
+      @media (max-width: 767px) {
+        .qrpass-auth-content {
+          justify-content: flex-start;
+          padding: max(20px, env(safe-area-inset-top)) clamp(14px, 5vw, 22px) max(24px, env(safe-area-inset-bottom)) !important;
+        }
+        .qrpass-auth-card > .bg-primary {
+          padding: 17px 18px 15px !important;
+        }
+        .qrpass-auth-register-card > .p-5 {
+          padding: 16px !important;
+        }
+        .qrpass-auth-card > .p-6,
+        .qrpass-auth-card > form.p-6 {
+          padding: 18px !important;
+        }
+        .qrpass-auth-card > .p-10 {
+          padding: 24px !important;
+        }
+      }
+      @media (max-width: 380px) {
+        .qrpass-auth-register-card .grid.grid-cols-2 {
+          grid-template-columns: minmax(0, 1fr) !important;
+        }
+        .qrpass-auth-register-card .flex.justify-center > button {
+          width: 100% !important;
+        }
+      }
+    `}</style>
+  );
   const PageShell = React.useMemo(
   () =>
     function AuthPageShell({
@@ -22815,17 +22778,16 @@ async function handleTwoFactorSubmit(
     }) {
       return (
         <div
-          className="min-h-screen flex flex-col"
+          className="min-h-screen flex flex-col qrpass-auth-page"
           style={{
             fontFamily: "Inter, sans-serif",
             background: "#f6f8fb",
           }}
         >
-          {TopBar}
+          {AuthThemeStyles}
 
-          {NavBar}
 
-          <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
+          <div className="flex-1 flex flex-col items-center justify-center px-4 py-10 qrpass-auth-content">
             {children}
 
             <p className="mt-8 text-xs text-muted-foreground text-center">
@@ -22835,7 +22797,6 @@ async function handleTwoFactorSubmit(
             </p>
           </div>
 
-          {BottomColorStrip}
         </div>
       );
     },
@@ -22849,14 +22810,14 @@ async function handleTwoFactorSubmit(
   if (mode === "two-factor") {
     return (
       <PageShell>
-        <div className="flex flex-col items-center mb-6">
+        <div className="flex flex-col items-center mb-6 qrpass-auth-logo">
           <QRpassLogo
             size={72}
             showText
           />
         </div>
 
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden qrpass-auth-card">
           <div className="bg-primary px-6 py-4">
             <h2
               className="text-white font-bold text-base"
@@ -23007,26 +22968,19 @@ async function handleTwoFactorSubmit(
   if (mode === "register") {
     return (
       <div
-        className="min-h-screen flex flex-col"
+        className="min-h-screen flex flex-col qrpass-auth-page"
         style={{
           fontFamily:
             "Inter, sans-serif",
           background: "#f6f8fb",
         }}
       >
-        {TopBar}
+        {AuthThemeStyles}
 
-        {NavBar}
 
-        <div className="flex-1 flex flex-col items-center px-4 py-8">
-          <div className="flex flex-col items-center mb-6">
-            <QRpassLogo
-              size={72}
-              showText
-            />
-          </div>
+        <div className="flex-1 flex flex-col items-center px-4 py-8 qrpass-auth-content qrpass-auth-register-content">
 
-          <div className="w-full max-w-2xl bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+          <div className="w-full max-w-[540px] bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden qrpass-auth-card qrpass-auth-register-card">
 
             {/* HEADER */}
             <div className="bg-primary px-6 py-4">
@@ -23037,64 +22991,28 @@ async function handleTwoFactorSubmit(
                     "Barlow, sans-serif",
                 }}
               >
-                Create an Account
+                Create Student Account
               </h2>
-
-              <p className="text-white/70 text-xs mt-0.5">
-                Fill in your details to
-                register for QRpass access.
-              </p>
             </div>
 
             {!regSubmitted ? (
-              <div className="p-6">
-
-                {/* ROLE */}
-                <div className="mb-5">
-                  <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-3">
-                    Step 1 — Select your role
-                  </p>
-
-                  <RoleSelector
-                    selected={regRole}
-                    onSelect={(role) => {
-                      setRegRole(role);
-                      setRegFields({});
-                    }}
-                    excludeRoles={[
-                      "sysadmin",
-                    ]}
-                  />
-                </div>
+              <div className="p-5">
 
                 {/* REGISTRATION FORM */}
-                {regRole && (
+                {regRole === "student" && (
                   <form
                     onSubmit={
                       handleRegister
                     }
                   >
-                    <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-3">
-                      Step 2 —{" "}
+                    <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-3">Student Information</p>
 
-                      {
-                        ROLES.find(
-                          (role) =>
-                            role.id ===
-                            regRole
-                        )?.label
-                      }{" "}
-
-                      Information
-                    </p>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {fields.map(
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-3">
+                      {fields.filter(field => !(field.label === "College / Department" && regFields["Year Level"] === "Senior High School")).map(
                         (field) => (
                           <div
-                            key={
-                              field.label
-                            }
+                            key={field.label}
+                            className={field.label === "College / Department" || field.label === "Year Level" ? "sm:col-span-2" : ""}
                           >
                             <label className="block text-xs font-semibold text-foreground mb-1">
                               {
@@ -23111,26 +23029,16 @@ async function handleTwoFactorSubmit(
                                       .label
                                   ] ?? ""
                                 }
-                                onChange={(
-                                  e
-                                ) =>
-                                  setRegFields(
-                                    (
-                                      previous
-                                    ) => ({
-                                      ...previous,
-
-                                      [field.label]:
-                                        e
-                                          .target
-                                          .value,
-                                    })
-                                  )
-                                }
+                                onChange={(e) => setRegFields((previous) => ({
+                                  ...previous,
+                                  [field.label]: e.target.value,
+                                  ...(field.label === "Year Level" && e.target.value === "Senior High School" ? { "College / Department": "" } : {}),
+                                }))}
+                                required
                                 className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                               >
-                                <option value="">
-                                  Select…
+                                <option value="" disabled hidden>
+                                  {field.label === "College / Department" ? "Select college" : "Select year level"}
                                 </option>
 
                                 {field.options?.map(
@@ -23153,51 +23061,54 @@ async function handleTwoFactorSubmit(
                                 )}
                               </select>
                             ) : (
-                              <input
-                                type={
-                                  field.type
-                                }
-                                placeholder={
-                                  field.placeholder
-                                }
-                                value={
-                                  regFields[
-                                    field
-                                      .label
-                                  ] ?? ""
-                                }
-                                onChange={(
-                                  e
-                                ) =>
-                                  setRegFields(
-                                    (
-                                      previous
-                                    ) => ({
-                                      ...previous,
-
-                                      [field.label]:
-                                        e
-                                          .target
-                                          .value,
-                                    })
-                                  )
-                                }
-                                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-                              />
+                              <div className="relative">
+                                <input
+                                  type={field.type === "password"
+                                    ? ((field.label === "Password" ? showRegPassword : showRegConfirmPassword) ? "text" : "password")
+                                    : field.type}
+                                  inputMode={field.label === "Student ID No." || field.label === "Contact Number" ? "numeric" : undefined}
+                                  autoComplete={field.label === "Full Name" ? "name" : field.label === "Contact Number" ? "tel" : field.type === "password" ? "new-password" : undefined}
+                                  pattern={field.label === "Student ID No." || field.label === "Contact Number" ? "[0-9]+" : undefined}
+                                  maxLength={field.label === "Student ID No." || field.label === "Contact Number" ? 20 : undefined}
+                                  placeholder={field.placeholder}
+                                  value={regFields[field.label] ?? ""}
+                                  onChange={(e) => {
+                                    const raw = e.target.value;
+                                    const sanitized = field.label === "Full Name"
+                                      ? raw.replace(/[0-9]/g, "")
+                                      : (field.label === "Student ID No." || field.label === "Contact Number")
+                                        ? raw.replace(/[^0-9]/g, "")
+                                        : raw;
+                                    setRegFields((previous) => ({ ...previous, [field.label]: sanitized }));
+                                  }}
+                                  required={field.label !== "Contact Number"}
+                                  minLength={field.type === "password" ? 6 : undefined}
+                                  className={"w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15" + (field.type === "password" ? " pr-11" : "")}
+                                />
+                                {field.type === "password" && (
+                                  <button
+                                    type="button"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-[#637da9] hover:text-[#17336d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2f5fd6]"
+                                    aria-label={(field.label === "Password" ? showRegPassword : showRegConfirmPassword) ? "Hide " + field.label : "Show " + field.label}
+                                    title={(field.label === "Password" ? showRegPassword : showRegConfirmPassword) ? "Hide password" : "Show password"}
+                                    onClick={() => field.label === "Password"
+                                      ? setShowRegPassword(v => !v)
+                                      : setShowRegConfirmPassword(v => !v)}
+                                  >
+                                    {(field.label === "Password" ? showRegPassword : showRegConfirmPassword)
+                                      ? <EyeOff size={18} /> : <Eye size={18} />}
+                                  </button>
+                                )}
+                              </div>
                             )}
                           </div>
                         )
                       )}
                     </div>
 
-                    <div className="mt-5 bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800">
-                      <strong>
-                        Note:
-                      </strong>{" "}
-                      Complete the required
-                      account information
-                      before submitting your
-                      registration.
+                    <div className="mt-4 flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-3 text-left text-xs leading-relaxed text-blue-800">
+                      <span className="shrink-0 font-semibold">Note:</span>
+                      <span className="min-w-0">Complete the required account information before submitting your registration.</span>
                     </div>
 
                     <div className="flex gap-3 mt-5 justify-end">
@@ -23223,27 +23134,6 @@ async function handleTwoFactorSubmit(
                   </form>
                 )}
 
-                {!regRole && (
-                  <div className="pt-2">
-                    <div className="text-center text-xs text-muted-foreground py-4">
-                      Select a role above to
-                      continue with
-                      registration.
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        switchMode(
-                          "login"
-                        )
-                      }
-                      className="w-full py-2.5 border border-[#cfd8e6] rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors"
-                    >
-                      ← Back to Login
-                    </button>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="p-10 flex flex-col items-center gap-4">
@@ -23300,7 +23190,6 @@ async function handleTwoFactorSubmit(
           </p>
         </div>
 
-        {BottomColorStrip}
       </div>
     );
   }
@@ -23312,14 +23201,8 @@ async function handleTwoFactorSubmit(
   if (mode === "forgot") {
     return (
       <PageShell>
-        <div className="flex flex-col items-center mb-6">
-          <QRpassLogo
-            size={72}
-            showText
-          />
-        </div>
 
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden qrpass-auth-card">
           <div className="bg-primary px-6 py-4">
             <h2
               className="text-white font-bold text-base"
@@ -23410,14 +23293,14 @@ async function handleTwoFactorSubmit(
   if (mode === "verify") {
     return (
       <PageShell>
-        <div className="flex flex-col items-center mb-6">
+        <div className="flex flex-col items-center mb-6 qrpass-auth-logo">
           <QRpassLogo
             size={72}
             showText
           />
         </div>
 
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden qrpass-auth-card">
 
           <div className="bg-primary px-6 py-4">
             <h2
@@ -23627,14 +23510,14 @@ async function handleTwoFactorSubmit(
   if (mode === "reset") {
     return (
       <PageShell>
-        <div className="flex flex-col items-center mb-6">
+        <div className="flex flex-col items-center mb-6 qrpass-auth-logo">
           <QRpassLogo
             size={72}
             showText
           />
         </div>
 
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden qrpass-auth-card">
           <div className="bg-primary px-6 py-4">
             <h2
               className="text-white font-bold text-base"
@@ -23748,7 +23631,7 @@ async function handleTwoFactorSubmit(
   if (mode === "reset-done") {
     return (
       <PageShell>
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md p-10 flex flex-col items-center gap-4">
+        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md p-10 flex flex-col items-center gap-4 qrpass-auth-card">
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
             <CheckCircle
               size={32}
@@ -23821,10 +23704,12 @@ async function handleTwoFactorSubmit(
           align-items: center;
           justify-content: center;
           padding: 24px;
-          background:
-            radial-gradient(ellipse at 15% 35%, rgba(53, 107, 213, 0.07), transparent 43%),
-            radial-gradient(ellipse at 87% 70%, rgba(67, 119, 219, 0.06), transparent 40%),
-            #f4f7fc;
+          /* Final QRPass login background selected by the project team. */
+          background-color: #f4f7fc;
+          background-image: url("/qrpass-login-background.png");
+          background-position: center center;
+          background-repeat: no-repeat;
+          background-size: cover;
         }
         .qrpass-login-card {
           width: 100% !important;
@@ -23971,13 +23856,82 @@ async function handleTwoFactorSubmit(
           }
           .qrpass-login-form { gap: 13px !important; }
         }
+        /* MOBILE LOGIN REFINEMENT — keeps desktop layout and all auth logic unchanged. */
+        @media (max-width: 767px) {
+          .qrpass-login-viewport {
+            min-height: 100svh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+          }
+          .qrpass-login-body {
+            box-sizing: border-box;
+            min-height: calc(100svh - 11px);
+            min-height: calc(100dvh - 11px);
+            padding: max(16px, env(safe-area-inset-top)) clamp(14px, 5vw, 22px) max(20px, env(safe-area-inset-bottom)) !important;
+            background-attachment: scroll;
+            background-position: center center;
+          }
+          .qrpass-login-card {
+            width: 100% !important;
+            max-width: 370px !important;
+            margin-inline: auto;
+            box-sizing: border-box;
+          }
+          .qrpass-login-form input[type="text"],
+          .qrpass-login-form input[type="password"] {
+            box-sizing: border-box;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            font-size: 16px !important; /* Stops iOS auto-zoom on focus. */
+          }
+          .qrpass-login-form button,
+          .qrpass-login-card-content button {
+            touch-action: manipulation;
+          }
+          .qrpass-login-form > .flex.items-center.justify-between {
+            flex-wrap: wrap; /* Keep Remember me + Forgot Password from overlapping. */
+            row-gap: 8px;
+          }
+          .qrpass-login-form > .flex.items-center.justify-between > button {
+            white-space: nowrap;
+          }
+        }
+        /* Compact phones (320–380 px): preserve readable inputs and tap targets. */
+        @media (max-width: 380px) {
+          .qrpass-login-card > .qrpass-login-card-content {
+            padding: 18px 17px 17px !important;
+          }
+          .qrpass-login-form { gap: 13px !important; }
+          .qrpass-login-card-logo img { width: 82px !important; }
+          .qrpass-login-form h2 { font-size: 23px !important; }
+          .qrpass-login-card-content > div:last-child {
+            margin-top: 14px !important;
+            padding-top: 12px !important;
+          }
+        }
+        /* Short displays and landscape phones: allow vertical scrolling, no clipped buttons. */
+        @media (max-width: 767px) and (max-height: 660px) {
+          .qrpass-login-body {
+            justify-content: flex-start;
+            padding-top: 16px !important;
+            padding-bottom: 20px !important;
+          }
+        }
+        @media (max-width: 767px) and (orientation: landscape) {
+          .qrpass-login-body {
+            justify-content: flex-start;
+            padding-top: 12px !important;
+            padding-bottom: 18px !important;
+          }
+        }
         @media (max-height: 610px) {
           .qrpass-login-body { justify-content: flex-start; }
         }
 `}</style>
-      {TopBar}
 
-      {NavBar}
+
+      
 
 
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-10 qrpass-login-body">
@@ -24218,7 +24172,7 @@ async function handleTwoFactorSubmit(
 
       </div>
 
-      {BottomColorStrip}
+
     </div>
   );
 }
