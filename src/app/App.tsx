@@ -14,7 +14,7 @@ import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable";
 
 import { QRCodeSVG } from "qrcode.react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 
 
 // =========================================================
@@ -232,36 +232,34 @@ function StatCard({
   return (
     <div
       className={`bg-white border border-[#dce3ee] flex items-center gap-4 p-4 ${className}`}
-      style={{
-        borderRadius: "14px",
-        boxShadow: "0 6px 18px rgba(16, 26, 51, 0.08)",
-      }}
+      style={{borderRadius: "14px", boxShadow: "0 6px 18px rgba(16, 26, 51, 0.08)"}}
     >
-      <div
-        className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{
-          backgroundColor: `${color}14`,
-          color,
-        }}
-      >
+      <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{backgroundColor: `${color}14`, color}}>
         {icon}
       </div>
-
       <div className="min-w-0">
-        <p className="text-[11px] text-[#64748b] font-semibold uppercase tracking-wide">
-          {label}
-        </p>
-
-        <p
-          className="text-2xl font-bold text-[#111827] mt-0.5"
-          style={{
-            fontFamily: "Barlow, sans-serif",
-          }}
-        >
-          {value}
-        </p>
+        <p className="text-[11px] text-[#64748b] font-semibold uppercase tracking-wide">{label}</p>
+        <p className="text-2xl font-bold text-[#111827] mt-0.5" style={{fontFamily: "Barlow, sans-serif"}}>{value}</p>
       </div>
     </div>
+  );
+}
+
+// Hide/show applies to the statistical cards as a group, not to the rest of the page.
+function StatisticalCardsSection({ children }: { children: React.ReactNode }) {
+  const [visible, setVisible] = useState(true);
+  return (
+    <section className="space-y-2" aria-label="Statistics">
+      <div className="flex items-center justify-end">
+        <button type="button" onClick={() => setVisible(current => !current)}
+          aria-expanded={visible}
+          className="rounded-xl border border-[#dce3ee] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] hover:bg-[#f2f5fc]">
+          {visible ? "Hide Cards" : "Show Cards"}
+        </button>
+      </div>
+      {visible && children}
+    </section>
   );
 }
 
@@ -2473,7 +2471,7 @@ function StudentMyQRCodes() {
         action={
           <button
             onClick={loadMyItems}
-            className="text-xs flex items-center gap-1 text-primary font-medium"
+            className="text-xs flex items-center gap-1 text-primary font-medium inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
           >
             <RefreshCw size={12} />
             Refresh
@@ -2504,7 +2502,7 @@ function StudentMyQRCodes() {
           <option value="oldest">Oldest first</option>
         </select>
         <button type="button" onClick={loadMyItems} disabled={loading}
-          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50">
+          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"> <RefreshCw size={13} className="shrink-0" />
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
@@ -3051,7 +3049,7 @@ function StudentPermitStatus() {
           <button
             onClick={loadItems}
             disabled={loading}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
           >
             <RefreshCw
               size={12}
@@ -3141,7 +3139,7 @@ function StudentPermitStatus() {
           <option value="oldest">Oldest first</option>
         </select>
         <button type="button" onClick={loadItems} disabled={loading}
-          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50">
+          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"> <RefreshCw size={13} className="shrink-0" />
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
@@ -3714,7 +3712,7 @@ let _lfItems: LFItem[] = [
   { id: "LF-001", type: "found", item: "Laptop Bag (Black, Jansport)", description: "Found near the library entrance, has stickers on it.", location: "Library", date: "Jun 15, 2026", postedBy: "Guard Ramos", postedByRole: "security", status: "Open", inquiries: [] },
   { id: "LF-002", type: "lost", item: "Samsung Earbuds (White)", description: "Lost after lunch, last seen at the canteen table.", location: "Canteen", date: "Jun 14, 2026", postedBy: "John Dela Cruz", postedByRole: "student", status: "Open", inquiries: [] },
   { id: "LF-003", type: "found", item: "Laptop Charger (Dell, 65W)", description: "Left in Room 201 after class. Adapter included.", location: "Room 201", date: "Jun 12, 2026", postedBy: "Guard Santos", postedByRole: "security", status: "Open", inquiries: [] },
-  { id: "LF-004", type: "found", item: "iPad with Blue Case", description: "Found at Gate 1 guardhouse. Screen has a small crack.", location: "Gate 1", date: "Jun 10, 2026", postedBy: "Guard Ramos", postedByRole: "security", status: "Claimed", inquiries: [{ name: "Maria Santos", message: "This is mine! I can show my receipt.", time: "Jun 11, 2026 – 9:00 AM" }] },
+  { id: "LF-004", type: "found", item: "iPad with Blue Case", description: "Found at Gate 2 guardhouse. Screen has a small crack.", location: "Gate 2", date: "Jun 10, 2026", postedBy: "Guard Ramos", postedByRole: "security", status: "Claimed", inquiries: [{ name: "Maria Santos", message: "This is mine! I can show my receipt.", time: "Jun 11, 2026 – 9:00 AM" }] },
 ];
 let _lfListeners: (() => void)[] = [];
 function getLFItems() { return [..._lfItems]; }
@@ -4121,7 +4119,7 @@ function StudentLostAndFound() {
             type="button"
             onClick={loadItems}
             disabled={loading}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
           >
             <RefreshCw size={12} />
             {loading ? "Refreshing..." : "Refresh"}
@@ -4220,8 +4218,8 @@ function StudentLostAndFound() {
           type="button"
           onClick={loadItems}
           disabled={loading}
-          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-        >
+          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+        > <RefreshCw size={13} className="shrink-0" />
           {loading
             ? "Refreshing..."
             : "Refresh"}
@@ -4831,8 +4829,8 @@ function StudentNotifications() {
           <button
             onClick={() => loadNotifications(true)}
             disabled={loading}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
-          >
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+          > <RefreshCw size={13} className="shrink-0" />
             {loading ? "Refreshing..." : "Refresh"}
           </button>
 
@@ -5009,7 +5007,7 @@ function SecurityScanVerify() {
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState("");
 
-  const [gate, setGate] = useState("Gate 1");
+  const [gate, setGate] = useState("Gate 2");
   const [logging, setLogging] = useState(false);
 
   const [recentLogs, setRecentLogs] = useState<any[]>([]);
@@ -5297,9 +5295,8 @@ function SecurityScanVerify() {
       setPendingIncident(null);
       setSameAsOwner(false);
 
-      alert(
-        `Item logged ${direction} successfully!`
-      );
+      alert(`Item logged ${direction} successfully!`);
+      resumeCamera();
     } catch (error) {
       alert(
         error instanceof Error
@@ -5316,40 +5313,64 @@ function SecurityScanVerify() {
     loadRecentLogs();
   }, []);
 
-  // Camera QR scanner
-  useEffect(() => {
-    const scanner = new Html5QrcodeScanner(
-      "qr-reader",
-      {
-        fps: 10,
-        qrbox: {
-          width: 220,
-          height: 220,
-        },
-      },
-      false
-    );
+  // Start the camera directly when the CSU scanning page opens.
+  // Manual QR ID / serial-number entry stays available if camera access is denied.
+  const [cameraError, setCameraError] = useState("");
+  const [cameraRetry, setCameraRetry] = useState(0);
+  const scanBusyRef = useRef(false);
 
-    scanner.render(
-      (decodedText) => {
-        scanner
-          .clear()
-          .then(() => {
-            verifyCode(decodedText);
-          })
-          .catch(() => {
-            verifyCode(decodedText);
-          });
-      },
-      () => {
-        // Normal while camera is searching for a QR code
+  useEffect(() => {
+    let disposed = false;
+    let started = false;
+    const scanner = new Html5Qrcode("qr-reader");
+    scanBusyRef.current = false;
+    setCameraError("");
+
+    const startCamera = async () => {
+      try {
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          (decodedText) => {
+            if (disposed || scanBusyRef.current) return;
+            scanBusyRef.current = true;
+            // Stop the live feed while checking and logging this item.
+            try { scanner.pause(true); } catch (_) { /* scanner may be stopping */ }
+            void verifyCode(decodedText);
+          },
+          () => { /* scanning frames without a QR is normal */ }
+        );
+        started = true;
+        if (disposed) {
+          await scanner.stop().catch(() => {});
+          scanner.clear();
+        }
+      } catch (error) {
+        if (!disposed) {
+          setCameraError("Camera unavailable or permission denied. Allow camera access, then select Retry Camera, or enter a QR ID manually.");
+        }
       }
-    );
+    };
+    void startCamera();
 
     return () => {
-      scanner.clear().catch(() => {});
+      disposed = true;
+      if (started) {
+        void scanner.stop().catch(() => {}).then(() => { try { scanner.clear(); } catch (_) {} });
+      }
     };
-  }, []);
+  }, [cameraRetry]);
+
+  // Re-enable scanning on demand, after the verification result has been handled.
+  function resumeCamera() {
+    scanBusyRef.current = false;
+    setScanResult(null);
+    setVerifyError("");
+    setIncidentMessage("");
+    setPendingIncident(null);
+    setInput("");
+    setCameraRetry(current => current + 1);
+  }
 
   return (
     <div className="w-full min-w-0 space-y-5">
@@ -5392,12 +5413,16 @@ function SecurityScanVerify() {
             </select>
           </div>
 
-          {/* CAMERA */}
-          <div className="w-full max-w-md">
-            <div
-              id="qr-reader"
-              className="w-full min-w-0 max-w-full overflow-hidden rounded-xl"
-            />
+          {/* LIVE QR CAMERA - automatically starts on page entry */}
+          <div className="w-full max-w-md space-y-3">
+            <div key={cameraRetry} id="qr-reader" className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-slate-50" />
+            {cameraError && <p role="alert" className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">{cameraError}</p>}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">Camera scans automatically. You may also verify a code manually.</p>
+              <button type="button" onClick={resumeCamera} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold hover:bg-muted">
+                <RefreshCw size={14} /> {cameraError ? "Retry Camera" : "Scan Next Item"}
+              </button>
+            </div>
           </div>
 
           {/* MANUAL INPUT */}
@@ -5881,7 +5906,7 @@ function SecurityScanVerify() {
           <button
             onClick={loadRecentLogs}
             disabled={loadingLogs}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
           >
             <RefreshCw size={12} />
             Refresh
@@ -5996,10 +6021,108 @@ function SecurityScanVerify() {
   );
 }
 
+type CSUDatePeriod = "today" | "week" | "month" | "all" | "custom";
+
+const CSU_PERIOD_OPTIONS: { value: CSUDatePeriod; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "week", label: "This Week" },
+  { value: "month", label: "This Month" },
+  { value: "all", label: "All Time" },
+  { value: "custom", label: "Custom Range" },
+];
+
+function csuMatchesPeriod(
+  value: string | null | undefined,
+  period: CSUDatePeriod,
+  customStart = "",
+  customEnd = ""
+): boolean {
+  if (period === "all") return true;
+  if (!value) return false;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  const now = new Date();
+  if (period === "today") return date.toDateString() === now.toDateString();
+  if (period === "month") return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+  if (period === "week") {
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    const end = new Date(start);
+    end.setDate(start.getDate() + 7);
+    return date >= start && date < end;
+  }
+  if (period === "custom") {
+    if (!customStart && !customEnd) return false;
+    if (customStart) {
+      const start = new Date(`${customStart}T00:00:00`);
+      if (date < start) return false;
+    }
+    if (customEnd) {
+      const end = new Date(`${customEnd}T23:59:59.999`);
+      if (date > end) return false;
+    }
+  }
+  return true;
+}
+
+function csuPeriodName(period: CSUDatePeriod, start = "", end = "") {
+  if (period === "custom") return `${start || "Start"} to ${end || "End"}`;
+  return CSU_PERIOD_OPTIONS.find(option => option.value === period)?.label || "All Time";
+}
+
+// Shared date selector for CSU statistic cards. Filters records by their creation date.
+function CSUStatsPeriodFilter({
+  value, onChange, start, onStartChange, end, onEndChange, description,
+}: {
+  value: CSUDatePeriod;
+  onChange: (period: CSUDatePeriod) => void;
+  start: string;
+  onStartChange: (date: string) => void;
+  end: string;
+  onEndChange: (date: string) => void;
+  description: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-3 shadow-sm sm:p-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="text-sm font-semibold text-foreground" htmlFor={`csu-stat-period-${description.replace(/[^a-z]/gi, "-").toLowerCase()}`}>
+          Reporting Period
+        </label>
+        <select
+          id={`csu-stat-period-${description.replace(/[^a-z]/gi, "-").toLowerCase()}`}
+          value={value}
+          onChange={event => onChange(event.target.value as CSUDatePeriod)}
+          className="h-10 min-w-[160px] rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+        >
+          {CSU_PERIOD_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+        {value === "custom" && (
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-xs text-muted-foreground">From
+              <input type="date" value={start} max={end || undefined} onChange={event => onStartChange(event.target.value)}
+                className="ml-2 h-10 rounded-xl border border-border bg-card px-2 text-sm" />
+            </label>
+            <label className="text-xs text-muted-foreground">To
+              <input type="date" value={end} min={start || undefined} onChange={event => onEndChange(event.target.value)}
+                className="ml-2 h-10 rounded-xl border border-border bg-card px-2 text-sm" />
+            </label>
+          </div>
+        )}
+        <span className="text-xs text-muted-foreground">{description}</span>
+      </div>
+    </div>
+  );
+}
+
 function SecurityEntryExitLog() {
   const [logs, setLogs] = useState<any[]>([]);
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scanPeriod, setScanPeriod] = useState<CSUDatePeriod>("all");
+  const [scanStartDate, setScanStartDate] = useState("");
+  const [scanEndDate, setScanEndDate] = useState("");
 
   // Show only the selected CSU entry / exit or incident section.
   const [entryExitTab, setEntryExitTab] = useState<
@@ -6304,41 +6427,23 @@ function SecurityEntryExitLog() {
   |--------------------------------------------------------------------------
   */
 
-  const todayLogs = logs.filter((log) =>
-    isToday(log.scanned_at)
+  const periodLogs = logs.filter((log) =>
+    csuMatchesPeriod(log.scanned_at, scanPeriod, scanStartDate, scanEndDate)
+  );
+  const periodIncidents = incidents.filter((incident) =>
+    csuMatchesPeriod(incident.reported_at, scanPeriod, scanStartDate, scanEndDate)
   );
 
-  const todayIncidents = incidents.filter(
-    (incident) =>
-      isToday(incident.reported_at)
-  );
-
-  const verifiedCount = todayLogs.filter(
-    (log) =>
-      String(log.result ?? "").toLowerCase() ===
-      "verified"
+  const verifiedCount = periodLogs.filter((log) =>
+    String(log.result ?? "").toLowerCase() === "verified"
   ).length;
-
-  const flaggedCount = todayIncidents.filter(
-    (incident) =>
-      String(
-        incident.status ?? ""
-      ).toLowerCase() === "flagged"
+  const flaggedCount = periodIncidents.filter((incident) =>
+    String(incident.status ?? "").toLowerCase() !== "resolved"
   ).length;
-
-  const uniqueStudents = new Set(
-    todayLogs
-      .map(
-        (log) =>
-          log.item?.user?.id ??
-          log.item?.user?.username ??
-          null
-      )
-      .filter(Boolean)
-  ).size;
-
-  const scannedToday = todayLogs.length;
-
+  const uniqueStudents = new Set(periodLogs.map((log) =>
+    log.item?.user?.id ?? log.item?.user?.username ?? null
+  ).filter(Boolean)).size;
+  const scanCount = periodLogs.length;
 
 /*
 |--------------------------------------------------------------------------
@@ -6346,46 +6451,19 @@ function SecurityEntryExitLog() {
 |--------------------------------------------------------------------------
 */
 
-const flaggedIncidents =
-  incidents.filter(
-    (incident) =>
-      String(
-        incident.status ?? ""
-      ).toLowerCase() !==
-      "resolved"
-  );
-
-const resolvedIncidents =
-  incidents.filter(
-    (incident) =>
-      String(
-        incident.status ?? ""
-      ).toLowerCase() ===
-      "resolved"
-  );
-
-const entryLogs = logs.filter(
-  (log) => String(log.direction ?? "").toUpperCase() === "IN"
+const flaggedIncidents = periodIncidents.filter((incident) =>
+  String(incident.status ?? "").toLowerCase() !== "resolved"
 );
-const exitLogs = logs.filter(
-  (log) => String(log.direction ?? "").toUpperCase() === "OUT"
+const resolvedIncidents = periodIncidents.filter((incident) =>
+  String(incident.status ?? "").toLowerCase() === "resolved"
 );
-const visibleLogs = entryExitTab === "entry"
-  ? entryLogs
-  : entryExitTab === "exit"
-    ? exitLogs
-    : logs;
+const entryLogs = periodLogs.filter((log) => String(log.direction ?? "").toUpperCase() === "IN");
+const exitLogs = periodLogs.filter((log) => String(log.direction ?? "").toUpperCase() === "OUT");
+const visibleLogs = entryExitTab === "entry" ? entryLogs : entryExitTab === "exit" ? exitLogs : periodLogs;
 
-// CSV export matches what the user selected in the tabs.
-const exportLogs = entryExitTab === "flagged" || entryExitTab === "resolved"
-  ? []
-  : visibleLogs;
-const exportIncidents = entryExitTab === "flagged"
-  ? flaggedIncidents
-  : entryExitTab === "resolved"
-    ? resolvedIncidents
-    : [];
-
+// CSV export follows both the selected period and the selected tab.
+const exportLogs = entryExitTab === "flagged" || entryExitTab === "resolved" ? [] : visibleLogs;
+const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExitTab === "resolved" ? resolvedIncidents : [];
 
 /*
 |--------------------------------------------------------------------------
@@ -6779,8 +6857,8 @@ const exportIncidents = entryExitTab === "flagged"
           <button
             onClick={loadData}
             disabled={loading}
-            className="h-10 w-full rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-50 sm:w-auto"
-          >
+            className="h-10 w-full rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-50 sm:w-auto inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+          > <RefreshCw size={13} className="shrink-0" />
             {loading
               ? "Refreshing..."
               : "Refresh"}
@@ -6795,15 +6873,36 @@ const exportIncidents = entryExitTab === "flagged"
         </div>
       </div>
 
+      {/* Apply the selected period to scan cards, tabs, and exports. */}
+      <div className="rounded-xl border border-border bg-card p-3 shadow-sm sm:p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <label htmlFor="csu-scan-period" className="text-sm font-semibold text-foreground">Reporting Period</label>
+          <select id="csu-scan-period" value={scanPeriod}
+            onChange={e => setScanPeriod(e.target.value as CSUDatePeriod)}
+            className="h-10 min-w-[160px] rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20">
+            {CSU_PERIOD_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
+          {scanPeriod === "custom" && (
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-xs text-muted-foreground">From <input type="date" value={scanStartDate} max={scanEndDate || undefined}
+                onChange={e => setScanStartDate(e.target.value)} className="ml-1 h-10 rounded-xl border border-border bg-card px-2 text-sm" /></label>
+              <label className="text-xs text-muted-foreground">To <input type="date" value={scanEndDate} min={scanStartDate || undefined}
+                onChange={e => setScanEndDate(e.target.value)} className="ml-1 h-10 rounded-xl border border-border bg-card px-2 text-sm" /></label>
+            </div>
+          )}
+          <span className="text-xs text-muted-foreground">Statistics and records reflect this period.</span>
+        </div>
+      </div>
+
       {/* SUMMARY */}
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4 xl:gap-4">
         <div className="min-w-0 rounded-xl border border-border bg-card p-3 shadow-sm sm:p-5">
           <p className="text-sm text-gray-500">
-            Scanned Today
+            {`Scans (${csuPeriodName(scanPeriod, scanStartDate, scanEndDate)})`}
           </p>
 
           <p className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">
-            {scannedToday}
+            {scanCount}
           </p>
         </div>
 
@@ -6812,7 +6911,7 @@ const exportIncidents = entryExitTab === "flagged"
             Verified
           </p>
 
-          <p className="mt-2 text-2xl font-bold text-green-600 sm:text-3xl">
+          <p className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">
             {verifiedCount}
           </p>
         </div>
@@ -6822,7 +6921,7 @@ const exportIncidents = entryExitTab === "flagged"
             Flagged
           </p>
 
-          <p className="mt-2 text-2xl font-bold text-red-600 sm:text-3xl">
+          <p className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">
             {flaggedCount}
           </p>
         </div>
@@ -6832,7 +6931,7 @@ const exportIncidents = entryExitTab === "flagged"
             Unique Students
           </p>
 
-          <p className="mt-2 text-2xl font-bold text-primary sm:text-3xl">
+          <p className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">
             {uniqueStudents}
           </p>
         </div>
@@ -6841,7 +6940,7 @@ const exportIncidents = entryExitTab === "flagged"
       {/* LOST & FOUND STYLE TABS: ONLY ONE SECTION VISIBLE AT A TIME */}
       <div className="grid grid-cols-2 gap-2 border-b border-border pb-3 sm:flex sm:flex-wrap">
         {([
-          { key: "all" as const, label: "All Records", count: logs.length },
+          { key: "all" as const, label: "All Records", count: periodLogs.length },
           { key: "entry" as const, label: "Entry", count: entryLogs.length },
           { key: "exit" as const, label: "Exit", count: exitLogs.length },
           { key: "flagged" as const, label: "Flagged", count: flaggedIncidents.length },
@@ -7789,6 +7888,9 @@ function SecurityReports() {
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reportPeriod, setReportPeriod] = useState<CSUDatePeriod>("all");
+  const [reportStart, setReportStart] = useState("");
+  const [reportEnd, setReportEnd] = useState("");
 
   // =========================================================
   // LOAD REAL SECURITY REPORT DATA
@@ -8029,619 +8131,171 @@ function SecurityReports() {
     ).length;
 
   // =========================================================
-  // DAILY QR SCAN SUMMARY PDF
+  // SHARED REPORT PERIOD (ALL PDF/CSV EXPORTS)
   // =========================================================
+
+  // A custom range is intentionally empty until users select dates.
+  const periodScanLogs = logs.filter(log =>
+    csuMatchesPeriod(log.scanned_at, reportPeriod, reportStart, reportEnd)
+  );
+  const periodLabel = csuPeriodName(reportPeriod, reportStart, reportEnd);
+  const periodValid = reportPeriod !== "custom" || (
+    Boolean(reportStart) && Boolean(reportEnd) && reportStart <= reportEnd
+  );
+  const reportFileSuffix = reportPeriod === "custom"
+    ? `${reportStart || "start"}-to-${reportEnd || "end"}`
+    : `${reportPeriod}-${new Date().toISOString().slice(0, 10)}`;
+
+  function generateScanPDF(reportTitle: string) {
+    try {
+      if (!periodValid) {
+        alert("Please choose both valid From and To dates for the custom range.");
+        return;
+      }
+      if (!periodScanLogs.length) {
+        alert("No QR scan records found for the selected reporting period.");
+        return;
+      }
+      const verifiedCount = periodScanLogs.filter(log =>
+        String(log.result ?? "").toLowerCase() === "verified"
+      ).length;
+      const entryCount = periodScanLogs.filter(log =>
+        String(log.direction ?? "").toUpperCase() === "IN"
+      ).length;
+      const exitCount = periodScanLogs.filter(log =>
+        String(log.direction ?? "").toUpperCase() === "OUT"
+      ).length;
+      const doc = new jsPDF({ orientation: "landscape" });
+      doc.setFontSize(18);
+      doc.text(reportTitle, 14, 18);
+      doc.setFontSize(10);
+      doc.text("University of Cebu - Main Campus", 14, 25);
+      doc.text(`Reporting Period: ${periodLabel}`, 14, 31);
+      doc.text(`Total QR Scans: ${periodScanLogs.length}`, 14, 38);
+      doc.text(`Verified Scans: ${verifiedCount}`, 14, 44);
+      doc.text(`Entry Scans: ${entryCount}`, 75, 38);
+      doc.text(`Exit Scans: ${exitCount}`, 75, 44);
+      autoTable(doc, {
+        startY: 51,
+        head: [["Date", "Time", "Owner", "Owner ID", "Item", "Serial No.", "QR ID", "Gate", "Direction", "Result", "Scanned By"]],
+        body: periodScanLogs.map(log => [
+          formatDate(log.scanned_at), formatTime(log.scanned_at),
+          log.item?.user?.name ?? "Unknown", log.item?.user?.username ?? "—",
+          log.item?.item_name ?? "Unknown Item", log.item?.serial_number ?? "—",
+          log.qr_code ?? "—", log.gate ?? "—", log.direction ?? "—",
+          log.result ?? "—", log.scanner?.name ?? "—",
+        ]),
+        styles: { fontSize: 7, cellPadding: 2 },
+        headStyles: { fillColor: [26, 58, 123], textColor: [255, 255, 255] },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+      });
+      const prefix = reportTitle.toLowerCase().includes("weekly")
+        ? "Weekly-Inspection" : reportTitle.toLowerCase().includes("daily")
+          ? "Daily-QR-Scan" : "Entry-Exit-Scan";
+      doc.save(`QRPass-${prefix}-${reportFileSuffix}.pdf`);
+    } catch (err) {
+      console.error("Failed to generate CSU scan report:", err);
+      alert(err instanceof Error ? err.message : "Failed to generate scan report.");
+    }
+  }
 
   function downloadDailyQrScanPDF() {
-    try {
-      const todayLogs =
-        logs.filter((log) =>
-          isToday(log.scanned_at)
-        );
-
-      if (todayLogs.length === 0) {
-        alert(
-          "There are no QR scan records for today."
-        );
-        return;
-      }
-
-      const verifiedCount =
-        todayLogs.filter(
-          (log) =>
-            String(
-              log.result ?? ""
-            ).toLowerCase() ===
-            "verified"
-        ).length;
-
-      const entryCount =
-        todayLogs.filter(
-          (log) =>
-            String(
-              log.direction ?? ""
-            ).toUpperCase() ===
-            "IN"
-        ).length;
-
-      const exitCount =
-        todayLogs.filter(
-          (log) =>
-            String(
-              log.direction ?? ""
-            ).toUpperCase() ===
-            "OUT"
-        ).length;
-
-      const doc = new jsPDF({
-        orientation: "landscape",
-      });
-
-      doc.setFontSize(18);
-      doc.text(
-        "QRPass Daily QR Scan Summary",
-        14,
-        18
-      );
-
-      doc.setFontSize(10);
-      doc.text(
-        "University of Cebu - Main Campus",
-        14,
-        25
-      );
-
-      doc.text(
-        `Report Date: ${new Date().toLocaleDateString(
-          "en-PH"
-        )}`,
-        14,
-        31
-      );
-
-      doc.text(
-        `Total QR Scans: ${todayLogs.length}`,
-        14,
-        38
-      );
-
-      doc.text(
-        `Verified Scans: ${verifiedCount}`,
-        14,
-        44
-      );
-
-      doc.text(
-        `Entry Scans: ${entryCount}`,
-        75,
-        38
-      );
-
-      doc.text(
-        `Exit Scans: ${exitCount}`,
-        75,
-        44
-      );
-
-      const rows =
-        todayLogs.map((log) => [
-          formatDate(log.scanned_at),
-          formatTime(log.scanned_at),
-          log.item?.user?.name ??
-            "Unknown",
-          log.item?.user?.username ??
-            "—",
-          log.item?.item_name ??
-            "Unknown Item",
-          log.item?.serial_number ??
-            "—",
-          log.qr_code ?? "—",
-          log.gate ?? "—",
-          log.direction ?? "—",
-          log.result ?? "—",
-          log.scanner?.name ?? "—",
-        ]);
-
-      autoTable(doc, {
-        startY: 51,
-
-        head: [
-          [
-            "Date",
-            "Time",
-            "Owner",
-            "Owner ID",
-            "Item",
-            "Serial No.",
-            "QR ID",
-            "Gate",
-            "Direction",
-            "Result",
-            "Scanned By",
-          ],
-        ],
-
-        body: rows,
-
-        styles: {
-          fontSize: 7,
-          cellPadding: 2,
-        },
-
-        headStyles: {
-          fillColor: [26, 58, 123],
-          textColor: [255, 255, 255],
-        },
-
-        alternateRowStyles: {
-          fillColor: [245, 247, 250],
-        },
-      });
-
-      const fileDate =
-        new Date()
-          .toISOString()
-          .slice(0, 10);
-
-      doc.save(
-        `QRPass-Daily-QR-Scan-${fileDate}.pdf`
-      );
-    } catch (err) {
-      console.error(
-        "Failed to generate Daily QR Scan Summary:",
-        err
-      );
-
-      alert(
-        err instanceof Error
-          ? err.message
-          : "Failed to generate Daily QR Scan Summary."
-      );
-    }
+    generateScanPDF("QRPass Daily QR Scan Summary");
   }
-
-  // =========================================================
-  // WEEKLY INSPECTION LOG PDF
-  // =========================================================
 
   function downloadWeeklyInspectionPDF() {
-    try {
-      const weeklyLogs =
-        logs.filter((log) =>
-          isCurrentWeek(log.scanned_at)
-        );
-
-      if (weeklyLogs.length === 0) {
-        alert(
-          "There are no inspection records for the current week."
-        );
-        return;
-      }
-
-      const verifiedCount =
-        weeklyLogs.filter(
-          (log) =>
-            String(
-              log.result ?? ""
-            ).toLowerCase() ===
-            "verified"
-        ).length;
-
-      const entryCount =
-        weeklyLogs.filter(
-          (log) =>
-            String(
-              log.direction ?? ""
-            ).toUpperCase() ===
-            "IN"
-        ).length;
-
-      const exitCount =
-        weeklyLogs.filter(
-          (log) =>
-            String(
-              log.direction ?? ""
-            ).toUpperCase() ===
-            "OUT"
-        ).length;
-
-      const uniqueItems =
-        new Set(
-          weeklyLogs
-            .map(
-              (log) =>
-                log.item?.id ??
-                log.qr_code ??
-                null
-            )
-            .filter(Boolean)
-        ).size;
-
-      const uniqueOwners =
-        new Set(
-          weeklyLogs
-            .map(
-              (log) =>
-                log.item?.user?.id ??
-                log.item?.user?.username ??
-                null
-            )
-            .filter(Boolean)
-        ).size;
-
-      const doc = new jsPDF({
-        orientation: "landscape",
-      });
-
-      doc.setFontSize(18);
-      doc.text(
-        "QRPass Weekly Inspection Log",
-        14,
-        18
-      );
-
-      doc.setFontSize(10);
-      doc.text(
-        "University of Cebu - Main Campus",
-        14,
-        25
-      );
-
-      doc.text(
-        `Reporting Period: ${currentWeekLabel}`,
-        14,
-        31
-      );
-
-      doc.text(
-        `Total Inspections / Scans: ${weeklyLogs.length}`,
-        14,
-        38
-      );
-
-      doc.text(
-        `Verified: ${verifiedCount}`,
-        14,
-        44
-      );
-
-      doc.text(
-        `Unique Items: ${uniqueItems}`,
-        75,
-        38
-      );
-
-      doc.text(
-        `Unique Owners: ${uniqueOwners}`,
-        75,
-        44
-      );
-
-      doc.text(
-        `Entries: ${entryCount}`,
-        130,
-        38
-      );
-
-      doc.text(
-        `Exits: ${exitCount}`,
-        130,
-        44
-      );
-
-      const rows =
-        weeklyLogs.map((log) => [
-          formatDate(log.scanned_at),
-          formatTime(log.scanned_at),
-          log.item?.user?.name ??
-            "Unknown",
-          log.item?.user?.username ??
-            "—",
-          log.item?.item_name ??
-            "Unknown Item",
-          log.item?.item_type ??
-            "—",
-          log.item?.serial_number ??
-            "—",
-          log.qr_code ?? "—",
-          log.gate ?? "—",
-          log.direction ?? "—",
-          log.result ?? "—",
-          log.scanner?.name ?? "—",
-        ]);
-
-      autoTable(doc, {
-        startY: 51,
-
-        head: [
-          [
-            "Date",
-            "Time",
-            "Owner",
-            "Owner ID",
-            "Item",
-            "Type",
-            "Serial No.",
-            "QR ID",
-            "Gate",
-            "Direction",
-            "Result",
-            "Inspected By",
-          ],
-        ],
-
-        body: rows,
-
-        styles: {
-          fontSize: 6.5,
-          cellPadding: 2,
-        },
-
-        headStyles: {
-          fillColor: [26, 58, 123],
-          textColor: [255, 255, 255],
-        },
-
-        alternateRowStyles: {
-          fillColor: [245, 247, 250],
-        },
-      });
-
-      const startDate =
-        weekStart
-          .toISOString()
-          .slice(0, 10);
-
-      const endDate =
-        weekEnd
-          .toISOString()
-          .slice(0, 10);
-
-      doc.save(
-        `QRPass-Weekly-Inspection-${startDate}-to-${endDate}.pdf`
-      );
-    } catch (err) {
-      console.error(
-        "Failed to generate Weekly Inspection Log:",
-        err
-      );
-
-      alert(
-        err instanceof Error
-          ? err.message
-          : "Failed to generate Weekly Inspection Log."
-      );
-    }
+    generateScanPDF("QRPass Weekly Inspection Log");
   }
-
-  // =========================================================
-  // MONTHLY ITEM REGISTRATION SUMMARY PDF
-  // =========================================================
 
   async function downloadMonthlyRegistrationPDF() {
     try {
-      // CSU's authorized reporting endpoint, not the PCO/System Admin registry.
-      const response =
-        await getSecurityReports();
-
-      const allItems =
-        Array.isArray(
-          response?.registered_items
-        )
-          ? response.registered_items
-          : [];
-
-      const now = new Date();
-
-      const monthlyItems =
-        allItems.filter((item: any) => {
-          const created =
-            parseDate(
-              item.created_at
-            );
-
-          if (!created) {
-            return false;
-          }
-
-          return (
-            created.getFullYear() ===
-              now.getFullYear() &&
-            created.getMonth() ===
-              now.getMonth()
-          );
-        });
-
-      if (!Array.isArray(response?.monthly_registration_summary) ||
-          !Array.isArray(response?.registered_items)) {
-        throw new Error("CSU monthly registration data is unavailable. Install the updated ReportController.php in the backend.");
-      }
-
-      const monthlySummary = response.monthly_registration_summary;
-
-      const totalRegistrations = monthlySummary.reduce(
-        (total: number, entry: any) => total + Number(entry.total ?? 0),
-        0
-      );
-
-      if (totalRegistrations === 0) {
-        alert(
-          "There are no item registrations for this month."
-        );
+      if (!periodValid) {
+        alert("Please choose both valid From and To dates for the custom range.");
         return;
       }
-
-      const countFor = (status: string) =>
-        monthlySummary
-          .filter((entry: any) => String(entry.status ?? "").toLowerCase() === status)
-          .reduce((count: number, entry: any) => count + Number(entry.total ?? 0), 0);
-
-      const approvedCount = countFor("approved");
-      const pendingCount = countFor("pending");
-
-      const qrIssuedCount =
-        monthlyItems.filter(
-          (item: any) =>
-            String(
-              item.status ?? ""
-            ).toLowerCase() ===
-              "approved" &&
-            Boolean(item.qr_code)
-        ).length;
-
-      const monthName =
-        now.toLocaleDateString(
-          "en-US",
-          {
-            month: "long",
-            year: "numeric",
-          }
-        );
-
-      const doc = new jsPDF({
-        orientation: "landscape",
-      });
-
+      const response = await getSecurityReports();
+      if (!Array.isArray(response?.registered_items)) {
+        throw new Error("CSU item registration records are unavailable from the backend.");
+      }
+      const filteredItems = response.registered_items.filter((item: any) =>
+        csuMatchesPeriod(item.created_at, reportPeriod, reportStart, reportEnd)
+      );
+      if (filteredItems.length === 0) {
+        alert("No authorized item registration records found for the selected period.");
+        return;
+      }
+      const approvedCount = filteredItems.filter((item: any) =>
+        String(item.status ?? "").toLowerCase() === "approved"
+      ).length;
+      const pendingCount = filteredItems.filter((item: any) =>
+        String(item.status ?? "").toLowerCase() === "pending"
+      ).length;
+      const qrIssuedCount = filteredItems.filter((item: any) => Boolean(item.qr_code)).length;
+      const doc = new jsPDF({ orientation: "landscape" });
       doc.setFontSize(18);
-      doc.text(
-        "QRPass Monthly Item Registration Summary",
-        14,
-        18
-      );
-
+      doc.text("QRPass Item Registration Summary", 14, 18);
       doc.setFontSize(10);
-      doc.text(
-        "University of Cebu - Main Campus",
-        14,
-        25
-      );
-
-      doc.text(
-        `Reporting Period: ${monthName}`,
-        14,
-        31
-      );
-
-      doc.text(
-        `Total Registrations: ${totalRegistrations}`,
-        14,
-        38
-      );
-
-      doc.text(
-        `Approved: ${approvedCount}`,
-        14,
-        44
-      );
-
-      doc.text(
-        `Pending: ${pendingCount}`,
-        75,
-        38
-      );
-
-      doc.text(
-        `QR Codes Issued: ${qrIssuedCount}`,
-        75,
-        44
-      );
-
-      const rows =
-        monthlyItems.map(
-          (item: any) => [
-            formatDate(
-              item.created_at
-            ),
-            item.user?.name ??
-              "Unknown",
-            item.user?.username ??
-              "—",
-            item.item_name ??
-              "—",
-            item.item_type ??
-              "—",
-            item.brand_model ??
-              "—",
-            item.serial_number ??
-              "—",
-            item.color ??
-              "—",
-            item.purpose ??
-              "—",
-            item.qr_code ??
-              "Not issued",
-            item.status
-              ? String(
-                  item.status
-                )
-                  .charAt(0)
-                  .toUpperCase() +
-                String(
-                  item.status
-                ).slice(1)
-              : "Unknown",
-          ]
-        );
-
+      doc.text("University of Cebu - Main Campus", 14, 25);
+      doc.text(`Reporting Period: ${periodLabel}`, 14, 31);
+      doc.text(`Authorized Records: ${filteredItems.length}`, 14, 38);
+      doc.text(`Approved: ${approvedCount}`, 14, 44);
+      doc.text(`Pending: ${pendingCount}`, 75, 38);
+      doc.text(`QR Codes Issued: ${qrIssuedCount}`, 75, 44);
       doc.setFontSize(8);
-      doc.text("Item-level details below are limited to approved registrations for gate verification.", 14, 49);
-
+      doc.text("Counts cover only registration records visible to CSU under its account permissions.", 14, 49);
       autoTable(doc, {
         startY: 54,
-
-        head: [
-          [
-            "Date",
-            "Owner",
-            "Owner ID",
-            "Item",
-            "Type",
-            "Brand / Model",
-            "Serial No.",
-            "Color",
-            "Purpose",
-            "QR ID",
-            "Status",
-          ],
-        ],
-
-        body: rows,
-
-        styles: {
-          fontSize: 6.5,
-          cellPadding: 2,
-        },
-
-        headStyles: {
-          fillColor: [26, 58, 123],
-          textColor: [255, 255, 255],
-        },
-
-        alternateRowStyles: {
-          fillColor: [245, 247, 250],
-        },
+        head: [["Date", "Owner", "Owner ID", "Item", "Type", "Brand / Model", "Serial No.", "Color", "Purpose", "QR ID", "Status"]],
+        body: filteredItems.map((item: any) => [
+          formatDate(item.created_at), item.user?.name ?? "Unknown",
+          item.user?.username ?? "—", item.item_name ?? "—", item.item_type ?? "—",
+          item.brand_model ?? "—", item.serial_number ?? "—", item.color ?? "—",
+          item.purpose ?? "—", item.qr_code ?? "Not issued", item.status ?? "—",
+        ]),
+        styles: { fontSize: 6.5, cellPadding: 2 },
+        headStyles: { fillColor: [26, 58, 123], textColor: [255, 255, 255] },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
       });
-
-      const fileMonth =
-        `${now.getFullYear()}-${String(
-          now.getMonth() + 1
-        ).padStart(2, "0")}`;
-
-      doc.save(
-        `QRPass-Monthly-Item-Registration-${fileMonth}.pdf`
-      );
+      doc.save(`QRPass-Item-Registration-${reportFileSuffix}.pdf`);
     } catch (err) {
-      console.error(
-        "Failed to generate Monthly Item Registration Summary:",
-        err
-      );
-
-      alert(
-        err instanceof Error
-          ? err.message
-          : "Failed to generate Monthly Item Registration Summary."
-      );
+      console.error("Failed to generate CSU registration report:", err);
+      alert(err instanceof Error ? err.message : "Failed to generate registration report.");
     }
+  }
+
+  // =========================================================
+  // FILTERABLE ENTRY / EXIT REPORTS
+  // =========================================================
+
+  function downloadScanReportPDF() {
+    generateScanPDF("QRPass CSU Entry / Exit Scan Report");
+  }
+
+  function downloadScanReportCSV() {
+    if (!periodValid) {
+      alert("Please choose both valid From and To dates for the custom range.");
+      return;
+    }
+    if (!periodScanLogs.length) {
+      alert("No Entry / Exit scans found for the chosen period.");
+      return;
+    }
+    const header = ["Date", "Time", "Owner", "Owner ID", "Item", "QR Code", "Gate", "Direction", "Result", "Scanned By"];
+    const rows = periodScanLogs.map(log => [
+      formatDate(log.scanned_at), formatTime(log.scanned_at),
+      log.item?.user?.name ?? "", log.item?.user?.username ?? "",
+      log.item?.item_name ?? "", log.qr_code ?? "", log.gate ?? "",
+      log.direction ?? "", log.result ?? "", log.scanner?.name ?? "",
+    ]);
+    const csv = [header, ...rows].map(row => row.map(cell => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `QRPass-CSU-Entry-Exit-${reportFileSuffix}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   }
 
   // =========================================================
@@ -8674,6 +8328,11 @@ function SecurityReports() {
       void downloadMonthlyRegistrationPDF();
       return;
     }
+
+    if (reportName === "Entry / Exit Scan Report") {
+      downloadScanReportPDF();
+      return;
+    }
   }
 
   // =========================================================
@@ -8681,31 +8340,10 @@ function SecurityReports() {
   // =========================================================
 
   const reports = [
-    {
-      name:
-        "Daily QR Scan Summary",
-      period:
-        new Date().toLocaleDateString(
-          "en-PH"
-        ),
-      format: "PDF",
-    },
-
-    {
-      name:
-        "Weekly Inspection Log",
-      period:
-        currentWeekLabel,
-      format: "PDF",
-    },
-
-    {
-      name:
-        "Monthly Item Registration Summary",
-      period:
-        currentMonth,
-      format: "PDF",
-    },
+    { name: "Daily QR Scan Summary", period: periodLabel, format: "PDF" },
+    { name: "Weekly Inspection Log", period: periodLabel, format: "PDF" },
+    { name: "Monthly Item Registration Summary", period: periodLabel, format: "PDF" },
+    { name: "Entry / Exit Scan Report", period: periodLabel, format: "PDF" },
   ];
 
   // =========================================================
@@ -8724,7 +8362,7 @@ function SecurityReports() {
               loadSecurityReports
             }
             disabled={loading}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
           >
             <RefreshCw
               size={12}
@@ -8743,77 +8381,62 @@ function SecurityReports() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard
-          label="Inspections Done"
-          value={
-            loading
-              ? "..."
-              : String(
-                  inspectionsDone
-                )
-          }
-          icon={
-            <ClipboardList
-              size={20}
-            />
-          }
-          color="#1a3a7b"
-        />
-
-        <StatCard
-          label="QR Scans This Month"
-          value={
-            loading
-              ? "..."
-              : String(
-                  qrScansThisMonth
-                )
-          }
-          icon={
-            <ScanLine
-              size={20}
-            />
-          }
-          color="#557bdc"
-        />
-
-        <StatCard
-          label="Flagged Items"
-          value={
-            loading
-              ? "..."
-              : String(
-                  flaggedItems
-                )
-          }
-          icon={
-            <AlertTriangle
-              size={20}
-            />
-          }
-          color="#e8543a"
-        />
-
-        <StatCard
-          label="Incidents Resolved"
-          value={
-            loading
-              ? "..."
-              : String(
-                  incidentsResolved
-                )
-          }
-          icon={
-            <CheckCircle
-              size={20}
-            />
-          }
-          color="#2ecc71"
-        />
-      </div>
-
       <Card title="Available Reports">
+        <div className="border-b border-border bg-muted/10 p-4 sm:p-5">
+        <p className="mb-1 text-sm font-semibold text-foreground">Reporting Period</p>
+        <p className="mb-3 text-xs text-muted-foreground">Select a period for the downloadable reports listed below.</p>
+        <div className="flex flex-wrap items-center gap-2">
+          {([
+            { value: "today", label: "Daily" },
+            { value: "week", label: "Weekly" },
+            { value: "month", label: "Monthly" },
+          ] as { value: CSUDatePeriod; label: string }[]).map(option => (
+            <button
+              type="button"
+              key={option.value}
+              onClick={() => setReportPeriod(option.value)}
+              aria-pressed={reportPeriod === option.value}
+              className={`h-10 rounded-xl px-4 text-xs font-semibold transition-colors ${
+                reportPeriod === option.value
+                  ? "bg-primary text-white shadow-sm"
+                  : "border border-border bg-card text-foreground hover:bg-muted"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+          <select
+            aria-label="Additional date filter options"
+            value={reportPeriod === "custom" || reportPeriod === "all" ? reportPeriod : ""}
+            onChange={e => setReportPeriod(e.target.value as CSUDatePeriod)}
+            className={`h-10 rounded-xl border border-border px-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-primary/15 ${
+              reportPeriod === "custom" || reportPeriod === "all"
+                ? "bg-primary text-white"
+                : "bg-card text-foreground"
+            }`}
+          >
+            <option value="" disabled hidden>More date options</option>
+            <option value="all">All Time</option>
+            <option value="custom">Custom Range</option>
+          </select>
+          <span className="text-xs text-muted-foreground">{periodScanLogs.length} scan records match · {periodLabel}</span>
+        </div>
+        {reportPeriod === "custom" && (
+          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/30 p-3">
+            <label className="text-xs font-medium">From
+              <input type="date" value={reportStart} max={reportEnd || undefined}
+                onChange={e => setReportStart(e.target.value)}
+                className="ml-2 h-10 rounded-xl border border-border bg-card px-2 text-sm" />
+            </label>
+            <label className="text-xs font-medium">To
+              <input type="date" value={reportEnd} min={reportStart || undefined}
+                onChange={e => setReportEnd(e.target.value)}
+                className="ml-2 h-10 rounded-xl border border-border bg-card px-2 text-sm" />
+            </label>
+            <span className="text-xs text-muted-foreground">Choose both From and To to enable report downloads.</span>
+          </div>
+        )}
+        </div>
         <div className="divide-y divide-border">
           {reports.map(
             (report) => (
@@ -8837,6 +8460,7 @@ function SecurityReports() {
                   </p>
                 </div>
 
+                <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() =>
@@ -8844,7 +8468,7 @@ function SecurityReports() {
                       report.name
                     )
                   }
-                  disabled={loading}
+                  disabled={loading || !periodValid}
                   className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-primary hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:w-32"
                 >
                   <Download
@@ -8855,6 +8479,13 @@ function SecurityReports() {
                     report.format
                   }
                 </button>
+                {report.name === "Entry / Exit Scan Report" && (
+                  <button type="button" onClick={downloadScanReportCSV} disabled={loading || !periodValid}
+                    className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-primary hover:bg-muted disabled:opacity-50 sm:w-32">
+                    <Download size={13} /> CSV
+                  </button>
+                )}
+                </div>
               </div>
             )
           )}
@@ -8917,7 +8548,7 @@ function CSULocationPicker({
           className={inputStyle}
           required={required}
         >
-          <option value="">Select building</option>
+          <option value="" disabled hidden>Choose building</option>
           {Object.keys(QR_CAMPUS_FLOORS).map(b => <option value={b} key={b}>{b}</option>)}
           <option value="Other Campus Area">Other Campus Area</option>
         </select>
@@ -8929,7 +8560,7 @@ function CSULocationPicker({
             className={inputStyle}
             required={required}
           >
-            <option value="">Select floor</option>
+            <option value="" disabled hidden>Choose floor</option>
             {QR_CAMPUS_FLOORS[building].map(f => <option value={f} key={f}>{f}</option>)}
           </select>
         ) : building === "Other Campus Area" ? (
@@ -8985,6 +8616,10 @@ function SecurityLostFound() {
 
   const [tab, setTab] =
     useState<"registry" | "report">("registry");
+  const [lostFoundFilter, setLostFoundFilter] = useState<"all" | "lost" | "found" | "recovered">("all");
+  const [lostFoundPeriod, setLostFoundPeriod] = useState<CSUDatePeriod>("all");
+  const [lostFoundStart, setLostFoundStart] = useState("");
+  const [lostFoundEnd, setLostFoundEnd] = useState("");
   // Help is hidden by default; CSU can expand it when needed.
   const [showLostFoundGuide, setShowLostFoundGuide] = useState(false);
 
@@ -8992,7 +8627,7 @@ function SecurityLostFound() {
     useState<"found" | "lost">("found");
 
   // Mirror the five category cards shown in Student Register Item.
-  type CSUReportGroupId = "computer" | "highvalue" | "musical" | "sports" | "other";
+  type CSUReportGroupId = "computer" | "highvalue" | "mobile" | "musical" | "sports" | "other";
   const [selectedReportGroup, setSelectedReportGroup] =
     useState<CSUReportGroupId | null>(null);
 
@@ -9015,6 +8650,12 @@ function SecurityLostFound() {
       icon: <Camera size={18} />,
     },
     {
+      id: "mobile",
+      name: "Mobile / Personal Electronics",
+      description: "Mobile phones, tablets, and personal audio equipment.",
+      icon: <Smartphone size={18} />,
+    },
+    {
       id: "musical",
       name: "Musical Instrument",
       description: "Guitars, keyboards, and other musical instruments.",
@@ -9029,7 +8670,7 @@ function SecurityLostFound() {
     {
       id: "other",
       name: "Personal Belongings & Other Items",
-      description: "Bags, wallets, IDs, keys, umbrellas, and other personal belongings.",
+      description: "Personal belongings and equipment not included in other categories.",
       icon: <Package size={18} />,
     },
   ];
@@ -9058,13 +8699,26 @@ function SecurityLostFound() {
   // These fields are common to every category; the report's category was selected above.
   function renderStudentStyleReportFields() {
     const suggestions: Record<CSUReportGroupId, string[]> = {
-      computer: ["Laptop", "Desktop Computer", "Tablet", "Computer Mouse", "Keyboard", "Charger"],
-      highvalue: ["Mobile Phone", "Digital Camera", "Projector", "Printer", "Smartwatch", "Drone", "Headphones"],
-      musical: ["Acoustic Guitar", "Electric Guitar", "Keyboard", "Ukulele", "Violin", "Drum", "Flute"],
-      sports: ["Basketball", "Volleyball", "Soccer Ball", "Racket", "Sports Bag", "Training Gear"],
+      computer: ["Laptop"],
+      highvalue: ["Desktop Computer", "Smart TV", "Projector", "Digital Camera", "Drone", "Professional Video Camera", "3D Printer", "Graphics Tablet", "Monitor"],
+      mobile: ["Mobile Phone", "Tablet", "Audio Equipment"],
+      musical: ["Acoustic Guitar", "Electric Guitar", "Bass Guitar", "Keyboard", "Drum Set", "Snare Drum", "Violin", "Ukelele", "Flute"],
+      sports: ["Basketball", "Volleyball", "Soccer Ball", "Badminton Racket", "Speak Takraw Ball", "Boxing Gloves"],
       other: ["Backpack", "Wallet", "School ID", "Keys", "Eyeglasses", "Umbrella", "Tumbler", "Notebook"],
     };
+
+    const brandSuggestions: Record<CSUReportGroupId, string[]> = {
+      computer: ["Acer", "ASUS", "Dell", "HP", "Lenovo", "Apple", "MSI"],
+      highvalue: ["Samsung", "LG", "Sony", "Canon", "Nikon", "Epson", "BenQ", "DJI", "Apple", "GoPro"],
+      mobile: ["Samsung", "Apple", "Xiaomi", "OPPO", "Vivo", "Realme", "Huawei", "Honor", "JBL", "Sony"],
+      musical: ["Fender", "Casio", "Roland", "Gibson", "Ibanez", "Korg", "Pearl", "Suzuki", "Yamaha"],
+      sports: ["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "Puma"],
+      other: ["Jansport", "Hawk", "Secosana", "Aquaflask", "Hydro Flask", "Pilot", "Parker"],
+    };
+
     const categoryNames = selectedReportGroup ? suggestions[selectedReportGroup] : [];
+    const categoryBrands = selectedReportGroup ? brandSuggestions[selectedReportGroup] : [];
+
     return (
       <div className="space-y-4">
         <p className="text-xs text-muted-foreground">
@@ -9073,39 +8727,74 @@ function SecurityLostFound() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">Item Name *</label>
-            <input
-              list="csu-lost-found-item-suggestions"
-              value={form.item_name}
-              onChange={e => setForm(current => ({...current, item_name: e.target.value}))}
-              maxLength={255}
-              placeholder="e.g. Black laptop, school ID, blue umbrella"
+            <select
+              value={categoryNames.includes(form.item_name) ? form.item_name : form.item_name ? "__OTHER__" : ""}
+              onChange={e => setForm(current => ({...current, item_name: e.target.value === "__OTHER__" ? "__OTHER__" : e.target.value}))}
               required
               className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-            />
-            <datalist id="csu-lost-found-item-suggestions">
-              {categoryNames.map(name => <option key={name} value={name}/>)}
-            </datalist>
+            >
+              <option value="" disabled hidden>Item Name</option>
+              {categoryNames.map(name => <option key={name} value={name}>{name}</option>)}
+              <option value="__OTHER__">Others (Specify)</option>
+            </select>
+            {(form.item_name === "__OTHER__" || (form.item_name && !categoryNames.includes(form.item_name))) && (
+              <input
+                type="text"
+                maxLength={255}
+                required
+                aria-label="Specify item name"
+                className="mt-2 w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                value={form.item_name === "__OTHER__" ? "" : form.item_name}
+                placeholder="Specify item name"
+                onChange={e => setForm(current => ({...current, item_name: e.target.value || "__OTHER__"}))}
+              />
+            )}
           </div>
+
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">Brand / Model (if known)</label>
-            <input
-              value={form.brand_model}
-              onChange={e => setForm(current => ({...current, brand_model: e.target.value}))}
-              maxLength={255}
-              placeholder="e.g. Acer Aspire, Casio, Nike"
+            <select
+              value={categoryBrands.includes(form.brand_model) ? form.brand_model : form.brand_model ? "__OTHER__" : ""}
+              onChange={e => setForm(current => ({ ...current, brand_model: e.target.value }))}
               className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-            />
+              aria-label="Brand / Model"
+            >
+              <option value="" disabled hidden>Brand / Model (optional)</option>
+              {categoryBrands.map(brand => <option key={brand} value={brand}>{brand}</option>)}
+              <option value="__OTHER__">Others (Specify)</option>
+            </select>
+            {(form.brand_model === "__OTHER__" || (form.brand_model && !categoryBrands.includes(form.brand_model))) && (
+              <input type="text" maxLength={255} aria-label="Specify brand or model"
+                className="mt-2 w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                value={form.brand_model === "__OTHER__" ? "" : form.brand_model}
+                placeholder="Specify brand and model (optional)"
+                onChange={e => setForm(current => ({ ...current, brand_model: e.target.value || "__OTHER__" }))}
+              />
+            )}
           </div>
+
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">Color (if known)</label>
-            <input
-              value={form.color}
-              onChange={e => setForm(current => ({...current, color: e.target.value}))}
-              maxLength={100}
-              placeholder="e.g. Black, navy blue, silver"
+            <select
+              value={COMMON_ITEM_COLORS.includes(form.color) ? form.color : form.color ? "__OTHER__" : ""}
+              onChange={e => setForm(current => ({ ...current, color: e.target.value }))}
               className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-            />
+              aria-label="Item Color"
+            >
+              <option value="" disabled hidden>Color (optional)</option>
+              {COMMON_ITEM_COLORS.map(color => <option key={color} value={color}>{color}</option>)}
+              <option value="__OTHER__">Others (Specify)</option>
+            </select>
+            {(form.color === "__OTHER__" || (form.color && !COMMON_ITEM_COLORS.includes(form.color))) && (
+              <input type="text" maxLength={100} aria-label="Specify item color"
+                className="mt-2 w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                value={form.color === "__OTHER__" ? "" : form.color}
+                placeholder="Specify item color (optional)"
+                onChange={e => setForm(current => ({ ...current, color: e.target.value || "__OTHER__" }))}
+              />
+            )}
           </div>
+
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">Serial / Identification No. (optional)</label>
             <input
@@ -9116,6 +8805,7 @@ function SecurityLostFound() {
               className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
+
           <div className="md:col-span-2">
             <label className="mb-1 block text-xs font-medium text-foreground">Identifying Features / Accessories (optional)</label>
             <input
@@ -9518,7 +9208,7 @@ function SecurityLostFound() {
     setSuccess("");
 
     const reportItemName = form.item_name.trim();
-    const reportBrandModel = form.brand_model.trim();
+    const reportBrandModel = form.brand_model.trim() === "__OTHER__" ? "" : form.brand_model.trim();
 
     if (!selectedReportGroup) {
       setError("Please choose an item category first.");
@@ -9607,7 +9297,7 @@ function SecurityLostFound() {
           brand_model:
             reportBrandModel || undefined,
           color:
-            form.color.trim() || undefined,
+            (form.color.trim() === "__OTHER__" ? "" : form.color.trim()) || undefined,
           location_found:
             form.location_found.trim(),
           date_found: form.date_found,
@@ -9631,7 +9321,7 @@ function SecurityLostFound() {
           brand_model:
             reportBrandModel || undefined,
           color:
-            form.color.trim() || undefined,
+            (form.color.trim() === "__OTHER__" ? "" : form.color.trim()) || undefined,
           location_lost:
             form.location_lost.trim(),
           date_lost: form.date_lost,
@@ -10107,8 +9797,20 @@ function SecurityLostFound() {
     }
   }
 
-  const filteredItems = items.filter((item) => {
+  // Date is based on when CSU recorded the lost/found report.
+  const periodItems = items.filter(item =>
+    csuMatchesPeriod(item.created_at ?? item.reported_at ?? item.date_found ?? item.date_lost,
+      lostFoundPeriod, lostFoundStart, lostFoundEnd)
+  );
+
+  const filteredItems = periodItems.filter((item) => {
     const query = search.trim().toLowerCase();
+    const status = String(item.status ?? "").toLowerCase();
+    const reportType = String(item.report_type ?? "found").toLowerCase();
+    const recovered = status === "recovered" || status === "claimed";
+    if (lostFoundFilter === "recovered" && !recovered) return false;
+    if (lostFoundFilter === "lost" && (recovered || reportType !== "lost")) return false;
+    if (lostFoundFilter === "found" && (recovered || reportType !== "found")) return false;
 
     if (!query) {
       return true;
@@ -10145,7 +9847,7 @@ function SecurityLostFound() {
     return searchableText.includes(query);
   });
 
-  const foundCount = items.filter(
+  const foundCount = periodItems.filter(
     (item) =>
       String(item.report_type ?? "found").toLowerCase() ===
         "found" &&
@@ -10153,7 +9855,7 @@ function SecurityLostFound() {
         "found"
   ).length;
 
-  const lostCount = items.filter(
+  const lostCount = periodItems.filter(
     (item) =>
       String(item.report_type ?? "").toLowerCase() ===
         "lost" &&
@@ -10161,13 +9863,13 @@ function SecurityLostFound() {
         "lost"
   ).length;
 
-  const pendingClaimsCount = items.filter(
+  const pendingClaimsCount = periodItems.filter(
     (item) =>
       String(item.report_type ?? "found").toLowerCase() === "found" &&
       String(item.status ?? "").toLowerCase() === "pending"
   ).length;
 
-  const recoveredCount = items.filter(
+  const recoveredCount = periodItems.filter(
     (item) =>
       String(item.status ?? "").toLowerCase() ===
       "recovered"
@@ -10234,10 +9936,18 @@ function SecurityLostFound() {
         </div>
       )}
 
+      <CSUStatsPeriodFilter
+        value={lostFoundPeriod} onChange={setLostFoundPeriod}
+        start={lostFoundStart} onStartChange={setLostFoundStart}
+        end={lostFoundEnd} onEndChange={setLostFoundEnd}
+        description="Summary cards and report records reflect the report creation date."
+      />
+
+      <StatisticalCardsSection>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatCard
           label="Total Reports"
-          value={String(items.length)}
+          value={String(periodItems.length)}
           icon={<BookOpen size={20} />}
           color="#1a3a7b"
         />
@@ -10272,6 +9982,7 @@ function SecurityLostFound() {
         />
         </div>
       </div>
+      </StatisticalCardsSection>
 
       <div className="grid grid-cols-2 gap-2 border-b border-border pb-3 sm:flex sm:flex-wrap">
         <button
@@ -10312,7 +10023,7 @@ function SecurityLostFound() {
         className="col-span-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-primary transition-colors hover:bg-muted sm:ml-auto sm:w-auto sm:text-sm"
       >
         <BookOpen size={15} />
-        {showLostFoundGuide ? "Hide guide" : "How it works"}
+        How it works
         <ChevronRight
           size={14}
           className={`transition-transform ${showLostFoundGuide ? "rotate-90" : ""}`}
@@ -10323,48 +10034,78 @@ function SecurityLostFound() {
       {showLostFoundGuide && (
         <div
           id="csu-lost-found-guide"
-          className="rounded-xl border border-[#cfd8e6] bg-card p-4 sm:p-5"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="How Lost and Found works"
+          onMouseDown={e => { if (e.target === e.currentTarget) setShowLostFoundGuide(false); }}
         >
-          <div className="mb-4">
-            <h3 className="text-sm font-semibold text-foreground">
-              {tab === "registry" ? "How Lost & Found Reports Work" : "How Lost & Found Reporting Works"}
-            </h3>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              {tab === "registry"
-                ? "View existing records, check the status of an item, and manage recovery or claims. Found Item is for an item surrendered to Security; Lost Item is for an item reported missing."
-                : "Choose a category, enter the known item details, and save the report. Use Found Item for an item surrendered to Security and Lost Item for a missing-item report."}
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            {(tab === "registry"
-              ? [
-                  ["1", "Find a Report", "Use Search or Refresh to locate an existing Lost or Found record."],
-                  ["2", "Review Details", "Check the item, finder or owner, location, and recovery status."],
-                  ["3", "Manage the Case", "Use Edit Report or the available recovery and claim actions as appropriate."],
-                ]
-              : [
-                  ["1", "Choose Category", "Select the matching item category."],
-                  ["2", "Complete Details", "Enter identifying details, finder/owner ID, building, floor and date."],
-                  ["3", "Save the Report", "Security records the item and manages recovery or claims."],
-                ]).map(([number, title, description]) => (
-              <div key={number} className="rounded-lg border border-[#dce3ee] bg-[#f8fafc] p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-                    {number}
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">{title}</p>
-                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{description}</p>
+          <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-[#cfd8e6] bg-card p-6 shadow-2xl sm:p-8 lg:p-10">
+            <button
+              type="button"
+              aria-label="Close guide"
+              onClick={() => setShowLostFoundGuide(false)}
+              className="absolute right-4 top-4 rounded-xl border border-border p-2.5 hover:bg-muted"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="mb-6 pr-12 sm:mb-8">
+              <h3 className="text-lg font-bold text-foreground sm:text-xl">
+                {tab === "registry" ? "How Lost & Found Reports Work" : "How Lost & Found Reporting Works"}
+              </h3>
+              <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground sm:text-[15px]">
+                {tab === "registry"
+                  ? "View existing records, check the status of an item, and manage recovery or claims. Found Item is for an item surrendered to Security, while Lost Item is for an item reported missing."
+                  : "Choose the matching category, enter only the known identifying details, and save the report. Use Found Item for an item surrendered to Security and Lost Item for a missing-item report."}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-5">
+              {(tab === "registry"
+                ? [
+                    ["1", "Find a Report", "Use Search or Refresh to quickly locate an existing Lost or Found record."],
+                    ["2", "Review Details", "Check the item information, owner or finder details, location, and current recovery status."],
+                    ["3", "Manage the Case", "Use Edit Report or the available recovery and claim actions based on the situation."],
+                  ]
+                : [
+                    ["1", "Choose Category", "Select the item category that best matches the reported item."],
+                    ["2", "Complete Details", "Enter identifying details, the finder or owner ID, building, floor, and the correct date and time."],
+                    ["3", "Save the Report", "Security saves the record so it can be monitored for recovery, claiming, or further verification."],
+                  ]).map(([number, title, description]) => (
+                <div key={number} className="rounded-2xl border border-[#dce3ee] bg-[#f8fafc] p-5 sm:p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">
+                      {number}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground sm:text-[15px]">{title}</p>
+                      <p className="mt-2 text-xs leading-6 text-muted-foreground sm:text-sm">{description}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {tab === "registry" && (
         <div className="space-y-4">
+          <div className="flex flex-wrap gap-2 border-b border-border pb-3">
+            {([
+              { id: "all" as const, label: "All Reports", count: periodItems.length },
+              { id: "lost" as const, label: "Lost", count: periodItems.filter(item => String(item.report_type ?? "").toLowerCase() === "lost" && !["claimed", "recovered"].includes(String(item.status ?? "").toLowerCase())).length },
+              { id: "found" as const, label: "Found", count: periodItems.filter(item => String(item.report_type ?? "found").toLowerCase() === "found" && !["claimed", "recovered"].includes(String(item.status ?? "").toLowerCase())).length },
+              { id: "recovered" as const, label: "Recovered / Claimed", count: periodItems.filter(item => ["recovered", "claimed"].includes(String(item.status ?? "").toLowerCase())).length },
+            ]).map(option => (
+              <button type="button" key={option.id} aria-pressed={lostFoundFilter === option.id}
+                onClick={() => setLostFoundFilter(option.id)}
+                className={`min-h-10 rounded-xl px-4 py-2 text-xs font-semibold transition-colors ${lostFoundFilter === option.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+                {option.label} ({option.count})
+              </button>
+            ))}
+          </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <div className="relative min-w-0 flex-1">
               <Search
@@ -10385,8 +10126,8 @@ function SecurityLostFound() {
               type="button"
               onClick={loadItems}
               disabled={loading}
-              className="h-11 w-full rounded-xl border border-border bg-card px-4 text-sm font-semibold hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-            >
+              className="h-11 w-full rounded-xl border border-border bg-card px-4 text-sm font-semibold hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+            > <RefreshCw size={13} className="shrink-0" />
               {loading ? "Refreshing..." : "Refresh"}
             </button>
           </div>
@@ -11615,8 +11356,8 @@ function PCOResponsiveToolbar({
         type="button"
         onClick={onRefresh}
         disabled={loading}
-        className="w-full rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 lg:w-auto"
-      >
+        className="w-full rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 lg:w-auto inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+      > <RefreshCw size={13} className="shrink-0" />
         {loading ? "Refreshing..." : "Refresh"}
       </button>
     </div>
@@ -11715,7 +11456,7 @@ function PCOPermitRequests() {
         action={
           <button
             onClick={loadPendingItems}
-            className="text-xs flex items-center gap-1 text-primary font-medium"
+            className="text-xs flex items-center gap-1 text-primary font-medium inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
           >
 
             <RefreshCw size={12} />
@@ -11729,6 +11470,7 @@ function PCOPermitRequests() {
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
       {/* Requests is the pending approval queue; issued QR codes belong in Registered Items. */}
+      <StatisticalCardsSection>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
         <StatCard
           label="Pending Review"
@@ -11737,6 +11479,7 @@ function PCOPermitRequests() {
           color="#2f5fd6"
         />
       </div>
+      </StatisticalCardsSection>
 
       <PCOResponsiveToolbar
         search={requestSearch}
@@ -11986,7 +11729,7 @@ function PCOItemRegistry() {
           <button
             onClick={loadItems}
             disabled={loading}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
           >
             <RefreshCw size={12} />
 
@@ -11998,6 +11741,7 @@ function PCOItemRegistry() {
       />
 
       {/* SUMMARY CARDS */}
+      <StatisticalCardsSection>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
   <StatCard
     label="ALL"
@@ -12023,6 +11767,7 @@ function PCOItemRegistry() {
   </div>
 
 </div>
+      </StatisticalCardsSection>
 
       <PCOResponsiveToolbar
         search={search}
@@ -13309,7 +13054,7 @@ function PCOItemRegistry() {
                                   disabled={
                                     loading
                                   }
-                                  className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+                                  className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
                                 >
                                   <RefreshCw
                                     size={12}
@@ -13635,8 +13380,8 @@ function PCONotifications() {
           <button
             onClick={() => loadNotifications(true)}
             disabled={loading}
-            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
-          >
+            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+          > <RefreshCw size={13} className="shrink-0" />
             {loading
               ? "Refreshing..."
               : "Refresh"}
@@ -13665,6 +13410,7 @@ function PCONotifications() {
       )}
 
       {/* SUMMARY */}
+      <StatisticalCardsSection>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <StatCard
           label="All Notifications"
@@ -13695,6 +13441,7 @@ function PCONotifications() {
           color="#2ecc71"
         />
       </div>
+      </StatisticalCardsSection>
 
       {/* NOTIFICATIONS */}
       <Card title="All Notifications">
@@ -13854,356 +13601,106 @@ function PCONotifications() {
 // ══════════════════════════════════════════════════════════════════════════════
 // ADMIN PAGES
 // ══════════════════════════════════════════════════════════════════════════════
-function AdminDashboard() {
-  const [dashboardData, setDashboardData] =
-    useState<any>(null);
-
-  const [loading, setLoading] = useState(true);
+function AdminDashboard({ onNavigate }: { onNavigate?: (index: number) => void }) {
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [refreshNotice, setRefreshNotice] = useState("");
+  const [showDutyGuide, setShowDutyGuide] = useState(true);
 
-  async function loadDashboard() {
+  async function refreshOverview() {
+    setLoading(true);
+    setError("");
+    setRefreshNotice("");
     try {
-      setLoading(true);
-      setError("");
-
-      const data = await getDashboard();
-
-      setDashboardData(data);
+      await getDashboard();
+      const refreshedAt = new Date();
+      setLastRefreshed(refreshedAt);
+      setRefreshNotice(`Dashboard refreshed successfully at ${refreshedAt.toLocaleTimeString("en-PH")}.`);
     } catch (err) {
-      console.error(
-        "Failed to load dashboard:",
-        err
-      );
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load dashboard data."
-      );
+      setError(err instanceof Error ? err.message : "Could not refresh the dashboard.");
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
+  useEffect(() => { void refreshOverview(); }, []);
 
-  function formatActivityTime(
-    dateString: string | null
-  ) {
-    if (!dateString) return "—";
+  const actions = [
+    { index: 1, title: "Registered Items", description: "Review registrations and item ownership details.", icon: <Package size={22} />, accent: "#1a3a7b" },
+    { index: 2, title: "Lost & Found", description: "Review lost, found, and recovered property.", icon: <BookOpen size={22} />, accent: "#7c3aed" },
+    { index: 3, title: "Reports & Analytics", description: "Choose a role and download the appropriate reports.", icon: <BarChart2 size={22} />, accent: "#2f5fd6" },
+    { index: 4, title: "User Accounts", description: "Manage and review system users.", icon: <Users size={22} />, accent: "#0f766e" },
+    { index: 5, title: "System Logs", description: "Inspect login, audit, and transaction records.", icon: <ClipboardList size={22} />, accent: "#c47c19" },
+    { index: 6, title: "Active Sessions", description: "Review authenticated sessions and access.", icon: <Eye size={22} />, accent: "#557bdc" },
+    { index: 7, title: "Announcement Management", description: "Publish and manage campus announcements.", icon: <Bell size={22} />, accent: "#7c3aed" },
+    { index: 8, title: "System Settings", description: "Update institutional and system preferences.", icon: <Settings size={22} />, accent: "#475569" },
+  ];
+  const reminders = [
+    { title: "Review system records", detail: "Use System Logs to review significant activities, errors, and security incidents.", icon: <ClipboardList size={20} /> },
+    { title: "Manage users securely", detail: "Check account details and permissions before enabling, disabling, or updating users.", icon: <Shield size={20} /> },
+    { title: "Keep reports current", detail: "Select the correct role and date range before exporting operational reports.", icon: <FileText size={20} /> },
+  ];
 
-    const date = new Date(dateString);
-
-    if (Number.isNaN(date.getTime())) {
-      return "—";
-    }
-
-    return date.toLocaleString([], {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
-  const stats = dashboardData?.stats ?? {
-    total_items: 0,
-    active_qr_codes: 0,
-    pending_registrations: 0,
-    scans_today: 0,
-    flagged_incidents: 0,
-    lost_found_items: 0,
-  };
-
-  const itemTypes =
-    dashboardData?.item_types ?? [];
-
-  const recentScans =
-    dashboardData?.recent_scans ?? [];
-
-  const recentIncidents =
-    dashboardData?.recent_incidents ?? [];
-
-  const maxItemTypeCount = Math.max(
-    ...itemTypes.map((item: any) =>
-      Number(item.total ?? 0)
-    ),
-    1
-  );
-
-  const recentActivity = [
-    ...recentScans.map((scan: any) => ({
-      id: `scan-${scan.id}`,
-      type: "scan",
-      date: scan.scanned_at,
-      message: `${
-        scan.direction ?? "QR"
-      } scan verified for ${
-        scan.item?.item_name ?? "registered item"
-      } at ${scan.gate ?? "campus gate"}.`,
-    })),
-
-    ...recentIncidents.map(
-      (incident: any) => ({
-        id: `incident-${incident.id}`,
-        type: "incident",
-        date: incident.reported_at,
-        message: `${
-          incident.incident_type ??
-          "Security incident"
-        } reported at ${
-          incident.gate ?? "campus gate"
-        }${
-          incident.scanned_code
-            ? ` — ${incident.scanned_code}`
-            : ""
-        }.`,
-      })
-    ),
-  ]
-    .sort(
-      (a, b) =>
-        new Date(b.date ?? 0).getTime() -
-        new Date(a.date ?? 0).getTime()
-    )
-    .slice(0, 8);
-
-  if (loading && !dashboardData) {
-    return (
-      <div className="space-y-5">
-        <PageHeader
-          title="Overview Dashboard"
-          subtitle="Campus-wide operations, registrations, security and recovery at a glance."
-        />
-
-        <div className="bg-white border border-[#cfd8e6] rounded-lg p-10 text-center text-sm text-muted-foreground">
-          Loading dashboard data...
-        </div>
-      </div>
-    );
-  }
   return (
-    <div className="space-y-5">
-      {/* HEADER */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <PageHeader
-          title="Overview Dashboard"
-          subtitle="Campus-wide operations, registrations, security and recovery at a glance."
-        />
-
-        <button
-          onClick={loadDashboard}
-          disabled={loading}
-          className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
-        >
-          {loading
-            ? "Refreshing..."
-            : "Refresh Dashboard"}
+    <div className="w-full min-w-0 space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Overview Dashboard" subtitle="Quick access to the system administrator workspace." />
+        <button type="button" onClick={refreshOverview} disabled={loading}
+          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-[#17336d] hover:bg-[#edf2ff] disabled:opacity-50">
+          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+          {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
-
-      {/* ERROR */}
-      {error && (
-        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-          {error}
+      {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {refreshNotice && !error && <p role="status" className="text-right text-xs text-[#456181]">{refreshNotice}</p>}
+      <section className="rounded-2xl border border-[#dce3ee] bg-card px-4 py-6 shadow-sm sm:px-7 sm:py-8">
+        <div className="mx-auto mb-6 max-w-2xl text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef2fc] text-[#1a3a7b]"><Shield size={25} /></div>
+          <h3 className="text-lg font-bold text-foreground">System Administrator Quick Actions</h3>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Select a module below to open its page directly. Detailed records remain in their own modules.</p>
         </div>
-      )}
-
-      {/* MAIN STATISTICS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        <StatCard
-          label="Total Items"
-          value={String(stats.total_items)}
-          icon={<Package size={20} />}
-          color="#1a3a7b"
-        />
-
-        <StatCard
-          label="Active QR"
-          value={String(stats.active_qr_codes)}
-          icon={<QrCode size={20} />}
-          color="#557bdc"
-        />
-
-        <StatCard
-          label="Scans Today"
-          value={String(stats.scans_today)}
-          icon={<ScanLine size={20} />}
-          color="#2f5fd6"
-        />
-
-        <StatCard
-          label="Flagged Incidents"
-          value={String(stats.flagged_incidents)}
-          icon={<AlertTriangle size={20} />}
-          color="#e8543a"
-        />
-
-        <StatCard
-          label="Pending"
-          value={String(
-            stats.pending_registrations
-          )}
-          icon={<Clock size={20} />}
-          color="#6b8ee6"
-        />
-
-        <StatCard
-          label="Lost & Found"
-          value={String(stats.lost_found_items)}
-          icon={<Search size={20} />}
-          color="#2ecc71"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {/* ITEM TYPES */}
-        <Card title="Registered Items by Type">
-          <div className="p-4">
-            {itemTypes.length === 0 ? (
-              <div className="py-10 text-center">
-                <p className="text-sm font-semibold text-foreground">
-                  No registered items yet.
-                </p>
-
-                <p className="text-xs text-muted-foreground mt-1">
-                  Item statistics will appear here after
-                  students register items.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {itemTypes.map(
-                  (item: any, index: number) => {
-                    const count = Number(
-                      item.total ?? 0
-                    );
-
-                    const percentage =
-                      (count /
-                        maxItemTypeCount) *
-                      100;
-
-                    const colors = [
-                      "#1a3a7b",
-                      "#557bdc",
-                      "#2f5fd6",
-                      "#2ecc71",
-                      "#6b8ee6",
-                      "#e8543a",
-                    ];
-
-                    const color =
-                      colors[
-                        index %
-                          colors.length
-                      ];
-
-                    return (
-                      <div
-                        key={
-                          item.item_type ??
-                          index
-                        }
-                      >
-                        <div className="flex items-center justify-between gap-3 mb-1.5">
-                          <span className="text-xs font-medium text-foreground">
-                            {item.item_type ||
-                              "Other"}
-                          </span>
-
-                          <span className="text-xs font-semibold text-muted-foreground">
-                            {count}
-                          </span>
-                        </div>
-
-                        <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-300"
-                            style={{
-                              width: `${Math.max(
-                                percentage,
-                                3
-                              )}%`,
-                              backgroundColor:
-                                color,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  }
-                )}
-              </div>
-            )}
+        <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-3 sm:gap-4">
+          {actions.map(action => (
+            <button key={action.index} type="button" onClick={() => onNavigate?.(action.index)}
+              className="group flex min-h-[116px] w-full items-start gap-4 rounded-2xl border border-[#dce3ee] bg-[#fafbfe] p-5 text-left transition-all hover:border-[#a6bce1] hover:bg-[#eef2fc] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)]">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm" style={{ color: action.accent }}>{action.icon}</span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center justify-between gap-2"><span className="text-sm font-bold text-foreground">{action.title}</span><ChevronRight size={16} className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" /></span>
+                <span className="mt-2 block text-xs leading-5 text-muted-foreground">{action.description}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+      <section className="rounded-2xl border border-[#dce3ee] bg-card p-5 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-base font-bold text-foreground">Administrator Duty Guide</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Useful reminders for daily QRPass administration.</p>
           </div>
-        </Card>
-
-        {/* RECENT ACTIVITY */}
-        <Card title="Recent System Activity">
-          {recentActivity.length === 0 ? (
-            <div className="p-10 text-center">
-              <p className="text-sm font-semibold text-foreground">
-                No recent activity.
-              </p>
-
-              <p className="text-xs text-muted-foreground mt-1">
-                QR scans and security incidents will
-                appear here.
-              </p>
+          <button type="button" aria-expanded={showDutyGuide}
+            onClick={() => setShowDutyGuide(value => !value)}
+            className="rounded-xl border border-[#dce3ee] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] hover:bg-[#f2f5fc]">
+            {showDutyGuide ? "Hide Guide" : "Show Guide"}
+          </button>
+        </div>
+        {showDutyGuide && <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {reminders.map(item => (
+            <div key={item.title} className="rounded-xl border border-border bg-muted/20 p-4">
+              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef2fc] text-[#1a3a7b]">{item.icon}</div>
+              <h4 className="text-sm font-semibold text-foreground">{item.title}</h4>
+              <p className="mt-2 text-xs leading-6 text-muted-foreground">{item.detail}</p>
             </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {recentActivity.map(
-                (activity) => (
-                  <div
-                    key={activity.id}
-                    className="px-4 py-3 flex gap-3"
-                  >
-                    <div className="mt-0.5">
-                      {activity.type ===
-                      "incident" ? (
-                        <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
-                          <AlertTriangle
-                            size={15}
-                            className="text-red-600"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center">
-                          <CheckCircle
-                            size={15}
-                            className="text-green-600"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-foreground">
-                        {activity.message}
-                      </p>
-
-                      <p className="text-[11px] text-muted-foreground mt-1">
-                        {formatActivityTime(
-                          activity.date
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          )}
-        </Card>
-      </div>
+          ))}
+        </div>}
+      </section>
+      {lastRefreshed && <p className="text-right text-xs text-muted-foreground">Last synced: {lastRefreshed.toLocaleString("en-PH")}</p>}
     </div>
   );
 }
 
-function AdminRecords() {
+function AdminRecords({ embedded = false, selectedType = "All", sharedPeriod = "all", sharedStart = "", sharedEnd = "" }: { embedded?: boolean; selectedType?: string; sharedPeriod?: CSUDatePeriod; sharedStart?: string; sharedEnd?: string } = {}) {
   const [records, setRecords] = useState<any[]>([]);
   const [summary, setSummary] = useState({
     total_records: 0,
@@ -14215,6 +13712,7 @@ function AdminRecords() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
+  const effectiveTypeFilter = embedded ? selectedType : typeFilter;
   const [periodFilter, setPeriodFilter] = useState<"all" | "day" | "week" | "month">("all");
 
   async function loadRecords() {
@@ -14291,8 +13789,8 @@ function AdminRecords() {
   const filteredRecords = records.filter(
     (record) => {
       const matchesType =
-        typeFilter === "All" ||
-        record.record_type === typeFilter;
+        effectiveTypeFilter === "All" ||
+        record.record_type === effectiveTypeFilter;
 
       const query = search
         .trim()
@@ -14302,7 +13800,8 @@ function AdminRecords() {
         return false;
       }
 
-      if (periodFilter !== "all") {
+      if (embedded && !csuMatchesPeriod(record.date ?? record.created_at, sharedPeriod, sharedStart, sharedEnd)) return false;
+      if (!embedded && periodFilter !== "all") {
         const date = new Date(record.date ?? "");
         if (Number.isNaN(date.getTime())) return false;
         const now = new Date();
@@ -14446,19 +13945,20 @@ function AdminRecords() {
 
   return (
     <div className="space-y-5">
+      {!embedded && <>
       {/* HEADER */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <PageHeader
-          title="System Records"
-          subtitle="Centralized records for all QRpass transactions."
+          title="System Transactions"
+          subtitle="Search, filter, and export centralized QRPass transaction records."
         />
 
         <div className="flex gap-2">
           <button
             onClick={loadRecords}
             disabled={loading}
-            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
-          >
+            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+          > <RefreshCw size={13} className="shrink-0" />
             {loading
               ? "Refreshing..."
               : "Refresh"}
@@ -14481,6 +13981,7 @@ function AdminRecords() {
       )}
 
       {/* SUMMARY */}
+      <StatisticalCardsSection>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard
           label="Total Records"
@@ -14513,10 +14014,39 @@ function AdminRecords() {
           color="#e8543a"
         />
       </div>
+      </StatisticalCardsSection>
 
-      {/* SEARCH AND FILTER */}
+      {/* System transaction types — same compact filter tabs as audit activity. */}
+      <div className="rounded-xl border border-[#cfd8e6] bg-white px-4 py-3 flex flex-wrap items-center gap-2">
+        {recordTypes.map(type => (
+          <button
+            type="button"
+            key={type}
+            onClick={() => setTypeFilter(type)}
+            aria-pressed={typeFilter === type}
+            className={`rounded-full px-3 py-2 text-xs font-semibold transition-colors ${typeFilter === type ? "bg-[#17336d] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+          >
+            {type === "All" ? "All Transactions" : type}
+          </button>
+        ))}
+        <span className="ml-auto text-xs text-slate-500">{filteredRecords.length} matching transactions</span>
+      </div>
+
+      </>}
+      {embedded && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#dce3ee] bg-white px-4 py-3">
+        <div>
+          <p className="text-sm font-semibold text-[#17336d]">{selectedType} Records</p>
+          <p className="text-xs text-muted-foreground">{filteredRecords.length} matching transactions. CSV includes the active date and search filters.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={loadRecords} disabled={loading} className="rounded-lg border border-[#cfd8e6] px-3 py-2 text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"> <RefreshCw size={13} className="shrink-0" />{loading ? "Refreshing..." : "Refresh"}</button>
+          <button type="button" onClick={exportCSV} className="rounded-lg bg-[#17336d] px-3 py-2 text-xs font-semibold text-white hover:opacity-90">Export CSV</button>
+        </div>
+      </div>}
+      {error && embedded && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {/* SEARCH AND DATE FILTER */}
       <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_200px_200px] gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_200px] gap-3">
           <input
             type="text"
             value={search}
@@ -14529,26 +14059,6 @@ function AdminRecords() {
             className="w-full px-3 py-2.5 border border-[#cfd8e6] rounded-md text-sm bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
           />
 
-          <select
-            value={typeFilter}
-            onChange={(event) =>
-              setTypeFilter(
-                event.target.value
-              )
-            }
-            className="w-full px-3 py-2.5 border border-[#cfd8e6] rounded-md text-sm bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-          >
-            {recordTypes.map(
-              (type) => (
-                <option
-                  key={type}
-                  value={type}
-                >
-                  {type}
-                </option>
-              )
-            )}
-          </select>
           <select
             value={periodFilter}
             onChange={(event) => setPeriodFilter(event.target.value as "all" | "day" | "week" | "month")}
@@ -14932,13 +14442,16 @@ async function downloadQrScanActivityExcel() {
 // =========================================================
 function SysAdminLostFound() {
   const [items, setItems] = useState<any[]>([]);
-  const [tab, setTab] = useState<"reports" | "claims">("reports");
+  const [tab, setTab] = useState<"all" | "lost" | "found" | "recovered">("all");
   const [status, setStatus] = useState("all");
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [limitedDetails, setLimitedDetails] = useState(false);
+  const [lfPeriod, setLfPeriod] = useState<CSUDatePeriod>("all");
+  const [lfFrom, setLfFrom] = useState("");
+  const [lfTo, setLfTo] = useState("");
 
   async function loadItems() {
     try {
@@ -14984,15 +14497,20 @@ function SysAdminLostFound() {
   function csvCell(value: unknown) {
     return `"${String(value ?? "").replace(/"/g, '""')}"`;
   }
+  const periodLostFoundItems = items.filter(item => csuMatchesPeriod(item.reported_at ?? item.created_at ?? item.date, lfPeriod, lfFrom, lfTo));
   const counts = {
-    reports: items.length,
-    pending: items.filter(i => String(i.status ?? "").toLowerCase() === "pending").length,
-    claimed: items.filter(i => String(i.status ?? "").toLowerCase() === "claimed").length,
-    recovered: items.filter(i => String(i.status ?? "").toLowerCase() === "recovered").length,
+    reports: periodLostFoundItems.length,
+    lost: periodLostFoundItems.filter(i => String(i.report_type ?? i.type ?? i.status ?? "").toLowerCase() === "lost" && !["recovered","claimed","resolved"].includes(String(i.status ?? "").toLowerCase())).length,
+    found: periodLostFoundItems.filter(i => String(i.report_type ?? i.type ?? i.status ?? "").toLowerCase() === "found" && !["recovered","claimed","resolved"].includes(String(i.status ?? "").toLowerCase())).length,
+    recovered: periodLostFoundItems.filter(i => ["recovered","claimed","resolved"].includes(String(i.status ?? "").toLowerCase())).length,
   };
-  const filtered = items.filter(item => {
+  const filtered = periodLostFoundItems.filter(item => {
     const stat = String(item.status ?? "").toLowerCase();
-    if (tab === "claims" && !["pending", "claimed"].includes(stat) && !item.claimed_by && !item.claimant) return false;
+    const reportType = String(item.report_type ?? item.type ?? "").toLowerCase();
+    const isRecovered = ["recovered", "claimed", "resolved"].includes(stat);
+    if (tab === "recovered" && !isRecovered) return false;
+    if (tab === "lost" && (isRecovered || (reportType !== "lost" && stat !== "lost"))) return false;
+    if (tab === "found" && (isRecovered || (reportType !== "found" && !["found", "pending"].includes(stat)))) return false;
     if (status !== "all" && stat !== status) return false;
     const searchText = [item.item_name, item.category, item.brand_model, item.color,
       item.reporter?.name, item.reporter?.username, item.finder?.name,
@@ -15026,23 +14544,26 @@ function SysAdminLostFound() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <PageHeader title="Lost & Found Management" subtitle="Monitor lost item reports, claims and recoveries across campus." />
+        <PageHeader title="Lost & Found Management" subtitle="Monitor lost, found and recovered items across campus." />
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={loadItems} disabled={loading} className="px-4 py-2 rounded-lg border border-[#cfd8e6] bg-white text-sm font-medium disabled:opacity-50"><RefreshCw size={14} className="inline mr-2" />Refresh</button>
+          <button type="button" onClick={loadItems} disabled={loading} className="px-4 py-2 rounded-lg border border-[#cfd8e6] bg-white text-sm font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"><RefreshCw size={14} className="inline mr-2" />Refresh</button>
           <button type="button" onClick={exportCSV} className="px-4 py-2 rounded-lg bg-[#17336d] text-white text-sm font-semibold"><Download size={14} className="inline mr-2" />Export CSV</button>
         </div>
       </div>
       {error && <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm">{error}</div>}
       {limitedDetails && <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 text-xs">Detailed claim fields require the accompanying SystemRecordController.php update. Basic system records are displayed meanwhile.</div>}
+      <CSUStatsPeriodFilter value={lfPeriod} onChange={setLfPeriod} start={lfFrom} onStartChange={setLfFrom} end={lfTo} onEndChange={setLfTo} description="Lost and Found summary, record list and CSV use the report date." />
+      <StatisticalCardsSection>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Total Reports" value={String(counts.reports)} icon={<BookOpen size={20}/>} color="#1a3a7b" />
-        <StatCard label="Pending Claims" value={String(counts.pending)} icon={<Clock size={20}/>} color="#cf8c1e" />
-        <StatCard label="Claimed" value={String(counts.claimed)} icon={<CheckCircle size={20}/>} color="#269a5b" />
+        <StatCard label="Lost" value={String(counts.lost)} icon={<Clock size={20}/>} color="#cf8c1e" />
+        <StatCard label="Found" value={String(counts.found)} icon={<CheckCircle size={20}/>} color="#269a5b" />
         <StatCard label="Recovered" value={String(counts.recovered)} icon={<Package size={20}/>} color="#2f5fd6" />
       </div>
+      </StatisticalCardsSection>
       <div className="bg-white rounded-xl border border-[#cfd8e6] overflow-hidden">
         <div className="p-4 border-b border-[#cfd8e6] flex flex-wrap items-center gap-2">
-          {([{id:"reports",name:"Lost Reports"},{id:"claims",name:"Claim Management"}] as const).map(opt => (
+          {([{id:"all",name:"All Reports"},{id:"lost",name:"Lost"},{id:"found",name:"Found"},{id:"recovered",name:"Recovered"}] as const).map(opt => (
             <button key={opt.id} type="button" onClick={() => {setTab(opt.id);setStatus("all");setSelectedItem(null);}}
               className={`rounded-full px-4 py-2 text-xs font-semibold ${tab===opt.id?"bg-[#17336d] text-white":"bg-[#f4f6fa] text-slate-600 hover:bg-[#e9eef9]"}`}>
               {opt.name}
@@ -15056,23 +14577,23 @@ function SysAdminLostFound() {
           </div>
           <select value={status} onChange={e=>setStatus(e.target.value)} className="rounded-lg border border-[#cfd8e6] px-3 py-2.5 text-sm bg-white" aria-label="Filter claim or report status">
             <option value="all">All Statuses</option>
-            {(tab === "claims" ? ["pending","claimed"] : ["lost","found","pending","claimed","recovered"]).map(v => <option key={v} value={v}>{v[0].toUpperCase()+v.slice(1)}</option>)}
+            {["lost","found","pending","claimed","recovered"].map(v => <option key={v} value={v}>{v[0].toUpperCase()+v.slice(1)}</option>)}
           </select>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[780px] text-sm">
             <thead className="bg-slate-50 text-xs text-slate-500 border-b border-[#cfd8e6]"><tr>
-              {(["Item / Category","Report Type","Reported By","Location","Status",tab==="claims"?"Claimant":"Date","Details"]).map(h=><th key={h} className="text-left px-4 py-3 font-semibold">{h}</th>)}
+              {(["Item / Category","Report Type","Reported By","Location","Status",tab==="recovered"?"Claimant":"Date","Details"]).map(h=><th key={h} className="text-left px-4 py-3 font-semibold">{h}</th>)}
             </tr></thead>
             <tbody className="divide-y divide-slate-100">
-              {loading ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">Loading records...</td></tr> : filtered.length===0 ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">No {tab === "claims" ? "claims" : "reports"} match the selected filters.</td></tr> : filtered.map(item => (
+              {loading ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">Loading records...</td></tr> : filtered.length===0 ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">No {tab === "all" ? "reports" : tab + " reports"} match the selected filters.</td></tr> : filtered.map(item => (
                 <tr key={item.id} className="hover:bg-blue-50/40">
                   <td className="px-4 py-3"><p className="font-semibold text-slate-800">{item.item_name ?? "Unnamed Item"}</p><p className="text-xs text-slate-500">{item.category ?? "Other"}</p></td>
                   <td className="px-4 py-3 capitalize">{item.report_type ?? "—"}</td>
                   <td className="px-4 py-3">{item.reporter?.name ?? "—"}</td>
                   <td className="px-4 py-3">{item.location_found ?? item.location_lost ?? "—"}</td>
                   <td className="px-4 py-3"><span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusClass(String(item.status ?? ""))}`}>{item.status ?? "Unknown"}</span></td>
-                  <td className="px-4 py-3">{tab === "claims" ? (item.claimant?.name ?? "—") : formattedDate(item.created_at ?? item.reported_at)}</td>
+                  <td className="px-4 py-3">{tab === "recovered" ? (item.claimant?.name ?? "—") : formattedDate(item.created_at ?? item.reported_at)}</td>
                   <td className="px-4 py-3"><button type="button" onClick={()=>setSelectedItem(item)} className="text-blue-800 font-semibold hover:underline">View</button></td>
                 </tr>
               ))}
@@ -15105,7 +14626,25 @@ function SysAdminLostFound() {
 }
 
 function AdminAnalytics() {
+  const [reportRole, setReportRole] = useState<"student" | "security" | "pco" | "sysadmin" | null>(null);
+  const [showSummaryValues, setShowSummaryValues] = useState(true);
+  const [showDownloadableReports, setShowDownloadableReports] = useState(true);
+  const [registrationStatusFilter, setRegistrationStatusFilter] = useState("all");
+  const [recentCategory, setRecentCategory] = useState<"registration" | "scan" | "entryexit" | "incidents" | "lostfound">("registration");
+  const [analyticsTab, setAnalyticsTab] = useState<"charts" | "registrations" | "incidents">("charts");
+  const [exportPeriod, setExportPeriod] = useState<"day" | "week" | "month" | "all" | "custom">("month");
+  const [exportFrom, setExportFrom] = useState("");
+  const [exportTo, setExportTo] = useState("");
+  const [exportingReport, setExportingReport] = useState(false);
+
   const [reportData, setReportData] = useState<any>(null);
+  const [recentSecurityScans, setRecentSecurityScans] = useState<any[]>([]);
+  const [recentSecurityIncidents, setRecentSecurityIncidents] = useState<any[]>([]);
+  const [recentLostFound, setRecentLostFound] = useState<any[]>([]);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState("");
+  const [securityScansLoading, setSecurityScansLoading] = useState(false);
+  const [securityScansError, setSecurityScansError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -15134,6 +14673,44 @@ function AdminAnalytics() {
     loadReports();
   }, []);
 
+  // CSU activity is a different source from item registrations.
+  useEffect(() => {
+    if (reportRole !== "security" && reportRole !== "sysadmin") return;
+    let cancelled = false;
+    setSecurityScansLoading(true);
+    setSecurityScansError("");
+    getScanLogs().then((response: any) => {
+      if (cancelled) return;
+      const logs = Array.isArray(response?.logs) ? response.logs : [];
+      setRecentSecurityScans([...logs].sort((a: any, b: any) =>
+        (new Date(b.scanned_at ?? 0).getTime() || 0) - (new Date(a.scanned_at ?? 0).getTime() || 0)
+      ).slice(0, 30));
+    }).catch((err: any) => {
+      if (!cancelled) setSecurityScansError(err instanceof Error ? err.message : "Unable to load QR scan activity.");
+    }).finally(() => { if (!cancelled) setSecurityScansLoading(false); });
+    return () => { cancelled = true; };
+  }, [reportRole]);
+
+  // Each category's recent table uses its actual API data source.
+  useEffect(() => {
+    if (!reportRole || !(reportRole === "security" || reportRole === "sysadmin")) return;
+    let cancelled = false;
+    setDetailsLoading(true);
+    setDetailsError("");
+    Promise.all([getSecurityIncidents(), getLostFoundItems()]).then(([incidentsResponse, foundResponse]: any[]) => {
+      if (cancelled) return;
+      const incidents = Array.isArray(incidentsResponse?.incidents) ? incidentsResponse.incidents : [];
+      const found = Array.isArray(foundResponse) ? foundResponse :
+        (Array.isArray(foundResponse?.items) ? foundResponse.items :
+         (Array.isArray(foundResponse?.lost_found_items) ? foundResponse.lost_found_items : []));
+      setRecentSecurityIncidents(incidents);
+      setRecentLostFound(found);
+    }).catch((err: any) => {
+      if (!cancelled) setDetailsError(err instanceof Error ? err.message : "Unable to load recent records.");
+    }).finally(() => { if (!cancelled) setDetailsLoading(false); });
+    return () => { cancelled = true; };
+  }, [reportRole]);
+
   const summary = reportData?.summary ?? {
     total_registered_items: 0,
     active_qr_codes: 0,
@@ -15147,6 +14724,10 @@ function AdminAnalytics() {
     lost_found_claimed: 0,
   };
 
+  const reportSources: ("scan" | "registration")[] =
+    reportRole === "sysadmin" ? ["scan", "registration"] :
+    reportRole === "security" ? ["scan"] : ["registration"];
+
   const itemTypes =
     reportData?.item_types ?? [];
 
@@ -15156,8 +14737,26 @@ function AdminAnalytics() {
   const monthlyRegistrations =
     reportData?.monthly_registrations ?? [];
 
-  const recentRegistrations =
-    reportData?.recent_registrations ?? [];
+  const recentRegistrations: any[] = Array.isArray(reportData?.recent_registrations)
+    ? reportData.recent_registrations : [];
+
+  // Expose every status actually present in this reporting dataset, not just approved/pending.
+  const registrationStatuses = Array.from(new Set(recentRegistrations.map((item: any) =>
+    String(item.status ?? "Unknown").trim().toLowerCase() || "unknown"
+  ))).sort((a, b) => {
+    const priority: Record<string, number> = { approved: 0, pending: 1, rejected: 2, flagged: 3 };
+    return (priority[a] ?? 99) - (priority[b] ?? 99) || a.localeCompare(b);
+  });
+  // Use owner role when included in the API. Do not guess an owner's role from their name.
+  const roleRecentRegistrations = reportRole === "student"
+    ? recentRegistrations.filter((item: any) => {
+        const ownerRole = String(item.user?.role ?? item.owner?.role ?? "").toLowerCase();
+        return !ownerRole || ["student", "user"].includes(ownerRole);
+      })
+    : recentRegistrations;
+  const filteredRecentRegistrations = roleRecentRegistrations.filter((item: any) =>
+    registrationStatusFilter === "all" || String(item.status ?? "Unknown").trim().toLowerCase() === registrationStatusFilter
+  );
 
   const recentIncidents =
     reportData?.recent_incidents ?? [];
@@ -16099,6 +15698,207 @@ async function downloadGateEntryExitPDF() {
     }
   }
 
+  // The selected report period is applied to the actual exported rows (not just the label).
+  function selectedExportRange() {
+    const now = new Date();
+    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let until: Date | null = null;
+    if (exportPeriod === "all") return {from: null as Date | null, until, label: "All Time"};
+    if (exportPeriod === "custom") {
+      if (!exportFrom || !exportTo) throw new Error("Please select both From and To dates.");
+      const start = new Date(`${exportFrom}T00:00:00`);
+      const end = new Date(`${exportTo}T00:00:00`);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
+        throw new Error("Please enter a valid date range (From must not be after To).");
+      }
+      end.setDate(end.getDate() + 1);
+      return {from: start, until: end, label: `${exportFrom} to ${exportTo}`};
+    }
+    if (exportPeriod === "week") from.setDate(from.getDate() - ((from.getDay() + 6) % 7));
+    if (exportPeriod === "month") from.setDate(1);
+    until = new Date(from);
+    if (exportPeriod === "day") until.setDate(until.getDate() + 1);
+    if (exportPeriod === "week") until.setDate(until.getDate() + 7);
+    if (exportPeriod === "month") until.setMonth(until.getMonth() + 1);
+    const label = exportPeriod === "day" ? "Today" : exportPeriod === "week" ? "This Week" : "This Month";
+    return {from, until, label};
+  }
+
+  type AdminReportKind = "registration" | "scan" | "entryexit" | "incidents" | "lostfound";
+  const downloadOptions: {kind: AdminReportKind; label: string; hint: string}[] =
+    reportRole === "student" ? [
+      {kind:"registration", label:"Student Item Registration Report",hint:"Registered item records and statuses"},
+    ] : reportRole === "security" ? [
+      {kind:"scan",label:"QR Scan Activity Report",hint:"Verified item scan activity"},
+      {kind:"entryexit",label:"Gate Entry / Exit Report",hint:"Entry and exit transactions"},
+      {kind:"incidents",label:"Security Incidents Report",hint:"Flagged and resolved incidents"},
+      {kind:"lostfound",label:"Lost & Found Report",hint:"CSU item recovery records"},
+    ] : reportRole === "pco" ? [
+      {kind:"registration",label:"Property / Registered Items Report",hint:"Item inventory and registration records"},
+    ] : reportRole === "sysadmin" ? [
+      {kind:"registration",label:"Item Registration Report",hint:"Campus-wide registered items"},
+      {kind:"scan",label:"QR Scan Activity Report",hint:"All scan activity"},
+      {kind:"entryexit",label:"Gate Entry / Exit Report",hint:"IN and OUT transactions"},
+      {kind:"incidents",label:"Security Incidents Report",hint:"Flagged and resolved cases"},
+      {kind:"lostfound",label:"Lost & Found Report",hint:"Lost, found, and recovered cases"},
+    ] : [];
+
+  async function exportRoleReport(kind: AdminReportKind, format: "pdf" | "csv") {
+    try {
+      if (!reportRole) return;
+      const range = selectedExportRange();
+      setExportingReport(true);
+      const response = kind === "registration" ? await getAllItems() :
+        kind === "scan" || kind === "entryexit" ? await getScanLogs() :
+        kind === "incidents" ? await getSecurityIncidents() : await getLostFoundItems();
+      const data: any = response;
+      const records: any[] = kind === "registration" ? (data?.items ?? []) :
+        kind === "scan" || kind === "entryexit" ? (data?.logs ?? []) :
+        kind === "incidents" ? (data?.incidents ?? []) : (Array.isArray(data) ? data : (data?.items ?? data?.lost_found_items ?? []));
+      const original = Array.isArray(records) ? records : [];
+      const timestampFor = (record: any) => kind === "scan" || kind === "entryexit" ? record.scanned_at :
+        kind === "incidents" ? (record.reported_at ?? record.created_at) :
+        (record.created_at ?? record.reported_at);
+      const filtered = original.filter((record: any) => {
+        if (kind === "entryexit" && !["IN","OUT"].includes(String(record.direction ?? "").toUpperCase())) return false;
+        const stamp = timestampFor(record);
+        const when = stamp ? new Date(stamp) : null;
+        return !!when && !Number.isNaN(when.getTime()) &&
+          (!range.from || when >= range.from) && (!range.until || when < range.until);
+      });
+      if (!filtered.length) {
+        alert(`No matching records for ${range.label}.`);
+        return;
+      }
+      const str = (v: any) => v === null || v === undefined || v === "" ? "—" : String(v);
+      const dt = (v: any) => v ? new Date(v).toLocaleString("en-PH") : "—";
+      let headers: string[] = [];
+      let rows: string[][] = [];
+      if (kind === "registration") {
+        headers = ["Date Registered", "Item", "Category", "Owner", "Owner ID", "Brand / Model", "Serial", "Status"];
+        rows = filtered.map((r:any) => [dt(timestampFor(r)),str(r.item_name),str(r.item_type),str(r.user?.name),str(r.user?.username),str(r.brand_model),str(r.serial_number),str(r.status)]);
+      } else if (kind === "scan" || kind === "entryexit") {
+        headers = ["Date / Time", "QR ID", "Item", "Owner", "Gate", "Direction", "Result", "Scanned By"];
+        rows = filtered.map((r:any) => [dt(timestampFor(r)),str(r.qr_code),str(r.item?.item_name),str(r.item?.user?.name),str(r.gate),str(r.direction),str(r.result),str(r.scanner?.name)]);
+      } else if (kind === "incidents") {
+        headers = ["Date / Time", "Incident", "Item", "QR ID", "Owner", "Gate", "Status", "Reporter"];
+        rows = filtered.map((r:any) => [dt(timestampFor(r)),str(r.incident_type),str(r.item_name),str(r.scanned_code),str(r.owner_name),str(r.gate),str(r.status),str(r.reporter?.name)]);
+      } else {
+        headers = ["Date / Time", "Item", "Category", "Report Type", "Location", "Status", "Owner / Finder"];
+        rows = filtered.map((r:any) => [dt(timestampFor(r)),str(r.item_name),str(r.category),str(r.type ?? r.report_type),str(r.location_found ?? r.location_lost),str(r.status),str(r.finder?.name ?? r.owner?.name)]);
+      }
+      const option = downloadOptions.find(o => o.kind === kind);
+      const title = `QRPass ${option?.label ?? "System Report"}`;
+      const filename = `QRPass-${kind}-${range.label.replace(/[^a-z0-9]+/gi,"-")}`;
+      if (format === "csv") {
+        const escapeCSV = (v: string) => `"${v.replace(/"/g,'""')}"`;
+        const lines = [headers, ...rows].map(row => row.map(escapeCSV).join(","));
+        const blob = new Blob(["\uFEFF" + lines.join("\r\n")], {type: "text/csv;charset=utf-8;"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${filename}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } else {
+        const pdf = new jsPDF({orientation:"landscape"});
+        pdf.setFontSize(17);
+        pdf.text(title,14,18);
+        pdf.setFontSize(10);
+        pdf.text("University of Cebu - Main Campus",14,25);
+        pdf.text(`Reporting Period: ${range.label} | Records: ${filtered.length}`,14,32);
+        autoTable(pdf, {startY:39, head:[headers], body:rows, styles:{fontSize:7,cellPadding:2},
+          headStyles:{fillColor:[26,58,123],textColor:[255,255,255]},
+          alternateRowStyles:{fillColor:[245,247,250]}});
+        pdf.save(`${filename}.pdf`);
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not generate report.");
+    } finally {
+      setExportingReport(false);
+    }
+  }
+
+  // Recent Activity uses actual event timestamps. The same period also controls report exports.
+  const recentPeriodName: CSUDatePeriod = exportPeriod === "day" ? "today" : exportPeriod;
+  const isRecentDate = (value: string | null | undefined) =>
+    (exportPeriod !== "custom" || (!!exportFrom && !!exportTo && exportFrom <= exportTo)) &&
+    csuMatchesPeriod(value, recentPeriodName, exportFrom, exportTo);
+  const periodRecentSecurityScans = recentSecurityScans.filter((log: any) => isRecentDate(log.scanned_at ?? log.created_at));
+  const periodRecentSecurityIncidents = recentSecurityIncidents.filter((incident: any) => isRecentDate(incident.reported_at ?? incident.created_at));
+  const periodRecentLostFound = recentLostFound.filter((item: any) => isRecentDate(item.created_at ?? item.reported_at));
+  const periodRecentRegistrations = recentRegistrations.filter((item: any) => isRecentDate(item.created_at ?? item.registered_at));
+  const periodRoleRecentRegistrations = roleRecentRegistrations.filter((item: any) => isRecentDate(item.created_at ?? item.registered_at));
+  const periodFilteredRecentRegistrations = filteredRecentRegistrations.filter((item: any) => isRecentDate(item.created_at ?? item.registered_at));
+
+  const renderRecentToolbar = () => (
+    <div className="border-b border-[#dce3ee] px-4 py-4">
+      {downloadOptions.length > 1 && (
+        <div>
+          <p className="mb-3 text-xs font-bold text-[#17336d]">Category</p>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Filter recent activity by category">
+            {downloadOptions.map(option => (
+              <button
+                key={option.kind}
+                type="button"
+                aria-pressed={recentCategory === option.kind}
+                onClick={() => setRecentCategory(option.kind)}
+                className={`rounded-xl px-3 py-2 text-xs font-semibold ${recentCategory === option.kind ? "bg-[#17336d] text-white" : "bg-[#f3f5fa] text-[#536782] hover:bg-[#e8eef9]"}`}
+              >
+                {option.label.replace(/ Report$/, "")}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className={downloadOptions.length > 1 ? "mt-4" : ""}>
+        <p className="mb-3 text-xs font-bold text-[#17336d]">Reporting Period</p>
+        <div className="flex flex-wrap items-center gap-2">
+          {([ ["day","Daily"], ["week","Weekly"], ["month","Monthly"], ["all","All Time"], ["custom","Custom Range"] ] as const).map(([id,label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setExportPeriod(id)}
+              aria-pressed={exportPeriod === id}
+              className={`rounded-xl border px-4 py-2 text-xs font-semibold transition-colors ${exportPeriod === id ? "border-[#17336d] bg-[#17336d] text-white" : "border-[#dce3ee] bg-white text-[#17336d] hover:bg-[#edf2ff]"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {exportPeriod === "custom" && (
+          <div className="mt-3 flex flex-wrap gap-3">
+            <label className="text-xs font-semibold text-[#17336d]">From
+              <input
+                type="date"
+                aria-label="Recent records from date"
+                value={exportFrom}
+                max={exportTo || undefined}
+                onChange={e => setExportFrom(e.target.value)}
+                className="mt-1 block rounded-lg border border-[#cfd8e6] bg-white px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="text-xs font-semibold text-[#17336d]">To
+              <input
+                type="date"
+                aria-label="Recent records to date"
+                value={exportTo}
+                min={exportFrom || undefined}
+                onChange={e => setExportTo(e.target.value)}
+                className="mt-1 block rounded-lg border border-[#cfd8e6] bg-white px-3 py-2 text-sm"
+              />
+            </label>
+          </div>
+        )}
+        {exportPeriod === "custom" && (!exportFrom || !exportTo) && (
+          <p className="mt-2 text-xs text-muted-foreground">Choose both dates to display records in the custom range.</p>
+        )}
+      </div>
+    </div>
+  );
+
 return (
     <div className="space-y-5">
       {/* HEADER */}
@@ -16108,94 +15908,49 @@ return (
           subtitle="Real-time QRpass statistics and downloadable system reports."
         />
 
-        <button
+        {reportRole && <button
           onClick={loadReports}
           disabled={loading}
-          className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
-        >
+          className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+        > <RefreshCw size={13} className="shrink-0" />
           {loading
             ? "Refreshing..."
             : "Refresh Reports"}
-        </button>
+        </button>}
       </div>
 
-      {/* =====================================================
-          DOWNLOADABLE REPORTS
-      ====================================================== */}
-      <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+      {/* Role-based report navigation — same selection-card pattern as Student Item Registration. */}
+      <div className="rounded-2xl border border-[#dce3ee] bg-white p-4 shadow-sm sm:p-5">
         <div className="mb-4">
-          <h2 className="text-sm font-bold text-foreground">
-            Download Reports
-          </h2>
-
-          <p className="text-xs text-muted-foreground mt-1">
-            Generate reports using current QRPass database records.
-          </p>
+          <h3 className="text-sm font-bold text-[#17336d]">Reports by Role</h3>
+          <p className="mt-1 text-xs text-muted-foreground">Choose a role to open its reports and analytics. Only the selected role’s report options will appear.</p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-          {(["scan", "registration"] as const).map(source => (
-            <div key={source} className="border border-slate-200 rounded-lg p-3 space-y-2">
-              <p className="text-xs font-bold text-[#17336d]">{source === "scan" ? "QR Scan Reports" : "Item Registration Reports"}</p>
-              <div className="flex flex-wrap gap-2">
-                {(["day", "week", "month"] as const).map(period => (
-                  <button key={period} type="button" onClick={() => downloadPeriodPDF(period, source)}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-[#17336d] hover:bg-blue-100">
-                    <Download size={13}/>{period === "day" ? "Daily" : period === "week" ? "Weekly" : "Monthly"} PDF
-                  </button>
-                ))}
-              </div>
-            </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {([
+            {id:"student",label:"Students",description:"Item registrations and student-related item records",icon:<User size={23}/>},
+            {id:"security",label:"Security Personnel (CSU)",description:"Gate scans, entry/exit activity and security incidents",icon:<Shield size={23}/>},
+            {id:"pco",label:"Property Custodian (PCO)",description:"Registration and property item reports",icon:<Package size={23}/>},
+            {id:"sysadmin",label:"System Administrator",description:"All QRPass system reports and analytics",icon:<BarChart2 size={23}/>},
+          ] as const).map(role => (
+            <button
+              key={role.id}
+              type="button"
+              onClick={() => { setReportRole(role.id); setRecentCategory(role.id === "security" ? "scan" : "registration"); setRegistrationStatusFilter("all"); setAnalyticsTab(role.id === "security" ? "incidents" : role.id === "sysadmin" ? "charts" : "registrations"); }}
+              aria-pressed={reportRole === role.id}
+              className={`flex min-h-[112px] w-full items-start gap-3 rounded-xl border border-[#dce3ee] px-3 py-4 text-left shadow-sm transition-colors sm:px-4 ${reportRole === role.id ? "border-[#17336d] bg-[#edf2ff] ring-1 ring-[#17336d]" : "bg-white hover:bg-[#f5f8ff]"}`}
+            >
+              <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${reportRole === role.id ? "bg-[#17336d] text-white" : "bg-[#eef2fc] text-[#17336d]"}`}>{role.icon}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-[#17336d]">{role.label}</span>
+                <span className="mt-1 block text-xs leading-relaxed text-[#64748b]">{role.description}</span>
+              </span>
+              <ChevronRight className="ml-auto mt-2 shrink-0 text-[#64748b]" size={16} />
+            </button>
           ))}
         </div>
-        <p className="mb-3 text-[11px] text-slate-500">Reports cover the current calendar day, Monday-to-Sunday week, or month. Downloads use actual database records.</p>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={downloadQrScanActivityExcel}
-            className="px-4 py-2.5 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
-          >
-            <Download size={14} />
-            QR Scan Activity Excel
-          </button>
-
-          <button
-            type="button"
-            onClick={downloadDailyQrScanPDF}
-            className="px-4 py-2.5 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
-          >
-            <Download size={14} />
-            Daily QR Scan PDF
-          </button>
-
-            <button
-            type="button"
-            onClick={downloadGateEntryExitPDF}
-            className="px-4 py-2.5 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
-          >
-            <Download size={14} />
-            Gate Entry/Exit Log PDF
-          </button>
-
-          <button
-            type="button"
-            onClick={downloadMonthlyRegistrationPDF}
-            className="px-4 py-2.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
-          >
-            <Download size={14} />
-            Monthly Registration PDF
-          </button>
-
-          <button
-            type="button"
-            onClick={downloadFlaggedIncidentsExcel}
-            className="px-4 py-2.5 bg-green-600 text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
-          >
-            <Download size={14} />
-            Security Incidents Excel
-          </button>
-        </div>
       </div>
+
+      {reportRole && <>
 
       {/* ERROR */}
       {error && (
@@ -16204,526 +15959,274 @@ return (
         </div>
       )}
 
-      {/* MAIN SUMMARY */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        <StatCard
-          label="Registered Items"
-          value={String(
-            summary.total_registered_items
-          )}
-          icon={
-            <Package size={20} />
-          }
-          color="#1a3a7b"
-        />
-
-        <StatCard
-          label="Active QR"
-          value={String(
-            summary.active_qr_codes
-          )}
-          icon={
-            <QrCode size={20} />
-          }
-          color="#557bdc"
-        />
-
-        <StatCard
-          label="Pending"
-          value={String(
-            summary.pending_items
-          )}
-          icon={
-            <Clock size={20} />
-          }
-          color="#6b8ee6"
-        />
-
-        <StatCard
-          label="Scans Today"
-          value={String(
-            summary.scans_today
-          )}
-          icon={
-            <ScanLine size={20} />
-          }
-          color="#2f5fd6"
-        />
-
-        <StatCard
-          label="Flagged"
-          value={String(
-            summary.flagged_incidents
-          )}
-          icon={
-            <AlertTriangle
-              size={20}
-            />
-          }
-          color="#e8543a"
-        />
-
-        <StatCard
-          label="Resolved"
-          value={String(
-            summary.resolved_incidents
-          )}
-          icon={
-            <CheckCircle
-              size={20}
-            />
-          }
-          color="#2ecc71"
-        />
-      </div>
-
-      {/* SECONDARY SUMMARY */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard
-          label="Scans This Month"
-          value={String(
-            summary.scans_this_month
-          )}
-          icon={
-            <BarChart2 size={20} />
-          }
-          color="#1a3a7b"
-        />
-
-        <StatCard
-          label="Registrations This Month"
-          value={String(
-            summary.registrations_this_month
-          )}
-          icon={
-            <FileText size={20} />
-          }
-          color="#557bdc"
-        />
-
-        <StatCard
-          label="Found Items"
-          value={String(
-            summary.lost_found_available
-          )}
-          icon={
-            <Search size={20} />
-          }
-          color="#2f5fd6"
-        />
-
-        <StatCard
-          label="Claimed Items"
-          value={String(
-            summary.lost_found_claimed
-          )}
-          icon={
-            <CheckCircle
-              size={20}
-            />
-          }
-          color="#2ecc71"
-        />
-      </div>
-
-      {/* ANALYTICS */}
-      <div className="grid lg:grid-cols-3 gap-5">
-        {/* ITEMS BY TYPE */}
-        <Card title="Items by Type">
-          <div className="p-4 space-y-4">
-            {itemTypes.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No item data available.
-              </p>
-            ) : (
-              itemTypes.map(
-                (
-                  item: any,
-                  index: number
-                ) => {
-                  const total =
-                    Number(
-                      item.total ?? 0
-                    );
-
-                  const percentage =
-                    (total /
-                      maxItemType) *
-                    100;
-
-                  const colors = [
-                    "#1a3a7b",
-                    "#557bdc",
-                    "#2f5fd6",
-                    "#2ecc71",
-                    "#6b8ee6",
-                    "#e8543a",
-                  ];
-
-                  return (
-                    <div
-                      key={
-                        item.item_type ??
-                        index
-                      }
-                    >
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="font-medium">
-                          {item.item_type ||
-                            "Other"}
-                        </span>
-
-                        <span className="text-muted-foreground">
-                          {total}
-                        </span>
-                      </div>
-
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${Math.max(
-                              percentage,
-                              3
-                            )}%`,
-
-                            backgroundColor:
-                              colors[
-                                index %
-                                  colors.length
-                              ],
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                }
-              )
-            )}
+      {/* Campus-wide summary is shown only when System Administrator is selected. */}
+      {reportRole && <div className="rounded-2xl border border-[#dce3ee] bg-white p-4 shadow-sm sm:p-5">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-bold text-[#17336d]">System Summary</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Statistics relevant to the selected role are shown. Counts are campus-wide.</p>
           </div>
-        </Card>
-
-        {/* LAST 7 DAYS */}
-        <Card title="QR Scans - Last 7 Days">
-          <div className="p-4 space-y-4">
-            {dailyScans.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No scan activity recorded.
-              </p>
-            ) : (
-              dailyScans.map(
-                (entry: any) => {
-                  const total =
-                    Number(
-                      entry.total ?? 0
-                    );
-
-                  return (
-                    <div
-                      key={
-                        entry.date
-                      }
-                    >
-                      <div className="flex justify-between text-xs mb-1">
-                        <span>
-                          {formatDate(
-                            entry.date
-                          )}
-                        </span>
-
-                        <span className="font-semibold">
-                          {total}
-                        </span>
-                      </div>
-
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary rounded-full"
-                          style={{
-                            width: `${Math.max(
-                              (total /
-                                maxDailyScans) *
-                                100,
-                              3
-                            )}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                }
-              )
-            )}
+          <div className="flex items-center gap-2">
+            <span className="rounded-full border border-[#dce3ee] bg-[#f8fafc] px-3 py-1 text-[11px] font-medium text-muted-foreground">Campus-wide</span>
+            <button type="button" aria-label={showSummaryValues ? "Hide statistic cards" : "Show statistic cards"} onClick={() => setShowSummaryValues(v => !v)} className="rounded-xl border border-[#dce3ee] bg-white px-3 py-1 text-xs font-semibold text-[#17336d]">{showSummaryValues ? "Hide Cards" : "Show Cards"}</button>
           </div>
-        </Card>
+        </div>
+        {showSummaryValues && <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {([
+            {category: "registration", label: "Registered Items", value: summary.total_registered_items, icon: <Package size={19}/>, color: "#1a3a7b"},
+            {category: "registration", label: "Active QR", value: summary.active_qr_codes, icon: <QrCode size={19}/>, color: "#557bdc"},
+            {category: "registration", label: "Pending", value: summary.pending_items, icon: <Clock size={19}/>, color: "#6b8ee6"},
+            {category: "scan", label: "Scans Today", value: summary.scans_today, icon: <ScanLine size={19}/>, color: "#2f5fd6"},
+            {category: "incidents", label: "Flagged", value: summary.flagged_incidents, icon: <AlertTriangle size={19}/>, color: "#e8543a"},
+            {category: "incidents", label: "Resolved", value: summary.resolved_incidents, icon: <CheckCircle size={19}/>, color: "#2ecc71"},
+            {category: "scan", label: "Scans This Month", value: summary.scans_this_month, icon: <BarChart2 size={19}/>, color: "#1a3a7b"},
+            {category: "registration", label: "Registrations This Month", value: summary.registrations_this_month, icon: <FileText size={19}/>, color: "#557bdc"},
+            {category: "lostfound", label: "Found Items", value: summary.lost_found_available, icon: <Search size={19}/>, color: "#2f5fd6"},
+            {category: "lostfound", label: "Claimed Items", value: summary.lost_found_claimed, icon: <CheckCircle size={19}/>, color: "#2ecc71"},
+          ]).filter(item => reportRole === "sysadmin" ||
+            (reportRole === "security" && ["scan", "incidents", "lostfound"].includes(item.category)) ||
+            ((reportRole === "student" || reportRole === "pco") && item.category === "registration")
+          ).map(item => (
+            <div key={item.label} className="flex min-h-[98px] items-center gap-3 rounded-xl border border-[#dce3ee] bg-[#fbfcff] p-3 sm:p-4">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{color:item.color, backgroundColor:`${item.color}13`}}>{item.icon}</span>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold text-[#64748b]">{item.label}</p>
+                <p className="mt-1 text-2xl font-bold leading-none text-[#111827]">{Number(item.value ?? 0).toLocaleString("en-PH")}</p>
+              </div>
+            </div>
+          ))}
+        </div>}
+      </div>}
 
-        {/* MONTHLY REGISTRATIONS */}
-        <Card title="Monthly Registrations">
-          <div className="p-4 space-y-4">
-            {monthlyRegistrations.length ===
-            0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No registration data available.
-              </p>
-            ) : (
-              monthlyRegistrations.map(
-                (entry: any) => {
-                  const total =
-                    Number(
-                      entry.total ?? 0
-                    );
-
-                  const month =
-                    monthNames[
-                      Number(
-                        entry.month
-                      ) - 1
-                    ] ??
-                    `Month ${entry.month}`;
-
-                  return (
-                    <div
-                      key={
-                        entry.month
-                      }
-                    >
-                      <div className="flex justify-between text-xs mb-1">
-                        <span>
-                          {month}
-                        </span>
-
-                        <span className="font-semibold">
-                          {total}
-                        </span>
-                      </div>
-
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${Math.max(
-                              (total /
-                                maxMonthly) *
-                                100,
-                              3
-                            )}%`,
-
-                            backgroundColor:
-                              "#557bdc",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                }
-              )
-            )}
+      {/* Reports are displayed as clear, role-specific rows rather than duplicate category tabs. */}
+      <div className="overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#dce3ee] px-4 py-4 sm:px-5">
+          <div>
+            <h3 className="text-sm font-semibold text-[#17336d]">
+              {reportRole === "security" ? "Downloadable Reports — CSU" :
+                reportRole === "student" ? "Downloadable Reports — Students" :
+                reportRole === "pco" ? "Downloadable Reports — Property Custodian (PCO)" :
+                "Downloadable Reports — System Administrator"}
+            </h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Download the selected role's relevant reports in PDF or CSV format.
+            </p>
           </div>
-        </Card>
-      </div>
-
-      {/* RECENT REGISTRATIONS */}
-      <div className="bg-white border border-[#cfd8e6] rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#cfd8e6]">
-          <h2 className="font-semibold text-sm">
-            Recent Item Registrations
-          </h2>
+          <button
+            type="button"
+            aria-expanded={showDownloadableReports}
+            aria-label={showDownloadableReports ? "Hide downloadable reports" : "Show downloadable reports"}
+            onClick={() => setShowDownloadableReports(value => !value)}
+            className="rounded-xl border border-[#dce3ee] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] hover:bg-[#f3f6fc]"
+          >
+            {showDownloadableReports ? "Hide Reports" : "Show Reports"}
+          </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px]">
-            <thead>
-              <tr className="bg-[#fafbfc]">
-                {[
-                  "Date",
-                  "Student",
-                  "Item",
-                  "Type",
-                  "Serial Number",
-                  "Status",
-                ].map((heading) => (
-                  <th
-                    key={heading}
-                    className="text-left px-3 py-3 text-xs text-muted-foreground font-semibold"
-                  >
-                    {heading}
-                  </th>
+        {showDownloadableReports && <>
+        <div className="divide-y divide-[#dce3ee]">
+          {downloadOptions.map(option => (
+            <div key={option.kind} className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
+              <div>
+                <p className="text-sm font-semibold text-[#17336d]">{option.label}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{option.hint}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button type="button" disabled={exportingReport} onClick={() => exportRoleReport(option.kind,"pdf")}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#17336d] px-4 py-2 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"><Download size={14}/> PDF</button>
+                <button type="button" disabled={exportingReport} onClick={() => exportRoleReport(option.kind,"csv")}
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#17336d] hover:bg-muted disabled:opacity-50"><Download size={14}/> CSV</button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="border-t border-[#dce3ee] px-4 py-3 text-[11px] text-muted-foreground sm:px-5">
+          Report types are grouped by role. Downloads follow the Reporting Period selected in Recent Activity below. The available backend records are campus-wide and are not restricted to accounts of that role.
+        </p>
+        </>}
+      </div>
+
+      {/* Role-specific recent records. CSU scans are not item registrations. */}
+      {(reportRole === "security" || reportRole === "sysadmin") && (recentCategory === "scan" || recentCategory === "entryexit") && (
+        <div className="overflow-hidden rounded-xl border border-[#dce3ee] bg-white shadow-sm">
+          <div className="px-4 py-3">
+            <h3 className="text-sm font-semibold text-[#17336d]">{recentCategory === "entryexit" ? "Recent Gate Entry / Exit Activity" : "Recent QR Scan Activity"}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Actual verification and entry/exit events from the scan logs, not registration records.</p>
+          </div>
+          {renderRecentToolbar()}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[850px]">
+              <thead className="bg-[#fafbfc]"><tr>
+                {['Date / Time', 'Item', 'Owner', 'Gate', 'Direction', 'Result', 'Scanned By'].map(heading =>
+                  <th key={heading} className="px-3 py-3 text-left text-xs font-semibold text-muted-foreground">{heading}</th>
+                )}
+              </tr></thead>
+              <tbody className="divide-y divide-border">
+                {securityScansLoading ? (
+                  <tr><td colSpan={7} className="py-10 text-center text-sm text-muted-foreground">Loading scan activity...</td></tr>
+                ) : securityScansError ? (
+                  <tr><td colSpan={7} className="py-10 text-center text-sm text-red-600">{securityScansError}</td></tr>
+                ) : periodRecentSecurityScans.filter((log: any) => recentCategory !== "entryexit" || ["in", "out", "entry", "exit"].includes(String(log.direction ?? "").toLowerCase())).length === 0 ? (
+                  <tr><td colSpan={7} className="py-10 text-center text-sm text-muted-foreground">No scan records available.</td></tr>
+                ) : periodRecentSecurityScans.filter((log: any) => recentCategory !== "entryexit" || ["in", "out", "entry", "exit"].includes(String(log.direction ?? "").toLowerCase())).map((log: any, index: number) => (
+                  <tr key={log.id ?? `scan-${index}`} className="hover:bg-[#f8fafc]">
+                    <td className="px-3 py-3 text-xs">{log.scanned_at ? new Date(log.scanned_at).toLocaleString('en-PH') : '—'}</td>
+                    <td className="px-3 py-3 text-xs font-semibold">{log.item?.item_name ?? log.item_name ?? '—'}</td>
+                    <td className="px-3 py-3 text-xs">{log.item?.user?.name ?? log.owner?.name ?? '—'}</td>
+                    <td className="px-3 py-3 text-xs">{log.gate ?? '—'}</td>
+                    <td className="px-3 py-3 text-xs">{log.direction ?? '—'}</td>
+                    <td className="px-3 py-3 text-xs">{log.result ?? '—'}</td>
+                    <td className="px-3 py-3 text-xs">{log.scanner?.name ?? '—'}</td>
+                  </tr>
                 ))}
-              </tr>
-            </thead>
-
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {reportRole === "pco" && recentCategory === "registration" && (
+        <div className="overflow-hidden rounded-xl border border-[#dce3ee] bg-white shadow-sm">
+          <div className="px-4 py-3">
+            <h3 className="text-sm font-semibold text-[#17336d]">Property Inventory Overview</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Property-oriented inventory of registered items, including category, identifying details and registration status.
+              These are campus-wide records: the current API does not mark items as specifically assigned to PCO.
+            </p>
+          </div>
+          {renderRecentToolbar()}
+          <div className="flex flex-wrap gap-2 border-b border-[#dce3ee] px-4 py-3" role="group" aria-label="Filter inventory by status">
+            {["all", ...registrationStatuses].map(status => {
+              const count = status === "all" ? periodRecentRegistrations.length : periodRecentRegistrations.filter((item: any) =>
+                String(item.status ?? "unknown").toLowerCase() === status).length;
+              return <button type="button" key={status} aria-pressed={registrationStatusFilter === status}
+                onClick={() => setRegistrationStatusFilter(status)}
+                className={`rounded-xl px-3 py-2 text-xs font-semibold ${registrationStatusFilter === status ? "bg-[#17336d] text-white" : "bg-[#f3f5fa] text-[#536782] hover:bg-[#e8eef9]"}`}>
+                {status === "all" ? "All Inventory" : status.charAt(0).toUpperCase() + status.slice(1)} ({count})
+              </button>;
+            })}
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px]">
+              <thead className="bg-[#fafbfc]"><tr>
+                {["Category", "Item / Equipment", "Brand / Model", "Serial / Identification", "Registered Owner", "Status"].map(h =>
+                  <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>)}
+              </tr></thead>
+              <tbody className="divide-y divide-border">
+                {loading ? <tr><td colSpan={6} className="py-10 text-center text-sm text-muted-foreground">Loading inventory...</td></tr> :
+                  periodFilteredRecentRegistrations.length === 0 ? <tr><td colSpan={6} className="py-10 text-center text-sm text-muted-foreground">No inventory records match this filter.</td></tr> :
+                  [...periodFilteredRecentRegistrations].sort((a: any, b: any) => String(a.item_type ?? "").localeCompare(String(b.item_type ?? ""))).map((item: any) =>
+                    <tr key={item.id} className="hover:bg-[#f8fafc]">
+                      <td className="px-3 py-3 text-xs">{item.item_type ?? "—"}</td>
+                      <td className="px-3 py-3 text-xs font-semibold">{item.item_name ?? "—"}</td>
+                      <td className="px-3 py-3 text-xs">{item.brand_model || "—"}</td>
+                      <td className="px-3 py-3 text-xs">{item.serial_number || "—"}</td>
+                      <td className="px-3 py-3 text-xs">{item.user?.name ?? "Unknown"}</td>
+                      <td className="px-3 py-3 text-xs capitalize">{item.status ?? "Unknown"}</td>
+                    </tr>)}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {(reportRole === "security" || reportRole === "sysadmin") && recentCategory === "incidents" && (
+        <div className="overflow-hidden rounded-xl border border-[#dce3ee] bg-white shadow-sm">
+          <div className="px-4 py-3"><h3 className="text-sm font-semibold text-[#17336d]">Recent Security Incidents</h3></div>
+          {renderRecentToolbar()}
+          <div className="overflow-x-auto"><table className="w-full min-w-[700px]">
+            <thead className="bg-[#fafbfc]"><tr>{["Date", "Item / Incident", "Gate / Location", "Status", "Description"].map(h => <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>)}</tr></thead>
             <tbody className="divide-y divide-border">
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="py-10 text-center text-sm text-muted-foreground"
-                  >
-                    Loading reports...
-                  </td>
-                </tr>
-              ) : recentRegistrations.length ===
-                0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="py-10 text-center text-sm text-muted-foreground"
-                  >
-                    No registration records found.
-                  </td>
-                </tr>
-              ) : (
-                recentRegistrations.map(
-                  (item: any) => (
-                    <tr key={item.id}>
-                      <td className="px-3 py-3 text-xs">
-                        {formatDate(
-                          item.created_at
-                        )}
-                      </td>
-
-                      <td className="px-3 py-3 text-xs">
-                        <div className="font-semibold">
-                          {item.user?.name ??
-                            "Unknown"}
-                        </div>
-
-                        <div className="text-muted-foreground">
-                          {item.user?.username ??
-                            ""}
-                        </div>
-                      </td>
-
-                      <td className="px-3 py-3 text-xs font-semibold">
-                        {item.item_name}
-                      </td>
-
-                      <td className="px-3 py-3 text-xs">
-                        {item.item_type}
-                      </td>
-
-                      <td className="px-3 py-3 text-xs">
-                        {item.serial_number}
-                      </td>
-
-                      <td className="px-3 py-3">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                            String(
-                              item.status
-                            ).toLowerCase() ===
-                            "approved"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                )
-              )}
+              {detailsLoading ? <tr><td colSpan={5} className="px-3 py-8 text-center text-sm">Loading incidents...</td></tr> :
+              detailsError ? <tr><td colSpan={5} className="px-3 py-8 text-center text-sm text-red-600">{detailsError}</td></tr> :
+              periodRecentSecurityIncidents.length === 0 ? <tr><td colSpan={5} className="px-3 py-8 text-center text-sm">No incidents found.</td></tr> :
+              periodRecentSecurityIncidents.slice(0,30).map((incident: any, i: number) => <tr key={incident.id ?? i}>
+                <td className="px-3 py-3 text-xs">{formatDate(incident.reported_at ?? incident.created_at)}</td>
+                <td className="px-3 py-3 text-xs font-semibold">{incident.item?.item_name ?? incident.item_name ?? incident.incident_type ?? "—"}</td>
+                <td className="px-3 py-3 text-xs">{incident.gate ?? incident.location ?? "—"}</td>
+                <td className="px-3 py-3 text-xs capitalize">{incident.status ?? "—"}</td>
+                <td className="px-3 py-3 text-xs">{incident.description ?? incident.reason ?? "—"}</td>
+              </tr>)}
             </tbody>
-          </table>
+          </table></div>
         </div>
-      </div>
-
-      {/* SECURITY INCIDENTS */}
-      <div className="bg-white border border-[#cfd8e6] rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#cfd8e6]">
-          <h2 className="font-semibold text-sm">
-            Recent Security Incidents
-          </h2>
+      )}
+      {(reportRole === "security" || reportRole === "sysadmin") && recentCategory === "lostfound" && (
+        <div className="overflow-hidden rounded-xl border border-[#dce3ee] bg-white shadow-sm">
+          <div className="px-4 py-3"><h3 className="text-sm font-semibold text-[#17336d]">Recent Lost & Found Records</h3></div>
+          {renderRecentToolbar()}
+          <div className="overflow-x-auto"><table className="w-full min-w-[700px]">
+            <thead className="bg-[#fafbfc]"><tr>{["Date", "Item", "Type", "Location", "Status"].map(h => <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>)}</tr></thead>
+            <tbody className="divide-y divide-border">
+              {detailsLoading ? <tr><td colSpan={5} className="px-3 py-8 text-center text-sm">Loading lost and found records...</td></tr> :
+              detailsError ? <tr><td colSpan={5} className="px-3 py-8 text-center text-sm text-red-600">{detailsError}</td></tr> :
+              periodRecentLostFound.length === 0 ? <tr><td colSpan={5} className="px-3 py-8 text-center text-sm">No Lost & Found records found.</td></tr> :
+              periodRecentLostFound.slice(0,30).map((item: any, i: number) => <tr key={item.id ?? i}>
+                <td className="px-3 py-3 text-xs">{formatDate(item.reported_at ?? item.created_at)}</td>
+                <td className="px-3 py-3 text-xs font-semibold">{item.item_name ?? item.name ?? "—"}</td>
+                <td className="px-3 py-3 text-xs capitalize">{item.report_type ?? item.type ?? "—"}</td>
+                <td className="px-3 py-3 text-xs">{item.location_found ?? item.location_lost ?? "—"}</td>
+                <td className="px-3 py-3 text-xs capitalize">{item.status ?? "—"}</td>
+              </tr>)}
+            </tbody>
+          </table></div>
         </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px]">
-            <thead>
-              <tr className="bg-[#fafbfc]">
-                {[
-                  "Date",
-                  "Incident",
-                  "Code",
-                  "Gate",
-                  "Reported By",
-                  "Status",
-                ].map((heading) => (
-                  <th
-                    key={heading}
-                    className="text-left px-3 py-3 text-xs text-muted-foreground font-semibold"
-                  >
-                    {heading}
-                  </th>
+      )}
+      {reportRole && reportRole !== "security" && reportRole !== "pco" && recentCategory === "registration" && (
+        <div className="overflow-hidden rounded-xl border border-[#dce3ee] bg-white shadow-sm">
+          <div className="px-4 py-3">
+            <h3 className="text-sm font-semibold text-[#17336d]">{reportRole === "student" ? "Recent Student Item Registrations" : "Recent Campus-wide Item Registrations"}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{reportRole === "student" ? "Student-owned registrations where the API identifies owner role; owner role missing from records is not assumed to be non-student." : "All recent item registration records across campus."}</p>
+          </div>
+          {renderRecentToolbar()}
+          <div className="flex flex-wrap items-center gap-2 border-b border-[#dce3ee] px-4 py-3" role="group" aria-label="Filter registrations by status">
+            {["all", ...registrationStatuses].map(status => {
+              const count = status === "all" ? periodRoleRecentRegistrations.length : periodRoleRecentRegistrations.filter((item: any) =>
+                String(item.status ?? "Unknown").trim().toLowerCase() === status
+              ).length;
+              const label = status === "all" ? "All Records" : status.charAt(0).toUpperCase() + status.slice(1);
+              return <button key={status} type="button" onClick={() => setRegistrationStatusFilter(status)}
+                aria-pressed={registrationStatusFilter === status}
+                className={`rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${registrationStatusFilter === status ? "bg-[#17336d] text-white" : "bg-[#f3f5fa] text-[#536782] hover:bg-[#e8eef9]"}`}>
+                {label} ({count})
+              </button>;
+            })}
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[850px]">
+              <thead className="bg-[#fafbfc]">
+                <tr>{["Date", "Student", "Item", "Type", "Serial Number", "Status"].map(h => (
+                  <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>
+                ))}</tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {loading ? (
+                  <tr><td colSpan={6} className="py-10 text-center text-sm text-muted-foreground">Loading registrations...</td></tr>
+                ) : periodFilteredRecentRegistrations.length === 0 ? (
+                  <tr><td colSpan={6} className="py-10 text-center text-sm text-muted-foreground">No registration records match the selected status.</td></tr>
+                ) : periodFilteredRecentRegistrations.map((item: any) => (
+                  <tr key={item.id} className="hover:bg-[#f8fafc]">
+                    <td className="px-3 py-3 text-xs">{formatDate(item.created_at)}</td>
+                    <td className="px-3 py-3 text-xs">
+                      <p className="font-semibold">{item.user?.name ?? "Unknown"}</p>
+                      <p className="text-muted-foreground">{item.user?.username ?? ""}</p>
+                    </td>
+                    <td className="px-3 py-3 text-xs font-semibold">{item.item_name ?? "—"}</td>
+                    <td className="px-3 py-3 text-xs">{item.item_type ?? "—"}</td>
+                    <td className="px-3 py-3 text-xs">{item.serial_number || "—"}</td>
+                    <td className="px-3 py-3">
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${String(item.status ?? "").toLowerCase() === "approved" ? "bg-green-100 text-green-700" : String(item.status ?? "").toLowerCase() === "pending" ? "bg-yellow-100 text-yellow-700" : "bg-slate-100 text-slate-700"}`}>
+                        {item.status ?? "Unknown"}
+                      </span>
+                    </td>
+                  </tr>
                 ))}
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-border">
-              {recentIncidents.length ===
-              0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="py-10 text-center text-sm text-muted-foreground"
-                  >
-                    No security incidents found.
-                  </td>
-                </tr>
-              ) : (
-                recentIncidents.map(
-                  (incident: any) => (
-                    <tr
-                      key={
-                        incident.id
-                      }
-                    >
-                      <td className="px-3 py-3 text-xs">
-                        {formatDate(
-                          incident.reported_at
-                        )}
-                      </td>
-
-                      <td className="px-3 py-3 text-xs font-semibold">
-                        {incident.incident_type}
-                      </td>
-
-                      <td className="px-3 py-3 text-xs font-mono">
-                        {incident.scanned_code ||
-                          "—"}
-                      </td>
-
-                      <td className="px-3 py-3 text-xs">
-                        {incident.gate}
-                      </td>
-
-                      <td className="px-3 py-3 text-xs">
-                        {incident.reporter?.name ??
-                          "Security Personnel"}
-                      </td>
-
-                      <td className="px-3 py-3">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                            String(
-                              incident.status
-                            ).toLowerCase() ===
-                            "resolved"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {incident.status}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                )
-              )}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+
+      </>}
     </div>
   );
 }
@@ -16747,6 +16250,7 @@ function AdminNotifications() {
 // SYSADMIN PAGES
 // ══════════════════════════════════════════════════════════════════════════════
 function SysAdminUserAccounts() {
+  const [showRoleBreakdown, setShowRoleBreakdown] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
 
   const [summary, setSummary] = useState<any>({
@@ -16765,6 +16269,9 @@ function SysAdminUserAccounts() {
   const [search, setSearch] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState("all");
   const [userStatusFilter, setUserStatusFilter] = useState("all");
+  const [accountsPeriod, setAccountsPeriod] = useState<CSUDatePeriod>("all");
+  const [accountsFrom, setAccountsFrom] = useState("");
+  const [accountsTo, setAccountsTo] = useState("");
 
   const [updatingId, setUpdatingId] =
     useState<number | null>(null);
@@ -16788,6 +16295,16 @@ function SysAdminUserAccounts() {
     role: "student",
     password: "",
   });
+
+  const periodAccounts = users.filter((user:any) => csuMatchesPeriod(user.created_at ?? user.registered_at, accountsPeriod, accountsFrom, accountsTo));
+  const accountPeriodStats = {
+    total: periodAccounts.length,
+    students: periodAccounts.filter((user:any) => String(user.role ?? "").toLowerCase() === "student").length,
+    personnel: periodAccounts.filter((user:any) => ["security", "pco"].includes(String(user.role ?? "").toLowerCase())).length,
+    active: periodAccounts.filter((user:any) => String(user.status ?? "").toLowerCase() === "approved").length,
+    disabled: periodAccounts.filter((user:any) => String(user.status ?? "").toLowerCase() !== "approved").length,
+    admins: periodAccounts.filter((user:any) => String(user.role ?? "").toLowerCase() === "sysadmin").length,
+  };
 
   async function loadUsers() {
   try {
@@ -17266,8 +16783,8 @@ function SysAdminUserAccounts() {
           <button
             onClick={loadUsers}
             disabled={loading}
-            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
-          >
+            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+          > <RefreshCw size={13} className="shrink-0" />
             {loading
               ? "Refreshing..."
               : "Refresh Users"}
@@ -17641,12 +17158,19 @@ function SysAdminUserAccounts() {
         </Card>
       )}
 
-      {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3">
+      <CSUStatsPeriodFilter value={accountsPeriod} onChange={setAccountsPeriod} start={accountsFrom} onStartChange={setAccountsFrom} end={accountsTo} onEndChange={setAccountsTo} description="Account summary shows users created during the selected period. Current account search remains independent." />
+            {/* Consistent account overview, grouped to avoid scattered boxes. */}
+      <div className="rounded-2xl border border-[#dce3ee] bg-white p-4 shadow-sm sm:p-5">
+        <div className="mb-4">
+          <h3 className="text-sm font-bold text-[#17336d]">Account Overview</h3>
+          <p className="mt-1 text-xs text-muted-foreground">A quick summary of account roles and availability.</p>
+        </div>
+        <StatisticalCardsSection>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <StatCard
           label="Total Users"
           value={String(
-            summary.total_users ?? 0
+            accountPeriodStats.total
           )}
           icon={<Users size={20} />}
           color="#1a3a7b"
@@ -17655,7 +17179,7 @@ function SysAdminUserAccounts() {
         <StatCard
           label="Students"
           value={String(
-            summary.students ?? 0
+            accountPeriodStats.students
           )}
           icon={<Users size={20} />}
           color="#557bdc"
@@ -17664,7 +17188,7 @@ function SysAdminUserAccounts() {
         <StatCard
           label="Staff / Personnel"
           value={String(
-            totalPersonnel
+            accountPeriodStats.personnel
           )}
           icon={<Users size={20} />}
           color="#6b8ee6"
@@ -17673,7 +17197,7 @@ function SysAdminUserAccounts() {
         <StatCard
           label="Active Accounts"
           value={String(
-            summary.active_users ?? 0
+            accountPeriodStats.active
           )}
           icon={
             <CheckCircle size={20} />
@@ -17684,7 +17208,7 @@ function SysAdminUserAccounts() {
         <StatCard
           label="Disabled"
           value={String(
-            summary.inactive_users ?? 0
+            accountPeriodStats.disabled
           )}
           icon={<X size={20} />}
           color="#e8543a"
@@ -17693,15 +17217,21 @@ function SysAdminUserAccounts() {
         <StatCard
           label="System Admins"
           value={String(
-            summary.system_admins ?? 0
+            accountPeriodStats.admins
           )}
           icon={<Shield size={20} />}
           color="#2f5fd6"
         />
+        </div>
+      </StatisticalCardsSection>
       </div>
 
+      <button type="button" onClick={() => setShowRoleBreakdown(value => !value)}
+        className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-semibold hover:bg-muted">
+        <Users size={15}/> {showRoleBreakdown ? "Hide Role Breakdown" : "Show Role Breakdown"}
+      </button>
       {/* ROLE BREAKDOWN */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {showRoleBreakdown && <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
           <p className="text-xs text-muted-foreground">
             Students
@@ -17742,7 +17272,7 @@ function SysAdminUserAccounts() {
               0}
           </p>
         </div>
-      </div>
+      </div>}
 
       {/* USER LIST */}
       <Card
@@ -17893,42 +17423,16 @@ function SysAdminUserAccounts() {
 
                         {/* ACTIONS */}
                         <td className="py-3 px-3">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() =>
-                                handleStartEdit(
-                                  user
-                                )
-                              }
-                              className="text-xs text-primary font-semibold hover:underline"
-                            >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button type="button" onClick={() => handleStartEdit(user)}
+                              className="rounded-lg border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] transition-colors hover:bg-[#eef2fc]">
                               Edit
                             </button>
-
-                            <span className="text-muted-foreground">
-                              |
-                            </span>
-
-                            <button
-                              onClick={() =>
-                                handleToggleStatus(
-                                  user
-                                )
-                              }
-                              disabled={
-                                isUpdating
-                              }
-                              className={`text-xs font-semibold hover:underline disabled:opacity-50 ${
-                                isActive
-                                  ? "text-red-600"
-                                  : "text-green-600"
-                              }`}
-                            >
-                              {isUpdating
-                                ? "Updating..."
-                                : isActive
-                                ? "Disable"
-                                : "Enable"}
+                            <button type="button" onClick={() => handleToggleStatus(user)} disabled={isUpdating}
+                              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${isActive
+                                ? "border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+                                : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"}`}>
+                              {isUpdating ? "Updating..." : isActive ? "Disable" : "Enable"}
                             </button>
                           </div>
                         </td>
@@ -18064,8 +17568,13 @@ function SysAdminSettings() {
         });
       }
 
+      localStorage.setItem("qrpass-footer-brand", JSON.stringify({
+        institution: String(data?.settings?.institution || settings.institution),
+        system_name: String(data?.settings?.system_name || settings.system_name),
+      }));
+      window.dispatchEvent(new Event("qrpass-settings-updated"));
       setSuccess(
-        "General settings saved successfully."
+        "General settings saved successfully. Footer branding has been updated."
       );
     } catch (err) {
       console.error(
@@ -18401,6 +17910,9 @@ function SysAdminAuditLogs() {
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
+  const [logsPeriod, setLogsPeriod] = useState<CSUDatePeriod>("all");
+  const [logsStart, setLogsStart] = useState("");
+  const [logsEnd, setLogsEnd] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -18586,8 +18098,21 @@ function SysAdminAuditLogs() {
     {id:"all",label:"All Activity"},{id:"login",label:"Login"},
     {id:"logout",label:"Logout"},{id:"changes",label:"Data Changes"},
     {id:"qr_scan",label:"QR Scans"},{id:"errors",label:"Errors"},
+    {id:"item-registration",label:"Item Registrations"},
+    {id:"transaction-scan",label:"Scan Transactions"},
+    {id:"security-incident",label:"Security Incidents"},
+    {id:"lost-found",label:"Lost & Found"},
   ];
-  const visibleAuditLogs = logs.filter((log:any) => {
+  const periodAuditLogs = logs.filter((log:any) =>
+    csuMatchesPeriod(log.created_at ?? log.date, logsPeriod, logsStart, logsEnd)
+  );
+  const periodAuditStats = {
+    total: periodAuditLogs.length,
+    scans: periodAuditLogs.filter((log:any) => `${log.event_type ?? ""} ${log.action ?? ""} ${log.module ?? ""}`.toLowerCase().includes("scan")).length,
+    changes: periodAuditLogs.filter((log:any) => ["create", "update", "delete", "approval", "status_change"].some(x => `${log.event_type ?? ""} ${log.action ?? ""}`.toLowerCase().includes(x))).length,
+    errors: periodAuditLogs.filter((log:any) => ["failed", "error", "warning"].includes(String(log.status ?? "").toLowerCase())).length,
+  };
+  const visibleAuditLogs = periodAuditLogs.filter((log:any) => {
     const event = String(log.event_type ?? "").toLowerCase();
     const action = String(log.action ?? "").toLowerCase();
     const text = `${event} ${action}`;
@@ -18602,7 +18127,7 @@ function SysAdminAuditLogs() {
   });
 
   function exportAuditLogsExcel() {
-    if (logs.length === 0) {
+    if (visibleAuditLogs.length === 0) {
       alert(
         "There are no audit logs to export."
       );
@@ -18691,9 +18216,27 @@ function SysAdminAuditLogs() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Audit Logs"
-        subtitle="Complete record of QRPass system activity and user actions."
+        title="System Logs"
+        subtitle="Audit events and system transactions, grouped by activity type."
       />
+      <CSUStatsPeriodFilter
+        value={logsPeriod} onChange={setLogsPeriod}
+        start={logsStart} onStartChange={setLogsStart}
+        end={logsEnd} onEndChange={setLogsEnd}
+        description="Filters audit statistics, activity records, system transactions and exports by date."
+      />
+      <div className="rounded-xl border border-[#cfd8e6] bg-white px-4 py-3 flex flex-wrap items-center gap-2">
+        {actionTabs.map(tab => (
+          <button type="button" key={tab.id} aria-pressed={actionFilter === tab.id}
+            onClick={() => setActionFilter(tab.id)}
+            className={`rounded-full px-3 py-2 text-xs font-semibold ${actionFilter === tab.id ? "bg-[#17336d] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      {["item-registration", "transaction-scan", "security-incident", "lost-found"].includes(actionFilter)
+        ? <AdminRecords embedded selectedType={actionFilter === "item-registration" ? "Item Registration" : actionFilter === "transaction-scan" ? "QR Scan" : actionFilter === "security-incident" ? "Security Incident" : "Lost & Found"} sharedPeriod={logsPeriod} sharedStart={logsStart} sharedEnd={logsEnd} />
+        : <>
 
       {error && (
         <div className="p-3 border border-red-200 bg-red-50 rounded-md text-sm text-red-700">
@@ -18701,10 +18244,11 @@ function SysAdminAuditLogs() {
         </div>
       )}
 
+      <StatisticalCardsSection>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard
-          label="Logs Today"
-          value={stats.logs_today.toLocaleString()}
+          label="Logs in Period (Loaded)"
+          value={periodAuditStats.total.toLocaleString()}
           icon={
             <FileText size={20} />
           }
@@ -18713,7 +18257,7 @@ function SysAdminAuditLogs() {
 
         <StatCard
           label="QR Scan Events"
-          value={stats.qr_scan_events.toLocaleString()}
+          value={periodAuditStats.scans.toLocaleString()}
           icon={
             <ScanLine size={20} />
           }
@@ -18722,7 +18266,7 @@ function SysAdminAuditLogs() {
 
         <StatCard
           label="Data Changes"
-          value={stats.data_changes.toLocaleString()}
+          value={periodAuditStats.changes.toLocaleString()}
           icon={
             <RefreshCw size={20} />
           }
@@ -18731,21 +18275,17 @@ function SysAdminAuditLogs() {
 
         <StatCard
           label="Errors"
-          value={stats.errors.toLocaleString()}
+          value={periodAuditStats.errors.toLocaleString()}
           icon={
             <AlertTriangle size={20} />
           }
           color="#e8543a"
         />
       </div>
+      </StatisticalCardsSection>
 
-      <div className="rounded-xl border border-[#cfd8e6] bg-white px-4 py-3 flex flex-wrap items-center gap-2">
-        {actionTabs.map(tab => (
-          <button type="button" key={tab.id} onClick={()=>setActionFilter(tab.id)} className={`rounded-full px-3 py-2 text-xs font-semibold ${actionFilter===tab.id?"bg-[#17336d] text-white":"bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{tab.label}</button>
-        ))}
-        <span className="ml-auto text-xs text-slate-500">{visibleAuditLogs.length} matching events</span>
-      </div>
-      <Card title="Audit Log Records">
+      <p className="text-xs text-muted-foreground">{visibleAuditLogs.length} matching audit events</p>
+      <Card title="Audit Activity Records">
         <div className="p-4 border-b border-[#cfd8e6]">
           <form
             onSubmit={handleSearch}
@@ -18966,13 +18506,16 @@ function SysAdminAuditLogs() {
           </div>
         )}
       </Card>
+      </>}
     </div>
   );
 }
 
 function SysAdminActiveSessions() {
   const [sessions, setSessions] = useState<any[]>([]);
+  const [sessionAccounts, setSessionAccounts] = useState<any[]>([]);
   const [activeCount, setActiveCount] = useState(0);
+  const [activeUsersCount, setActiveUsersCount] = useState(0);
   const [totalSessions, setTotalSessions] = useState(0);
   const [sessionTimeout, setSessionTimeout] = useState(30);
 
@@ -18998,11 +18541,28 @@ function SysAdminActiveSessions() {
       const data =
         await getActiveSessions();
 
-      setSessions(
-        Array.isArray(data.sessions)
-          ? data.sessions
-          : []
+      const returnedSessions = Array.isArray(data.sessions) ? data.sessions : [];
+      setSessions(returnedSessions);
+      // Sanctum may create multiple active tokens for ONE account.
+      // Count distinct user IDs, not tokens, to avoid displaying 3 users for 1 person.
+      const distinctActiveUsers = new Set(
+        returnedSessions
+          .filter((session: any) => session.is_active === true)
+          .map((session: any) => session.user_id ?? session.user?.id)
+          .filter((id: any) => id !== null && id !== undefined && String(id).trim() !== "")
+          .map((id: any) => String(id))
       );
+      setActiveUsersCount(distinctActiveUsers.size);
+
+      // Use the same user directory as User Accounts for accurate user ID and email.
+      // This is supplementary: session listing must still work if user directory fails.
+      try {
+        const accountData = await getUsers();
+        setSessionAccounts(Array.isArray(accountData?.users) ? accountData.users : []);
+      } catch (accountError) {
+        console.warn("Session user directory unavailable:", accountError);
+        setSessionAccounts([]);
+      }
 
       setActiveCount(
         Number(
@@ -19047,6 +18607,10 @@ function SysAdminActiveSessions() {
 
   useEffect(() => {
     loadSessions();
+    // Refresh session activity automatically. This is recent-token activity,
+    // not a guaranteed live presence signal (closing a tab doesn't log out).
+    const refreshInterval = window.setInterval(() => { void loadSessions(); }, 20000);
+    return () => window.clearInterval(refreshInterval);
   }, []);
 
 
@@ -19182,6 +18746,38 @@ function SysAdminActiveSessions() {
   }
 
 
+  function linkedAccount(session: any) {
+    const sessionUser = session.user ?? {};
+    const sessionId = session.user_id ?? sessionUser.id;
+    if (sessionId !== undefined && sessionId !== null && String(sessionId).trim()) {
+      const found = sessionAccounts.find((user: any) => String(user.id) === String(sessionId));
+      if (found) return found;
+    }
+    const email = String(session.email ?? sessionUser.email ?? "").trim().toLowerCase();
+    if (email) {
+      const found = sessionAccounts.find((user: any) => String(user.email ?? "").trim().toLowerCase() === email);
+      if (found) return found;
+    }
+    const username = String(session.username ?? sessionUser.username ?? "").trim().toLowerCase();
+    if (username) {
+      const found = sessionAccounts.find((user: any) => String(user.username ?? "").trim().toLowerCase() === username);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  function sessionDisplayName(session: any) {
+    const account = linkedAccount(session);
+    const accountUser = account?.user ?? {};
+    const completeName = [account?.first_name ?? account?.firstname ?? accountUser.first_name,
+      account?.middle_name ?? accountUser.middle_name,
+      account?.last_name ?? account?.lastname ?? accountUser.last_name]
+      .map(value => String(value ?? "").trim()).filter(Boolean).join(" ");
+    const candidates = [completeName, account?.full_name, accountUser.full_name, account?.name,
+      session.user?.full_name, session.user?.name, session.name];
+    return candidates.map(value => String(value ?? "").trim()).find(Boolean) || "Name unavailable";
+  }
+
   /*
   |--------------------------------------------------------------------------
   | PAGE
@@ -19229,10 +18825,11 @@ function SysAdminActiveSessions() {
 
       {/* STAT CARDS */}
 
+      <StatisticalCardsSection>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <StatCard
-          label="Active Sessions"
-          value={String(activeCount)}
+          label="Unique Active Users"
+          value={String(activeUsersCount)}
           icon={
             <Eye size={20} />
           }
@@ -19240,8 +18837,8 @@ function SysAdminActiveSessions() {
         />
 
         <StatCard
-          label="Stored Sessions"
-          value={String(totalSessions)}
+          label="Active Tokens / Stored"
+          value={`${activeCount} / ${totalSessions}`}
           icon={
             <Users size={20} />
           }
@@ -19257,6 +18854,7 @@ function SysAdminActiveSessions() {
           color="#d49b17"
         />
       </div>
+      </StatisticalCardsSection>
 
 
       {/* SESSION TABLE */}
@@ -19267,10 +18865,12 @@ function SysAdminActiveSessions() {
             <p className="text-sm font-semibold text-foreground">
               Session Management
             </p>
+            <p className="mt-1 text-xs text-muted-foreground">Name shows the matched User Accounts profile name, not a name inferred from the user's role. Update the account profile if it only says "System Administrator".</p>
 
             <p className="text-xs text-muted-foreground mt-1">
-              Sessions are considered active when they have activity within the configured{" "}
-              {sessionTimeout}-minute timeout period.
+              Unique Active Users counts distinct accounts with recently used tokens; Active Tokens / Stored counts login tokens.
+              Closing a browser tab does not immediately revoke its token. Data refreshes every 20 seconds;
+              tokens are considered active within the configured {sessionTimeout}-minute timeout period.
             </p>
           </div>
 
@@ -19278,7 +18878,7 @@ function SysAdminActiveSessions() {
             type="button"
             onClick={loadSessions}
             disabled={loading}
-            className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-[#cfd8e6] bg-white text-sm font-medium text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-[#cfd8e6] bg-white text-sm font-medium text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
           >
             <RefreshCw
               size={15}
@@ -19299,7 +18899,15 @@ function SysAdminActiveSessions() {
             <thead>
               <tr className="bg-[#fafbfc] border-b border-[#dce3ee]">
                 <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
-                  User
+                  Name
+                </th>
+
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  User ID
+                </th>
+
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Email
                 </th>
 
                 <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
@@ -19333,7 +18941,7 @@ function SysAdminActiveSessions() {
               sessions.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={9}
                     className="py-12 text-center text-sm text-muted-foreground"
                   >
                     Loading active sessions...
@@ -19342,7 +18950,7 @@ function SysAdminActiveSessions() {
               ) : sessions.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={9}
                     className="py-12 text-center"
                   >
                     <Users
@@ -19367,31 +18975,27 @@ function SysAdminActiveSessions() {
                       className="border-b border-[#edf0f5] hover:bg-[#fafbfc]"
                     >
                       <td className="py-3 px-4">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-semibold text-foreground">
-                              {session.name ||
-                                "Unknown User"}
-                            </p>
-
-                            {session.is_current && (
-                              <span className="rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-                                Current
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {session.username ||
-                              "—"}
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-foreground">
+                            {sessionDisplayName(session)}
                           </p>
+                          {session.is_current && (
+                            <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">Current</span>
+                          )}
                         </div>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{linkedAccount(session)?.username || session.username || session.user?.username || ""}</p>
+                      </td>
+
+                      <td className="py-3 px-4 text-xs text-foreground">
+                        {linkedAccount(session)?.id ?? session.user_id ?? session.user?.id ?? "—"}
+                      </td>
+
+                      <td className="py-3 px-4 text-xs text-muted-foreground">
+                        {linkedAccount(session)?.email || session.email || session.user?.email || "—"}
                       </td>
 
                       <td className="py-3 px-4 text-sm">
-                        {roleLabel(
-                          session.role
-                        )}
+                        {roleLabel(linkedAccount(session)?.role || session.role)}
                       </td>
 
                       <td className="py-3 px-4">
@@ -19749,7 +19353,7 @@ function SysAdminPerformance() {
               loadPerformance
             }
             disabled={loading}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
           >
             <RefreshCw
               size={12}
@@ -19773,6 +19377,7 @@ function SysAdminPerformance() {
         </div>
       )}
 
+      <StatisticalCardsSection>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard
           label="Server Uptime"
@@ -19838,6 +19443,7 @@ function SysAdminPerformance() {
           color="#e8543a"
         />
       </div>
+      </StatisticalCardsSection>
 
       <Card title="System Status">
         {loading ? (
@@ -20242,7 +19848,7 @@ function SysAdminSecurityConfig() {
             disabled={
               loading
             }
-            className="inline-flex items-center justify-center gap-2 rounded-md border border-[#cfd8e6] bg-white px-3 py-2 text-sm font-medium text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-[#cfd8e6] bg-white px-3 py-2 text-sm font-medium text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
           >
             <RefreshCw
               size={15}
@@ -20557,6 +20163,11 @@ function SysAdminAnnouncementManagement() {
 
   const [success, setSuccess] =
     useState("");
+  const [announcementTab, setAnnouncementTab] = useState<"list" | "form">("list");
+  const [announcementPriority, setAnnouncementPriority] = useState<"all" | "info" | "important" | "urgent">("all");
+  const [annPeriod, setAnnPeriod] = useState<CSUDatePeriod>("all");
+  const [annFrom, setAnnFrom] = useState("");
+  const [annTo, setAnnTo] = useState("");
 
   function toLocalDateTimeInput(
     value?: string | null
@@ -20781,6 +20392,7 @@ function SysAdminAnnouncementManagement() {
     announcement:
       ManagedAnnouncement
   ) {
+    setAnnouncementTab("form");
     setEditingId(
       announcement.id
     );
@@ -20909,6 +20521,7 @@ function SysAdminAnnouncementManagement() {
 
       setEditingId(null);
       setForm(emptyForm);
+      setAnnouncementTab("list");
 
       await loadAnnouncements();
 
@@ -21037,29 +20650,34 @@ function SysAdminAnnouncementManagement() {
     }
   }
 
+  // Date filters target when the announcement record was created.
+  const periodAnnouncements = announcements.filter(item =>
+    csuMatchesPeriod(item.created_at, annPeriod, annFrom, annTo)
+  );
+
   const activeCount =
-    announcements.filter(
+    periodAnnouncements.filter(
       (announcement) =>
         announcement.display_status ===
         "active"
     ).length;
 
   const scheduledCount =
-    announcements.filter(
+    periodAnnouncements.filter(
       (announcement) =>
         announcement.display_status ===
         "scheduled"
     ).length;
 
   const draftCount =
-    announcements.filter(
+    periodAnnouncements.filter(
       (announcement) =>
         announcement.display_status ===
         "draft"
     ).length;
 
   const expiredCount =
-    announcements.filter(
+    periodAnnouncements.filter(
       (announcement) =>
         announcement.display_status ===
         "expired"
@@ -21077,7 +20695,7 @@ function SysAdminAnnouncementManagement() {
               loadAnnouncements
             }
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-lg border border-[#cfd8e6] bg-white px-3 py-2 text-xs font-semibold text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-[#cfd8e6] bg-white px-3 py-2 text-xs font-semibold text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
           >
             <RefreshCw
               size={14}
@@ -21116,6 +20734,13 @@ function SysAdminAnnouncementManagement() {
         </div>
       )}
 
+      <div className="flex flex-wrap gap-2 rounded-xl border border-[#dce3ee] bg-white p-3">
+        <button type="button" onClick={() => setAnnouncementTab("list")} className={`rounded-xl px-4 py-2 text-xs font-semibold ${announcementTab === "list" ? "bg-[#17336d] text-white" : "bg-[#f3f6fb] text-[#17336d]"}`}>Announcement Records</button>
+        <button type="button" onClick={() => { setAnnouncementTab("form"); if (editingId) resetForm(); }} className={`rounded-xl px-4 py-2 text-xs font-semibold ${announcementTab === "form" ? "bg-[#17336d] text-white" : "bg-[#f3f6fb] text-[#17336d]"}`}>+ Create Announcement</button>
+      </div>
+      {announcementTab === "list" && <>
+      <CSUStatsPeriodFilter value={annPeriod} onChange={setAnnPeriod} start={annFrom} onStartChange={setAnnFrom} end={annTo} onEndChange={setAnnTo} description="Announcement statistics use the announcement creation date." />
+      <StatisticalCardsSection>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label="Active"
@@ -21163,7 +20788,10 @@ function SysAdminAnnouncementManagement() {
           color="#64748b"
         />
       </div>
+      </StatisticalCardsSection>
 
+      </>}
+      {announcementTab === "form" && <>
       <Card
         title={
           editingId
@@ -21449,14 +21077,22 @@ function SysAdminAnnouncementManagement() {
         </form>
       </Card>
 
+      </>}
+      {announcementTab === "list" && <>
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#dce3ee] bg-white p-3">
+        <span className="mr-1 text-xs font-semibold text-[#17336d]">Priority:</span>
+        {([ ["all","All Announcements"], ["info","Information"], ["important","Important"], ["urgent","Urgent"] ] as const).map(([id,label]) => (
+          <button key={id} type="button" aria-pressed={announcementPriority === id} onClick={() => setAnnouncementPriority(id)} className={`rounded-xl px-3 py-2 text-xs font-semibold ${announcementPriority === id ? "bg-[#17336d] text-white" : "bg-[#f3f6fb] text-[#17336d]"}`}>{label}</button>
+        ))}
+      </div>
       <Card
         title="All Announcements"
         action={
           <span className="rounded-full bg-[#eef2fc] px-2.5 py-1 text-[10px] font-bold text-[#1a3a7b]">
             {
-              announcements.length
+              periodAnnouncements.filter(a => announcementPriority === "all" || a.priority === announcementPriority).length
             }{" "}
-            total
+            matching
           </span>
         }
       >
@@ -21464,7 +21100,7 @@ function SysAdminAnnouncementManagement() {
           <div className="py-14 text-center text-sm text-[#64748b]">
             Loading announcements...
           </div>
-        ) : announcements.length ===
+        ) : periodAnnouncements.filter(a => announcementPriority === "all" || a.priority === announcementPriority).length ===
           0 ? (
           <div className="py-14 text-center">
             <Bell
@@ -21482,7 +21118,7 @@ function SysAdminAnnouncementManagement() {
           </div>
         ) : (
           <div className="divide-y divide-[#e5eaf2]">
-            {announcements.map(
+            {periodAnnouncements.filter(a => announcementPriority === "all" || a.priority === announcementPriority).map(
               (
                 announcement
               ) => {
@@ -21657,6 +21293,7 @@ function SysAdminAnnouncementManagement() {
           </div>
         )}
       </Card>
+      </>}
     </div>
   );
 }
@@ -21666,79 +21303,75 @@ function SysAdminAnnouncementManagement() {
 // =========================================================
 // CSU OVERVIEW - read-only operational statistics
 // =========================================================
-function SecurityOverview() {
-  const [logs, setLogs] = useState<any[]>([]);
-  const [incidents, setIncidents] = useState<any[]>([]);
-  const [foundItems, setFoundItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+function SecurityOverview({ onNavigate }: { onNavigate?: (index: number) => void }) {
+  const [showCSUGuide, setShowCSUGuide] = useState(true);
+  const actions = [
+    { index: 1, title: "Scan & Verify", description: "Scan a QR code or manually verify an item.", icon: <ScanLine size={23} />, accent: "#1a3a7b" },
+    { index: 2, title: "Entry / Exit Log", description: "Review past scans and security incidents.", icon: <Map size={23} />, accent: "#2f5fd6" },
+    { index: 3, title: "Registered Items", description: "Find approved items and confirm ownership.", icon: <Layers size={23} />, accent: "#0f766e" },
+    { index: 4, title: "Lost & Found", description: "Record missing or surrendered property.", icon: <BookOpen size={23} />, accent: "#7c3aed" },
+    { index: 5, title: "Reports", description: "Export security reports for your selected dates.", icon: <FileText size={23} />, accent: "#c47c19" },
+  ];
 
-  async function refresh() {
-    setLoading(true);
-    setError("");
-    const results = await Promise.allSettled([
-      getScanLogs(), getSecurityIncidents(), getLostFoundItems(),
-    ]);
-    const [scanResult, incidentResult, foundResult] = results;
-    if (scanResult.status === "fulfilled") {
-      setLogs(Array.isArray(scanResult.value?.logs) ? scanResult.value.logs : []);
-    }
-    if (incidentResult.status === "fulfilled") {
-      setIncidents(Array.isArray(incidentResult.value?.incidents) ? incidentResult.value.incidents : []);
-    }
-    if (foundResult.status === "fulfilled") {
-      setFoundItems(Array.isArray(foundResult.value?.items) ? foundResult.value.items : []);
-    }
-    const failures = results.filter(result => result.status === "rejected");
-    if (failures.length > 0) {
-      setError("Some security information could not be loaded. Check the backend and your account permissions.");
-    }
-    setLoading(false);
-  }
-
-  useEffect(() => { void refresh(); }, []);
-
-  const isToday = (date: string | null | undefined) => {
-    if (!date) return false;
-    const parsed = new Date(date);
-    const today = new Date();
-    return !Number.isNaN(parsed.getTime()) && parsed.toDateString() === today.toDateString();
-  };
-  const todaysScans = logs.filter(log => isToday(log.scanned_at));
-  const flagged = incidents.filter(incident => String(incident.status ?? "").toLowerCase() !== "resolved");
-  const resolved = incidents.filter(incident => String(incident.status ?? "").toLowerCase() === "resolved");
-  const found = foundItems.filter(item => String(item.report_type ?? "").toLowerCase() === "found" && String(item.status ?? "").toLowerCase() !== "claimed");
+  const duties = [
+    { title: "Before allowing entry or exit", detail: "Check the QR verification result and match the registered owner with the person carrying the item.", icon: <Shield size={19} /> },
+    { title: "When an item is not verified", detail: "Follow CSU inspection procedures and record an incident if the item is unregistered or unapproved.", icon: <AlertTriangle size={19} /> },
+    { title: "When property is turned over", detail: "Record the item description and location, then verify the claimant before completing a claim.", icon: <Package size={19} /> },
+  ];
 
   return (
     <div className="w-full min-w-0 space-y-5">
-      <PageHeader title="CSU Overview" subtitle="Operational summary for campus gate verification and item recovery." action={
-        <button type="button" onClick={refresh} disabled={loading} className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-primary hover:bg-muted disabled:opacity-50"><RefreshCw size={14}/>{loading ? "Refreshing..." : "Refresh"}</button>
-      } />
-      {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Scans Today" value={loading ? "..." : String(todaysScans.length)} icon={<ScanLine size={20}/>} color="#1a3a7b"/>
-        <StatCard label="Open Incidents" value={loading ? "..." : String(flagged.length)} icon={<AlertTriangle size={20}/>} color="#dc2626"/>
-        <StatCard label="Incidents Resolved" value={loading ? "..." : String(resolved.length)} icon={<CheckCircle size={20}/>} color="#15803d"/>
-        <StatCard label="Found Reports" value={loading ? "..." : String(found.length)} icon={<Package size={20}/>} color="#557bdc"/>
+      <PageHeader title="CSU Overview" subtitle="Your daily campus security workspace at University of Cebu - Main Campus." />
+
+      <section className="rounded-2xl border border-[#dce3ee] bg-card px-4 py-6 shadow-sm sm:px-7 sm:py-8">
+        <div className="mx-auto mb-6 max-w-2xl text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef2fc] text-[#1a3a7b]"><Shield size={25} /></div>
+          <h3 className="text-lg font-bold text-foreground">CSU Quick Actions</h3>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Open the module you need. Detailed scan statistics and records stay in Entry / Exit Log.</p>
+        </div>
+        <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-3 sm:gap-4">
+          {actions.map(action => (
+            <button
+              key={action.index}
+              type="button"
+              onClick={() => onNavigate?.(action.index)}
+              className="group flex min-h-[118px] w-full items-start gap-4 rounded-2xl border border-[#dce3ee] bg-[#fafbfe] p-5 text-left transition-all hover:border-[#a6bce1] hover:bg-[#eef2fc] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)]"
+            >
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm" style={{ color: action.accent }}>{action.icon}</span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center justify-between gap-2"><span className="text-sm font-bold text-foreground">{action.title}</span><ChevronRight size={16} className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" /></span>
+                <span className="mt-2 block text-xs leading-5 text-muted-foreground">{action.description}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-[#dce3ee] bg-card p-5 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-base font-bold text-foreground">CSU Duty Guide</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Quick reminders for routine gate verification and property handling.</p>
+          </div>
+          <button type="button" aria-expanded={showCSUGuide} onClick={() => setShowCSUGuide(value => !value)}
+            className="rounded-xl border border-[#dce3ee] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] hover:bg-[#f2f5fc]">
+            {showCSUGuide ? "Hide Guide" : "Show Guide"}
+          </button>
+        </div>
+        {showCSUGuide && <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {duties.map(duty => (
+            <div key={duty.title} className="rounded-xl border border-border bg-muted/20 p-4">
+              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef2fc] text-[#1a3a7b]">{duty.icon}</div>
+              <h4 className="text-sm font-semibold text-foreground">{duty.title}</h4>
+              <p className="mt-2 text-xs leading-6 text-muted-foreground">{duty.detail}</p>
+            </div>
+          ))}
+        </div>}
+      </section>
+
+      <div className="rounded-xl border border-[#dce3ee] bg-[#f8fafc] px-5 py-4 text-xs leading-relaxed text-muted-foreground">
+        <strong className="text-foreground">Security reminder:</strong> Never approve a scan based on the QR image alone. Verify the displayed item and owner details before recording an IN or OUT transaction.
       </div>
-      <Card title="Recent Gate Activity">
-        <div className="w-full overflow-x-auto">
-          <table className="w-full min-w-[680px] text-sm">
-            <thead className="bg-muted/40 text-left text-xs text-muted-foreground"><tr><th className="p-3">Scanned</th><th className="p-3">Item</th><th className="p-3">Owner</th><th className="p-3">Gate</th><th className="p-3">Direction</th></tr></thead>
-            <tbody className="divide-y divide-border">
-              {logs.slice(0, 8).map(log => <tr key={log.id} className="hover:bg-muted/30"><td className="p-3 whitespace-nowrap">{log.scanned_at ? new Date(log.scanned_at).toLocaleString("en-PH") : "—"}</td><td className="p-3">{log.item?.item_name ?? "—"}</td><td className="p-3">{log.item?.user?.name ?? "—"}</td><td className="p-3">{log.gate ?? "—"}</td><td className="p-3 font-semibold">{log.direction ?? "—"}</td></tr>)}
-              {!loading && logs.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No recent gate activity recorded.</td></tr>}
-              {loading && <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Loading recent activity...</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-      <Card title="Open Security Alerts">
-        <div className="divide-y divide-border">
-          {flagged.slice(0, 5).map(incident => <div key={incident.id} className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="text-sm font-semibold text-foreground">{incident.item_name ?? incident.item?.item_name ?? incident.incident_type ?? "Security Incident"}</p><p className="mt-1 text-xs text-muted-foreground">{incident.gate ?? "Unknown gate"} · {incident.reported_at ? new Date(incident.reported_at).toLocaleString("en-PH") : "—"}</p></div><span className="w-fit rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">Flagged</span></div>)}
-          {!loading && flagged.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">No open security incidents.</p>}
-        </div>
-      </Card>
     </div>
   );
 }
@@ -21751,6 +21384,9 @@ function SecurityItemRegistry() {
   const [items, setItems] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [registeredPeriod, setRegisteredPeriod] = useState<CSUDatePeriod>("all");
+  const [registeredStart, setRegisteredStart] = useState("");
+  const [registeredEnd, setRegisteredEnd] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -21779,7 +21415,11 @@ function SecurityItemRegistry() {
     const expired = item.qr_expires_at && new Date(item.qr_expires_at).getTime() < Date.now();
     return expired ? "Expired" : item.qr_code ? "Active" : "No QR";
   };
-  const visible = items.filter(item => {
+  // Date is based on the date the item was first registered.
+  const periodItems = items.filter(item =>
+    csuMatchesPeriod(item.created_at ?? item.registered_at, registeredPeriod, registeredStart, registeredEnd)
+  );
+  const visible = periodItems.filter(item => {
     if (statusFilter !== "all" && itemStatus(item).toLowerCase() !== statusFilter) return false;
     const haystack = [item.item_name, item.item_type, item.serial_number, item.qr_code, item.brand_model, item.user?.name, item.user?.username].map(value => String(value ?? "").toLowerCase()).join(" ");
     return haystack.includes(search.trim().toLowerCase());
@@ -21807,16 +21447,24 @@ function SecurityItemRegistry() {
   return (
     <div className="w-full min-w-0 space-y-5">
       <PageHeader title="Registered Items" subtitle="Read-only approved item registry for gate personnel. Pending and rejected applications remain restricted to PCO and System Admin."/>
+      <CSUStatsPeriodFilter
+        value={registeredPeriod} onChange={setRegisteredPeriod}
+        start={registeredStart} onStartChange={setRegisteredStart}
+        end={registeredEnd} onEndChange={setRegisteredEnd}
+        description="Summary cards, registry records and CSV reflect the registration date."
+      />
+      <StatisticalCardsSection>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <StatCard label="Approved Items" value={loading ? "..." : String(items.length)} icon={<Package size={20}/>} color="#1a3a7b"/>
-        <StatCard label="Active QR" value={loading ? "..." : String(items.filter(item => itemStatus(item) === "Active").length)} icon={<QrCode size={20}/>} color="#15803d"/>
-        <div className="col-span-2 lg:col-span-1"><StatCard label="Expired QR" value={loading ? "..." : String(items.filter(item => itemStatus(item) === "Expired").length)} icon={<Clock size={20}/>} color="#d97706"/></div>
+        <StatCard label="Approved Items" value={loading ? "..." : String(periodItems.length)} icon={<Package size={20}/>} color="#1a3a7b"/>
+        <StatCard label="Active QR" value={loading ? "..." : String(periodItems.filter(item => itemStatus(item) === "Active").length)} icon={<QrCode size={20}/>} color="#15803d"/>
+        <div className="col-span-2 lg:col-span-1"><StatCard label="Expired QR" value={loading ? "..." : String(periodItems.filter(item => itemStatus(item) === "Expired").length)} icon={<Clock size={20}/>} color="#d97706"/></div>
       </div>
+      </StatisticalCardsSection>
       <Card title="Approved Item Registry">
         <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center">
           <label className="relative min-w-0 flex-1"><Search size={15} className="pointer-events-none absolute left-3 top-3 text-muted-foreground"/><input aria-label="Search approved items" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search item, owner, QR ID or serial..." className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-primary"/></label>
           <select aria-label="Filter QR status" value={statusFilter} onChange={event => setStatusFilter(event.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm"><option value="all">All QR Statuses</option><option value="active">Active</option><option value="expired">Expired</option><option value="flagged">Flagged</option><option value="no qr">No QR</option></select>
-          <button type="button" onClick={refresh} disabled={loading} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-primary disabled:opacity-50"><RefreshCw size={14}/>Refresh</button>
+          <button type="button" onClick={refresh} disabled={loading} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-primary disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"><RefreshCw size={14}/>Refresh</button>
           <button type="button" onClick={downloadCsv} disabled={loading || visible.length === 0} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-semibold text-white disabled:opacity-50"><Download size={14}/>Export CSV</button>
         </div>
         {error && <p role="alert" className="m-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}</p>}
@@ -21830,10 +21478,15 @@ function SecurityItemRegistry() {
   );
 }
 
+// System Records and Audit Activity share one navigation page, while retaining their own APIs.
+function SysAdminSystemLogs() {
+  return <SysAdminAuditLogs />;
+}
+
 // =========================================================
 // CSU NOTIFICATIONS - same authenticated notifications API as header
 // =========================================================
-const PAGES: Record<Role, React.ComponentType[]> = {
+const PAGES: Record<Role, React.ComponentType<{ onNavigate?: (index: number) => void }>[]> = {
   student: [
     StudentRegisterItem,
     StudentMyQRCodes,
@@ -21859,14 +21512,13 @@ const PAGES: Record<Role, React.ComponentType[]> = {
   sysadmin: [
     AdminDashboard,
     PCOItemRegistry,
-    AdminRecords,
     SysAdminLostFound,
     AdminAnalytics,
     SysAdminUserAccounts,
-    SysAdminSettings,
-    SysAdminAuditLogs,
+    SysAdminSystemLogs,
     SysAdminActiveSessions,
     SysAdminAnnouncementManagement,
+    SysAdminSettings,
   ],
 };
 
@@ -21931,10 +21583,6 @@ const NAV: Record<
       label: "Registered Items",
     },
     {
-      icon: <Layers size={16} />,
-      label: "System Records",
-    },
-    {
       icon: <BookOpen size={16} />,
       label: "Lost & Found",
     },
@@ -21947,12 +21595,8 @@ const NAV: Record<
       label: "User Accounts",
     },
     {
-      icon: <Settings size={16} />,
-      label: "System Settings",
-    },
-    {
       icon: <ClipboardList size={16} />,
-      label: "Audit Logs",
+      label: "System Logs",
     },
     {
       icon: <Eye size={16} />,
@@ -21961,6 +21605,10 @@ const NAV: Record<
     {
       icon: <Bell size={16} />,
       label: "Announcement Management",
+    },
+    {
+      icon: <Settings size={16} />,
+      label: "System Settings",
     },
   ],
 };
@@ -24188,6 +23836,35 @@ function Dashboard({
 }) {
   const navItems = NAV[role];
   const pages = PAGES[role];
+  const [footerBrand, setFooterBrand] = useState(() => {
+    try {
+      const stored = localStorage.getItem("qrpass-footer-brand");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return { institution: String(parsed.institution || "University of Cebu"), system_name: String(parsed.system_name || "QRpass") };
+      }
+    } catch { /* use defaults */ }
+    return { institution: "University of Cebu", system_name: "QRpass" };
+  });
+  useEffect(() => {
+    let mounted = true;
+    const refreshBrand = async () => {
+      try {
+        const response = await getSystemSettings();
+        if (mounted && response?.settings) {
+          const brand = {
+            institution: String(response.settings.institution || "University of Cebu"),
+            system_name: String(response.settings.system_name || "QRpass"),
+          };
+          setFooterBrand(brand);
+          localStorage.setItem("qrpass-footer-brand", JSON.stringify(brand));
+        }
+      } catch (err) { console.warn("Footer branding unavailable:", err); }
+    };
+    refreshBrand();
+    window.addEventListener("qrpass-settings-updated", refreshBrand);
+    return () => { mounted = false; window.removeEventListener("qrpass-settings-updated", refreshBrand); };
+  }, []);
 
   const [activeNav, setActiveNav] =
     useState(0);
@@ -25455,13 +25132,13 @@ const handleSaveAccountProfile = async () => {
     |
     | 0 = Overview Dashboard
     | 1 = Registered Items
-    | 2 = System Records
-    | 4 = Reports & Analytics
-    | 5 = User Accounts
-    | 6 = System Settings
-    | 7 = Audit Logs
-    | 8 = Active Sessions
-    | 9 = Announcement Management
+    | 2 = Lost & Found
+    | 3 = Reports & Analytics
+    | 4 = User Accounts
+    | 5 = System Logs
+    | 6 = Active Sessions
+    | 7 = Announcement Management
+    | 8 = System Settings
     |
     */
   
@@ -25471,18 +25148,18 @@ const handleSaveAccountProfile = async () => {
         normalizedType.includes("user") ||
         normalizedType.includes("account")
       ) {
-        return 5; // User Accounts
+        return 4; // User Accounts
       }
   
       if (
         normalizedType.includes("security_config") ||
         normalizedType.includes("permission")
       ) {
-        return 6; // System Settings (Security Config no longer appears in sidebar)
+        return 8; // System Settings (Security Config no longer appears in sidebar)
       }
   
       if (normalizedType.includes("setting")) {
-        return 6; // System Settings
+        return 8; // System Settings
       }
   
       if (
@@ -25492,11 +25169,11 @@ const handleSaveAccountProfile = async () => {
         normalizedType.includes("failed") ||
         normalizedType.includes("warning")
       ) {
-        return 7; // Audit Logs
+        return 5; // System Logs
       }
   
       if (normalizedType.includes("report")) {
-        return 4; // Reports & Analytics
+        return 3; // Reports & Analytics
       }
   
       if (
@@ -25504,7 +25181,7 @@ const handleSaveAccountProfile = async () => {
         normalizedType.includes("lost") ||
         normalizedType.includes("found")
       ) {
-        return 3; // Lost & Found
+        return 2; // Lost & Found
       }
   
       if (
@@ -26571,9 +26248,7 @@ const handleSaveAccountProfile = async () => {
             QRpass
           </span>
 
-          <span className="hidden md:inline text-muted-foreground text-xs">
-            V1.0
-          </span>
+
         </div>
 
         <div className="flex-1" />
@@ -27022,7 +26697,7 @@ const handleSaveAccountProfile = async () => {
                     disabled={
                       notificationsLoading
                     }
-                    className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-semibold text-[#1a3a7b] transition-colors hover:bg-[#eef2fc] disabled:opacity-50 dark:text-blue-300 dark:hover:bg-blue-500/10"
+                    className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-semibold text-[#1a3a7b] transition-colors hover:bg-[#eef2fc] disabled:opacity-50 dark:text-blue-300 dark:hover:bg-blue-500/10 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
                   >
                     <RefreshCw
                       size={11}
@@ -27541,7 +27216,9 @@ const handleSaveAccountProfile = async () => {
               </div>
             )}
 
-          <ActivePage />
+          <div className={role === "sysadmin" ? "qrpass-admin-page mx-auto w-full max-w-[1480px]" : "w-full"}>
+            <ActivePage onNavigate={handleNavClick} />
+          </div>
         </main>
       </div>
 {/* =====================================================
@@ -27993,9 +27670,9 @@ const handleSaveAccountProfile = async () => {
           <p className="text-xs text-[#64748b]">
             &copy; 2026{" "}
             <span className="font-medium text-[#334155]">
-              University of Cebu
+              {footerBrand.institution}
             </span>{" "}
-            — QRpass
+            — {footerBrand.system_name}
           </p>
 
           <div className="hidden sm:flex items-center gap-2 text-xs text-[#94a3b8]">

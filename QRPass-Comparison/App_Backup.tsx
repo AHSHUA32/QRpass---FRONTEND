@@ -1,0 +1,22916 @@
+﻿// =========================================================
+// REACT
+// =========================================================
+
+import React, { useEffect, useState } from "react";
+
+
+// =========================================================
+// THIRD-PARTY LIBRARIES
+// =========================================================
+
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import { autoTable } from "jspdf-autotable";
+
+import { QRCodeSVG } from "qrcode.react";
+import { Html5QrcodeScanner } from "html5-qrcode";
+
+
+// =========================================================
+// ICONS
+// =========================================================
+
+import {
+  AlertCircle,
+  AlertTriangle,
+  BarChart2,
+  Bell,
+  BookOpen,
+  CheckCircle,
+  ChevronRight,
+  ClipboardList,
+  Clock,
+  Download,
+  Eye,
+  EyeOff,
+  FileText,
+  Filter,
+  Layers,
+  Lock,
+  LogOut,
+  Map,
+  Menu,
+  Monitor,
+  Camera,
+  Smartphone,
+  Music2,
+  Globe2,
+  Box,
+  Package,
+  Plus,
+  QrCode,
+  RefreshCw,
+  ScanLine,
+  Search,
+  Settings,
+  Shield,
+  User,
+  Users,
+  X,
+  XCircle,
+} from "lucide-react";
+
+
+// =========================================================
+// QRPass API SERVICES
+// =========================================================
+
+import {
+  login,
+  register,
+  logout,
+
+  createItem,
+  getItems,
+  getMyQRCodes,
+  getPendingItems,
+  approveItem,
+
+  verifyItem,
+  createScanLog,
+  getScanLogs,
+
+  getAllItems,
+
+  getSecurityIncidents,
+  createSecurityIncident,
+  resolveSecurityIncident,
+
+  getLostFoundItems,
+  createLostFoundItem,
+  updateLostFoundItem,
+  claimLostFoundItem,
+  markLostFoundRecovered,
+
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+
+  getDashboard,
+  getSystemRecords,
+  getReports,
+
+  getSystemSettings,
+  updateSystemSettings,
+
+  getAuditLogs,
+  getUsers,
+  createUser,
+  updateUser,
+  updateUserStatus,
+
+  requestPasswordReset,
+  verifyPasswordResetCode,
+  resetPassword,
+
+  getAccount,
+  updateAccountProfile,
+  uploadAccountProfilePhoto,
+  removeAccountProfilePhoto,
+  updateAccountPassword,
+
+  getActiveSessions,
+  revokeActiveSession,
+
+  getRolePermissions,
+  updateRolePermissions,
+
+  getSecurityReports,
+  getPerformance,
+  getSessionPolicy,
+  verifyTwoFactor,
+
+  getAnnouncements,
+  getManagedAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
+  setAnnouncementPublished,
+  deleteAnnouncement,
+} from "../services/api";
+
+// ── QRpass Logo ───────────────────────────────────────────────────────────────
+function QRpassLogo({
+  size = 96,
+  showText = false,
+}: {
+  size?: number;
+  showText?: boolean;
+}) {
+  return (
+    <img
+      src={
+        showText
+          ? "/qrpass-logo.png"
+          : "/qrpass-shield.png"
+      }
+      alt="QRpass"
+      style={{
+        width: size,
+        height: "auto",
+        display: "block",
+        objectFit: "contain",
+      }}
+    />
+  );
+}
+
+// ── Fake QR code visual ───────────────────────────────────────────────────────
+function QRCodeDisplay({
+  value,
+  size = 80,
+}: {
+  value: string;
+  size?: number;
+}) {
+  if (!value) {
+    return (
+      <div
+        style={{ width: size, height: size }}
+        className="bg-muted rounded-md flex items-center justify-center"
+      >
+        <QrCode size={24} className="text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <QRCodeSVG
+      value={value}
+      size={size}
+      level="M"
+      bgColor="#ffffff"
+      fgColor="#1a3a7b"
+      marginSize={4}
+      title={`QR Code ${value}`}
+    />
+  );
+}
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type Role = "student" | "security" | "pco" | "sysadmin";
+
+type View = "login" | "dashboard";
+
+const ROLES: { id: Role; label: string; color: string; textColor: string }[] = [
+  { id: "student", label: "Student", color: "#1a3a7b", textColor: "#fff" },
+  { id: "security", label: "Security Personnel (CSU)", color: "#2f5fd6", textColor: "#fff" },
+  { id: "pco", label: "PCO Staff", color: "#557bdc", textColor: "#fff" },
+  { id: "sysadmin", label: "System Administrator", color: "#eef2fc", textColor: "#111827" },
+];
+
+// ── Shared UI ─────────────────────────────────────────────────────────────────
+function StatCard({
+  label,
+  value,
+  icon,
+  color,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  color: string;
+}) {
+  return (
+    <div
+      className="bg-white border border-[#dce3ee] flex items-center gap-4 p-4"
+      style={{
+        borderRadius: "14px",
+        boxShadow: "0 6px 18px rgba(16, 26, 51, 0.08)",
+      }}
+    >
+      <div
+        className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{
+          backgroundColor: `${color}14`,
+          color,
+        }}
+      >
+        {icon}
+      </div>
+
+      <div className="min-w-0">
+        <p className="text-[11px] text-[#64748b] font-semibold uppercase tracking-wide">
+          {label}
+        </p>
+
+        <p
+          className="text-2xl font-bold text-[#111827] mt-0.5"
+          style={{
+            fontFamily: "Barlow, sans-serif",
+          }}
+        >
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function NotifItem({ type, message, time }: { type: "success" | "warning" | "info"; message: string; time: string }) {
+  const icons = {
+    success: <CheckCircle size={15} className="text-green-500" />,
+    warning: <AlertTriangle size={15} className="text-yellow-500" />,
+    info: <Bell size={15} className="text-blue-500" />,
+  };
+  const bg = { success: "bg-green-50 border-green-100", warning: "bg-yellow-50 border-yellow-100", info: "bg-blue-50 border-blue-100" };
+  return (
+    <div className={`flex gap-3 p-3 rounded-md border text-sm ${bg[type]}`}>
+      <span className="flex-shrink-0 mt-0.5">{icons[type]}</span>
+      <div>
+        <p className="text-foreground">{message}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{time}</p>
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<
+    string,
+    {
+      background: string;
+      color: string;
+      border: string;
+    }
+  > = {
+    Approved: {
+      background: "#ecfdf3",
+      color: "#15803d",
+      border: "#bbf7d0",
+    },
+
+    Active: {
+      background: "#ecfdf3",
+      color: "#15803d",
+      border: "#bbf7d0",
+    },
+
+    Registered: {
+      background: "#ecfdf3",
+      color: "#15803d",
+      border: "#bbf7d0",
+    },
+
+    Verified: {
+      background: "#ecfdf3",
+      color: "#15803d",
+      border: "#bbf7d0",
+    },
+
+    Pending: {
+      background: "#fff8e6",
+      color: "#b7791f",
+      border: "#fde68a",
+    },
+
+    Rejected: {
+      background: "#fff1f2",
+      color: "#dc2626",
+      border: "#fecdd3",
+    },
+
+    Expired: {
+      background: "#f3f4f6",
+      color: "#6b7280",
+      border: "#e5e7eb",
+    },
+
+    Flagged: {
+      background: "#fff7ed",
+      color: "#c2410c",
+      border: "#fed7aa",
+    },
+
+    Recovered: {
+      background: "#eef2fc",
+      color: "#2f5fd6",
+      border: "#d7e0f3",
+    },
+
+    Lost: {
+      background: "#fff1f2",
+      color: "#dc2626",
+      border: "#fecdd3",
+    },
+
+    Found: {
+      background: "#ecfeff",
+      color: "#0f766e",
+      border: "#a5f3fc",
+    },
+  };
+
+  const style =
+    map[status] ?? {
+      background: "#f3f5f9",
+      color: "#64748b",
+      border: "#dce3ee",
+    };
+
+  return (
+    <span
+      className="inline-flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full border"
+      style={{
+        backgroundColor: style.background,
+        color: style.color,
+        borderColor: style.border,
+      }}
+    >
+      {status}
+    </span>
+  );
+}
+
+function Card({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="bg-white border border-[#dce3ee] overflow-hidden"
+      style={{
+        borderRadius: "14px",
+        boxShadow: "0 8px 24px rgba(16, 26, 51, 0.10)",
+      }}
+    >
+      <div className="px-4 py-3 border-b border-[#dce3ee] bg-white flex items-center justify-between">
+        <h3 className="font-semibold text-sm text-[#111827]">
+          {title}
+        </h3>
+
+        {action}
+      </div>
+
+      {children}
+    </div>
+  );
+}
+
+function PageHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start justify-between mb-5 gap-4">
+      <div className="min-w-0">
+        <h2
+          className="text-xl font-bold text-[#111827] tracking-tight"
+          style={{
+            fontFamily: "Barlow, sans-serif",
+          }}
+        >
+          {title}
+        </h2>
+
+        {subtitle && (
+          <p className="text-xs text-[#64748b] mt-1 leading-relaxed">
+            {subtitle}
+          </p>
+        )}
+      </div>
+
+      {action && (
+        <div className="flex-shrink-0">
+          {action}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Sample item data ──────────────────────────────────────────────────────────
+const sampleItems = [
+  { id: "ITEM-001", name: "Laptop Dell XPS 15", serial: "SN-92841", type: "Laptop", owner: "Adrian N. Badon", ownerID: "22-1234", status: "Registered", date: "Jun 10, 2026", expires: "Dec 10, 2026", qr: "QRPASS-001-SN92841" },
+  { id: "ITEM-002", name: "iPad Pro 12.9 (2024)", serial: "SN-77210", type: "Tablet", owner: "Adrian N. Badon", ownerID: "22-1234", status: "Pending", date: "Jun 14, 2026", expires: "—", qr: "QRPASS-002-SN77210" },
+  { id: "ITEM-003", name: "DJI Mini 4 Pro Drone", serial: "SN-30412", type: "Equipment", owner: "Adrian N. Badon", ownerID: "22-1234", status: "Pending", date: "Jun 8, 2026", expires: "—", qr: "" },
+  { id: "ITEM-004", name: "Samsung Galaxy S24 Ultra", serial: "SN-54321", type: "Mobile Phone", owner: "Adrian N. Badon", ownerID: "22-1234", status: "Registered", date: "May 20, 2026", expires: "Nov 20, 2026", qr: "QRPASS-004-SN54321" },
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STUDENT PAGES
+// ══════════════════════════════════════════════════════════════════════════════
+
+function RegistrationField({
+  label,
+  field,
+  value,
+  onChange,
+  placeholder,
+  optional = false,
+  type = "text",
+}: {
+  label: string;
+  field: string;
+  value: string;
+  onChange: (field: string, value: string) => void;
+  placeholder?: string;
+  optional?: boolean;
+  type?: string;
+}) {
+  const fieldClass =
+    "w-full px-3 py-2.5 text-sm border border-[#c7d2fe] rounded-lg bg-[#eef2ff] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15";
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-foreground mb-1.5">
+        {label}
+        {optional && (
+          <span className="ml-1 text-[11px] font-normal text-muted-foreground">
+            (Optional)
+          </span>
+        )}
+      </label>
+
+      <input
+        type={type}
+        value={value}
+        onChange={(e) =>
+          onChange(field, e.target.value)
+        }
+        placeholder={placeholder}
+        className={fieldClass}
+      />
+    </div>
+  );
+}
+
+function RegistrationPermitValidUntilField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const fieldClass =
+    "w-full px-3 py-2.5 text-sm border border-[#c7d2fe] rounded-lg bg-[#eef2ff] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15";
+
+  return (
+    <div className="md:col-span-2">
+      <label className="block text-xs font-semibold text-foreground mb-1.5">
+        Permit Valid Until
+      </label>
+
+      <input
+        type="datetime-local"
+        value={value}
+        onChange={(e) =>
+          onChange(e.target.value)
+        }
+        className={fieldClass}
+      />
+
+      <p className="text-[11px] text-muted-foreground mt-1.5">
+        This is retained for QRPass permit validity and QR expiration.
+      </p>
+    </div>
+  );
+}
+
+function StudentRegisterItem() {
+  type RegistrationGroupId =
+    | "computer"
+    | "highvalue"
+    | "mobile"
+    | "musical"
+    | "sports"
+    | "other";
+
+  type RegistrationForm = {
+    item_name: string;
+    brand_model: string;
+    serial_number: string;
+    color: string;
+    purpose: string;
+    accessories_included: string;
+    valid_until: string;
+
+    quantity: string;
+    complete_description: string;
+
+    computer_type: string;
+    processor: string;
+    motherboard: string;
+    memory: string;
+    hard_drive: string;
+    monitor: string;
+    casing: string;
+    cd_dvd_rom: string;
+    operating_system: string;
+
+    unit_type: string;
+    power_source: string;
+    lens_attachment: string;
+    condition: string;
+
+    storage_capacity: string;
+
+    brand: string;
+    model_no: string;
+    material_body: string;
+    size: string;
+
+    equipment_type: string;
+  };
+
+  const registrationGroups: {
+    id: RegistrationGroupId;
+    name: string;
+    description: string;
+    types: string;
+    color: string;
+  }[] = [
+    {
+      id: "computer",
+      name: "Computer Equipment",
+      description:
+        "For laptops, desktop computers, and similar computer equipment.",
+      types: "Laptop / Computer",
+      color: "#16224b",
+    },
+    {
+      id: "highvalue",
+      name: "High-Value Electronics",
+      description:
+        "For DSLR cameras, projectors, printers, and similar equipment.",
+      types: "Camera (DSLR), Projector, Printer",
+      color: "#16224b",
+    },
+    {
+      id: "mobile",
+      name: "Mobile / Personal Electronics",
+      description:
+        "For mobile phones, tablets, and personal audio equipment.",
+      types: "Mobile Phone, Tablet, Audio Equipment",
+      color: "#0f766e",
+    },
+    {
+      id: "musical",
+      name: "Musical Instrument",
+      description:
+        "For guitars, keyboards, and other musical instruments.",
+      types: "Musical Instrument",
+      color: "#7c3aed",
+    },
+    {
+      id: "sports",
+      name: "Sports Equipment",
+      description:
+        "For balls, rackets, training gear, and other sports equipment.",
+      types: "Sports Equipment",
+      color: "#15803d",
+    },
+    {
+      id: "other",
+      name: "Other Equipment",
+      description:
+        "For equipment that does not belong to the other registration groups.",
+      types: "Other Equipment",
+      color: "#475569",
+    },
+  ];
+
+  function emptyForm(): RegistrationForm {
+    return {
+      item_name: "",
+      brand_model: "",
+      serial_number: "",
+      color: "",
+      purpose: "",
+      accessories_included: "",
+      valid_until: "",
+
+      quantity: "1",
+      complete_description: "",
+
+      computer_type: "",
+      processor: "",
+      motherboard: "",
+      memory: "",
+      hard_drive: "",
+      monitor: "",
+      casing: "",
+      cd_dvd_rom: "",
+      operating_system: "",
+
+      unit_type: "",
+      power_source: "",
+      lens_attachment: "",
+      condition: "",
+
+      storage_capacity: "",
+
+      brand: "",
+      model_no: "",
+      material_body: "",
+      size: "",
+
+      equipment_type: "",
+    };
+  }
+
+  const [selectedGroup, setSelectedGroup] =
+    useState<RegistrationGroupId | null>(null);
+
+  const [showTypeMenu, setShowTypeMenu] =
+    useState(false);
+
+  const [submitting, setSubmitting] =
+    useState(false);
+
+  const [items, setItems] =
+    useState<any[]>([]);
+
+  const [loadingItems, setLoadingItems] =
+    useState(true);
+
+  const [form, setForm] =
+    useState<RegistrationForm>(emptyForm());
+
+  const activeGroup =
+    registrationGroups.find(
+      (group) => group.id === selectedGroup
+    ) ?? null;
+
+  function getRegistrationGroupIcon(
+    groupId: RegistrationGroupId,
+    size = 18
+  ) {
+    switch (groupId) {
+      case "computer":
+        return <Monitor size={size} strokeWidth={1.8} />;
+
+      case "highvalue":
+        return <Camera size={size} strokeWidth={1.8} />;
+
+      case "mobile":
+        return <Smartphone size={size} strokeWidth={1.8} />;
+
+      case "musical":
+        return <Music2 size={size} strokeWidth={1.8} />;
+
+      case "sports":
+        return <Globe2 size={size} strokeWidth={1.8} />;
+
+      case "other":
+        return <Box size={size} strokeWidth={1.8} />;
+
+      default:
+        return <Package size={size} strokeWidth={1.8} />;
+    }
+  }
+
+  function updateField(
+    key: keyof RegistrationForm,
+    value: string
+  ) {
+    setForm((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  }
+
+  async function loadItems() {
+    try {
+      setLoadingItems(true);
+
+      const data = await getItems();
+
+      const loadedItems =
+        Array.isArray(data?.items)
+          ? data.items
+          : [];
+
+      setItems(
+        [...loadedItems].sort(
+          (a, b) =>
+            Number(b?.id ?? 0) -
+            Number(a?.id ?? 0)
+        )
+      );
+    } catch (error) {
+      console.error(
+        "Failed to load items:",
+        error
+      );
+
+      setItems([]);
+    } finally {
+      setLoadingItems(false);
+    }
+  }
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+  function selectGroup(
+    groupId: RegistrationGroupId
+  ) {
+    setSelectedGroup(groupId);
+    setShowTypeMenu(false);
+    setForm(emptyForm());
+  }
+
+  function backToSelection() {
+    setSelectedGroup(null);
+    setShowTypeMenu(false);
+    setForm(emptyForm());
+  }
+
+  function missingRequiredFields() {
+    const required: [string, string][] = [
+      [
+        "Purpose / Reason for Bringing",
+        form.purpose,
+      ],
+      [
+        "Permit Valid Until",
+        form.valid_until,
+      ],
+    ];
+
+    if (selectedGroup === "computer") {
+      required.push(
+        ["Item Name", form.item_name],
+        ["Brand & Model", form.brand_model],
+        ["Serial Number", form.serial_number],
+        ["Color", form.color],
+        [
+          "Computer / Laptop Type",
+          form.computer_type,
+        ],
+        ["Processor", form.processor],
+        ["Motherboard", form.motherboard],
+        ["Memory / RAM", form.memory],
+        [
+          "Hard Drive / Storage",
+          form.hard_drive,
+        ],
+        ["Monitor", form.monitor],
+        ["Casing", form.casing],
+        [
+          "Operating System",
+          form.operating_system,
+        ]
+      );
+    }
+
+    if (selectedGroup === "highvalue") {
+      required.push(
+        ["Item Name", form.item_name],
+        ["Brand & Model", form.brand_model],
+        ["Serial Number", form.serial_number],
+        ["Color", form.color],
+        ["Unit Type", form.unit_type],
+        [
+          "Power Source / Cable",
+          form.power_source,
+        ],
+        ["Condition", form.condition]
+      );
+    }
+
+    if (selectedGroup === "mobile") {
+      required.push(
+        ["Item Name", form.item_name],
+        ["Brand & Model", form.brand_model],
+        ["Color", form.color]
+      );
+    }
+
+    if (selectedGroup === "musical") {
+      required.push(
+        ["Item Name", form.item_name],
+        ["Brand", form.brand],
+        ["Model No.", form.model_no],
+        [
+          "Material / Body",
+          form.material_body,
+        ]
+      );
+    }
+
+    if (selectedGroup === "sports") {
+      required.push(
+        [
+          "Equipment Type",
+          form.equipment_type,
+        ],
+        ["Quantity", form.quantity],
+        ["Condition", form.condition]
+      );
+    }
+
+    if (selectedGroup === "other") {
+      required.push(
+        [
+          "Item/s with Complete Description",
+          form.complete_description,
+        ],
+        ["Quantity", form.quantity]
+      );
+    }
+
+    return required
+      .filter(
+        ([, value]) =>
+          !String(value ?? "").trim()
+      )
+      .map(([label]) => label);
+  }
+
+  function buildPayload() {
+    const detailParts: string[] = [];
+
+    let itemName =
+      form.item_name.trim();
+
+    let brandModel =
+      form.brand_model.trim();
+
+    let serialNumber =
+      form.serial_number.trim();
+
+    let color =
+      form.color.trim();
+
+    let itemType =
+      "Other Equipment";
+
+    let quantity =
+      form.quantity.trim() || "1";
+
+    let computerType = "";
+    let processor = "";
+    let motherboard = "";
+    let memory = "";
+    let hardDrive = "";
+    let monitor = "";
+    let casing = "";
+    let cdDvdRom = "";
+    let operatingSystem = "";
+
+    if (selectedGroup === "computer") {
+      itemType = "Laptop";
+
+      computerType =
+        form.computer_type.trim();
+
+      processor =
+        form.processor.trim();
+
+      motherboard =
+        form.motherboard.trim();
+
+      memory =
+        form.memory.trim();
+
+      hardDrive =
+        form.hard_drive.trim();
+
+      monitor =
+        form.monitor.trim();
+
+      casing =
+        form.casing.trim();
+
+      cdDvdRom =
+        form.cd_dvd_rom.trim();
+
+      operatingSystem =
+        form.operating_system.trim();
+    }
+
+    if (selectedGroup === "highvalue") {
+      itemType =
+        form.unit_type.trim() ||
+        "High-Value Electronics";
+
+      detailParts.push(
+        `Unit Type: ${form.unit_type.trim()}`,
+        `Power Source / Cable: ${form.power_source.trim()}`,
+        `Condition: ${form.condition.trim()}`
+      );
+
+      if (
+        form.lens_attachment.trim()
+      ) {
+        detailParts.push(
+          `Lens / Attachment Included: ${form.lens_attachment.trim()}`
+        );
+      }
+    }
+
+    if (selectedGroup === "mobile") {
+      itemType =
+        form.item_name.trim() ||
+        "Mobile / Personal Electronics";
+
+      if (
+        form.storage_capacity.trim()
+      ) {
+        detailParts.push(
+          `Storage / Capacity: ${form.storage_capacity.trim()}`
+        );
+      }
+    }
+
+    if (selectedGroup === "musical") {
+      itemType =
+        "Musical Instrument";
+
+      brandModel = [
+        form.brand.trim(),
+        form.model_no.trim(),
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      color = "N/A";
+
+      detailParts.push(
+        `Material / Body: ${form.material_body.trim()}`
+      );
+
+      if (form.size.trim()) {
+        detailParts.push(
+          `Size: ${form.size.trim()}`
+        );
+      }
+    }
+
+    if (selectedGroup === "sports") {
+      itemName =
+        form.equipment_type.trim();
+
+      itemType =
+        "Sports Equipment";
+
+      brandModel =
+        form.brand.trim() || "N/A";
+
+      serialNumber = "";
+      color = "N/A";
+
+      detailParts.push(
+        `Condition: ${form.condition.trim()}`
+      );
+    }
+
+    if (selectedGroup === "other") {
+      itemName =
+        form.complete_description.trim();
+
+      itemType =
+        "Other Equipment";
+
+      brandModel = "N/A";
+      serialNumber = "";
+      color = "N/A";
+    }
+
+    if (
+      form.complete_description.trim() &&
+      selectedGroup !== "other"
+    ) {
+      detailParts.push(
+        form.complete_description.trim()
+      );
+    }
+
+    const completeDescription =
+      selectedGroup === "other"
+        ? form.complete_description.trim()
+        : detailParts.join(" | ");
+
+    return {
+      item_name: itemName,
+      brand_model: brandModel,
+      serial_number: serialNumber,
+      color,
+      item_type: itemType,
+      purpose: form.purpose.trim(),
+
+      quantity,
+      complete_description:
+        completeDescription,
+
+      computer_type: computerType,
+      processor,
+      motherboard,
+      memory,
+      hard_drive: hardDrive,
+      monitor,
+      casing,
+      cd_dvd_rom: cdDvdRom,
+      operating_system:
+        operatingSystem,
+
+      accessories_included:
+        form.accessories_included.trim(),
+
+      valid_until:
+        form.valid_until,
+    };
+  }
+
+  async function handleItemSubmit(
+    e: React.FormEvent
+  ) {
+    e.preventDefault();
+
+    if (!selectedGroup) {
+      return;
+    }
+
+    const missing =
+      missingRequiredFields();
+
+    if (missing.length > 0) {
+      alert(
+        `Please complete all required fields before submitting:\n\n${missing
+          .map(
+            (field) => `• ${field}`
+          )
+          .join("\n")}`
+      );
+
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const payload =
+        buildPayload();
+
+      await createItem(payload);
+
+      alert(
+        "Item registration submitted successfully!"
+      );
+
+      setForm(emptyForm());
+      setSelectedGroup(null);
+      setShowTypeMenu(false);
+
+      await loadItems();
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Item registration failed."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function renderSelectedForm() {
+    if (!activeGroup) {
+      return null;
+    }
+
+    return (
+      <div className="space-y-4">
+        <div
+          className="bg-white border border-[#dce3ee] overflow-hidden"
+          style={{
+            borderRadius: "14px",
+            boxShadow:
+              "0 8px 24px rgba(16, 26, 51, 0.10)",
+          }}
+        >
+          <div className="px-5 py-4 border-b border-[#dce3ee] flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-[#f2f5fb] border border-[#dce3ee] text-[#16224b]">
+              {getRegistrationGroupIcon(activeGroup.id, 20)}
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-base text-foreground">
+                {activeGroup.name}
+              </h3>
+
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Registration Form
+              </p>
+            </div>
+          </div>
+
+          <form
+            onSubmit={handleItemSubmit}
+            className="p-5"
+          >
+            {/* COMPUTER EQUIPMENT */}
+            {selectedGroup ===
+              "computer" && (
+              <>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <RegistrationField
+  label="Item Name"
+  field="item_name"
+  value={form.item_name}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Laptop"
+/>
+
+                  <RegistrationField
+  label="Brand & Model"
+  field="brand_model"
+  value={form.brand_model}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Dell XPS 15 9530"
+/>
+
+                  <RegistrationField
+  label="Serial Number"
+  field="serial_number"
+  value={form.serial_number}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. SN-00000"
+/>
+
+                  <RegistrationField
+  label="Color"
+  field="color"
+  value={form.color}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Silver"
+/>
+
+                  <RegistrationField
+  label="Purpose / Reason for Bringing"
+  field="purpose"
+  value={form.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Academic use, thesis documentation"
+/>
+
+                  <RegistrationField
+  label="Accessories Included"
+  field="accessories_included"
+  value={form.accessories_included}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Charger, mouse, laptop bag"
+  optional
+/>
+                </div>
+
+                <div className="mt-5 rounded-xl overflow-hidden border border-blue-200">
+                  <div className="bg-primary px-4 py-3">
+                    <p className="text-sm font-semibold text-white">
+                      Computer / Laptop Specifications
+                    </p>
+
+                    <p className="text-xs text-white/75 mt-0.5">
+                      Complete the applicable specifications based on the UC Computer Equipment Gate Pass.
+                    </p>
+                  </div>
+
+                  <div className="p-4 grid md:grid-cols-2 gap-4 bg-blue-50/30">
+                    <RegistrationField
+  label="Computer / Laptop Type"
+  field="computer_type"
+  value={form.computer_type}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Laptop, Desktop, Gaming Laptop"
+/>
+
+                    <RegistrationField
+  label="Processor"
+  field="processor"
+  value={form.processor}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Intel Core i5 / Ryzen 5"
+/>
+
+                    <RegistrationField
+  label="Motherboard"
+  field="motherboard"
+  value={form.motherboard}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. ASUS B550M / Built-in"
+/>
+
+                    <RegistrationField
+  label="Memory / RAM"
+  field="memory"
+  value={form.memory}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 16 GB DDR4"
+/>
+
+                    <RegistrationField
+  label="Hard Drive / Storage"
+  field="hard_drive"
+  value={form.hard_drive}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 512 GB SSD"
+/>
+
+                    <RegistrationField
+  label="Monitor"
+  field="monitor"
+  value={form.monitor}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Built-in 15.6 inch"
+/>
+
+                    <RegistrationField
+  label="Casing"
+  field="casing"
+  value={form.casing}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Black chassis / Built-in"
+/>
+
+                    <RegistrationField
+  label="CD / DVD ROM"
+  field="cd_dvd_rom"
+  value={form.cd_dvd_rom}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. None / DVD-RW"
+  optional
+/>
+
+                    <div className="md:col-span-2">
+                      <RegistrationField
+  label="Operating System"
+  field="operating_system"
+  value={form.operating_system}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Windows 11 Pro"
+/>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                  <RegistrationPermitValidUntilField
+  value={form.valid_until}
+  onChange={(value) =>
+    updateField(
+      "valid_until",
+      value
+    )
+  }
+/>
+                </div>
+              </>
+            )}
+
+            {/* HIGH-VALUE ELECTRONICS */}
+            {selectedGroup ===
+              "highvalue" && (
+              <>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <RegistrationField
+  label="Item Name"
+  field="item_name"
+  value={form.item_name}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Projector"
+/>
+
+                  <RegistrationField
+  label="Brand & Model"
+  field="brand_model"
+  value={form.brand_model}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Epson EB-X51"
+/>
+
+                  <RegistrationField
+  label="Serial Number"
+  field="serial_number"
+  value={form.serial_number}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. SN-00000"
+/>
+
+                  <RegistrationField
+  label="Color"
+  field="color"
+  value={form.color}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. White"
+/>
+
+                  <RegistrationField
+  label="Purpose / Reason for Bringing"
+  field="purpose"
+  value={form.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Classroom presentation"
+/>
+
+                  <RegistrationField
+  label="Accessories Included"
+  field="accessories_included"
+  value={form.accessories_included}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Power cable, remote, bag"
+  optional
+/>
+                </div>
+
+                <div className="mt-5 rounded-xl overflow-hidden border border-[#dce3ee]">
+                  <div className="bg-primary px-4 py-3">
+                    <p className="text-sm font-semibold text-white">
+                      High-Value Equipment Specifications
+                    </p>
+
+                    <p className="text-xs text-white/75 mt-0.5">
+                      Complete the applicable specifications for the unit being registered.
+                    </p>
+                  </div>
+
+                  <div className="p-4 grid md:grid-cols-2 gap-4 bg-[#fafbfc]">
+                    <RegistrationField
+  label="Unit Type"
+  field="unit_type"
+  value={form.unit_type}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. DSLR Camera, Projector, Printer"
+/>
+
+                    <RegistrationField
+  label="Power Source / Cable"
+  field="power_source"
+  value={form.power_source}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. AC Adapter, Battery Pack"
+/>
+
+                    <RegistrationField
+  label="Lens / Attachment Included"
+  field="lens_attachment"
+  value={form.lens_attachment}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 18-55mm kit lens"
+  optional
+/>
+
+                    <RegistrationField
+  label="Condition"
+  field="condition"
+  value={form.condition}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Good, Minor scratches"
+/>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                  <RegistrationPermitValidUntilField
+  value={form.valid_until}
+  onChange={(value) =>
+    updateField(
+      "valid_until",
+      value
+    )
+  }
+/>
+                </div>
+              </>
+            )}
+
+            {/* MOBILE / PERSONAL ELECTRONICS */}
+            {selectedGroup ===
+              "mobile" && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <RegistrationField
+  label="Item Name"
+  field="item_name"
+  value={form.item_name}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Mobile Phone"
+/>
+
+                <RegistrationField
+  label="Brand & Model"
+  field="brand_model"
+  value={form.brand_model}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Samsung Galaxy A54"
+/>
+
+                <RegistrationField
+  label="Serial Number"
+  field="serial_number"
+  value={form.serial_number}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. SN-00000 or leave blank"
+  optional
+/>
+
+                <RegistrationField
+  label="Color"
+  field="color"
+  value={form.color}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Black"
+/>
+
+                <RegistrationField
+  label="Purpose / Reason for Bringing"
+  field="purpose"
+  value={form.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Personal use"
+/>
+
+                <RegistrationField
+  label="Accessories Included"
+  field="accessories_included"
+  value={form.accessories_included}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Charger, case"
+  optional
+/>
+
+                <RegistrationField
+  label="Storage / Capacity"
+  field="storage_capacity"
+  value={form.storage_capacity}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 128 GB, 256 GB"
+  optional
+/>
+
+                <div />
+
+                <RegistrationPermitValidUntilField
+  value={form.valid_until}
+  onChange={(value) =>
+    updateField(
+      "valid_until",
+      value
+    )
+  }
+/>
+              </div>
+            )}
+
+            {/* MUSICAL INSTRUMENT */}
+            {selectedGroup ===
+              "musical" && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <RegistrationField
+  label="Item Name"
+  field="item_name"
+  value={form.item_name}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Acoustic Guitar"
+/>
+
+                <RegistrationField
+  label="Brand"
+  field="brand"
+  value={form.brand}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Yamaha"
+/>
+
+                <RegistrationField
+  label="Model No."
+  field="model_no"
+  value={form.model_no}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. F310"
+/>
+
+                <RegistrationField
+  label="Serial Number"
+  field="serial_number"
+  value={form.serial_number}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="Leave blank if none"
+  optional
+/>
+
+                <RegistrationField
+  label="Purpose / Reason for Bringing"
+  field="purpose"
+  value={form.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Band rehearsal"
+/>
+
+                <RegistrationField
+  label="Accessories Included"
+  field="accessories_included"
+  value={form.accessories_included}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Case, strap, picks"
+  optional
+/>
+
+                <RegistrationField
+  label="Material / Body"
+  field="material_body"
+  value={form.material_body}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Spruce top, mahogany body"
+/>
+
+                <RegistrationField
+  label="Size"
+  field="size"
+  value={form.size}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Full size, 4/4"
+  optional
+/>
+
+                <RegistrationPermitValidUntilField
+  value={form.valid_until}
+  onChange={(value) =>
+    updateField(
+      "valid_until",
+      value
+    )
+  }
+/>
+              </div>
+            )}
+
+            {/* SPORTS EQUIPMENT */}
+            {selectedGroup ===
+              "sports" && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <RegistrationField
+  label="Equipment Type"
+  field="equipment_type"
+  value={form.equipment_type}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Basketball, Badminton Racket"
+/>
+
+                <RegistrationField
+  label="Brand"
+  field="brand"
+  value={form.brand}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Molten, Yonex"
+  optional
+/>
+
+                <RegistrationField
+  label="Quantity"
+  field="quantity"
+  value={form.quantity}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 2"
+  type="number"
+/>
+
+                <RegistrationField
+  label="Condition"
+  field="condition"
+  value={form.condition}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Good, Used"
+/>
+
+                <div className="md:col-span-2">
+                  <RegistrationField
+  label="Purpose / Reason for Bringing"
+  field="purpose"
+  value={form.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Varsity practice"
+/>
+                </div>
+
+                <RegistrationPermitValidUntilField
+  value={form.valid_until}
+  onChange={(value) =>
+    updateField(
+      "valid_until",
+      value
+    )
+  }
+/>
+              </div>
+            )}
+
+            {/* OTHER EQUIPMENT */}
+            {selectedGroup ===
+              "other" && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <RegistrationField
+  label="Item/s with Complete Description"
+  field="complete_description"
+  value={form.complete_description}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 2x extension cords, 1x megaphone"
+/>
+                </div>
+
+                <RegistrationField
+  label="Quantity"
+  field="quantity"
+  value={form.quantity}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. 3"
+  type="number"
+/>
+
+                <RegistrationField
+  label="Purpose / Reason for Bringing"
+  field="purpose"
+  value={form.purpose}
+  onChange={(field, value) =>
+    updateField(
+      field as keyof RegistrationForm,
+      value
+    )
+  }
+  placeholder="e.g. Org event"
+/>
+
+                <RegistrationPermitValidUntilField
+  value={form.valid_until}
+  onChange={(value) =>
+    updateField(
+      "valid_until",
+      value
+    )
+  }
+/>
+              </div>
+            )}
+
+            {/* NOTE */}
+            <div className="mt-5 bg-slate-50 border border-slate-200 border-l-4 border-l-slate-400 rounded-lg p-3 text-xs text-slate-600 leading-relaxed">
+              <strong className="text-slate-800">
+                Note:
+              </strong>{" "}
+              All fields are required except those marked
+              <strong> (Optional)</strong>. The form cannot be submitted until all required information is completed.
+            </div>
+
+            {/* ACTIONS */}
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={backToSelection}
+                className="text-xs px-4 py-2 border border-[#cfd8e6] rounded-md text-muted-foreground hover:bg-muted"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="text-xs bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 font-semibold disabled:opacity-50"
+              >
+                {submitting
+                  ? "Submitting..."
+                  : "Submit for Approval"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Register Item"
+        subtitle={
+          selectedGroup
+            ? "Complete the form below. It will be submitted to PCO for approval."
+            : "Submit a new item for QR code registration. Items must be approved by PCO before a QR code is issued."
+        }
+        action={
+          !selectedGroup ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() =>
+                  setShowTypeMenu(
+                    (current) => !current
+                  )
+                }
+                className="flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-3 py-2 rounded-md hover:opacity-90 transition-opacity"
+              >
+                <Plus size={13} />
+                New Registration
+              </button>
+
+              {showTypeMenu && (
+                <div className="absolute right-0 top-full mt-2 z-50 w-[340px] max-w-[90vw] rounded-xl border border-[#dce3ee] bg-white p-2 shadow-xl">
+                  <div className="px-3 py-2 text-xs font-bold text-foreground border-b border-[#edf0f5] mb-1">
+                    Select item type
+                  </div>
+
+                  {registrationGroups.map(
+                    (group) => (
+                      <button
+                        key={group.id}
+                        type="button"
+                        onClick={() =>
+                          selectGroup(
+                            group.id
+                          )
+                        }
+                        className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[#f3f5fa]"
+                      >
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#f2f5fb] border border-[#dce3ee] text-[#16224b]">
+                          {getRegistrationGroupIcon(group.id, 18)}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-foreground">
+                            {group.name}
+                          </p>
+
+                          <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                            {group.types}
+                          </p>
+                        </div>
+
+                        <ChevronRight
+                          size={15}
+                          className="text-muted-foreground"
+                        />
+                      </button>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          ) : undefined
+        }
+      />
+
+      {selectedGroup ? (
+        renderSelectedForm()
+      ) : (
+        <Card
+          title="Registered Items"
+          action={
+            <button
+              onClick={loadItems}
+              className="text-xs flex items-center gap-1 text-primary font-medium"
+            >
+              <RefreshCw size={12} />
+              Refresh
+            </button>
+          }
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-[#fafbfc]">
+                  {[
+                    "Item ID",
+                    "Item",
+                    "Type",
+                    "Serial No.",
+                    "Status",
+                    "Date Filed",
+                  ].map((heading) => (
+                    <th
+                      key={heading}
+                      className="text-left py-2 px-3 text-xs text-muted-foreground font-medium"
+                    >
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {loadingItems ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="text-center py-6 text-sm text-muted-foreground"
+                    >
+                      Loading items...
+                    </td>
+                  </tr>
+                ) : items.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="text-center py-8 text-sm text-muted-foreground"
+                    >
+                      No registered items yet. Click
+                      <strong> New Registration </strong>
+                      to choose an item type.
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((item) => {
+                    const rawStatus =
+                      String(
+                        item.status ?? ""
+                      );
+
+                    const displayStatus =
+                      rawStatus
+                        ? rawStatus
+                            .charAt(0)
+                            .toUpperCase() +
+                          rawStatus.slice(1)
+                        : "Pending";
+
+                    return (
+                      <tr
+                        key={item.id}
+                        className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
+                      >
+                        <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
+                          ITEM-
+                          {String(
+                            item.id
+                          ).padStart(
+                            3,
+                            "0"
+                          )}
+                        </td>
+
+                        <td className="py-2.5 px-3 text-sm text-foreground font-medium">
+                          {item.item_name}
+                        </td>
+
+                        <td className="py-2.5 px-3 text-xs text-muted-foreground">
+                          {item.item_type}
+                        </td>
+
+                        <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
+                          {item.serial_number ||
+                            "—"}
+                        </td>
+
+                        <td className="py-2.5 px-3">
+                          <StatusBadge
+                            status={
+                              displayStatus
+                            }
+                          />
+                        </td>
+
+                        <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {item.created_at
+                            ? new Date(
+                                item.created_at
+                              ).toLocaleDateString(
+                                "en-PH",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )
+                            : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function StudentMyQRCodes() {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [qrModalItem, setQrModalItem] = useState<any | null>(null);
+  const [downloadingQrId, setDownloadingQrId] =
+    useState<number | string | null>(null);
+
+  async function loadMyItems() {
+    try {
+      setLoading(true);
+
+      const data = await getMyQRCodes();
+
+      const loadedItems = Array.isArray(data?.items)
+        ? data.items
+        : [];
+
+      setItems(
+        [...loadedItems].sort(
+          (a, b) =>
+            Number(b?.id ?? 0) -
+            Number(a?.id ?? 0)
+        )
+      );
+    } catch (error) {
+      console.error("Failed to load QR codes:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to load QR codes."
+      );
+
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadMyItems();
+  }, []);
+
+  const approvedItems = items.filter(
+    (item) =>
+      item.status === "approved" &&
+      item.qr_code
+  );
+
+  const pendingItems = items.filter(
+    (item) => item.status === "pending"
+  );
+
+  function isExpired(item: any) {
+    return Boolean(
+      item.qr_expires_at &&
+        new Date(item.qr_expires_at).getTime() <
+          Date.now()
+    );
+  }
+
+  function formatDate(value?: string | null) {
+    if (!value) {
+      return "Not set";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleDateString("en-PH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
+
+  function safeFileName(value: string) {
+    return value
+      .replace(/[^a-zA-Z0-9-_]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  async function downloadQRCode(item: any) {
+    try {
+      setDownloadingQrId(item.id);
+
+      const wrapper =
+        document.getElementById(
+          `qr-source-${item.id}`
+        );
+
+      const svg =
+        wrapper?.querySelector(
+          "svg"
+        ) as SVGSVGElement | null;
+
+      if (!svg) {
+        throw new Error(
+          "QR code image could not be found."
+        );
+      }
+
+      const clonedSvg =
+        svg.cloneNode(true) as SVGSVGElement;
+
+      clonedSvg.setAttribute("width", "1024");
+      clonedSvg.setAttribute("height", "1024");
+      clonedSvg.setAttribute(
+        "xmlns",
+        "http://www.w3.org/2000/svg"
+      );
+
+      const serializer = new XMLSerializer();
+
+      const svgString =
+        serializer.serializeToString(
+          clonedSvg
+        );
+
+      const svgBlob = new Blob(
+        [svgString],
+        {
+          type: "image/svg+xml;charset=utf-8",
+        }
+      );
+
+      const svgUrl =
+        URL.createObjectURL(svgBlob);
+
+      const image = new Image();
+
+      image.onload = () => {
+        const canvas =
+          document.createElement("canvas");
+
+        canvas.width = 1024;
+        canvas.height = 1024;
+
+        const ctx =
+          canvas.getContext("2d");
+
+        if (!ctx) {
+          URL.revokeObjectURL(svgUrl);
+          setDownloadingQrId(null);
+          alert(
+            "Unable to prepare the QR code for download."
+          );
+          return;
+        }
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        ctx.drawImage(
+          image,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(svgUrl);
+
+            if (!blob) {
+              setDownloadingQrId(null);
+              alert(
+                "Unable to create QR image."
+              );
+              return;
+            }
+
+            const pngUrl =
+              URL.createObjectURL(blob);
+
+            const link =
+              document.createElement("a");
+
+            const itemName =
+              safeFileName(
+                String(
+                  item.item_name ?? "item"
+                )
+              ) || "item";
+
+            const qrCode =
+              safeFileName(
+                String(
+                  item.qr_code ?? "qr"
+                )
+              ) || "qr";
+
+            link.href = pngUrl;
+            link.download =
+              `${itemName}-${qrCode}.png`;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(pngUrl);
+            setDownloadingQrId(null);
+          },
+          "image/png"
+        );
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(svgUrl);
+        setDownloadingQrId(null);
+        alert(
+          "Unable to prepare the QR code for download."
+        );
+      };
+
+      image.src = svgUrl;
+    } catch (error) {
+      console.error(
+        "Failed to download QR code:",
+        error
+      );
+
+      setDownloadingQrId(null);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to download QR code."
+      );
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="QR Codes"
+        subtitle="Approved items with their QR codes. Present these to security during inspection or exit."
+        action={
+          <button
+            onClick={loadMyItems}
+            className="text-xs flex items-center gap-1 text-primary font-medium"
+          >
+            <RefreshCw size={12} />
+            Refresh
+          </button>
+        }
+      />
+
+      {loading ? (
+        <div className="text-center py-10 text-sm text-muted-foreground">
+          Loading QR codes...
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-4">
+          {approvedItems.map((item) => {
+            const expired = isExpired(item);
+
+            return (
+              <div
+                key={item.id}
+                className="bg-card rounded-lg border border-[#dce3ee] transition-all hover:shadow-md overflow-hidden"
+              >
+                <div className="p-4 flex gap-4 items-start">
+                  <div
+                    id={`qr-source-${item.id}`}
+                    className="flex-shrink-0"
+                  >
+                    <QRCodeDisplay
+                      value={item.qr_code}
+                      size={88}
+                    />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-foreground">
+                      {item.item_name}
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {item.item_type}
+                    </p>
+
+                    <div className="mt-2 space-y-1">
+                      <div className="flex gap-2 text-xs">
+                        <span className="text-muted-foreground">
+                          Serial:
+                        </span>
+
+                        <span className="font-mono text-foreground">
+                          {item.serial_number || "—"}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 text-xs">
+                        <span className="text-muted-foreground">
+                          QR ID:
+                        </span>
+
+                        <span className="font-mono text-foreground">
+                          {item.qr_code}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 text-xs">
+                        <span className="text-muted-foreground">
+                          Registered:
+                        </span>
+
+                        <span className="text-foreground">
+                          {formatDate(item.created_at)}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 text-xs">
+                        <span className="text-muted-foreground">
+                          Expires:
+                        </span>
+
+                        <span
+                          className={
+                            expired
+                              ? "font-medium text-red-600"
+                              : "text-foreground"
+                          }
+                        >
+                          {formatDate(
+                            item.qr_expires_at
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-2">
+                      <StatusBadge
+                        status={
+                          expired
+                            ? "Expired"
+                            : "Approved"
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-[#dce3ee] bg-[#fafbfc] px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    QR ID:
+                    <span className="font-mono text-primary ml-2">
+                      {item.qr_code}
+                    </span>
+                  </p>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setQrModalItem(item)
+                      }
+                      className="inline-flex items-center gap-1.5 rounded-md border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-[#eef2fc]"
+                    >
+                      <Eye size={13} />
+                      View QR
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadQRCode(item)
+                      }
+                      disabled={
+                        downloadingQrId ===
+                        item.id
+                      }
+                      className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                    >
+                      <Download size={13} />
+
+                      {downloadingQrId ===
+                      item.id
+                        ? "Preparing..."
+                        : "Download QR"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {pendingItems.map((item) => (
+            <div
+              key={item.id}
+              className="bg-card rounded-lg border border-dashed border-yellow-300 p-4 flex gap-4 items-center opacity-70"
+            >
+              <div className="w-[88px] h-[88px] bg-yellow-50 border border-yellow-200 rounded-md flex flex-col items-center justify-center gap-1 flex-shrink-0">
+                <Clock
+                  size={22}
+                  className="text-yellow-500"
+                />
+
+                <span className="text-xs text-yellow-600 font-medium">
+                  Pending
+                </span>
+              </div>
+
+              <div>
+                <p className="font-semibold text-sm text-foreground">
+                  {item.item_name}
+                </p>
+
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {item.item_type} ·{" "}
+                  {item.serial_number ||
+                    "No serial number"}
+                </p>
+
+                <p className="text-xs text-yellow-600 mt-2">
+                  Awaiting PCO approval — QR code will be issued upon approval.
+                </p>
+              </div>
+            </div>
+          ))}
+
+          {approvedItems.length === 0 &&
+            pendingItems.length === 0 && (
+              <div className="md:col-span-2 text-center py-10 text-sm text-muted-foreground">
+                You don't have any registered items yet.
+              </div>
+            )}
+        </div>
+      )}
+
+      {qrModalItem && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/55 flex items-center justify-center p-4"
+          onClick={() =>
+            setQrModalItem(null)
+          }
+        >
+          <div
+            className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+            <div className="px-5 py-4 border-b border-[#dce3ee] bg-[#fafbfc] flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">
+                  {qrModalItem.item_name}
+                </h2>
+
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Present this QR code to CSU for scanning.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setQrModalItem(null)
+                }
+                className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:bg-[#eef2fc] hover:text-primary"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="mx-auto w-fit rounded-2xl border border-[#dce3ee] bg-white p-5 shadow-sm">
+                <QRCodeDisplay
+                  value={qrModalItem.qr_code}
+                  size={300}
+                />
+              </div>
+
+              <div className="mt-5 text-center">
+                <p className="text-xs text-muted-foreground">
+                  QR ID
+                </p>
+
+                <p className="font-mono text-sm font-semibold text-primary mt-1">
+                  {qrModalItem.qr_code}
+                </p>
+
+                <p className="text-xs text-muted-foreground mt-3">
+                  {qrModalItem.item_type}
+                  {qrModalItem.serial_number
+                    ? ` • Serial: ${qrModalItem.serial_number}`
+                    : ""}
+                </p>
+
+                {isExpired(qrModalItem) && (
+                  <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+                    This QR code is expired.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="px-5 py-4 border-t border-[#dce3ee] bg-[#fafbfc] flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setQrModalItem(null)
+                }
+                className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold text-muted-foreground hover:bg-white"
+              >
+                Close
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  downloadQRCode(
+                    qrModalItem
+                  )
+                }
+                disabled={
+                  downloadingQrId ===
+                  qrModalItem.id
+                }
+                className="inline-flex items-center gap-1.5 bg-primary text-white px-4 py-2 rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+              >
+                <Download size={14} />
+
+                {downloadingQrId ===
+                qrModalItem.id
+                  ? "Preparing..."
+                  : "Download QR"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StudentPermitStatus() {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  async function loadItems() {
+    try {
+      setLoading(true);
+
+      const data = await getItems();
+
+      setItems(data.items ?? []);
+    } catch (error) {
+      console.error("Failed to load permit status:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+  const pendingCount = items.filter(
+    (item) => item.status === "pending"
+  ).length;
+
+  const approvedCount = items.filter(
+    (item) => item.status === "approved"
+  ).length;
+
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Permit Status"
+        subtitle="Track the approval status of your registered items."
+        action={
+          <button
+            onClick={loadItems}
+            className="text-xs flex items-center gap-1 text-primary font-medium"
+          >
+            <RefreshCw size={12} />
+            Refresh
+          </button>
+        }
+      />
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          label="Total Requests"
+          value={String(items.length)}
+          icon={<Package size={20} />}
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="Pending"
+          value={String(pendingCount)}
+          icon={<Clock size={20} />}
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Approved"
+          value={String(approvedCount)}
+          icon={<CheckCircle size={20} />}
+          color="#2ecc71"
+        />
+
+      
+      </div>
+
+      <Card title="My Item Permit Requests">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#fafbfc]">
+                {[
+                  "Item",
+                  "Type",
+                  "Brand / Model",
+                  "Serial Number",
+                  "Date Registered",
+                  "QR ID",
+                  "Status",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="text-left py-2 px-3 text-xs text-muted-foreground font-medium"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="text-center py-8 text-sm text-muted-foreground"
+                  >
+                    Loading permit requests...
+                  </td>
+                </tr>
+              ) : items.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="text-center py-8 text-sm text-muted-foreground"
+                  >
+                    You have no registered items yet.
+                  </td>
+                </tr>
+              ) : (
+                items.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="border-t border-[#cfd8e6] hover:bg-[#eef2fc]"
+                  >
+                    <td className="py-3 px-3 text-sm font-medium">
+                      {item.item_name}
+                    </td>
+
+                    <td className="py-3 px-3 text-xs text-muted-foreground">
+                      {item.item_type}
+                    </td>
+
+                    <td className="py-3 px-3 text-xs text-muted-foreground">
+                      {item.brand_model || "—"}
+                    </td>
+
+                    <td className="py-3 px-3 text-xs font-mono">
+                      {item.serial_number}
+                    </td>
+
+                    <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(
+                        item.created_at
+                      ).toLocaleDateString("en-PH", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </td>
+
+                    <td className="py-3 px-3 text-xs font-mono text-primary">
+                      {item.qr_code || "Not issued yet"}
+                    </td>
+
+                    <td className="py-3 px-3">
+                      <StatusBadge
+                        status={
+                          item.status === "approved"
+                            ? "Approved"
+                            : "Pending"
+                        }
+                      />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ── Shared Lost & Found store (module-level for demo) ─────────────────────
+type LFItem = {
+  id: string;
+  type: "lost" | "found";
+  item: string;
+  description: string;
+  location: string;
+  date: string;
+  postedBy: string;
+  postedByRole: "student" | "security";
+  imageUrl?: string;
+  status: "Open" | "Claimed" | "Recovered";
+  inquiries: { name: string; message: string; time: string }[];
+};
+let _lfItems: LFItem[] = [
+  { id: "LF-001", type: "found", item: "Laptop Bag (Black, Jansport)", description: "Found near the library entrance, has stickers on it.", location: "Library", date: "Jun 15, 2026", postedBy: "Guard Ramos", postedByRole: "security", status: "Open", inquiries: [] },
+  { id: "LF-002", type: "lost", item: "Samsung Earbuds (White)", description: "Lost after lunch, last seen at the canteen table.", location: "Canteen", date: "Jun 14, 2026", postedBy: "John Dela Cruz", postedByRole: "student", status: "Open", inquiries: [] },
+  { id: "LF-003", type: "found", item: "Laptop Charger (Dell, 65W)", description: "Left in Room 201 after class. Adapter included.", location: "Room 201", date: "Jun 12, 2026", postedBy: "Guard Santos", postedByRole: "security", status: "Open", inquiries: [] },
+  { id: "LF-004", type: "found", item: "iPad with Blue Case", description: "Found at Gate 1 guardhouse. Screen has a small crack.", location: "Gate 1", date: "Jun 10, 2026", postedBy: "Guard Ramos", postedByRole: "security", status: "Claimed", inquiries: [{ name: "Maria Santos", message: "This is mine! I can show my receipt.", time: "Jun 11, 2026 – 9:00 AM" }] },
+];
+let _lfListeners: (() => void)[] = [];
+function getLFItems() { return [..._lfItems]; }
+function addLFItem(item: LFItem) { _lfItems = [item, ..._lfItems]; _lfListeners.forEach(fn => fn()); }
+function updateLFItem(id: string, patch: Partial<LFItem>) { _lfItems = _lfItems.map(i => i.id === id ? { ...i, ...patch } : i); _lfListeners.forEach(fn => fn()); }
+function useLFItems() {
+  const [items, setItems] = useState(getLFItems);
+  useEffect(() => {
+    const refresh = () => setItems(getLFItems());
+    _lfListeners.push(refresh);
+    return () => { _lfListeners = _lfListeners.filter(fn => fn !== refresh); };
+  }, []);
+  return items;
+}
+
+// ── Shared notifications store ────────────────────────────────────────────────
+type AppNotif = { id: string; role: "student" | "security"; type: "success" | "warning" | "info"; message: string; time: string };
+let _notifs: AppNotif[] = [];
+let _notifListeners: (() => void)[] = [];
+function addNotif(n: Omit<AppNotif, "id">) { _notifs = [{ ...n, id: Date.now().toString() }, ..._notifs]; _notifListeners.forEach(fn => fn()); }
+function getNotifsForRole(role: "student" | "security") { return _notifs.filter(n => n.role === role); }
+function useNotifs(role: "student" | "security") {
+  const [items, setItems] = useState(() => getNotifsForRole(role));
+  useEffect(() => {
+    const refresh = () => setItems(getNotifsForRole(role));
+    _notifListeners.push(refresh);
+    return () => { _notifListeners = _notifListeners.filter(fn => fn !== refresh); };
+  }, [role]);
+  return items;
+}
+
+function StudentLostAndFound() {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [search, setSearch] = useState("");
+  const [claimingId, setClaimingId] =
+    useState<number | null>(null);
+
+  async function loadItems() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getLostFoundItems();
+
+      setItems(
+        Array.isArray(data)
+          ? data
+          : data?.items ?? []
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load Lost & Found registry."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+  async function handleClaim(id: number) {
+    const confirmed = window.confirm(
+      "Submit a claim for this found item? You will still need to visit the Security office for ownership verification."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setClaimingId(id);
+      setError("");
+      setSuccess("");
+
+      const result = await claimLostFoundItem(id);
+
+      setSuccess(
+        result?.message ||
+          "Claim submitted successfully."
+      );
+
+      await loadItems();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 4000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to submit claim."
+      );
+    } finally {
+      setClaimingId(null);
+    }
+  }
+
+  const filteredItems = items.filter((item) => {
+    const query = search.trim().toLowerCase();
+
+    if (!query) {
+      return true;
+    }
+
+    const searchableText = [
+      item.id,
+      item.report_type,
+      item.item_name,
+      item.category,
+      item.brand_model,
+      item.color,
+      item.location_found,
+      item.location_lost,
+      item.description,
+      item.status,
+      item.finder?.name,
+      item.finder?.username,
+      item.lost_by?.name,
+      item.lost_by?.username,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(query);
+  });
+
+  const foundCount = items.filter(
+    (item) =>
+      String(item.report_type ?? "found").toLowerCase() ===
+        "found" &&
+      String(item.status ?? "").toLowerCase() ===
+        "found"
+  ).length;
+
+  const lostCount = items.filter(
+    (item) =>
+      String(item.report_type ?? "").toLowerCase() ===
+        "lost" &&
+      String(item.status ?? "").toLowerCase() ===
+        "lost"
+  ).length;
+
+  const recoveredCount = items.filter(
+    (item) =>
+      String(item.status ?? "").toLowerCase() ===
+      "recovered"
+  ).length;
+
+  function formatDate(value?: string | null) {
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleString("en-PH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Lost & Found"
+        subtitle="Browse found items and lost-item reports recorded by the Security office."
+      />
+
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+        <div className="flex items-start gap-2">
+          <Shield
+            size={16}
+            className="mt-0.5 flex-shrink-0 text-blue-700"
+          />
+
+          <div>
+            <p className="text-sm font-medium text-blue-900">
+              Lost & Found Procedure
+            </p>
+
+            <p className="mt-1 text-xs text-blue-800">
+              Found items must be physically turned over to the Security office before they are recorded. Lost-item reports are also encoded by Security. Students can browse records and claim available found items, but cannot create Lost & Found reports directly.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatCard
+          label="Total Reports"
+          value={String(items.length)}
+          icon={<BookOpen size={20} />}
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="Found Items"
+          value={String(foundCount)}
+          icon={<Package size={20} />}
+          color="#557bdc"
+        />
+
+        <StatCard
+          label="Lost Reports"
+          value={String(lostCount)}
+          icon={<AlertTriangle size={20} />}
+          color="#e74c3c"
+        />
+
+        <StatCard
+          label="Recovered"
+          value={String(recoveredCount)}
+          icon={<CheckCircle size={20} />}
+          color="#2ecc71"
+        />
+      </div>
+
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="relative flex-1">
+          <Search
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search item, report type, category, location..."
+            className="w-full rounded-lg border border-[#cfd8e6] bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={loadItems}
+          disabled={loading}
+          className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? "Refreshing..." : "Refresh"}
+        </button>
+      </div>
+
+      {loading && (
+        <div className="rounded-lg border border-[#cfd8e6] bg-card p-10 text-center">
+          <p className="text-sm text-muted-foreground">
+            Loading Lost & Found registry...
+          </p>
+        </div>
+      )}
+
+      {!loading && filteredItems.length === 0 && (
+        <div className="rounded-lg border border-[#cfd8e6] bg-card p-10 text-center">
+          <BookOpen
+            size={32}
+            className="mx-auto mb-3 text-muted-foreground"
+          />
+
+          <p className="text-sm font-medium text-foreground">
+            No Lost & Found records found.
+          </p>
+
+          <p className="mt-1 text-xs text-muted-foreground">
+            Reports recorded by the Security office will appear here.
+          </p>
+        </div>
+      )}
+
+      {!loading &&
+        filteredItems.map((item) => {
+          const reportType = String(
+            item.report_type ?? "found"
+          ).toLowerCase();
+          const isLostReport = reportType === "lost";
+
+          const status = String(
+            item.status ?? (isLostReport ? "Lost" : "Found")
+          );
+          const statusLower = status.toLowerCase();
+          const isFound =
+            !isLostReport && statusLower === "found";
+          const isClaimed = statusLower === "claimed";
+          const isRecovered = statusLower === "recovered";
+          const isLost =
+            isLostReport && statusLower === "lost";
+
+          return (
+            <div
+              key={item.id}
+              className="rounded-lg border border-[#cfd8e6] bg-card shadow-sm"
+            >
+              <div className="p-4">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-base font-semibold text-foreground">
+                        {item.item_name}
+                      </h3>
+
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                          isLostReport
+                            ? "bg-red-100 text-red-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
+                      >
+                        {isLostReport
+                          ? "Lost Report"
+                          : "Found Report"}
+                      </span>
+
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                          isRecovered
+                            ? "bg-green-100 text-green-700"
+                            : isClaimed
+                            ? "bg-yellow-100 text-yellow-700"
+                            : isLost
+                            ? "bg-red-100 text-red-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
+                      >
+                        {status}
+                      </span>
+
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        Report #{item.id}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Category
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {item.category || "—"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Brand / Model
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {item.brand_model || "—"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Color
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {item.color || "—"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          {isLostReport
+                            ? "Date & Time Lost / Last Seen"
+                            : "Date & Time Found"}
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {formatDate(
+                            isLostReport
+                              ? item.date_lost
+                              : item.date_found
+                          )}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          {isLostReport
+                            ? "Last Seen Location"
+                            : "Location Found"}
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {(isLostReport
+                            ? item.location_lost
+                            : item.location_found) || "—"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          {isLostReport
+                            ? "Reported Lost By"
+                            : "Turned Over By"}
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {isLostReport
+                            ? item.lost_by?.name || "Not specified"
+                            : item.finder?.name || "Not specified"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isLostReport && isRecovered && (
+                      <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3">
+                        <p className="text-xs font-semibold text-green-800">
+                          Recovery / Turnover Details
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-green-900">
+                          Found / turned over by: {item.finder?.name || "Not available"}
+                        </p>
+                        {item.finder?.username && (
+                          <p className="text-xs text-green-700">
+                            ID: {item.finder.username}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-green-700">
+                          Location: {item.location_found || "—"}
+                        </p>
+                        <p className="text-xs text-green-700">
+                          Date & time: {formatDate(item.date_found)}
+                        </p>
+                      </div>
+                    )}
+
+                    {item.description && (
+                      <div className="mt-4 rounded-lg bg-muted/40 p-3">
+                        <p className="text-xs font-medium text-muted-foreground">
+                          Item Description
+                        </p>
+                        <p className="mt-1 text-sm text-foreground">
+                          {item.description}
+                        </p>
+                      </div>
+                    )}
+
+                    {item.processor && (
+                      <div className="mt-3 text-xs text-muted-foreground">
+                        Processed by Security:{" "}
+                        <span className="font-medium text-foreground">
+                          {item.processor.name}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-shrink-0">
+                    {isFound && (
+                      <button
+                        type="button"
+                        disabled={
+                          claimingId === Number(item.id)
+                        }
+                        onClick={() =>
+                          handleClaim(Number(item.id))
+                        }
+                        className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+                      >
+                        {claimingId === Number(item.id)
+                          ? "Submitting..."
+                          : "Claim Item"}
+                      </button>
+                    )}
+
+                    {isLost && (
+                      <div className="max-w-xs rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+                        If you found an item matching this report, turn it over to the Security office.
+                      </div>
+                    )}
+
+                    {isClaimed && (
+                      <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
+                        Claim pending Security verification
+                      </div>
+                    )}
+
+                    {isRecovered && (
+                      <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-800">
+                        Item recovered / returned
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+    </div>
+  );
+}
+
+function StudentNotifications() {
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [markingId, setMarkingId] = useState<number | null>(null);
+  const [markingAll, setMarkingAll] = useState(false);
+  const [error, setError] = useState("");
+
+  async function loadNotifications(
+    showLoading = true
+  ) {
+    try {
+      if (showLoading) {
+        setLoading(true);
+      }
+
+      setError("");
+
+      const data =
+        await getNotifications();
+
+      setNotifications(
+        Array.isArray(
+          data?.notifications
+        )
+          ? data.notifications
+          : []
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load notifications:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load notifications."
+      );
+    } finally {
+      if (showLoading) {
+        setLoading(false);
+      }
+    }
+  }
+
+  useEffect(() => {
+    loadNotifications(true);
+
+    const interval =
+      window.setInterval(
+        () => {
+          loadNotifications(false);
+        },
+        15000
+      );
+
+    const handleFocus =
+      () => {
+        loadNotifications(false);
+      };
+
+    const handleVisibility =
+      () => {
+        if (
+          document.visibilityState ===
+          "visible"
+        ) {
+          loadNotifications(false);
+        }
+      };
+
+    window.addEventListener(
+      "focus",
+      handleFocus
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+    return () => {
+      window.clearInterval(
+        interval
+      );
+
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+    };
+  }, []);
+
+  async function handleMarkRead(id: number) {
+    try {
+      setMarkingId(id);
+      setError("");
+
+      await markNotificationRead(id);
+
+      setNotifications((previous) =>
+        previous.map((notification) =>
+          notification.id === id
+            ? {
+                ...notification,
+                is_read: true,
+                read_at: new Date().toISOString(),
+              }
+            : notification
+        )
+      );
+    } catch (err) {
+      console.error(
+        "Failed to mark notification as read:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark notification as read."
+      );
+    } finally {
+      setMarkingId(null);
+    }
+  }
+
+  async function handleMarkAllRead() {
+    const unreadExists = notifications.some(
+      (notification) => !notification.is_read
+    );
+
+    if (!unreadExists) return;
+
+    try {
+      setMarkingAll(true);
+      setError("");
+
+      await markAllNotificationsRead();
+
+      setNotifications((previous) =>
+        previous.map((notification) => ({
+          ...notification,
+          is_read: true,
+          read_at:
+            notification.read_at ??
+            new Date().toISOString(),
+        }))
+      );
+    } catch (err) {
+      console.error(
+        "Failed to mark all notifications as read:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark all notifications as read."
+      );
+    } finally {
+      setMarkingAll(false);
+    }
+  }
+
+  function formatDate(dateString: string) {
+    if (!dateString) return "—";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString();
+  }
+
+  function formatTime(dateString: string) {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  const unreadCount = notifications.filter(
+    (notification) => !notification.is_read
+  ).length;
+
+  const readCount =
+    notifications.length - unreadCount;
+
+  return (
+    <div className="space-y-6">
+      {/* HEADER */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Notifications
+          </h1>
+
+          <p className="text-sm text-gray-500 mt-1">
+            View updates about your registered items and
+            QRPass activity.
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => loadNotifications(true)}
+            disabled={loading}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+          >
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+
+          <button
+            onClick={handleMarkAllRead}
+            disabled={
+              markingAll ||
+              unreadCount === 0
+            }
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+          >
+            {markingAll
+              ? "Updating..."
+              : "Mark All as Read"}
+          </button>
+        </div>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* SUMMARY */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Total Notifications
+          </p>
+
+          <p className="text-3xl font-bold text-gray-900 mt-2">
+            {notifications.length}
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Unread
+          </p>
+
+          <p className="text-3xl font-bold text-blue-600 mt-2">
+            {unreadCount}
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Read
+          </p>
+
+          <p className="text-3xl font-bold text-green-600 mt-2">
+            {readCount}
+          </p>
+        </div>
+      </div>
+
+      {/* NOTIFICATIONS */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-bold text-gray-900">
+            Recent Notifications
+          </h2>
+        </div>
+
+        {loading ? (
+          <div className="py-14 text-center text-gray-500">
+            Loading notifications...
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="py-14 text-center">
+            <p className="font-semibold text-gray-700">
+              No notifications yet.
+            </p>
+
+            <p className="text-sm text-gray-500 mt-1">
+              Item approval and other QRPass updates will
+              appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {notifications.map((notification) => {
+              const unread = !notification.is_read;
+
+              return (
+                <div
+                  key={notification.id}
+                  className={`p-5 ${
+                    unread
+                      ? "bg-blue-50/60"
+                      : "bg-white"
+                  }`}
+                >
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-gray-900">
+                          {notification.title}
+                        </h3>
+
+                        {unread && (
+                          <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-bold uppercase">
+                            New
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-sm text-gray-600 mt-2">
+                        {notification.message}
+                      </p>
+
+                      <div className="flex flex-wrap gap-3 mt-3 text-xs text-gray-500">
+                        <span>
+                          {formatDate(
+                            notification.created_at
+                          )}
+                        </span>
+
+                        <span>
+                          {formatTime(
+                            notification.created_at
+                          )}
+                        </span>
+
+                        <span className="capitalize">
+                          {String(
+                            notification.type ??
+                              "system"
+                          ).replace(/_/g, " ")}
+                        </span>
+                      </div>
+                    </div>
+
+                    {unread ? (
+                      <button
+                        onClick={() =>
+                          handleMarkRead(
+                            notification.id
+                          )
+                        }
+                        disabled={
+                          markingId === notification.id
+                        }
+                        className="px-3 py-2 border border-blue-200 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-50 disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {markingId ===
+                        notification.id
+                          ? "Updating..."
+                          : "Mark as Read"}
+                      </button>
+                    ) : (
+                      <span className="px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold whitespace-nowrap">
+                        Read
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+// ══════════════════════════════════════════════════════════════════════════════
+// SECURITY (CSU) PAGES
+// ══════════════════════════════════════════════════════════════════════════════
+function SecurityScanVerify() {
+  const [scanResult, setScanResult] = useState<any | null>(null);
+  const [input, setInput] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+
+  const [gate, setGate] = useState("Gate 1");
+  const [logging, setLogging] = useState(false);
+
+  const [recentLogs, setRecentLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
+  const [incidentMessage, setIncidentMessage] = useState("");
+
+  const [pendingIncident, setPendingIncident] = useState<{
+    code: string;
+    incidentType: string;
+    errorMessage: string;
+  } | null>(null);
+
+  const [savingIncident, setSavingIncident] = useState(false);
+  const [sameAsOwner, setSameAsOwner] = useState(false);
+
+  const [flaggedForm, setFlaggedForm] = useState({
+    item_name: "",
+    owner_name: "",
+    owner_id_number: "",
+    carrier_name: "",
+    carrier_id_number: "",
+    direction: "OUT" as "IN" | "OUT",
+  });
+
+  // Keeps the latest selected gate available to the camera scanner
+  const gateRef = React.useRef(gate);
+
+  useEffect(() => {
+    gateRef.current = gate;
+  }, [gate]);
+
+  async function loadRecentLogs() {
+    try {
+      setLoadingLogs(true);
+
+      const data = await getScanLogs();
+
+      setRecentLogs((data.logs ?? []).slice(0, 5));
+    } catch (error) {
+      console.error(
+        "Failed to load recent scan logs:",
+        error
+      );
+    } finally {
+      setLoadingLogs(false);
+    }
+  }
+
+  function prepareSecurityIncident(
+    code: string,
+    errorMessage: string
+  ) {
+    const normalizedError = errorMessage.toLowerCase();
+
+    let incidentType = "";
+
+    if (normalizedError.includes("not found")) {
+      incidentType = "Unregistered Item";
+    } else if (normalizedError.includes("not approved")) {
+      incidentType = "Unapproved Item";
+    } else {
+      // Network/server errors should not create a security incident.
+      setPendingIncident(null);
+      return;
+    }
+
+    setSameAsOwner(false);
+    setFlaggedForm({
+      item_name: "",
+      owner_name: "",
+      owner_id_number: "",
+      carrier_name: "",
+      carrier_id_number: "",
+      direction: "OUT",
+    });
+
+    setPendingIncident({
+      code,
+      incidentType,
+      errorMessage,
+    });
+  }
+
+  function updateFlaggedForm(
+    field: keyof typeof flaggedForm,
+    value: string
+  ) {
+    setFlaggedForm((current) => {
+      const next = {
+        ...current,
+        [field]: value,
+      };
+
+      if (sameAsOwner) {
+        if (field === "owner_name") {
+          next.carrier_name = value;
+        }
+
+        if (field === "owner_id_number") {
+          next.carrier_id_number = value;
+        }
+      }
+
+      return next;
+    });
+  }
+
+  function handleSameAsOwner(checked: boolean) {
+    setSameAsOwner(checked);
+
+    if (checked) {
+      setFlaggedForm((current) => ({
+        ...current,
+        carrier_name: current.owner_name,
+        carrier_id_number: current.owner_id_number,
+      }));
+    }
+  }
+
+  async function submitSecurityIncident(
+    event: React.FormEvent
+  ) {
+    event.preventDefault();
+
+    if (!pendingIncident) {
+      return;
+    }
+
+    const requiredFields = [
+      ["Item Name", flaggedForm.item_name],
+      ["Owner Name", flaggedForm.owner_name],
+      ["Owner ID Number", flaggedForm.owner_id_number],
+      ["Person Carrying Item", flaggedForm.carrier_name],
+      ["Carrier ID Number", flaggedForm.carrier_id_number],
+      ["Direction", flaggedForm.direction],
+    ];
+
+    const missingFields = requiredFields
+      .filter(([, value]) => !String(value ?? "").trim())
+      .map(([label]) => label);
+
+    if (missingFields.length > 0) {
+      alert(
+        `Please complete all required flagged-item details:\n\n${missingFields
+          .map((field) => `• ${field}`)
+          .join("\n")}`
+      );
+      return;
+    }
+
+    try {
+      setSavingIncident(true);
+
+      await createSecurityIncident({
+        registered_item_id: null,
+        scanned_code: pendingIncident.code,
+        incident_type: pendingIncident.incidentType,
+        item_name: flaggedForm.item_name.trim(),
+        serial_number: null,
+        owner_name: flaggedForm.owner_name.trim(),
+        owner_id_number: flaggedForm.owner_id_number.trim(),
+        carrier_name: flaggedForm.carrier_name.trim(),
+        carrier_id_number: flaggedForm.carrier_id_number.trim(),
+        direction: flaggedForm.direction,
+        gate: gateRef.current,
+        description:
+          pendingIncident.incidentType === "Unregistered Item"
+            ? `Unregistered QR ID or serial number "${pendingIncident.code}" was presented at ${gateRef.current}.`
+            : `An item that has not yet been approved was presented at ${gateRef.current}. Code: ${pendingIncident.code}.`,
+      });
+
+      setIncidentMessage(
+        `${pendingIncident.incidentType} has been flagged and recorded at ${gateRef.current}.`
+      );
+
+      setPendingIncident(null);
+      setSameAsOwner(false);
+      setFlaggedForm({
+        item_name: "",
+        owner_name: "",
+        owner_id_number: "",
+        carrier_name: "",
+        carrier_id_number: "",
+        direction: "OUT",
+      });
+    } catch (incidentError) {
+      console.error(
+        "Failed to record security incident:",
+        incidentError
+      );
+
+      setIncidentMessage(
+        "The item could not be verified, but the security incident could not be saved."
+      );
+    } finally {
+      setSavingIncident(false);
+    }
+  }
+
+  async function verifyCode(code: string) {
+    const cleanCode = code.trim();
+
+    if (!cleanCode) {
+      setVerifyError(
+        "Please enter a QR ID or serial number."
+      );
+      setScanResult(null);
+      setIncidentMessage("");
+      setPendingIncident(null);
+      return;
+    }
+
+    try {
+      setVerifying(true);
+      setVerifyError("");
+      setIncidentMessage("");
+      setScanResult(null);
+
+      const data = await verifyItem(cleanCode);
+
+      setInput(cleanCode);
+      setScanResult(data.item);
+
+      // Successful verification removes previous incident warning/form.
+      setIncidentMessage("");
+      setPendingIncident(null);
+      setSameAsOwner(false);
+    } catch (error) {
+      setScanResult(null);
+      setInput(cleanCode);
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Item verification failed.";
+
+      setVerifyError(message);
+
+      // Ask CSU to complete the item/owner/carrier details before
+      // the failed verification is officially recorded as flagged.
+      prepareSecurityIncident(
+        cleanCode,
+        message
+      );
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  async function doScan() {
+    await verifyCode(input);
+  }
+
+  async function handleLog(
+    direction: "IN" | "OUT"
+  ) {
+    if (!scanResult) {
+      alert("Please verify an item first.");
+      return;
+    }
+
+    try {
+      setLogging(true);
+
+      await createScanLog(
+        scanResult.id,
+        gate,
+        direction
+      );
+
+      await loadRecentLogs();
+
+      // Clear the verified item after a successful IN / OUT log
+      // so CSU is ready to scan the next item immediately.
+      setScanResult(null);
+      setInput("");
+      setVerifyError("");
+      setIncidentMessage("");
+      setPendingIncident(null);
+      setSameAsOwner(false);
+
+      alert(
+        `Item logged ${direction} successfully!`
+      );
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to save scan log."
+      );
+    } finally {
+      setLogging(false);
+    }
+  }
+
+  // Load recent successful scans
+  useEffect(() => {
+    loadRecentLogs();
+  }, []);
+
+  // Camera QR scanner
+  useEffect(() => {
+    const scanner = new Html5QrcodeScanner(
+      "qr-reader",
+      {
+        fps: 10,
+        qrbox: {
+          width: 220,
+          height: 220,
+        },
+      },
+      false
+    );
+
+    scanner.render(
+      (decodedText) => {
+        scanner
+          .clear()
+          .then(() => {
+            verifyCode(decodedText);
+          })
+          .catch(() => {
+            verifyCode(decodedText);
+          });
+      },
+      () => {
+        // Normal while camera is searching for a QR code
+      }
+    );
+
+    return () => {
+      scanner.clear().catch(() => {});
+    };
+  }, []);
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Scan & Verify"
+        subtitle="Scan an item's QR code or manually enter the QR ID or serial number."
+      />
+
+      {/* SCANNER */}
+      <div className="bg-card rounded-lg border border-[#cfd8e6] p-5 shadow-sm">
+        <div className="flex flex-col items-center gap-4">
+          {/* GATE SELECTION */}
+          <div className="w-full max-w-md">
+            <label className="block text-xs font-semibold text-foreground mb-1">
+              Current Gate
+            </label>
+
+            <select
+              value={gate}
+              onChange={(e) =>
+                setGate(e.target.value)
+              }
+              className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+            >
+              <option value="Gate 1">
+                Gate 1
+              </option>
+
+              <option value="Gate 2">
+                Gate 2
+              </option>
+
+              <option value="Gate 3">
+                Gate 3
+              </option>
+
+              <option value="Gate 4">
+                Gate 4
+              </option>
+            </select>
+          </div>
+
+          {/* CAMERA */}
+          <div className="w-full max-w-md">
+            <div
+              id="qr-reader"
+              className="w-full"
+            />
+          </div>
+
+          {/* MANUAL INPUT */}
+          <div className="w-full max-w-sm flex gap-2">
+            <div className="relative flex-1">
+              <QrCode
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+
+              <input
+                value={input}
+                onChange={(e) =>
+                  setInput(e.target.value)
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    doScan();
+                  }
+                }}
+                placeholder="QR ID or serial number..."
+                className="w-full pl-8 pr-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <button
+              onClick={doScan}
+              disabled={verifying}
+              className="bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+            >
+              {verifying
+                ? "Verifying..."
+                : "Verify"}
+            </button>
+          </div>
+
+          {/* VERIFICATION ERROR */}
+          {verifyError && (
+            <div className="w-full max-w-md bg-red-50 border border-red-200 text-red-700 rounded-md p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle
+                  size={17}
+                  className="mt-0.5 flex-shrink-0"
+                />
+
+                <div>
+                  <p className="text-xs font-semibold">
+                    Verification Failed
+                  </p>
+
+                  <p className="text-xs mt-0.5">
+                    {verifyError}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* FLAGGED ITEM DETAILS FORM */}
+          {pendingIncident && (
+            <form
+              onSubmit={submitSecurityIncident}
+              className="w-full max-w-2xl bg-orange-50 border-2 border-orange-300 rounded-lg p-4"
+            >
+              <div className="flex items-start gap-3 mb-4">
+                <AlertTriangle
+                  size={20}
+                  className="text-orange-600 mt-0.5 flex-shrink-0"
+                />
+
+                <div>
+                  <p className="text-sm font-bold text-orange-800">
+                    {pendingIncident.incidentType.toUpperCase()} DETECTED
+                  </p>
+
+                  <p className="text-xs text-orange-700 mt-1">
+                    QR / Code:{" "}
+                    <span className="font-mono font-semibold">
+                      {pendingIncident.code}
+                    </span>
+                  </p>
+
+                  <p className="text-xs text-orange-700 mt-1">
+                    Complete the details below before recording this
+                    item as a security incident.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-3">
+                {/* ITEM NAME */}
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Item Name *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={flaggedForm.item_name}
+                    onChange={(e) =>
+                      updateFlaggedForm(
+                        "item_name",
+                        e.target.value
+                      )
+                    }
+                    placeholder="e.g. Acer Laptop, iPhone 15, Camera"
+                    required
+                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
+                  />
+                </div>
+
+                {/* OWNER NAME */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Owner Name *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={flaggedForm.owner_name}
+                    onChange={(e) =>
+                      updateFlaggedForm(
+                        "owner_name",
+                        e.target.value
+                      )
+                    }
+                    placeholder="Full name of item owner"
+                    required
+                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
+                  />
+                </div>
+
+                {/* OWNER ID */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Owner ID Number *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={flaggedForm.owner_id_number}
+                    onChange={(e) =>
+                      updateFlaggedForm(
+                        "owner_id_number",
+                        e.target.value
+                      )
+                    }
+                    placeholder="Student / Employee ID"
+                    required
+                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
+                  />
+                </div>
+
+                {/* SAME AS OWNER */}
+                <div className="md:col-span-2">
+                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={sameAsOwner}
+                      onChange={(e) =>
+                        handleSameAsOwner(e.target.checked)
+                      }
+                      className="rounded border-gray-300"
+                    />
+                    The owner is the same person carrying the item
+                  </label>
+                </div>
+
+                {/* CARRIER NAME */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Person Carrying the Item *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={flaggedForm.carrier_name}
+                    onChange={(e) =>
+                      updateFlaggedForm(
+                        "carrier_name",
+                        e.target.value
+                      )
+                    }
+                    placeholder="Full name of person carrying item"
+                    disabled={sameAsOwner}
+                    required
+                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 disabled:bg-gray-100"
+                  />
+                </div>
+
+                {/* CARRIER ID */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Student / Employee ID *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={flaggedForm.carrier_id_number}
+                    onChange={(e) =>
+                      updateFlaggedForm(
+                        "carrier_id_number",
+                        e.target.value
+                      )
+                    }
+                    placeholder="ID of person carrying item"
+                    disabled={sameAsOwner}
+                    required
+                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 disabled:bg-gray-100"
+                  />
+                </div>
+
+                {/* DIRECTION */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Direction *
+                  </label>
+
+                  <select
+                    value={flaggedForm.direction}
+                    onChange={(e) =>
+                      setFlaggedForm((current) => ({
+                        ...current,
+                        direction: e.target.value as "IN" | "OUT",
+                      }))
+                    }
+                    required
+                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
+                  >
+                    <option value="OUT">OUT</option>
+                    <option value="IN">IN</option>
+                  </select>
+                </div>
+
+                {/* GATE */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">
+                    Gate
+                  </label>
+
+                  <input
+                    type="text"
+                    value={gate}
+                    readOnly
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md bg-gray-100 text-gray-600"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap justify-end gap-2 mt-4 pt-3 border-t border-orange-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingIncident(null);
+                    setSameAsOwner(false);
+                  }}
+                  disabled={savingIncident}
+                  className="px-4 py-2 text-xs font-semibold border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={savingIncident}
+                  className="px-4 py-2 text-xs font-semibold rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {savingIncident
+                    ? "Saving Flagged Item..."
+                    : "Flag Item"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* FLAGGED INCIDENT */}
+          {incidentMessage && (
+            <div className="w-full max-w-md bg-red-50 border-2 border-red-300 rounded-md p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle
+                  size={20}
+                  className="text-red-600 mt-0.5 flex-shrink-0"
+                />
+
+                <div>
+                  <p className="text-sm font-bold text-red-700">
+                    SECURITY ALERT — FLAGGED
+                  </p>
+
+                  <p className="text-xs text-red-700 mt-1">
+                    {incidentMessage}
+                  </p>
+
+                  <p className="text-xs text-red-600 mt-2">
+                    Security personnel should inspect
+                    the item before allowing entry or
+                    exit.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* VERIFIED ITEM */}
+      {scanResult && (
+        <div className="bg-card rounded-lg border-2 border-green-400 p-5 shadow-sm">
+          <div className="flex items-start gap-4">
+            <QRCodeDisplay
+              value={scanResult.qr_code}
+              size={90}
+            />
+
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle
+                  size={18}
+                  className="text-green-500"
+                />
+
+                <span className="font-bold text-base text-green-600">
+                  ITEM VERIFIED ✓
+                </span>
+              </div>
+
+              {/* ITEM INFORMATION */}
+              <div className="grid md:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                <div>
+                  <span className="text-muted-foreground">
+                    Item:{" "}
+                  </span>
+
+                  <span className="font-medium">
+                    {scanResult.item_name}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">
+                    Type:{" "}
+                  </span>
+
+                  <span className="font-medium">
+                    {scanResult.item_type}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">
+                    Brand / Model:{" "}
+                  </span>
+
+                  <span className="font-medium">
+                    {scanResult.brand_model ||
+                      "—"}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">
+                    Color:{" "}
+                  </span>
+
+                  <span className="font-medium">
+                    {scanResult.color || "—"}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">
+                    Serial No.:{" "}
+                  </span>
+
+                  <span className="font-mono font-medium">
+                    {scanResult.serial_number}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">
+                    QR ID:{" "}
+                  </span>
+
+                  <span className="font-mono font-medium text-primary">
+                    {scanResult.qr_code}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">
+                    Registered Owner:{" "}
+                  </span>
+
+                  <span className="font-medium">
+                    {scanResult.user?.name ??
+                      "Unknown"}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">
+                    Owner ID:{" "}
+                  </span>
+
+                  <span className="font-mono font-medium">
+                    {scanResult.user?.username ??
+                      "—"}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">
+                    Date Registered:{" "}
+                  </span>
+
+                  <span className="font-medium">
+                    {new Date(
+                      scanResult.created_at
+                    ).toLocaleDateString(
+                      "en-PH",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      }
+                    )}
+                  </span>
+                </div>
+
+                <div className="flex gap-1.5 items-center">
+                  <span className="text-muted-foreground">
+                    Status:
+                  </span>
+
+                  <StatusBadge status="Approved" />
+                </div>
+              </div>
+
+              {/* ENTRY / EXIT */}
+              <div className="mt-5 pt-4 border-t border-[#cfd8e6]">
+                <p className="text-xs font-semibold text-foreground mb-2">
+                  Entry / Exit Log
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() =>
+                      handleLog("IN")
+                    }
+                    disabled={logging}
+                    className="text-xs bg-green-600 text-white px-5 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+                  >
+                    {logging
+                      ? "Saving..."
+                      : "IN"}
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      handleLog("OUT")
+                    }
+                    disabled={logging}
+                    className="text-xs bg-blue-600 text-white px-5 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+                  >
+                    {logging
+                      ? "Saving..."
+                      : "OUT"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RECENT SCANS */}
+      <Card
+        title="Recent Scan Logs"
+        action={
+          <button
+            onClick={loadRecentLogs}
+            disabled={loadingLogs}
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+          >
+            <RefreshCw size={12} />
+            Refresh
+          </button>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#fafbfc]">
+                {[
+                  "Date and Time",
+                  "QR ID",
+                  "Item",
+                  "Owner",
+                  "Gate",
+                  "Direction",
+                  "Result",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="text-left py-2 px-3 text-xs text-muted-foreground font-medium whitespace-nowrap"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {loadingLogs ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="text-center py-6 text-sm text-muted-foreground"
+                  >
+                    Loading recent scans...
+                  </td>
+                </tr>
+              ) : recentLogs.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="text-center py-6 text-sm text-muted-foreground"
+                  >
+                    No scan records yet.
+                  </td>
+                </tr>
+              ) : (
+                recentLogs.map((log) => (
+                  <tr
+                    key={log.id}
+                    className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
+                  >
+                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(
+                        log.scanned_at
+                      ).toLocaleString(
+                        "en-PH",
+                        {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs font-mono text-primary whitespace-nowrap">
+                      {log.qr_code}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-sm font-medium whitespace-nowrap">
+                      {log.item?.item_name ??
+                        "Unknown"}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {log.item?.user?.name ??
+                        "Unknown"}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {log.gate}
+                    </td>
+
+                    <td className="py-2.5 px-3">
+                      <span
+                        className={`text-xs font-bold ${
+                          log.direction === "IN"
+                            ? "text-green-600"
+                            : "text-blue-600"
+                        }`}
+                      >
+                        {log.direction}
+                      </span>
+                    </td>
+
+                    <td className="py-2.5 px-3">
+                      <StatusBadge
+                        status={log.result}
+                      />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function SecurityEntryExitLog() {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [incidents, setIncidents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [selectedIncident, setSelectedIncident] =
+    useState<any | null>(null);
+
+  const [resolvingIncident, setResolvingIncident] =
+    useState<any | null>(null);
+
+  const [resolutionType, setResolutionType] =
+    useState("");
+
+  const [resolutionDetails, setResolutionDetails] =
+    useState("");
+
+  const [resolutionError, setResolutionError] =
+    useState("");
+
+  const [savingResolution, setSavingResolution] =
+    useState(false);
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD DATA
+  |--------------------------------------------------------------------------
+  */
+
+  async function loadData() {
+    setLoading(true);
+
+    try {
+      const logsData = await getScanLogs();
+      setLogs(logsData.logs ?? []);
+    } catch (error) {
+      console.error(
+        "Failed to load scan logs:",
+        error
+      );
+
+      setLogs([]);
+    }
+
+    try {
+      const incidentsData =
+        await getSecurityIncidents();
+
+      setIncidents(
+        incidentsData.incidents ?? []
+      );
+    } catch (error) {
+      console.error(
+        "Failed to load security incidents:",
+        error
+      );
+
+      setIncidents([]);
+    }
+
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  /*
+  |--------------------------------------------------------------------------
+  | RESOLVE INCIDENT
+  |--------------------------------------------------------------------------
+  */
+
+  const resolutionTypeOptions = [
+    "Ownership Verified",
+    "Returned to Owner",
+    "Authorized by Owner",
+    "Item Held by Security",
+    "Registration Required",
+    "Invalid QR / Manual Verification",
+    "Other",
+  ];
+
+  function suggestedResolutionNote(
+    type: string
+  ) {
+    switch (type) {
+      case "Ownership Verified":
+        return "Owner presented a valid University ID and proof of ownership. CSU verified the information and cleared the item.";
+
+      case "Returned to Owner":
+        return "The item was returned to the registered owner after CSU verified the owner's identity and ownership.";
+
+      case "Authorized by Owner":
+        return "The registered owner confirmed that the person carrying the item had permission. CSU verified the identities before clearing the item.";
+
+      case "Item Held by Security":
+        return "Ownership could not be verified. The item was held by Security and the person was advised to coordinate with the appropriate university office.";
+
+      case "Registration Required":
+        return "The item was not properly registered. CSU advised the owner to complete item registration and secure an approved QR permit before the item can pass through the gate.";
+
+      case "Invalid QR / Manual Verification":
+        return "The QR code was invalid or could not be verified. CSU performed manual verification and confirmed the item information before resolving the incident.";
+
+      default:
+        return "";
+    }
+  }
+
+  function openResolveIncident(
+    incident: any
+  ) {
+    setResolutionType("");
+    setResolutionDetails("");
+    setResolutionError("");
+    setResolvingIncident(incident);
+  }
+
+  async function handleResolveIncident(
+    event: React.FormEvent
+  ) {
+    event.preventDefault();
+
+    if (!resolvingIncident) {
+      return;
+    }
+
+    const type =
+      resolutionType.trim();
+
+    const details =
+      resolutionDetails.trim();
+
+    if (!type) {
+      setResolutionError(
+        "Please select a resolution type."
+      );
+      return;
+    }
+
+    if (!details) {
+      setResolutionError(
+        "Please explain how this security incident was resolved."
+      );
+      return;
+    }
+
+    try {
+      setSavingResolution(true);
+      setResolutionError("");
+
+      await resolveSecurityIncident(
+        resolvingIncident.id,
+        type,
+        details
+      );
+
+      setResolvingIncident(null);
+      setSelectedIncident(null);
+      setResolutionType("");
+      setResolutionDetails("");
+
+      await loadData();
+
+      alert(
+        "Security incident resolved successfully."
+      );
+    } catch (error) {
+      console.error(
+        "Failed to resolve incident:",
+        error
+      );
+
+      setResolutionError(
+        error instanceof Error
+          ? error.message
+          : "Failed to resolve security incident."
+      );
+    } finally {
+      setSavingResolution(false);
+    }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | DATE HELPERS
+  |--------------------------------------------------------------------------
+  */
+
+  function isToday(dateString: string) {
+    if (!dateString) {
+      return false;
+    }
+
+    const date = new Date(dateString);
+    const today = new Date();
+
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    );
+  }
+
+  function formatDate(
+    dateString?: string | null
+  ) {
+    if (!dateString) {
+      return "—";
+    }
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return dateString;
+    }
+
+    return date.toLocaleDateString(
+      "en-PH",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }
+    );
+  }
+
+  function formatTime(
+    dateString?: string | null
+  ) {
+    if (!dateString) {
+      return "—";
+    }
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleTimeString(
+      "en-PH",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | SUMMARY COUNTS
+  |--------------------------------------------------------------------------
+  */
+
+  const todayLogs = logs.filter((log) =>
+    isToday(log.scanned_at)
+  );
+
+  const todayIncidents = incidents.filter(
+    (incident) =>
+      isToday(incident.reported_at)
+  );
+
+  const verifiedCount = todayLogs.filter(
+    (log) =>
+      String(log.result ?? "").toLowerCase() ===
+      "verified"
+  ).length;
+
+  const flaggedCount = todayIncidents.filter(
+    (incident) =>
+      String(
+        incident.status ?? ""
+      ).toLowerCase() === "flagged"
+  ).length;
+
+  const uniqueStudents = new Set(
+    todayLogs
+      .map(
+        (log) =>
+          log.item?.user?.id ??
+          log.item?.user?.username ??
+          null
+      )
+      .filter(Boolean)
+  ).size;
+
+  const scannedToday = todayLogs.length;
+
+  /*
+  |--------------------------------------------------------------------------
+  | EXPORT CSV
+  |--------------------------------------------------------------------------
+  */
+
+  function exportCSV() {
+    if (
+      logs.length === 0 &&
+      incidents.length === 0
+    ) {
+      alert(
+        "There are no entry / exit records to export."
+      );
+
+      return;
+    }
+
+    const headers = [
+      "Record Type",
+      "Date",
+      "Time",
+      "Owner",
+      "Owner ID",
+      "Person Carrying Item",
+      "Carrier ID",
+      "Item",
+      "Serial Number",
+      "QR / Scanned Code",
+      "Gate",
+      "Direction",
+      "Result / Status",
+      "Incident Type",
+      "Scanned / Reported By",
+    ];
+
+    const scanRows = logs.map((log) => [
+      "Entry/Exit Scan",
+      formatDate(log.scanned_at),
+      formatTime(log.scanned_at),
+      log.item?.user?.name ?? "",
+      log.item?.user?.username ?? "",
+      log.item?.user?.name ?? "",
+      log.item?.user?.username ?? "",
+      log.item?.item_name ?? "",
+      log.item?.serial_number ?? "",
+      log.qr_code ?? "",
+      log.gate ?? "",
+      log.direction ?? "",
+      log.result ?? "Verified",
+      "",
+      log.scanner?.name ?? "",
+    ]);
+
+    const incidentRows = incidents.map(
+      (incident) => [
+        "Security Incident",
+        formatDate(incident.reported_at),
+        formatTime(incident.reported_at),
+
+        incident.owner_name ??
+          incident.item?.user?.name ??
+          "",
+
+        incident.owner_id_number ??
+          incident.item?.user?.username ??
+          "",
+
+        incident.carrier_name ?? "",
+        incident.carrier_id_number ?? "",
+
+        incident.item?.item_name ??
+          incident.item_name ??
+          "Unknown Item",
+
+        incident.item?.serial_number ??
+          incident.serial_number ??
+          "",
+
+        incident.scanned_code ?? "",
+        incident.gate ?? "",
+        incident.direction ?? "",
+
+        String(
+          incident.status ?? "Flagged"
+        ),
+
+        incident.incident_type ??
+          "Security Incident",
+
+        incident.reporter?.name ??
+          "Security Personnel",
+      ]
+    );
+
+    const rows = [
+      ...scanRows,
+      ...incidentRows,
+    ];
+
+    const csvContent = [
+      headers,
+      ...rows,
+    ]
+      .map((row) =>
+        row
+          .map((value) => {
+            const cell =
+              String(value ?? "").replace(
+                /"/g,
+                '""'
+              );
+
+            return `"${cell}"`;
+          })
+          .join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob(
+      [csvContent],
+      {
+        type: "text/csv;charset=utf-8;",
+      }
+    );
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+      `qrpass-entry-exit-${new Date()
+        .toISOString()
+        .slice(0, 10)}.csv`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* HEADER */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Entry / Exit Log
+          </h1>
+
+          <p className="text-sm text-gray-500 mt-1">
+            Monitor verified item scans and security
+            incidents.
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={loadData}
+            disabled={loading}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+          >
+            {loading
+              ? "Refreshing..."
+              : "Refresh"}
+          </button>
+
+          <button
+            onClick={exportCSV}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700"
+          >
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      {/* SUMMARY */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Scanned Today
+          </p>
+
+          <p className="text-3xl font-bold text-gray-900 mt-2">
+            {scannedToday}
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Verified
+          </p>
+
+          <p className="text-3xl font-bold text-green-600 mt-2">
+            {verifiedCount}
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Flagged
+          </p>
+
+          <p className="text-3xl font-bold text-red-600 mt-2">
+            {flaggedCount}
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <p className="text-sm text-gray-500">
+            Unique Students
+          </p>
+
+          <p className="text-3xl font-bold text-blue-600 mt-2">
+            {uniqueStudents}
+          </p>
+        </div>
+      </div>
+
+      {/* SUCCESSFUL ENTRY / EXIT */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-bold text-gray-900">
+            Entry / Exit Records
+          </h2>
+
+          <p className="text-sm text-gray-500 mt-1">
+            Successful QR verification records.
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1050px]">
+            <thead className="bg-gray-50">
+              <tr>
+                {[
+                  "Date",
+                  "Time",
+                  "Owner",
+                  "Item",
+                  "QR Code",
+                  "Gate",
+                  "Direction",
+                  "Result",
+                  "Scanned By",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="py-3 px-3 text-left text-xs font-semibold text-gray-600"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="py-10 text-center text-gray-500"
+                  >
+                    Loading entry / exit records...
+                  </td>
+                </tr>
+              ) : logs.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="py-10 text-center text-gray-500"
+                  >
+                    No entry / exit records found.
+                  </td>
+                </tr>
+              ) : (
+                logs.map((log) => (
+                  <tr
+                    key={log.id}
+                    className="hover:bg-gray-50"
+                  >
+                    <td className="py-3 px-3 text-sm text-gray-700 whitespace-nowrap">
+                      {formatDate(
+                        log.scanned_at
+                      )}
+                    </td>
+
+                    <td className="py-3 px-3 text-sm text-gray-700 whitespace-nowrap">
+                      {formatTime(
+                        log.scanned_at
+                      )}
+                    </td>
+
+                    <td className="py-3 px-3">
+                      <div className="text-sm font-semibold text-gray-900">
+                        {log.item?.user?.name ??
+                          "Unknown"}
+                      </div>
+
+                      <div className="text-xs text-gray-500">
+                        {log.item?.user?.username ??
+                          ""}
+                      </div>
+                    </td>
+
+                    <td className="py-3 px-3">
+                      <div className="text-sm font-semibold text-gray-900">
+                        {log.item?.item_name ??
+                          "Unknown Item"}
+                      </div>
+
+                      <div className="text-xs text-gray-500">
+                        {log.item?.serial_number ??
+                          ""}
+                      </div>
+                    </td>
+
+                    <td className="py-3 px-3 text-sm font-mono text-gray-700">
+                      {log.qr_code ??
+                        "—"}
+                    </td>
+
+                    <td className="py-3 px-3 text-sm text-gray-700">
+                      {log.gate ??
+                        "—"}
+                    </td>
+
+                    <td className="py-3 px-3">
+                      <span
+                        className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          log.direction ===
+                          "IN"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-purple-100 text-purple-700"
+                        }`}
+                      >
+                        {log.direction ??
+                          "—"}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-3">
+                      <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        {log.result ??
+                          "Verified"}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-3 text-sm text-gray-700">
+                      {log.scanner?.name ??
+                        "—"}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* FLAGGED ITEMS */}
+      <div className="bg-white border border-red-200 rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-red-100 bg-red-50">
+          <h2 className="text-lg font-bold text-red-700">
+            Flagged / Unregistered Items
+          </h2>
+
+          <p className="text-sm text-red-600 mt-1">
+            Failed QR verification attempts that require
+            security attention.
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1450px]">
+            <thead className="bg-gray-50">
+              <tr>
+                {[
+                  "Date / Time",
+                  "Code",
+                  "Item",
+                  "Owner",
+                  "Person Carrying",
+                  "Direction",
+                  "Gate",
+                  "Reported By",
+                  "Status",
+                  "Action",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="py-3 px-3 text-left text-xs font-semibold text-gray-600"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={10}
+                    className="py-10 text-center text-gray-500"
+                  >
+                    Loading security incidents...
+                  </td>
+                </tr>
+              ) : incidents.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={10}
+                    className="py-10 text-center text-gray-500"
+                  >
+                    No security incidents found.
+                  </td>
+                </tr>
+              ) : (
+                incidents.map((incident) => {
+                  const ownerName =
+                    incident.owner_name ??
+                    incident.item?.user?.name ??
+                    "Unknown Owner";
+
+                  const ownerId =
+                    incident.owner_id_number ??
+                    incident.item?.user?.username ??
+                    "—";
+
+                  const carrierName =
+                    incident.carrier_name ??
+                    "Unknown";
+
+                  const carrierId =
+                    incident.carrier_id_number ??
+                    "—";
+
+                  const itemName =
+                    incident.item?.item_name ??
+                    incident.item_name ??
+                    "Unknown Item";
+
+                  const serialNumber =
+                    incident.item?.serial_number ??
+                    incident.serial_number ??
+                    "—";
+
+                  const resolved =
+                    String(
+                      incident.status ?? ""
+                    ).toLowerCase() ===
+                    "resolved";
+
+                  return (
+                    <tr
+                      key={incident.id}
+                      className="hover:bg-red-50/40"
+                    >
+                      {/* DATE/TIME */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <div className="text-sm text-gray-800">
+                          {formatDate(
+                            incident.reported_at
+                          )}
+                        </div>
+
+                        <div className="text-xs text-gray-500">
+                          {formatTime(
+                            incident.reported_at
+                          )}
+                        </div>
+                      </td>
+
+                      {/* CODE */}
+                      <td className="py-3 px-3">
+                        <span className="text-xs font-mono text-gray-700">
+                          {incident.scanned_code ??
+                            "—"}
+                        </span>
+
+                        <div className="text-xs font-semibold text-red-600 mt-1">
+                          {incident.incident_type ??
+                            "Security Incident"}
+                        </div>
+                      </td>
+
+                      {/* ITEM */}
+                      <td className="py-3 px-3">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {itemName}
+                        </div>
+
+                        <div className="text-xs text-gray-500">
+                          Serial:{" "}
+                          {serialNumber}
+                        </div>
+                      </td>
+
+                      {/* OWNER */}
+                      <td className="py-3 px-3">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {ownerName}
+                        </div>
+
+                        <div className="text-xs text-gray-500">
+                          ID:{" "}
+                          {ownerId}
+                        </div>
+                      </td>
+
+                      {/* CARRIER */}
+                      <td className="py-3 px-3">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {carrierName}
+                        </div>
+
+                        <div className="text-xs text-gray-500">
+                          ID:{" "}
+                          {carrierId}
+                        </div>
+                      </td>
+
+                      {/* DIRECTION */}
+                      <td className="py-3 px-3">
+                        {incident.direction ? (
+                          <span
+                            className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
+                              incident.direction ===
+                              "IN"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-purple-100 text-purple-700"
+                            }`}
+                          >
+                            {incident.direction}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">
+                            —
+                          </span>
+                        )}
+                      </td>
+
+                      {/* GATE */}
+                      <td className="py-3 px-3 text-sm text-gray-700 whitespace-nowrap">
+                        {incident.gate ??
+                          "—"}
+                      </td>
+
+                      {/* REPORTED BY */}
+                      <td className="py-3 px-3 text-sm text-gray-700">
+                        {incident.reporter?.name ??
+                          "Security Personnel"}
+                      </td>
+
+                      {/* STATUS */}
+                      <td className="py-3 px-3">
+                        {resolved ? (
+                          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                            Resolved
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                            Flagged
+                          </span>
+                        )}
+                      </td>
+
+                      {/* ACTIONS */}
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedIncident(
+                                incident
+                              )
+                            }
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-blue-200 text-blue-700 bg-blue-50 rounded-md text-xs font-semibold hover:bg-blue-100"
+                          >
+                            <Eye size={13} />
+                            View
+                          </button>
+
+                          {!resolved && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openResolveIncident(
+                                  incident
+                                )
+                              }
+                              className="px-3 py-1.5 bg-green-600 text-white rounded-md text-xs font-semibold hover:bg-green-700"
+                            >
+                              Resolve
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* INCIDENT DETAILS MODAL */}
+      {selectedIncident && (
+        <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+            {/* MODAL HEADER */}
+            <div className="px-5 py-4 bg-red-50 border-b border-red-200 flex items-start justify-between gap-4">
+              <div className="flex gap-3">
+                <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle
+                    size={20}
+                    className="text-red-600"
+                  />
+                </div>
+
+                <div>
+                  <h2 className="text-lg font-bold text-red-700">
+                    Security Incident Details
+                  </h2>
+
+                  <p className="text-xs text-red-600 mt-0.5">
+                    {selectedIncident.incident_type ??
+                      "Flagged Item"}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedIncident(
+                    null
+                  )
+                }
+                className="h-8 w-8 rounded-md flex items-center justify-center text-gray-500 hover:bg-red-100 hover:text-red-700"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* MODAL BODY */}
+            <div className="p-5 space-y-5">
+              {/* ITEM */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
+                  Item Information
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Item Name
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {selectedIncident.item?.item_name ??
+                        selectedIncident.item_name ??
+                        "Unknown Item"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Serial Number
+                    </p>
+
+                    <p className="text-sm font-mono font-semibold mt-1">
+                      {selectedIncident.item?.serial_number ??
+                        selectedIncident.serial_number ??
+                        "—"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3 md:col-span-2">
+                    <p className="text-xs text-gray-500">
+                      Scanned Code
+                    </p>
+
+                    <p className="text-sm font-mono font-semibold mt-1 text-red-700">
+                      {selectedIncident.scanned_code ??
+                        "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* OWNER */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
+                  Registered / Claimed Owner
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Owner Name
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {selectedIncident.owner_name ??
+                        selectedIncident.item?.user?.name ??
+                        "Unknown Owner"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Owner ID Number
+                    </p>
+
+                    <p className="text-sm font-mono font-semibold mt-1">
+                      {selectedIncident.owner_id_number ??
+                        selectedIncident.item?.user?.username ??
+                        "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* CARRIER */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
+                  Person Carrying Item
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Name
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {selectedIncident.carrier_name ??
+                        "Unknown"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Student / Employee ID
+                    </p>
+
+                    <p className="text-sm font-mono font-semibold mt-1">
+                      {selectedIncident.carrier_id_number ??
+                        "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* INCIDENT */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
+                  Incident Information
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Direction
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {selectedIncident.direction ??
+                        "—"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Gate
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {selectedIncident.gate ??
+                        "—"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Reported By
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {selectedIncident.reporter?.name ??
+                        "Security Personnel"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-xs text-gray-500">
+                      Date & Time
+                    </p>
+
+                    <p className="text-sm font-semibold mt-1">
+                      {formatDate(
+                        selectedIncident.reported_at
+                      )}{" "}
+                      {formatTime(
+                        selectedIncident.reported_at
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* DESCRIPTION */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
+                  Description
+                </h3>
+
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+                  {selectedIncident.description ||
+                    "No additional description provided."}
+                </div>
+              </div>
+
+              {String(
+                selectedIncident.status ?? ""
+              ).toLowerCase() === "resolved" && (
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-green-700 mb-2">
+                    Resolution Information
+                  </h3>
+
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="rounded-md border border-green-200 bg-white/70 p-3">
+                        <p className="text-xs text-gray-500">
+                          Resolution Type
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-green-900">
+                          {selectedIncident.resolution_type ||
+                            "Not recorded"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-md border border-green-200 bg-white/70 p-3">
+                        <p className="text-xs text-gray-500">
+                          Resolution Status
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-green-900">
+                          Resolved
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <p className="text-xs font-semibold text-green-700">
+                        How the incident was resolved
+                      </p>
+
+                      <p className="mt-1 whitespace-pre-wrap text-sm text-green-900">
+                        {selectedIncident.resolution_details ||
+                          "No resolution details were recorded for this older incident."}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 grid md:grid-cols-2 gap-3">
+                      <div className="rounded-md border border-green-200 bg-white/70 p-3">
+                        <p className="text-xs text-gray-500">
+                          Resolved By
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-gray-800">
+                          {selectedIncident.resolver?.name ??
+                            "Security Personnel"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-md border border-green-200 bg-white/70 p-3">
+                        <p className="text-xs text-gray-500">
+                          Date & Time Resolved
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-gray-800">
+                          {selectedIncident.resolved_at ? (
+                            <>
+                              {formatDate(
+                                selectedIncident.resolved_at
+                              )}{" "}
+                              {formatTime(
+                                selectedIncident.resolved_at
+                              )}
+                            </>
+                          ) : (
+                            "Not recorded"
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* MODAL FOOTER */}
+            <div className="px-5 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
+              <div>
+                {String(
+                  selectedIncident.status ?? ""
+                ).toLowerCase() ===
+                "resolved" ? (
+                  <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                    Resolved
+                  </span>
+                ) : (
+                  <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                    Flagged
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedIncident(
+                      null
+                    )
+                  }
+                  className="px-4 py-2 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                >
+                  Close
+                </button>
+
+                {String(
+                  selectedIncident.status ?? ""
+                ).toLowerCase() ===
+                  "flagged" && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openResolveIncident(
+                        selectedIncident
+                      )
+                    }
+                    className="px-4 py-2 bg-green-600 text-white rounded-md text-xs font-semibold hover:bg-green-700"
+                  >
+                    Resolve Incident
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RESOLVE INCIDENT MODAL */}
+      {resolvingIncident && (
+        <div
+          className="fixed inset-0 z-[10000] bg-black/55 flex items-center justify-center p-4"
+          onClick={() => {
+            if (!savingResolution) {
+              setResolvingIncident(null);
+              setResolutionType("");
+              setResolutionError("");
+              setResolutionDetails("");
+            }
+          }}
+        >
+          <form
+            onSubmit={handleResolveIncident}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+            className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-green-200 bg-green-50 px-5 py-4">
+              <div className="flex gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100">
+                  <CheckCircle
+                    size={20}
+                    className="text-green-700"
+                  />
+                </div>
+
+                <div>
+                  <h2 className="text-lg font-bold text-green-800">
+                    Resolve Security Incident
+                  </h2>
+
+                  <p className="mt-0.5 text-xs text-green-700">
+                    Record how this flagged item was resolved before closing the incident.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={savingResolution}
+                onClick={() => {
+                  setResolvingIncident(null);
+                  setResolutionError("");
+                  setResolutionDetails("");
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-green-100 disabled:opacity-50"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4 p-5">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <p className="text-xs text-gray-500">
+                    Item
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold">
+                    {resolvingIncident.item?.item_name ??
+                      resolvingIncident.item_name ??
+                      "Unknown Item"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <p className="text-xs text-gray-500">
+                    Code
+                  </p>
+
+                  <p className="mt-1 font-mono text-sm font-semibold">
+                    {resolvingIncident.scanned_code ??
+                      "—"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <p className="text-xs text-gray-500">
+                    Owner
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold">
+                    {resolvingIncident.owner_name ??
+                      resolvingIncident.item?.user?.name ??
+                      "Unknown Owner"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <p className="text-xs text-gray-500">
+                    Person Carrying
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold">
+                    {resolvingIncident.carrier_name ??
+                      "Unknown"}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-foreground">
+                  Resolution Type *
+                </label>
+
+                <select
+                  value={resolutionType}
+                  onChange={(event) => {
+                    const nextType =
+                      event.target.value;
+
+                    setResolutionType(
+                      nextType
+                    );
+
+                    setResolutionDetails(
+                      suggestedResolutionNote(
+                        nextType
+                      )
+                    );
+
+                    if (resolutionError) {
+                      setResolutionError("");
+                    }
+                  }}
+                  className={`w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 ${
+                    resolutionError &&
+                    !resolutionType
+                      ? "border-red-300 focus:ring-red-200"
+                      : "border-[#cfd8e6] focus:ring-primary/20"
+                  }`}
+                >
+                  <option value="">
+                    Select resolution type
+                  </option>
+
+                  {resolutionTypeOptions.map(
+                    (option) => (
+                      <option
+                        key={option}
+                        value={option}
+                      >
+                        {option}
+                      </option>
+                    )
+                  )}
+                </select>
+
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Selecting a type will suggest a resolution note that CSU can still edit.
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-foreground">
+                  Additional Resolution Details *
+                </label>
+
+                <textarea
+                  value={resolutionDetails}
+                  onChange={(event) => {
+                    setResolutionDetails(
+                      event.target.value
+                    );
+
+                    if (resolutionError) {
+                      setResolutionError("");
+                    }
+                  }}
+                  rows={5}
+                  maxLength={2000}
+                  placeholder="Explain what CSU verified, what action was taken, and why the incident can now be closed."
+                  className={`w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 ${
+                    resolutionError
+                      ? "border-red-300 focus:ring-red-200"
+                      : "border-[#cfd8e6] focus:ring-primary/20"
+                  }`}
+                  autoFocus
+                />
+
+                <div className="mt-1 flex items-center justify-between gap-3">
+                  <p className="text-[11px] text-muted-foreground">
+                    This note will be stored permanently with the incident.
+                  </p>
+
+                  <p className="text-[11px] text-muted-foreground">
+                    {resolutionDetails.length}/2000
+                  </p>
+                </div>
+              </div>
+
+              {resolutionError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle
+                      size={16}
+                      className="mt-0.5 shrink-0 text-red-600"
+                    />
+
+                    <p className="text-xs font-medium text-red-700">
+                      {resolutionError}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-gray-200 bg-gray-50 px-5 py-4">
+              <button
+                type="button"
+                disabled={savingResolution}
+                onClick={() => {
+                  setResolvingIncident(null);
+                  setResolutionError("");
+                  setResolutionDetails("");
+                }}
+                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={savingResolution}
+                className="inline-flex items-center gap-1.5 rounded-md bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                <CheckCircle size={14} />
+
+                {savingResolution
+                  ? "Saving..."
+                  : "Confirm Resolution"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SecurityReports() {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [incidents, setIncidents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // =========================================================
+  // LOAD REAL SECURITY REPORT DATA
+  // =========================================================
+
+  async function loadSecurityReports() {
+    try {
+      setLoading(true);
+      setError("");
+  
+      const response =
+        await getSecurityReports();
+  
+      setLogs(
+        Array.isArray(response?.logs)
+          ? response.logs
+          : []
+      );
+  
+      setIncidents(
+        Array.isArray(response?.incidents)
+          ? response.incidents
+          : []
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load security report data:",
+        err
+      );
+  
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load security reports."
+      );
+  
+      setLogs([]);
+      setIncidents([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadSecurityReports();
+  }, []);
+
+  // =========================================================
+  // DATE HELPERS
+  // =========================================================
+
+  function parseDate(
+    dateString?: string | null
+  ) {
+    if (!dateString) {
+      return null;
+    }
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+
+    return date;
+  }
+
+  function isCurrentMonth(
+    dateString?: string | null
+  ) {
+    const date = parseDate(dateString);
+
+    if (!date) {
+      return false;
+    }
+
+    const now = new Date();
+
+    return (
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth()
+    );
+  }
+
+  function isToday(
+    dateString?: string | null
+  ) {
+    const date = parseDate(dateString);
+
+    if (!date) {
+      return false;
+    }
+
+    const today = new Date();
+
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    );
+  }
+
+  function getCurrentWeekRange() {
+    const now = new Date();
+    const day = now.getDay();
+
+    // Monday is the first day of the reporting week.
+    const differenceToMonday =
+      day === 0 ? -6 : 1 - day;
+
+    const start = new Date(now);
+
+    start.setDate(
+      now.getDate() + differenceToMonday
+    );
+
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(start);
+
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+
+    return {
+      start,
+      end,
+    };
+  }
+
+  function isCurrentWeek(
+    dateString?: string | null
+  ) {
+    const date = parseDate(dateString);
+
+    if (!date) {
+      return false;
+    }
+
+    const { start, end } =
+      getCurrentWeekRange();
+
+    return date >= start && date <= end;
+  }
+
+  function formatDate(
+    dateString?: string | null
+  ) {
+    const date = parseDate(dateString);
+
+    if (!date) {
+      return "—";
+    }
+
+    return date.toLocaleDateString(
+      "en-PH"
+    );
+  }
+
+  function formatTime(
+    dateString?: string | null
+  ) {
+    const date = parseDate(dateString);
+
+    if (!date) {
+      return "—";
+    }
+
+    return date.toLocaleTimeString(
+      "en-PH",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  const currentMonth =
+    new Date().toLocaleDateString(
+      "en-US",
+      {
+        month: "long",
+        year: "numeric",
+      }
+    );
+
+  const {
+    start: weekStart,
+    end: weekEnd,
+  } = getCurrentWeekRange();
+
+  const currentWeekLabel =
+    `${weekStart.toLocaleDateString(
+      "en-PH",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }
+    )} - ${weekEnd.toLocaleDateString(
+      "en-PH",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }
+    )}`;
+
+  // =========================================================
+  // REAL STATISTICS
+  // =========================================================
+
+  const inspectionsDone = logs.filter(
+    (log) =>
+      String(
+        log.result ?? ""
+      ).toLowerCase() === "verified"
+  ).length;
+
+  const qrScansThisMonth =
+    logs.filter((log) =>
+      isCurrentMonth(log.scanned_at)
+    ).length;
+
+  const flaggedItems =
+    incidents.filter(
+      (incident) =>
+        String(
+          incident.status ?? ""
+        ).toLowerCase() === "flagged"
+    ).length;
+
+  const incidentsResolved =
+    incidents.filter(
+      (incident) =>
+        String(
+          incident.status ?? ""
+        ).toLowerCase() === "resolved"
+    ).length;
+
+  // =========================================================
+  // DAILY QR SCAN SUMMARY PDF
+  // =========================================================
+
+  function downloadDailyQrScanPDF() {
+    try {
+      const todayLogs =
+        logs.filter((log) =>
+          isToday(log.scanned_at)
+        );
+
+      if (todayLogs.length === 0) {
+        alert(
+          "There are no QR scan records for today."
+        );
+        return;
+      }
+
+      const verifiedCount =
+        todayLogs.filter(
+          (log) =>
+            String(
+              log.result ?? ""
+            ).toLowerCase() ===
+            "verified"
+        ).length;
+
+      const entryCount =
+        todayLogs.filter(
+          (log) =>
+            String(
+              log.direction ?? ""
+            ).toUpperCase() ===
+            "IN"
+        ).length;
+
+      const exitCount =
+        todayLogs.filter(
+          (log) =>
+            String(
+              log.direction ?? ""
+            ).toUpperCase() ===
+            "OUT"
+        ).length;
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+      });
+
+      doc.setFontSize(18);
+      doc.text(
+        "QRPass Daily QR Scan Summary",
+        14,
+        18
+      );
+
+      doc.setFontSize(10);
+      doc.text(
+        "University of Cebu - Main Campus",
+        14,
+        25
+      );
+
+      doc.text(
+        `Report Date: ${new Date().toLocaleDateString(
+          "en-PH"
+        )}`,
+        14,
+        31
+      );
+
+      doc.text(
+        `Total QR Scans: ${todayLogs.length}`,
+        14,
+        38
+      );
+
+      doc.text(
+        `Verified Scans: ${verifiedCount}`,
+        14,
+        44
+      );
+
+      doc.text(
+        `Entry Scans: ${entryCount}`,
+        75,
+        38
+      );
+
+      doc.text(
+        `Exit Scans: ${exitCount}`,
+        75,
+        44
+      );
+
+      const rows =
+        todayLogs.map((log) => [
+          formatDate(log.scanned_at),
+          formatTime(log.scanned_at),
+          log.item?.user?.name ??
+            "Unknown",
+          log.item?.user?.username ??
+            "—",
+          log.item?.item_name ??
+            "Unknown Item",
+          log.item?.serial_number ??
+            "—",
+          log.qr_code ?? "—",
+          log.gate ?? "—",
+          log.direction ?? "—",
+          log.result ?? "—",
+          log.scanner?.name ?? "—",
+        ]);
+
+      autoTable(doc, {
+        startY: 51,
+
+        head: [
+          [
+            "Date",
+            "Time",
+            "Owner",
+            "Owner ID",
+            "Item",
+            "Serial No.",
+            "QR ID",
+            "Gate",
+            "Direction",
+            "Result",
+            "Scanned By",
+          ],
+        ],
+
+        body: rows,
+
+        styles: {
+          fontSize: 7,
+          cellPadding: 2,
+        },
+
+        headStyles: {
+          fillColor: [26, 58, 123],
+          textColor: [255, 255, 255],
+        },
+
+        alternateRowStyles: {
+          fillColor: [245, 247, 250],
+        },
+      });
+
+      const fileDate =
+        new Date()
+          .toISOString()
+          .slice(0, 10);
+
+      doc.save(
+        `QRPass-Daily-QR-Scan-${fileDate}.pdf`
+      );
+    } catch (err) {
+      console.error(
+        "Failed to generate Daily QR Scan Summary:",
+        err
+      );
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to generate Daily QR Scan Summary."
+      );
+    }
+  }
+
+  // =========================================================
+  // WEEKLY INSPECTION LOG PDF
+  // =========================================================
+
+  function downloadWeeklyInspectionPDF() {
+    try {
+      const weeklyLogs =
+        logs.filter((log) =>
+          isCurrentWeek(log.scanned_at)
+        );
+
+      if (weeklyLogs.length === 0) {
+        alert(
+          "There are no inspection records for the current week."
+        );
+        return;
+      }
+
+      const verifiedCount =
+        weeklyLogs.filter(
+          (log) =>
+            String(
+              log.result ?? ""
+            ).toLowerCase() ===
+            "verified"
+        ).length;
+
+      const entryCount =
+        weeklyLogs.filter(
+          (log) =>
+            String(
+              log.direction ?? ""
+            ).toUpperCase() ===
+            "IN"
+        ).length;
+
+      const exitCount =
+        weeklyLogs.filter(
+          (log) =>
+            String(
+              log.direction ?? ""
+            ).toUpperCase() ===
+            "OUT"
+        ).length;
+
+      const uniqueItems =
+        new Set(
+          weeklyLogs
+            .map(
+              (log) =>
+                log.item?.id ??
+                log.qr_code ??
+                null
+            )
+            .filter(Boolean)
+        ).size;
+
+      const uniqueOwners =
+        new Set(
+          weeklyLogs
+            .map(
+              (log) =>
+                log.item?.user?.id ??
+                log.item?.user?.username ??
+                null
+            )
+            .filter(Boolean)
+        ).size;
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+      });
+
+      doc.setFontSize(18);
+      doc.text(
+        "QRPass Weekly Inspection Log",
+        14,
+        18
+      );
+
+      doc.setFontSize(10);
+      doc.text(
+        "University of Cebu - Main Campus",
+        14,
+        25
+      );
+
+      doc.text(
+        `Reporting Period: ${currentWeekLabel}`,
+        14,
+        31
+      );
+
+      doc.text(
+        `Total Inspections / Scans: ${weeklyLogs.length}`,
+        14,
+        38
+      );
+
+      doc.text(
+        `Verified: ${verifiedCount}`,
+        14,
+        44
+      );
+
+      doc.text(
+        `Unique Items: ${uniqueItems}`,
+        75,
+        38
+      );
+
+      doc.text(
+        `Unique Owners: ${uniqueOwners}`,
+        75,
+        44
+      );
+
+      doc.text(
+        `Entries: ${entryCount}`,
+        130,
+        38
+      );
+
+      doc.text(
+        `Exits: ${exitCount}`,
+        130,
+        44
+      );
+
+      const rows =
+        weeklyLogs.map((log) => [
+          formatDate(log.scanned_at),
+          formatTime(log.scanned_at),
+          log.item?.user?.name ??
+            "Unknown",
+          log.item?.user?.username ??
+            "—",
+          log.item?.item_name ??
+            "Unknown Item",
+          log.item?.item_type ??
+            "—",
+          log.item?.serial_number ??
+            "—",
+          log.qr_code ?? "—",
+          log.gate ?? "—",
+          log.direction ?? "—",
+          log.result ?? "—",
+          log.scanner?.name ?? "—",
+        ]);
+
+      autoTable(doc, {
+        startY: 51,
+
+        head: [
+          [
+            "Date",
+            "Time",
+            "Owner",
+            "Owner ID",
+            "Item",
+            "Type",
+            "Serial No.",
+            "QR ID",
+            "Gate",
+            "Direction",
+            "Result",
+            "Inspected By",
+          ],
+        ],
+
+        body: rows,
+
+        styles: {
+          fontSize: 6.5,
+          cellPadding: 2,
+        },
+
+        headStyles: {
+          fillColor: [26, 58, 123],
+          textColor: [255, 255, 255],
+        },
+
+        alternateRowStyles: {
+          fillColor: [245, 247, 250],
+        },
+      });
+
+      const startDate =
+        weekStart
+          .toISOString()
+          .slice(0, 10);
+
+      const endDate =
+        weekEnd
+          .toISOString()
+          .slice(0, 10);
+
+      doc.save(
+        `QRPass-Weekly-Inspection-${startDate}-to-${endDate}.pdf`
+      );
+    } catch (err) {
+      console.error(
+        "Failed to generate Weekly Inspection Log:",
+        err
+      );
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to generate Weekly Inspection Log."
+      );
+    }
+  }
+
+  // =========================================================
+  // MONTHLY ITEM REGISTRATION SUMMARY PDF
+  // =========================================================
+
+  async function downloadMonthlyRegistrationPDF() {
+    try {
+      const response =
+        await getAllItems();
+
+      const allItems =
+        Array.isArray(
+          response?.items
+        )
+          ? response.items
+          : [];
+
+      const now = new Date();
+
+      const monthlyItems =
+        allItems.filter((item: any) => {
+          const created =
+            parseDate(
+              item.created_at
+            );
+
+          if (!created) {
+            return false;
+          }
+
+          return (
+            created.getFullYear() ===
+              now.getFullYear() &&
+            created.getMonth() ===
+              now.getMonth()
+          );
+        });
+
+      if (
+        monthlyItems.length === 0
+      ) {
+        alert(
+          "There are no item registrations for this month."
+        );
+        return;
+      }
+
+      const approvedCount =
+        monthlyItems.filter(
+        (item: any) =>
+            String(
+              item.status ?? ""
+            ).toLowerCase() ===
+            "approved"
+        ).length;
+
+      const pendingCount =
+        monthlyItems.filter(
+          (item: any) =>
+            String(
+              item.status ?? ""
+            ).toLowerCase() ===
+            "pending"
+        ).length;
+
+      const qrIssuedCount =
+        monthlyItems.filter(
+          (item: any) =>
+            String(
+              item.status ?? ""
+            ).toLowerCase() ===
+              "approved" &&
+            Boolean(item.qr_code)
+        ).length;
+
+      const monthName =
+        now.toLocaleDateString(
+          "en-US",
+          {
+            month: "long",
+            year: "numeric",
+          }
+        );
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+      });
+
+      doc.setFontSize(18);
+      doc.text(
+        "QRPass Monthly Item Registration Summary",
+        14,
+        18
+      );
+
+      doc.setFontSize(10);
+      doc.text(
+        "University of Cebu - Main Campus",
+        14,
+        25
+      );
+
+      doc.text(
+        `Reporting Period: ${monthName}`,
+        14,
+        31
+      );
+
+      doc.text(
+        `Total Registrations: ${monthlyItems.length}`,
+        14,
+        38
+      );
+
+      doc.text(
+        `Approved: ${approvedCount}`,
+        14,
+        44
+      );
+
+      doc.text(
+        `Pending: ${pendingCount}`,
+        75,
+        38
+      );
+
+      doc.text(
+        `QR Codes Issued: ${qrIssuedCount}`,
+        75,
+        44
+      );
+
+      const rows =
+        monthlyItems.map(
+          (item: any) => [
+            formatDate(
+              item.created_at
+            ),
+            item.user?.name ??
+              "Unknown",
+            item.user?.username ??
+              "—",
+            item.item_name ??
+              "—",
+            item.item_type ??
+              "—",
+            item.brand_model ??
+              "—",
+            item.serial_number ??
+              "—",
+            item.color ??
+              "—",
+            item.purpose ??
+              "—",
+            item.qr_code ??
+              "Not issued",
+            item.status
+              ? String(
+                  item.status
+                )
+                  .charAt(0)
+                  .toUpperCase() +
+                String(
+                  item.status
+                ).slice(1)
+              : "Unknown",
+          ]
+        );
+
+      autoTable(doc, {
+        startY: 51,
+
+        head: [
+          [
+            "Date",
+            "Owner",
+            "Owner ID",
+            "Item",
+            "Type",
+            "Brand / Model",
+            "Serial No.",
+            "Color",
+            "Purpose",
+            "QR ID",
+            "Status",
+          ],
+        ],
+
+        body: rows,
+
+        styles: {
+          fontSize: 6.5,
+          cellPadding: 2,
+        },
+
+        headStyles: {
+          fillColor: [26, 58, 123],
+          textColor: [255, 255, 255],
+        },
+
+        alternateRowStyles: {
+          fillColor: [245, 247, 250],
+        },
+      });
+
+      const fileMonth =
+        `${now.getFullYear()}-${String(
+          now.getMonth() + 1
+        ).padStart(2, "0")}`;
+
+      doc.save(
+        `QRPass-Monthly-Item-Registration-${fileMonth}.pdf`
+      );
+    } catch (err) {
+      console.error(
+        "Failed to generate Monthly Item Registration Summary:",
+        err
+      );
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to generate Monthly Item Registration Summary."
+      );
+    }
+  }
+
+  // =========================================================
+  // REPORT DOWNLOAD HANDLER
+  // =========================================================
+
+  function handleReportDownload(
+    reportName: string
+  ) {
+    if (
+      reportName ===
+      "Daily QR Scan Summary"
+    ) {
+      downloadDailyQrScanPDF();
+      return;
+    }
+
+    if (
+      reportName ===
+      "Weekly Inspection Log"
+    ) {
+      downloadWeeklyInspectionPDF();
+      return;
+    }
+
+    if (
+      reportName ===
+      "Monthly Item Registration Summary"
+    ) {
+      void downloadMonthlyRegistrationPDF();
+      return;
+    }
+  }
+
+  // =========================================================
+  // REPORT LIST
+  // =========================================================
+
+  const reports = [
+    {
+      name:
+        "Daily QR Scan Summary",
+      period:
+        new Date().toLocaleDateString(
+          "en-PH"
+        ),
+      format: "PDF",
+    },
+
+    {
+      name:
+        "Weekly Inspection Log",
+      period:
+        currentWeekLabel,
+      format: "PDF",
+    },
+  ];
+
+  // =========================================================
+  // UI
+  // =========================================================
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Reports"
+        subtitle="Security inspection and QR verification reports."
+        action={
+          <button
+            type="button"
+            onClick={
+              loadSecurityReports
+            }
+            disabled={loading}
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+          >
+            <RefreshCw
+              size={12}
+            />
+
+            {loading
+              ? "Refreshing..."
+              : "Refresh"}
+          </button>
+        }
+      />
+
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          label="Inspections Done"
+          value={
+            loading
+              ? "..."
+              : String(
+                  inspectionsDone
+                )
+          }
+          icon={
+            <ClipboardList
+              size={20}
+            />
+          }
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="QR Scans This Month"
+          value={
+            loading
+              ? "..."
+              : String(
+                  qrScansThisMonth
+                )
+          }
+          icon={
+            <ScanLine
+              size={20}
+            />
+          }
+          color="#557bdc"
+        />
+
+        <StatCard
+          label="Flagged Items"
+          value={
+            loading
+              ? "..."
+              : String(
+                  flaggedItems
+                )
+          }
+          icon={
+            <AlertTriangle
+              size={20}
+            />
+          }
+          color="#e8543a"
+        />
+
+        <StatCard
+          label="Incidents Resolved"
+          value={
+            loading
+              ? "..."
+              : String(
+                  incidentsResolved
+                )
+          }
+          icon={
+            <CheckCircle
+              size={20}
+            />
+          }
+          color="#2ecc71"
+        />
+      </div>
+
+      <Card title="Available Reports">
+        <div className="divide-y divide-border">
+          {reports.map(
+            (report) => (
+              <div
+                key={
+                  report.name
+                }
+                className="flex items-center justify-between px-4 py-3 hover:bg-[#eef2fc] transition-colors"
+              >
+                <div>
+                  <p className="text-sm text-foreground font-medium">
+                    {
+                      report.name
+                    }
+                  </p>
+
+                  <p className="text-xs text-muted-foreground">
+                    {
+                      report.period
+                    }
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleReportDownload(
+                      report.name
+                    )
+                  }
+                  disabled={loading}
+                  className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Download
+                    size={13}
+                  />
+
+                  {
+                    report.format
+                  }
+                </button>
+              </div>
+            )
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function SecurityLostFound() {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [search, setSearch] = useState("");
+
+  const [editingItem, setEditingItem] =
+    useState<any | null>(null);
+
+  const [editSubmitting, setEditSubmitting] =
+    useState(false);
+
+  const [editError, setEditError] =
+    useState("");
+
+  const [editForm, setEditForm] = useState({
+    person_identifier: "",
+    item_name: "",
+    category: "",
+    brand_model: "",
+    color: "",
+    location: "",
+    date_time: "",
+    description: "",
+  });
+
+  const [tab, setTab] =
+    useState<"registry" | "report">("registry");
+
+  const [reportMode, setReportMode] =
+    useState<"found" | "lost">("found");
+
+  const [submitting, setSubmitting] =
+    useState(false);
+
+  const [recoveringId, setRecoveringId] =
+    useState<number | null>(null);
+
+  const [recoveringItem, setRecoveringItem] =
+    useState<any | null>(null);
+
+  const [recoveryForm, setRecoveryForm] = useState({
+    found_by_identifier: "",
+    location_found: "",
+    date_found: "",
+  });
+
+  const [form, setForm] = useState({
+    found_by_identifier: "",
+    location_found: "",
+    date_found: "",
+
+    lost_by_identifier: "",
+    location_lost: "",
+    date_lost: "",
+
+    item_name: "",
+    category: "",
+    brand_model: "",
+    color: "",
+    description: "",
+  });
+
+  async function loadItems() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getLostFoundItems();
+      const list = Array.isArray(data)
+        ? data
+        : data?.items ?? [];
+
+      setItems(list);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load Lost & Found registry."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+  function handleFormChange(
+    e: React.ChangeEvent<
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | HTMLSelectElement
+    >
+  ) {
+    const { name, value } = e.target;
+
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  }
+
+  function clearForm() {
+    setForm({
+      found_by_identifier: "",
+      location_found: "",
+      date_found: "",
+
+      lost_by_identifier: "",
+      location_lost: "",
+      date_lost: "",
+
+      item_name: "",
+      category: "",
+      brand_model: "",
+      color: "",
+      description: "",
+    });
+  }
+
+  async function handleSubmit(
+    e: React.FormEvent
+  ) {
+    e.preventDefault();
+
+    setError("");
+    setSuccess("");
+
+    if (!form.item_name.trim()) {
+      setEditError("Please enter the item name.");
+      return;
+    }
+
+    if (reportMode === "found") {
+      if (!form.found_by_identifier.trim()) {
+        setError(
+          "Please enter the Student/Employee ID of the person who turned over the item."
+        );
+        return;
+      }
+
+      if (!form.location_found.trim()) {
+        setError(
+          "Please enter where the item was found."
+        );
+        return;
+      }
+
+      if (!form.date_found) {
+        setError(
+          "Please select the date the item was found."
+        );
+        return;
+      }
+    }
+
+    if (reportMode === "lost") {
+      if (!form.lost_by_identifier.trim()) {
+        setError(
+          "Please enter the Student/Employee ID of the person who lost the item."
+        );
+        return;
+      }
+
+      if (!form.location_lost.trim()) {
+        setError(
+          "Please enter where the item was last seen."
+        );
+        return;
+      }
+
+      if (!form.date_lost) {
+        setError(
+          "Please select the date the item was lost."
+        );
+        return;
+      }
+    }
+
+    try {
+      setSubmitting(true);
+
+      if (reportMode === "found") {
+        const result = await createLostFoundItem({
+          report_type: "found",
+          found_by_identifier:
+            form.found_by_identifier.trim(),
+          item_name: form.item_name.trim(),
+          category:
+            form.category.trim() || undefined,
+          brand_model:
+            form.brand_model.trim() || undefined,
+          color:
+            form.color.trim() || undefined,
+          location_found:
+            form.location_found.trim(),
+          date_found: form.date_found,
+          description:
+            form.description.trim() || undefined,
+        });
+
+        setSuccess(
+          result?.message ||
+            "Found item recorded successfully."
+        );
+      } else {
+        const result = await createLostFoundItem({
+          report_type: "lost",
+          lost_by_identifier:
+            form.lost_by_identifier.trim(),
+          item_name: form.item_name.trim(),
+          category:
+            form.category.trim() || undefined,
+          brand_model:
+            form.brand_model.trim() || undefined,
+          color:
+            form.color.trim() || undefined,
+          location_lost:
+            form.location_lost.trim(),
+          date_lost: form.date_lost,
+          description:
+            form.description.trim() || undefined,
+        });
+
+        setSuccess(
+          result?.message ||
+            "Lost item report recorded successfully."
+        );
+      }
+
+      clearForm();
+      await loadItems();
+      setTab("registry");
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to save Lost & Found report."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function toDateTimeLocal(
+    value?: string | null
+  ) {
+    if (!value) {
+      return "";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return String(value).slice(0, 16);
+    }
+
+    const offset = date.getTimezoneOffset();
+    const local = new Date(
+      date.getTime() - offset * 60 * 1000
+    );
+
+    return local.toISOString().slice(0, 16);
+  }
+
+  function openEditReport(item: any) {
+    const reportType = String(
+      item.report_type ?? "found"
+    ).toLowerCase();
+
+    setError("");
+    setSuccess("");
+    setEditError("");
+    setEditingItem(item);
+
+    setEditForm({
+      person_identifier:
+        reportType === "lost"
+          ? item.lost_by?.username ?? ""
+          : item.finder?.username ?? "",
+
+      item_name:
+        item.item_name ?? "",
+
+      category:
+        item.category ?? "",
+
+      brand_model:
+        item.brand_model ?? "",
+
+      color:
+        item.color ?? "",
+
+      location:
+        reportType === "lost"
+          ? item.location_lost ?? ""
+          : item.location_found ?? "",
+
+      date_time:
+        toDateTimeLocal(
+          reportType === "lost"
+            ? item.date_lost
+            : item.date_found
+        ),
+
+      description:
+        item.description ?? "",
+    });
+  }
+
+  function handleEditFormChange(
+    e: React.ChangeEvent<
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | HTMLSelectElement
+    >
+  ) {
+    const { name, value } = e.target;
+
+    setEditForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+
+    if (editError) {
+      setEditError("");
+    }
+  }
+
+  async function handleEditSubmit(
+    e: React.FormEvent
+  ) {
+    e.preventDefault();
+
+    if (!editingItem) {
+      return;
+    }
+
+    const reportType = String(
+      editingItem.report_type ?? "found"
+    ).toLowerCase();
+
+    if (!editForm.person_identifier.trim()) {
+      setEditError(
+        reportType === "lost"
+          ? "Please enter the owner Student/Employee ID."
+          : "Please enter the finder Student/Employee ID."
+      );
+      return;
+    }
+
+    if (!editForm.item_name.trim()) {
+      setError("Please enter the item name.");
+      return;
+    }
+
+    if (!editForm.location.trim()) {
+      setEditError(
+        reportType === "lost"
+          ? "Please enter the last seen location."
+          : "Please enter the location found."
+      );
+      return;
+    }
+
+    if (!editForm.date_time) {
+      setEditError(
+        reportType === "lost"
+          ? "Please enter the date and time lost / last seen."
+          : "Please enter the date and time found."
+      );
+      return;
+    }
+
+    try {
+      setEditSubmitting(true);
+      setEditError("");
+      setSuccess("");
+
+      const common = {
+        item_name:
+          editForm.item_name.trim(),
+        category:
+          editForm.category.trim() || undefined,
+        brand_model:
+          editForm.brand_model.trim() || undefined,
+        color:
+          editForm.color.trim() || undefined,
+        description:
+          editForm.description.trim() || undefined,
+      };
+
+      const result =
+        reportType === "lost"
+          ? await updateLostFoundItem(
+              Number(editingItem.id),
+              {
+                ...common,
+                lost_by_identifier:
+                  editForm.person_identifier.trim(),
+                location_lost:
+                  editForm.location.trim(),
+                date_lost:
+                  editForm.date_time,
+              }
+            )
+          : await updateLostFoundItem(
+              Number(editingItem.id),
+              {
+                ...common,
+                found_by_identifier:
+                  editForm.person_identifier.trim(),
+                location_found:
+                  editForm.location.trim(),
+                date_found:
+                  editForm.date_time,
+              }
+            );
+
+      setSuccess(
+        result?.message ||
+          "Lost & Found report updated successfully."
+      );
+
+      setEditError("");
+      setEditingItem(null);
+      await loadItems();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+    } catch (err) {
+      setEditError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update Lost & Found report."
+      );
+    } finally {
+      setEditSubmitting(false);
+    }
+  }
+
+  function localDateTimeNow() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const local = new Date(
+      now.getTime() - offset * 60 * 1000
+    );
+
+    return local.toISOString().slice(0, 16);
+  }
+
+  async function handleRecovered(item: any) {
+    const reportType = String(
+      item.report_type ?? "found"
+    ).toLowerCase();
+
+    // Lost reports need turnover/recovery details first.
+    if (reportType === "lost") {
+      setError("");
+      setSuccess("");
+      setRecoveringItem(item);
+      setRecoveryForm({
+        found_by_identifier: "",
+        location_found: "",
+        date_found: localDateTimeNow(),
+      });
+      return;
+    }
+
+    // Found reports keep the existing claim-verification workflow.
+    const confirmed = window.confirm(
+      "Confirm that Security has verified the claimant's ownership and the found item has been returned to the rightful owner?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setRecoveringId(Number(item.id));
+      setError("");
+      setSuccess("");
+
+      const result = await markLostFoundRecovered(
+        Number(item.id)
+      );
+
+      setSuccess(
+        result?.message ||
+          "Item marked as recovered."
+      );
+
+      await loadItems();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark the item as recovered."
+      );
+    } finally {
+      setRecoveringId(null);
+    }
+  }
+
+  async function handleLostRecoverySubmit(
+    e: React.FormEvent
+  ) {
+    e.preventDefault();
+
+    if (!recoveringItem) {
+      return;
+    }
+
+    if (!recoveryForm.found_by_identifier.trim()) {
+      setError(
+        "Please enter the Student/Employee ID of the person who found or returned the item."
+      );
+      return;
+    }
+
+    if (!recoveryForm.location_found.trim()) {
+      setError(
+        "Please enter where the item was found or turned over."
+      );
+      return;
+    }
+
+    if (!recoveryForm.date_found) {
+      setError(
+        "Please enter the exact date and time the item was found or turned over."
+      );
+      return;
+    }
+
+    try {
+      setRecoveringId(Number(recoveringItem.id));
+      setError("");
+      setSuccess("");
+
+      const result = await markLostFoundRecovered(
+        Number(recoveringItem.id),
+        {
+          found_by_identifier:
+            recoveryForm.found_by_identifier.trim(),
+          location_found:
+            recoveryForm.location_found.trim(),
+          date_found: recoveryForm.date_found,
+        }
+      );
+
+      setSuccess(
+        result?.message ||
+          "Lost item recovery recorded successfully."
+      );
+
+      setRecoveringItem(null);
+      setRecoveryForm({
+        found_by_identifier: "",
+        location_found: "",
+        date_found: "",
+      });
+
+      await loadItems();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to record lost item recovery."
+      );
+    } finally {
+      setRecoveringId(null);
+    }
+  }
+
+  const filteredItems = items.filter((item) => {
+    const query = search.trim().toLowerCase();
+
+    if (!query) {
+      return true;
+    }
+
+    const searchableText = [
+      item.id,
+      item.report_type,
+      item.item_name,
+      item.category,
+      item.brand_model,
+      item.color,
+      item.location_found,
+      item.location_lost,
+      item.description,
+      item.status,
+
+      item.finder?.name,
+      item.finder?.username,
+
+      item.lost_by?.name,
+      item.lost_by?.username,
+
+      item.processor?.name,
+      item.processor?.username,
+
+      item.claimant?.name,
+      item.claimant?.username,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(query);
+  });
+
+  const foundCount = items.filter(
+    (item) =>
+      String(item.report_type ?? "found").toLowerCase() ===
+        "found" &&
+      String(item.status ?? "").toLowerCase() ===
+        "found"
+  ).length;
+
+  const lostCount = items.filter(
+    (item) =>
+      String(item.report_type ?? "").toLowerCase() ===
+        "lost" &&
+      String(item.status ?? "").toLowerCase() ===
+        "lost"
+  ).length;
+
+  const claimedCount = items.filter(
+    (item) =>
+      String(item.status ?? "").toLowerCase() ===
+      "claimed"
+  ).length;
+
+  const recoveredCount = items.filter(
+    (item) =>
+      String(item.status ?? "").toLowerCase() ===
+      "recovered"
+  ).length;
+
+  function formatDate(value?: string | null) {
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleString("en-PH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
+  function getStatusClass(status: string) {
+    const normalized = status.toLowerCase();
+
+    if (normalized === "recovered") {
+      return "bg-green-100 text-green-700";
+    }
+
+    if (normalized === "claimed") {
+      return "bg-yellow-100 text-yellow-700";
+    }
+
+    if (normalized === "lost") {
+      return "bg-red-100 text-red-700";
+    }
+
+    return "bg-blue-100 text-blue-700";
+  }
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Lost & Found"
+        subtitle="Manage found and lost item reports in one registry, credit finders, identify owners, and process recoveries."
+      />
+
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+        <div className="flex items-start gap-3">
+          <Shield
+            size={18}
+            className="mt-0.5 flex-shrink-0 text-blue-700"
+          />
+
+          <div>
+            <p className="text-sm font-semibold text-blue-900">
+              Lost & Found Procedure
+            </p>
+
+            <p className="mt-1 text-xs leading-relaxed text-blue-800">
+              Use Found Item when an item has been physically surrendered to Security. Use Lost Item when a student or employee reports an item missing. Security records and processes both report types in QRPass.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <StatCard
+          label="Total Reports"
+          value={String(items.length)}
+          icon={<BookOpen size={20} />}
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="Found"
+          value={String(foundCount)}
+          icon={<Package size={20} />}
+          color="#557bdc"
+        />
+
+        <StatCard
+          label="Lost"
+          value={String(lostCount)}
+          icon={<AlertTriangle size={20} />}
+          color="#e74c3c"
+        />
+
+        <StatCard
+          label="Pending Claims"
+          value={String(claimedCount)}
+          icon={<Clock size={20} />}
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Recovered"
+          value={String(recoveredCount)}
+          icon={<CheckCircle size={20} />}
+          color="#2ecc71"
+        />
+      </div>
+
+      <div className="flex flex-wrap gap-2 border-b border-[#cfd8e6] pb-3">
+        <button
+          type="button"
+          onClick={() => {
+            setTab("registry");
+            setError("");
+          }}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            tab === "registry"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Lost & Found Reports
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setTab("report");
+            setError("");
+            setSuccess("");
+          }}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            tab === "report"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          + Record Lost / Found Item
+        </button>
+      </div>
+
+      {tab === "registry" && (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative flex-1">
+              <Search
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search report, item, owner/finder, claimant, location..."
+                className="w-full rounded-lg border border-[#cfd8e6] bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={loadItems}
+              disabled={loading}
+              className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
+
+          {loading && (
+            <div className="rounded-lg border border-[#cfd8e6] bg-card p-10 text-center text-sm text-muted-foreground">
+              Loading Lost & Found records...
+            </div>
+          )}
+
+          {!loading && filteredItems.length === 0 && (
+            <div className="rounded-lg border border-[#cfd8e6] bg-card p-10 text-center">
+              <BookOpen
+                size={32}
+                className="mx-auto mb-3 text-muted-foreground"
+              />
+
+              <p className="text-sm font-medium text-foreground">
+                No Lost & Found records found.
+              </p>
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                Use the Record Lost / Found Item tab above, then choose the report type from the dropdown.
+              </p>
+            </div>
+          )}
+
+          {!loading &&
+            filteredItems.map((item) => {
+              const reportType = String(
+                item.report_type ?? "found"
+              ).toLowerCase();
+              const isLostReport = reportType === "lost";
+
+              const status = String(
+                item.status ??
+                  (isLostReport ? "Lost" : "Found")
+              );
+              const statusLower = status.toLowerCase();
+              const isClaimed = statusLower === "claimed";
+              const isRecovered =
+                statusLower === "recovered";
+              const isLost =
+                isLostReport && statusLower === "lost";
+
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-lg border border-[#cfd8e6] bg-card shadow-sm"
+                >
+                  <div className="p-4">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-base font-semibold text-foreground">
+                            {item.item_name}
+                          </h3>
+
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                              isLostReport
+                                ? "bg-red-100 text-red-700"
+                                : "bg-blue-100 text-blue-700"
+                            }`}
+                          >
+                            {isLostReport
+                              ? "Lost Report"
+                              : "Found Report"}
+                          </span>
+
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusClass(
+                              status
+                            )}`}
+                          >
+                            {status}
+                          </span>
+
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            Report #{item.id}
+                          </span>
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Category
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {item.category || "—"}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Brand / Model
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {item.brand_model || "—"}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Color
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {item.color || "—"}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              {isLostReport
+                                ? "Last Seen Location"
+                                : "Location Found"}
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {(isLostReport
+                                ? item.location_lost
+                                : item.location_found) || "—"}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              {isLostReport
+                                ? "Date & Time Lost / Last Seen"
+                                : "Date & Time Found"}
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {formatDate(
+                                isLostReport
+                                  ? item.date_lost
+                                  : item.date_found
+                              )}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Date Reported
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {formatDate(item.created_at)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {isLostReport ? (
+                          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3">
+                            <div className="flex items-start gap-2">
+                              <User
+                                size={15}
+                                className="mt-0.5 flex-shrink-0 text-red-700"
+                              />
+
+                              <div>
+                                <p className="text-xs font-semibold text-red-800">
+                                  Reported Lost By / Owner
+                                </p>
+                                <p className="mt-1 text-sm font-medium text-red-900">
+                                  {item.lost_by?.name ||
+                                    "Not available"}
+                                </p>
+                                {item.lost_by?.username && (
+                                  <p className="text-xs text-red-700">
+                                    ID: {item.lost_by.username}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3">
+                            <div className="flex items-start gap-2">
+                              <User
+                                size={15}
+                                className="mt-0.5 flex-shrink-0 text-green-700"
+                              />
+
+                              <div>
+                                <p className="text-xs font-semibold text-green-800">
+                                  Turned Over By / Finder Credit
+                                </p>
+                                <p className="mt-1 text-sm font-medium text-green-900">
+                                  {item.finder?.name ||
+                                    "Not available"}
+                                </p>
+                                {item.finder?.username && (
+                                  <p className="text-xs text-green-700">
+                                    ID: {item.finder.username}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {isLostReport && isRecovered && (
+                          <div className="mt-3 rounded-lg border border-green-200 bg-green-50 p-3">
+                            <div className="flex items-start gap-2">
+                              <User
+                                size={15}
+                                className="mt-0.5 flex-shrink-0 text-green-700"
+                              />
+                              <div>
+                                <p className="text-xs font-semibold text-green-800">
+                                  Found / Turned Over By
+                                </p>
+                                <p className="mt-1 text-sm font-medium text-green-900">
+                                  {item.finder?.name || "Not available"}
+                                </p>
+                                {item.finder?.username && (
+                                  <p className="text-xs text-green-700">
+                                    ID: {item.finder.username}
+                                  </p>
+                                )}
+                                <p className="mt-2 text-xs text-green-700">
+                                  Turnover location: {item.location_found || "—"}
+                                </p>
+                                <p className="text-xs text-green-700">
+                                  Turned over: {formatDate(item.date_found)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/50 p-3">
+                          <p className="text-xs text-muted-foreground">
+                            Processed by Security
+                          </p>
+                          <p className="mt-0.5 text-sm font-medium text-foreground">
+                            {item.processor?.name ||
+                              item.reporter?.name ||
+                              "—"}
+                          </p>
+                        </div>
+
+                        {!isLostReport && item.claimant && (
+                          <div className="mt-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+                            <p className="text-xs font-semibold text-yellow-800">
+                              Claimant
+                            </p>
+                            <p className="mt-1 text-sm font-medium text-yellow-900">
+                              {item.claimant.name}
+                            </p>
+                            {item.claimant.username && (
+                              <p className="text-xs text-yellow-700">
+                                ID: {item.claimant.username}
+                              </p>
+                            )}
+                            {item.claimed_at && (
+                              <p className="mt-1 text-xs text-yellow-700">
+                                Claim submitted:{" "}
+                                {formatDate(item.claimed_at)}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {item.description && (
+                          <div className="mt-3 rounded-lg bg-muted/40 p-3">
+                            <p className="text-xs font-medium text-muted-foreground">
+                              Description
+                            </p>
+                            <p className="mt-1 text-sm text-foreground">
+                              {item.description}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-shrink-0 flex-col gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openEditReport(item)
+                          }
+                          className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-sm font-medium text-primary hover:bg-[#eef2fc]"
+                        >
+                          Edit Report
+                        </button>
+
+                        {(isClaimed || isLost) && !isRecovered && (
+                          <button
+                            type="button"
+                            disabled={
+                              recoveringId === Number(item.id)
+                            }
+                            onClick={() =>
+                              handleRecovered(item)
+                            }
+                            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {recoveringId === Number(item.id)
+                              ? "Processing..."
+                              : isLostReport
+                              ? "Record Recovery"
+                              : "Verify & Mark Recovered"}
+                          </button>
+                        )}
+
+                        {isRecovered && (
+                          <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
+                            Item recovered / returned to owner
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      )}
+
+      {tab === "report" && (
+        <div className="rounded-lg border border-[#cfd8e6] bg-card shadow-sm">
+          <div className="border-b border-[#cfd8e6] px-4 py-4">
+            <h3 className="font-semibold text-foreground">
+              {reportMode === "found"
+                ? "Report Found Item"
+                : "Report Lost Item"}
+            </h3>
+
+            <p className="mt-1 text-xs text-muted-foreground">
+              {reportMode === "found"
+                ? "Use this form after a found item has been physically surrendered to the Security office."
+                : "Use this form when a student or employee reports an item as lost or missing."}
+            </p>
+          </div>
+
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-5 p-4"
+          >
+            <div className="rounded-lg border border-[#cfd8e6] bg-muted/30 p-4">
+              <label className="mb-1 block text-xs font-medium text-foreground">
+                Report Type *
+              </label>
+
+              <select
+                value={reportMode}
+                onChange={(e) => {
+                  const nextMode = e.target.value as "found" | "lost";
+                  setReportMode(nextMode);
+                  setError("");
+                  setSuccess("");
+                }}
+                className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="found">Found Item</option>
+                <option value="lost">Lost Item</option>
+              </select>
+
+              <p className="mt-2 text-xs text-muted-foreground">
+                Choose whether Security is recording an item that was found and turned over, or an item reported as lost. The required fields below will change automatically.
+              </p>
+            </div>
+
+            {reportMode === "found" ? (
+              <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                <div className="mb-3">
+                  <p className="text-sm font-semibold text-green-900">
+                    Finder / Turnover Credit
+                  </p>
+                  <p className="mt-1 text-xs text-green-700">
+                    Enter the Student or Employee ID of the person who found and physically turned over the item.
+                  </p>
+                </div>
+
+                <label className="mb-1 block text-xs font-medium text-green-900">
+                  Finder Student / Employee ID *
+                </label>
+
+                <input
+                  type="text"
+                  name="found_by_identifier"
+                  value={form.found_by_identifier}
+                  onChange={handleFormChange}
+                  required
+                  placeholder="Example: 26-9999"
+                  className="w-full rounded-lg border border-green-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-200"
+                />
+              </div>
+            ) : (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                <div className="mb-3">
+                  <p className="text-sm font-semibold text-red-900">
+                    Person Reporting Lost Item
+                  </p>
+                  <p className="mt-1 text-xs text-red-700">
+                    Enter the Student or Employee ID of the person who owns and reported the missing item.
+                  </p>
+                </div>
+
+                <label className="mb-1 block text-xs font-medium text-red-900">
+                  Owner Student / Employee ID *
+                </label>
+
+                <input
+                  type="text"
+                  name="lost_by_identifier"
+                  value={form.lost_by_identifier}
+                  onChange={handleFormChange}
+                  required
+                  placeholder="Example: 26-9999"
+                  className="w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-200"
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Item Name *
+                </label>
+                <input
+                  type="text"
+                  name="item_name"
+                  value={form.item_name}
+                  onChange={handleFormChange}
+                  required
+                  placeholder="Example: Laptop"
+                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Category
+                </label>
+                <select
+                  name="category"
+                  value={form.category}
+                  onChange={handleFormChange}
+                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="">Select category</option>
+                  <option value="Laptop">Laptop</option>
+                  <option value="Mobile Phone">Mobile Phone</option>
+                  <option value="Tablet">Tablet</option>
+                  <option value="Bag">Bag</option>
+                  <option value="Wallet">Wallet</option>
+                  <option value="ID / Card">ID / Card</option>
+                  <option value="Accessories">Accessories</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Brand / Model
+                </label>
+                <input
+                  type="text"
+                  name="brand_model"
+                  value={form.brand_model}
+                  onChange={handleFormChange}
+                  placeholder="Example: Acer Aspire 5"
+                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Color
+                </label>
+                <input
+                  type="text"
+                  name="color"
+                  value={form.color}
+                  onChange={handleFormChange}
+                  placeholder="Example: Black"
+                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  {reportMode === "found"
+                    ? "Location Found *"
+                    : "Last Seen Location *"}
+                </label>
+                <input
+                  type="text"
+                  name={
+                    reportMode === "found"
+                      ? "location_found"
+                      : "location_lost"
+                  }
+                  value={
+                    reportMode === "found"
+                      ? form.location_found
+                      : form.location_lost
+                  }
+                  onChange={handleFormChange}
+                  required
+                  placeholder={
+                    reportMode === "found"
+                      ? "Example: 4th Floor Computer Laboratory"
+                      : "Example: Library, 2nd Floor"
+                  }
+                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  {reportMode === "found"
+                    ? "Date & Time Found *"
+                    : "Date & Time Lost / Last Seen *"}
+                </label>
+                <input
+                  type="datetime-local"
+                  name={
+                    reportMode === "found"
+                      ? "date_found"
+                      : "date_lost"
+                  }
+                  value={
+                    reportMode === "found"
+                      ? form.date_found
+                      : form.date_lost
+                  }
+                  onChange={handleFormChange}
+                  required
+                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground">
+                Item Description
+              </label>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleFormChange}
+                rows={4}
+                placeholder="Describe identifying features, case, stickers, scratches, accessories, or other useful details."
+                className="w-full resize-none rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div
+              className={`rounded-lg border px-4 py-3 ${
+                reportMode === "found"
+                  ? "border-yellow-200 bg-yellow-50"
+                  : "border-red-200 bg-red-50"
+              }`}
+            >
+              <p
+                className={`text-xs ${
+                  reportMode === "found"
+                    ? "text-yellow-800"
+                    : "text-red-800"
+                }`}
+              >
+                {reportMode === "found"
+                  ? "Confirm that the item has already been physically received by Security before saving this record."
+                  : "Confirm the owner's identity and the reported last-seen information before saving this lost-item report."}
+              </p>
+            </div>
+
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setTab("registry");
+                  setError("");
+                }}
+                className="rounded-lg border border-[#cfd8e6] bg-background px-5 py-2 text-sm font-medium hover:bg-muted"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {submitting
+                  ? "Saving..."
+                  : reportMode === "found"
+                  ? "Report Found Item"
+                  : "Report Lost Item"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[#cfd8e6] bg-card shadow-xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[#cfd8e6] px-5 py-4">
+              <div>
+                <h3 className="font-semibold text-foreground">
+                  Edit Lost & Found Report
+                </h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Correct typographical errors or incorrect report information. Report type and recovery status are not changed here.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingItem(null);
+                  setEditError("");
+                }}
+                disabled={editSubmitting}
+                className="rounded-md p-1 text-muted-foreground hover:bg-muted disabled:opacity-50"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleEditSubmit}
+              className="space-y-4 p-5"
+            >
+              <div
+                className={`rounded-lg border px-4 py-3 ${
+                  String(
+                    editingItem.report_type ?? "found"
+                  ).toLowerCase() === "lost"
+                    ? "border-red-200 bg-red-50"
+                    : "border-green-200 bg-green-50"
+                }`}
+              >
+                <p className="text-xs font-semibold text-foreground">
+                  {String(
+                    editingItem.report_type ?? "found"
+                  ).toLowerCase() === "lost"
+                    ? "Lost Report"
+                    : "Found Report"}
+                  {` • Report #${editingItem.id}`}
+                </p>
+              </div>
+
+              {editError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle
+                      size={16}
+                      className="mt-0.5 shrink-0 text-red-600"
+                    />
+                    <p className="text-xs font-medium text-red-700">
+                      {editError}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  {String(
+                    editingItem.report_type ?? "found"
+                  ).toLowerCase() === "lost"
+                    ? "Owner Student / Employee ID *"
+                    : "Finder Student / Employee ID *"}
+                </label>
+
+                <input
+                  type="text"
+                  name="person_identifier"
+                  value={editForm.person_identifier}
+                  onChange={handleEditFormChange}
+                  required
+                  className={`w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 ${
+                    editError
+                      ? "border-red-300 focus:ring-red-200"
+                      : "border-[#cfd8e6] focus:ring-primary/20"
+                  }`}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-foreground">
+                    Item Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="item_name"
+                    value={editForm.item_name}
+                    onChange={handleEditFormChange}
+                    required
+                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-foreground">
+                    Category
+                  </label>
+                  <select
+                    name="category"
+                    value={editForm.category}
+                    onChange={handleEditFormChange}
+                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="">Select category</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Mobile Phone">Mobile Phone</option>
+                    <option value="Tablet">Tablet</option>
+                    <option value="Bag">Bag</option>
+                    <option value="Wallet">Wallet</option>
+                    <option value="ID / Card">ID / Card</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-foreground">
+                    Brand / Model
+                  </label>
+                  <input
+                    type="text"
+                    name="brand_model"
+                    value={editForm.brand_model}
+                    onChange={handleEditFormChange}
+                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-foreground">
+                    Color
+                  </label>
+                  <input
+                    type="text"
+                    name="color"
+                    value={editForm.color}
+                    onChange={handleEditFormChange}
+                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-foreground">
+                    {String(
+                      editingItem.report_type ?? "found"
+                    ).toLowerCase() === "lost"
+                      ? "Last Seen Location *"
+                      : "Location Found *"}
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={editForm.location}
+                    onChange={handleEditFormChange}
+                    required
+                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-foreground">
+                    {String(
+                      editingItem.report_type ?? "found"
+                    ).toLowerCase() === "lost"
+                      ? "Date & Time Lost / Last Seen *"
+                      : "Date & Time Found *"}
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="date_time"
+                    value={editForm.date_time}
+                    onChange={handleEditFormChange}
+                    required
+                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Item Description
+                </label>
+                <textarea
+                  name="description"
+                  value={editForm.description}
+                  onChange={handleEditFormChange}
+                  rows={4}
+                  className="w-full resize-none rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div className="flex flex-col-reverse gap-2 border-t border-[#cfd8e6] pt-4 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingItem(null);
+                    setEditError("");
+                  }}
+                  disabled={editSubmitting}
+                  className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {editSubmitting
+                    ? "Saving Changes..."
+                    : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {recoveringItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-lg rounded-xl border border-[#cfd8e6] bg-card shadow-xl">
+            <div className="border-b border-[#cfd8e6] px-5 py-4">
+              <h3 className="font-semibold text-foreground">
+                Record Lost Item Recovery
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Record who found or returned the item, where it was turned over, and the exact date and time before marking it recovered.
+              </p>
+            </div>
+
+            <form
+              onSubmit={handleLostRecoverySubmit}
+              className="space-y-4 p-5"
+            >
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                <p className="text-xs font-medium text-red-800">
+                  Lost Item / Owner
+                </p>
+                <p className="mt-1 text-sm font-semibold text-red-900">
+                  {recoveringItem.item_name}
+                </p>
+                <p className="text-xs text-red-700">
+                  Owner: {recoveringItem.lost_by?.name || "Not available"}
+                  {recoveringItem.lost_by?.username
+                    ? ` (${recoveringItem.lost_by.username})`
+                    : ""}
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Found / Turned Over By Student or Employee ID *
+                </label>
+                <input
+                  type="text"
+                  value={recoveryForm.found_by_identifier}
+                  onChange={(e) =>
+                    setRecoveryForm((current) => ({
+                      ...current,
+                      found_by_identifier: e.target.value,
+                    }))
+                  }
+                  placeholder="Example: 26-9999"
+                  required
+                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Location Found / Turned Over *
+                </label>
+                <input
+                  type="text"
+                  value={recoveryForm.location_found}
+                  onChange={(e) =>
+                    setRecoveryForm((current) => ({
+                      ...current,
+                      location_found: e.target.value,
+                    }))
+                  }
+                  placeholder="Example: Security Office / Library"
+                  required
+                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-foreground">
+                  Date & Time Found / Turned Over *
+                </label>
+                <input
+                  type="datetime-local"
+                  value={recoveryForm.date_found}
+                  onChange={(e) =>
+                    setRecoveryForm((current) => ({
+                      ...current,
+                      date_found: e.target.value,
+                    }))
+                  }
+                  required
+                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRecoveringItem(null);
+                    setError("");
+                  }}
+                  disabled={recoveringId !== null}
+                  className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={recoveringId !== null}
+                  className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {recoveringId !== null
+                    ? "Saving Recovery..."
+                    : "Save & Mark Recovered"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PCO PAGES
+// ══════════════════════════════════════════════════════════════════════════════
+function PCOPermitRequests() {
+  const [pending, setPending] = useState<any[]>([]);
+  const [approved, setApproved] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [error, setError] = useState("");
+
+  async function loadPendingItems() {
+    try {
+      setLoading(true);
+      setError("");
+  
+      const data = await getPendingItems();
+  
+      setPending(
+        Array.isArray(data?.items)
+          ? data.items
+          : []
+      );
+    } catch (error) {
+      console.error(
+        "Failed to load pending items:",
+        error
+      );
+  
+      setPending([]);
+  
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load registration requests."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadPendingItems();
+  }, []);
+
+  async function handleApprove(item: any) {
+    try {
+      setApprovingId(item.id);
+
+      const data = await approveItem(item.id);
+
+      alert("Item approved and QR code issued successfully!");
+
+      setPending((prev) =>
+        prev.filter((p) => p.id !== item.id)
+      );
+
+      setApproved((prev) => [
+        {
+          ...item,
+          ...data.item,
+          approvedAt: new Date().toLocaleString("en-PH", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+        ...prev,
+      ]);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to approve item."
+      );
+    } finally {
+      setApprovingId(null);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Item Registration Requests"
+        subtitle="Review and approve student item registration requests. Approval triggers QR code generation."
+        action={
+          <button
+            onClick={loadPendingItems}
+            className="text-xs flex items-center gap-1 text-primary font-medium"
+          >
+
+            {error && (
+              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                {error}
+              </div>
+            )}
+            <RefreshCw size={12} />
+            Refresh
+          </button>
+        }
+        
+      />
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <StatCard
+          label="Pending Review"
+          value={String(pending.length)}
+          icon={<Clock size={20} />}
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Approved This Session"
+          value={String(approved.length)}
+          icon={<CheckCircle size={20} />}
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="QR Codes Issued"
+          value={String(approved.length)}
+          icon={<QrCode size={20} />}
+          color="#557bdc"
+        />
+      </div>
+
+      <Card
+        title="Pending Requests"
+        action={
+          <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">
+            {pending.length} pending
+          </span>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#fafbfc]">
+                {[
+                  "Ref #",
+                  "Student",
+                  "ID",
+                  "Item / Description",
+                  "Type",
+                  "Qty",
+                  "Serial No.",
+                  "Purpose / Reason",
+                  "Permit Valid Until",
+                  "Date Filed",
+                  "Action",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="text-left py-2 px-3 text-xs text-muted-foreground font-medium"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={11}
+                    className="text-center py-8 text-sm text-muted-foreground"
+                  >
+                    Loading pending requests...
+                  </td>
+                </tr>
+              ) : pending.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={11}
+                    className="text-center py-8 text-sm text-muted-foreground"
+                  >
+                    No pending item registration requests.
+                  </td>
+                </tr>
+              ) : (
+                pending.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
+                  >
+                    <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
+                      REQ-{String(item.id).padStart(3, "0")}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-sm text-foreground font-medium">
+                      {item.user?.name ?? "Unknown"}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
+                      {item.user?.username ?? "—"}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-sm text-foreground min-w-[190px]">
+                      <div className="font-medium">
+                        {item.item_name}
+                      </div>
+
+                      {item.complete_description &&
+                        String(item.complete_description).trim() &&
+                        String(item.complete_description).trim().toLowerCase() !==
+                          String(item.item_name ?? "").trim().toLowerCase() && (
+                          <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+                            {item.complete_description}
+                          </div>
+                        )}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {item.item_type}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs text-foreground text-center">
+                      {item.quantity ?? "—"}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground whitespace-nowrap">
+                      {item.serial_number || "—"}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs text-muted-foreground min-w-[180px]">
+                      {item.purpose || "—"}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {item.qr_expires_at
+                        ? new Date(item.qr_expires_at).toLocaleString("en-PH", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })
+                        : "—"}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(
+                        item.created_at
+                      ).toLocaleDateString("en-PH", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </td>
+
+                    <td className="py-2.5 px-3">
+                      <button
+                        onClick={() => handleApprove(item)}
+                        disabled={approvingId === item.id}
+                        className="text-xs bg-primary text-white px-3 py-1.5 rounded font-semibold hover:opacity-90 whitespace-nowrap disabled:opacity-50"
+                      >
+                        {approvingId === item.id
+                          ? "Approving..."
+                          : "Approve & Issue QR"}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {approved.length > 0 && (
+        <Card title="Approved Requests">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-[#fafbfc]">
+                  {[
+                    "Ref #",
+                    "Student",
+                    "Item",
+                    "Serial No.",
+                    "QR Code",
+                    "Status",
+                    "Approved At",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="text-left py-2 px-3 text-xs text-muted-foreground font-medium"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {approved.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="border-t border-[#cfd8e6]"
+                  >
+                    <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
+                      REQ-{String(item.id).padStart(3, "0")}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-sm font-medium">
+                      {item.user?.name ?? "Unknown"}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-sm">
+                      {item.item_name}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs font-mono">
+                      {item.serial_number}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs font-mono text-primary">
+                      {item.qr_code}
+                    </td>
+
+                    <td className="py-2.5 px-3">
+                      <StatusBadge status="Approved" />
+                    </td>
+
+                    <td className="py-2.5 px-3 text-xs text-green-600 whitespace-nowrap">
+                      {item.approvedAt}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function PCOItemRegistry() {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selectedItem, setSelectedItem] =
+    useState<any | null>(null);
+
+  async function loadItems() {
+    try {
+      setLoading(true);
+
+      const data = await getAllItems();
+
+      setItems(data.items ?? []);
+    } catch (error) {
+      console.error("Failed to load registered items:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+  // SEARCH
+  const filteredItems = items.filter((item) => {
+    const keyword = search.toLowerCase().trim();
+
+    return (
+      item.item_name?.toLowerCase().includes(keyword) ||
+      item.brand_model?.toLowerCase().includes(keyword) ||
+      item.serial_number?.toLowerCase().includes(keyword) ||
+      item.qr_code?.toLowerCase().includes(keyword) ||
+      item.item_type?.toLowerCase().includes(keyword) ||
+      item.user?.name?.toLowerCase().includes(keyword) ||
+      item.user?.username?.toLowerCase().includes(keyword)
+    );
+  });
+
+  // SUMMARY
+  const activeQrCount = items.filter(
+    (item) => item.is_active_qr === true
+  ).length;
+  
+  const expiredCount = items.filter(
+    (item) => item.is_expired === true
+  ).length;
+  
+  const flaggedCount = items.filter(
+    (item) => item.is_flagged === true
+  ).length;
+
+  // EXPORT FULL ITEM REGISTRY
+  function handleExportRegistry() {
+  if (items.length === 0) {
+    alert("There are no item records to export.");
+    return;
+  }
+
+  const headers = [
+    "Owner",
+    "Owner ID",
+    "Item",
+    "Type",
+    "Brand / Model",
+    "Serial Number",
+    "Color",
+    "Purpose",
+    "QR ID",
+    "QR Expiration",
+    "Date Registered",
+    "Status",
+  ];
+
+  function escapeCSV(value: any) {
+    const text = String(value ?? "");
+
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  const rows = items.map((item) => [
+    item.user?.name ?? "Unknown",
+    item.user?.username ?? "—",
+    item.item_name ?? "—",
+    item.item_type ?? "—",
+    item.brand_model ?? "—",
+    item.serial_number ?? "—",
+    item.color ?? "—",
+    item.purpose ?? "—",
+    item.qr_code ?? "Not issued",
+
+    item.qr_expires_at
+      ? new Date(
+          item.qr_expires_at
+        ).toLocaleString("en-PH", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        })
+      : "No expiration",
+
+    item.created_at
+      ? new Date(
+          item.created_at
+        ).toLocaleDateString("en-PH", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+      : "—",
+
+    item.registry_status ??
+      item.status ??
+      "Unknown",
+  ]);
+
+  const csvContent = [
+    headers.map(escapeCSV).join(","),
+    ...rows.map((row) =>
+      row.map(escapeCSV).join(",")
+    ),
+  ].join("\n");
+
+  const blob = new Blob(
+    ["\uFEFF" + csvContent],
+    {
+      type: "text/csv;charset=utf-8;",
+    }
+  );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const link =
+    document.createElement("a");
+
+  const fileDate = new Date()
+    .toISOString()
+    .split("T")[0];
+
+  link.href = url;
+
+  link.download =
+    `QRPass-Item-Registry-${fileDate}.csv`;
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+}
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Item Registry"
+        subtitle="View and manage the centralized registry of campus items."
+        action={
+          <button
+            onClick={loadItems}
+            disabled={loading}
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+          >
+            <RefreshCw size={12} />
+
+            {loading
+              ? "Refreshing..."
+              : "Refresh"}
+          </button>
+        }
+      />
+
+      {/* SUMMARY CARDS */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+  <StatCard
+    label="Total Registered"
+    value={String(items.length)}
+    icon={<Package size={20} />}
+    color="#1a3a7b"
+  />
+
+  <StatCard
+    label="Active QR Codes"
+    value={String(activeQrCount)}
+    icon={<QrCode size={20} />}
+    color="#2ecc71"
+  />
+
+  <StatCard
+    label="Expired"
+    value={String(expiredCount)}
+    icon={<Clock size={20} />}
+    color="#2f5fd6"
+  />
+
+  <StatCard
+    label="Flagged"
+    value={String(flaggedCount)}
+    icon={<AlertTriangle size={20} />}
+    color="#d32f2f"
+  />
+</div>
+
+      <Card
+        title="Registered Items"
+        action={
+          <button
+            onClick={handleExportRegistry}
+            disabled={items.length === 0}
+            className="text-xs flex items-center gap-1 bg-primary text-white px-3 py-1.5 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            <Download size={12} />
+            Export CSV
+          </button>
+        }
+      >
+        {/* SEARCH */}
+        <div className="mb-4">
+          <div className="relative w-full md:max-w-md">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+
+            <input
+              type="text"
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              placeholder="Search item, owner, serial number, or QR ID..."
+              className="w-full pl-9 pr-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-muted/30 focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+            />
+          </div>
+        </div>
+
+        {/* RESULT COUNT */}
+        {search && !loading && (
+          <div className="mb-3 text-xs text-muted-foreground">
+            Showing {filteredItems.length} of{" "}
+            {items.length} item(s)
+          </div>
+        )}
+
+        {/* TABLE */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#fafbfc]">
+                {[
+                  "Owner",
+                  "Owner ID",
+                  "Item",
+                  "Type",
+                  "Brand / Model",
+                  "Serial Number",
+                  "QR ID",
+                  "Date Registered",
+                  "Status",
+                  "Action",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="text-left py-2 px-3 text-xs text-muted-foreground font-medium whitespace-nowrap"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={10}
+                    className="text-center py-8 text-sm text-muted-foreground"
+                  >
+                    Loading registered items...
+                  </td>
+                </tr>
+              ) : filteredItems.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={10}
+                    className="text-center py-8 text-sm text-muted-foreground"
+                  >
+                    {search
+                      ? "No matching registered items found."
+                      : "No registered items found."}
+                  </td>
+                </tr>
+              ) : (
+                filteredItems.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
+                  >
+                    {/* OWNER */}
+                    <td className="py-3 px-3 text-sm font-medium whitespace-nowrap">
+                      {item.user?.name ?? "Unknown"}
+                    </td>
+
+                    {/* OWNER ID */}
+                    <td className="py-3 px-3 text-xs font-mono text-muted-foreground whitespace-nowrap">
+                      {item.user?.username ?? "—"}
+                    </td>
+
+                    {/* ITEM */}
+                    <td className="py-3 px-3 text-sm font-medium whitespace-nowrap">
+                      {item.item_name}
+                    </td>
+
+                    {/* TYPE */}
+                    <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {item.item_type}
+                    </td>
+
+                    {/* BRAND / MODEL */}
+                    <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {item.brand_model || "—"}
+                    </td>
+
+                    {/* SERIAL NUMBER */}
+                    <td className="py-3 px-3 text-xs font-mono whitespace-nowrap">
+                      {item.serial_number}
+                    </td>
+
+                    {/* QR ID */}
+                    <td className="py-3 px-3 text-xs font-mono text-primary whitespace-nowrap">
+                      {item.qr_code || "Not issued"}
+                    </td>
+
+                    {/* DATE REGISTERED */}
+                    <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(
+                        item.created_at
+                      ).toLocaleDateString("en-PH", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </td>
+
+                    {/* STATUS */}
+                    <td className="py-3 px-3">
+                      <StatusBadge
+                        status={
+                          item.is_flagged
+                            ? "Flagged"
+                            : item.is_expired
+                            ? "Expired"
+                            : item.is_active_qr
+                            ? "Active"
+                            : item.status === "pending"
+                            ? "Pending"
+                            : item.registry_status || "Unknown"
+                        }
+                      />
+                    </td>
+
+                    {/* ACTION */}
+                    <td className="py-3 px-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedItem(item)
+                        }
+                        className="inline-flex items-center gap-1.5 rounded-md border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-[#eef2fc]"
+                      >
+                        <Eye size={13} />
+                        View
+                      </button>
+                    </td>
+                                        </tr>
+                                      ))
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </Card>
+
+                            {/* REGISTERED ITEM DETAILS MODAL */}
+                            {selectedItem && (
+                              <div
+                                className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 p-4"
+                                onClick={() =>
+                                  setSelectedItem(null)
+                                }
+                              >
+                                <div
+                                  className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+                                  onClick={(e) =>
+                                    e.stopPropagation()
+                                  }
+                                >
+                                  {/* HEADER */}
+                                  <div className="flex items-start justify-between gap-4 border-b border-[#dce3ee] bg-[#fafbfc] px-5 py-4">
+                                    <div>
+                                      <h2 className="text-lg font-bold text-foreground">
+                                        Registered Item Details
+                                      </h2>
+
+                                      <p className="mt-0.5 text-xs text-muted-foreground">
+                                        Complete registration information for this campus item.
+                                      </p>
+                                    </div>
+
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setSelectedItem(null)
+                                      }
+                                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-[#eef2fc] hover:text-primary"
+                                    >
+                                      <X size={18} />
+                                    </button>
+                                  </div>
+
+                                  {/* CONTENT */}
+                                  <div className="max-h-[70vh] overflow-y-auto p-5">
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Owner
+                                        </p>
+                                        <p className="mt-1 text-sm font-semibold text-foreground">
+                                          {selectedItem.user?.name ?? "Unknown"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Owner ID
+                                        </p>
+                                        <p className="mt-1 font-mono text-sm text-foreground">
+                                          {selectedItem.user?.username ?? "—"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Item Name
+                                        </p>
+                                        <p className="mt-1 text-sm font-semibold text-foreground">
+                                          {selectedItem.item_name || "—"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Item Type
+                                        </p>
+                                        <p className="mt-1 text-sm text-foreground">
+                                          {selectedItem.item_type || "—"}
+                                        </p>
+                                      </div>
+
+                                      {(() => {
+                                        const detailCards = [
+                                          selectedItem.brand_model &&
+                                          String(
+                                            selectedItem.brand_model
+                                          ).trim() &&
+                                          String(
+                                            selectedItem.brand_model
+                                          ).toUpperCase() !== "N/A"
+                                            ? {
+                                                label: "Brand / Model",
+                                                value:
+                                                  selectedItem.brand_model,
+                                                mono: false,
+                                              }
+                                            : null,
+
+                                          selectedItem.serial_number &&
+                                          String(
+                                            selectedItem.serial_number
+                                          ).trim()
+                                            ? {
+                                                label: "Serial Number",
+                                                value:
+                                                  selectedItem.serial_number,
+                                                mono: true,
+                                              }
+                                            : null,
+
+                                          selectedItem.color &&
+                                          String(
+                                            selectedItem.color
+                                          ).trim() &&
+                                          String(
+                                            selectedItem.color
+                                          ).toUpperCase() !== "N/A"
+                                            ? {
+                                                label: "Color",
+                                                value:
+                                                  selectedItem.color,
+                                                mono: false,
+                                              }
+                                            : null,
+
+                                          [
+                                            "sports equipment",
+                                            "other equipment",
+                                          ].includes(
+                                            String(
+                                              selectedItem.item_type ?? ""
+                                            ).toLowerCase()
+                                          )
+                                            ? {
+                                                label: "Quantity",
+                                                value:
+                                                  selectedItem.quantity ||
+                                                  "1",
+                                                mono: false,
+                                              }
+                                            : null,
+                                        ].filter(Boolean) as {
+                                          label: string;
+                                          value: any;
+                                          mono: boolean;
+                                        }[];
+
+                                        return detailCards.map(
+                                          (detail, index) => {
+                                            const isLastOddCard =
+                                              detailCards.length % 2 === 1 &&
+                                              index ===
+                                                detailCards.length - 1;
+
+                                            return (
+                                              <div
+                                                key={detail.label}
+                                                className={`rounded-lg border border-[#dce3ee] p-3 ${
+                                                  isLastOddCard
+                                                    ? "sm:col-span-2"
+                                                    : ""
+                                                }`}
+                                              >
+                                                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                                  {detail.label}
+                                                </p>
+
+                                                <p
+                                                  className={`mt-1 text-sm text-foreground ${
+                                                    detail.mono
+                                                      ? "font-mono"
+                                                      : ""
+                                                  }`}
+                                                >
+                                                  {detail.value}
+                                                </p>
+                                              </div>
+                                            );
+                                          }
+                                        );
+                                      })()}
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3 sm:col-span-2">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Purpose / Reason for Bringing
+                                        </p>
+                                        <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
+                                          {selectedItem.purpose || "—"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] bg-[#f8fafc] p-3 sm:col-span-2">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Description / Specifications
+                                        </p>
+                                        <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
+                                          {selectedItem.complete_description ||
+                                            selectedItem.description ||
+                                            "No additional description or specifications were provided."}
+                                        </p>
+                                      </div>
+
+                                      {selectedItem.accessories_included && (
+                                        <div className="rounded-lg border border-[#dce3ee] p-3 sm:col-span-2">
+                                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Accessories Included
+                                          </p>
+                                          <p className="mt-1 text-sm text-foreground">
+                                            {selectedItem.accessories_included}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {selectedItem.computer_type && (
+                                        <div className="rounded-lg border border-[#dce3ee] p-3">
+                                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Computer / Laptop Type
+                                          </p>
+                                          <p className="mt-1 text-sm text-foreground">
+                                            {selectedItem.computer_type}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {selectedItem.processor && (
+                                        <div className="rounded-lg border border-[#dce3ee] p-3">
+                                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Processor
+                                          </p>
+                                          <p className="mt-1 text-sm text-foreground">
+                                            {selectedItem.processor}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {selectedItem.memory && (
+                                        <div className="rounded-lg border border-[#dce3ee] p-3">
+                                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Memory / RAM
+                                          </p>
+                                          <p className="mt-1 text-sm text-foreground">
+                                            {selectedItem.memory}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {selectedItem.hard_drive && (
+                                        <div className="rounded-lg border border-[#dce3ee] p-3">
+                                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Storage
+                                          </p>
+                                          <p className="mt-1 text-sm text-foreground">
+                                            {selectedItem.hard_drive}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {selectedItem.operating_system && (
+                                        <div className="rounded-lg border border-[#dce3ee] p-3">
+                                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Operating System
+                                          </p>
+                                          <p className="mt-1 text-sm text-foreground">
+                                            {selectedItem.operating_system}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          QR ID
+                                        </p>
+                                        <p className="mt-1 font-mono text-sm text-primary">
+                                          {selectedItem.qr_code || "Not issued"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          QR Expiration
+                                        </p>
+                                        <p className="mt-1 text-sm text-foreground">
+                                          {selectedItem.qr_expires_at
+                                            ? new Date(
+                                                selectedItem.qr_expires_at
+                                              ).toLocaleString("en-PH", {
+                                                year: "numeric",
+                                                month: "short",
+                                                day: "numeric",
+                                                hour: "numeric",
+                                                minute: "2-digit",
+                                              })
+                                            : "No expiration set"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Date Registered
+                                        </p>
+                                        <p className="mt-1 text-sm text-foreground">
+                                          {selectedItem.created_at
+                                            ? new Date(
+                                                selectedItem.created_at
+                                              ).toLocaleString("en-PH", {
+                                                year: "numeric",
+                                                month: "short",
+                                                day: "numeric",
+                                                hour: "numeric",
+                                                minute: "2-digit",
+                                              })
+                                            : "—"}
+                                        </p>
+                                      </div>
+
+                                      <div className="rounded-lg border border-[#dce3ee] p-3">
+                                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Status
+                                        </p>
+                                        <div className="mt-1">
+                                          <StatusBadge
+                                            status={
+                                              selectedItem.is_flagged
+                                                ? "Flagged"
+                                                : selectedItem.is_expired
+                                                ? "Expired"
+                                                : selectedItem.is_active_qr
+                                                ? "Active"
+                                                : selectedItem.status === "pending"
+                                                ? "Pending"
+                                                : selectedItem.registry_status ||
+                                                  "Unknown"
+                                            }
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* FOOTER */}
+                                  <div className="flex justify-end border-t border-[#dce3ee] bg-[#fafbfc] px-5 py-4">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setSelectedItem(null)
+                                      }
+                                      className="rounded-md bg-primary px-4 py-2 text-xs font-semibold text-white hover:opacity-90"
+                                    >
+                                      Close
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      function PCOReports() {
+                        const [items, setItems] = useState<any[]>([]);
+                        const [loading, setLoading] = useState(true);
+                        const [error, setError] = useState("");
+                      
+                        async function loadReportData() {
+                          try {
+                            setLoading(true);
+                            setError("");
+                      
+                            const data = await getAllItems();
+                      
+                            setItems(data.items ?? []);
+                          } catch (err) {
+                            console.error(
+                              "Failed to load PCO report data:",
+                              err
+                            );
+                      
+                            setError("Failed to load report data.");
+                          } finally {
+                            setLoading(false);
+                          }
+                        }
+                      
+                        useEffect(() => {
+                          loadReportData();
+                        }, []);
+                      
+                        // =========================================================
+                        // STATISTICS
+                        // =========================================================
+                      
+                        const totalRegistered = items.length;
+                      
+                        const approvedCount = items.filter(
+                          (item) => item.status === "approved"
+                        ).length;
+                      
+                        const qrIssuedCount = items.filter(
+                          (item) =>
+                            item.status === "approved" &&
+                            item.qr_code
+                        ).length;
+                      
+                        const pendingCount = items.filter(
+                          (item) => item.status === "pending"
+                        ).length;
+                      
+                        const currentPeriod =
+                          new Date().toLocaleDateString("en-PH", {
+                            month: "short",
+                            year: "numeric",
+                          });
+                      
+                        // =========================================================
+                        // HELPER
+                        // =========================================================
+                      
+                        function formatDateTime(
+                          value: string | null | undefined
+                        ) {
+                          if (!value) {
+                            return "—";
+                          }
+                      
+                          return new Date(value).toLocaleString(
+                            "en-PH",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            }
+                          );
+                        }
+                      
+                        function formatDate(
+                          value: string | null | undefined
+                        ) {
+                          if (!value) {
+                            return "—";
+                          }
+                      
+                          return new Date(value).toLocaleDateString(
+                            "en-PH",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          );
+                        }
+                      
+                        // =========================================================
+                        // 1. MONTHLY ITEM REGISTRATION SUMMARY - PDF
+                        // =========================================================
+                      
+                        function handleMonthlyRegistrationPDF() {
+                          const now = new Date();
+                      
+                          const monthlyItems = items.filter(
+                            (item) => {
+                              if (!item.created_at) {
+                                return false;
+                              }
+                      
+                              const created = new Date(
+                                item.created_at
+                              );
+                      
+                              return (
+                                created.getMonth() ===
+                                  now.getMonth() &&
+                                created.getFullYear() ===
+                                  now.getFullYear()
+                              );
+                            }
+                          );
+                      
+                          const monthlyApproved =
+                            monthlyItems.filter(
+                              (item) =>
+                                item.status === "approved"
+                            ).length;
+                      
+                          const monthlyPending =
+                            monthlyItems.filter(
+                              (item) =>
+                                item.status === "pending"
+                            ).length;
+                      
+                          const doc = new jsPDF({
+                            orientation: "landscape",
+                          });
+                      
+                          doc.setFontSize(16);
+                      
+                          doc.text(
+                            "QRPass - Monthly Item Registration Summary",
+                            14,
+                            18
+                          );
+                      
+                          doc.setFontSize(10);
+                      
+                          doc.text(
+                            `Period: ${currentPeriod}`,
+                            14,
+                            27
+                          );
+                      
+                          doc.text(
+                            `Total Registrations: ${monthlyItems.length}`,
+                            14,
+                            34
+                          );
+                      
+                          doc.text(
+                            `Approved: ${monthlyApproved}`,
+                            14,
+                            41
+                          );
+                      
+                          doc.text(
+                            `Pending: ${monthlyPending}`,
+                            14,
+                            48
+                          );
+                      
+                          const rows = monthlyItems.map(
+                            (item) => [
+                              formatDate(item.created_at),
+                      
+                              item.user?.name ??
+                                "Unknown",
+                      
+                              item.user?.username ??
+                                "—",
+                      
+                              item.item_name ??
+                                "—",
+                      
+                              item.item_type ??
+                                "—",
+                      
+                              item.brand_model ??
+                                "—",
+                      
+                              item.serial_number ??
+                                "—",
+                      
+                              item.status === "approved"
+                                ? "Approved"
+                                : "Pending",
+                            ]
+                          );
+                      
+                          autoTable(doc, {
+                            startY: 56,
+                      
+                            head: [
+                              [
+                                "Date",
+                                "Owner",
+                                "Owner ID",
+                                "Item",
+                                "Type",
+                                "Brand / Model",
+                                "Serial Number",
+                                "Status",
+                              ],
+                            ],
+                      
+                            body: rows,
+                          });
+                      
+                          const fileDate = now
+                            .toISOString()
+                            .slice(0, 10);
+                      
+                          doc.save(
+                            `QRPass-Monthly-Item-Registration-${fileDate}.pdf`
+                          );
+                        }
+                      
+                        // =========================================================
+                        // 2. QR CODE ISSUANCE LOG - EXCEL
+                        // =========================================================
+                      
+                        function handleQrIssuanceExcel() {
+                          const now = new Date();
+                      
+                          const issuedItems = items.filter(
+                            (item) => {
+                              if (
+                                item.status !== "approved" ||
+                                !item.qr_code
+                              ) {
+                                return false;
+                              }
+                      
+                              const dateSource =
+                                item.approved_at ||
+                                item.updated_at ||
+                                item.created_at;
+                      
+                              if (!dateSource) {
+                                return false;
+                              }
+                      
+                              const issuedDate =
+                                new Date(dateSource);
+                      
+                              return (
+                                issuedDate.getMonth() ===
+                                  now.getMonth() &&
+                                issuedDate.getFullYear() ===
+                                  now.getFullYear()
+                              );
+                            }
+                          );
+                      
+                          const rows = issuedItems.map(
+                            (item) => ({
+                              Owner:
+                                item.user?.name ??
+                                "Unknown",
+                      
+                              "Owner ID":
+                                item.user?.username ??
+                                "—",
+                      
+                              Item:
+                                item.item_name ??
+                                "—",
+                      
+                              Type:
+                                item.item_type ??
+                                "—",
+                      
+                              "Brand / Model":
+                                item.brand_model ??
+                                "—",
+                      
+                              "Serial Number":
+                                item.serial_number ??
+                                "—",
+                      
+                              "QR ID":
+                                item.qr_code ??
+                                "—",
+                      
+                              "Approved / Issued At":
+                                formatDateTime(
+                                  item.approved_at ||
+                                    item.updated_at
+                                ),
+                      
+                              "QR Expiration":
+                                item.qr_expires_at
+                                  ? formatDateTime(
+                                      item.qr_expires_at
+                                    )
+                                  : "No expiration",
+                            })
+                          );
+                      
+                          const workbook =
+                            XLSX.utils.book_new();
+                      
+                          const worksheet =
+                            XLSX.utils.json_to_sheet(
+                              rows
+                            );
+                      
+                          worksheet["!cols"] = [
+                            { wch: 24 },
+                            { wch: 16 },
+                            { wch: 24 },
+                            { wch: 18 },
+                            { wch: 24 },
+                            { wch: 22 },
+                            { wch: 20 },
+                            { wch: 26 },
+                            { wch: 26 },
+                          ];
+                      
+                          XLSX.utils.book_append_sheet(
+                            workbook,
+                            worksheet,
+                            "QR Issuance Log"
+                          );
+                      
+                          const fileDate = now
+                            .toISOString()
+                            .slice(0, 10);
+                      
+                          XLSX.writeFile(
+                            workbook,
+                            `QRPass-QR-Code-Issuance-${fileDate}.xlsx`
+                          );
+                        }
+                      
+                        // =========================================================
+                        // 3. APPROVAL HISTORY WITH TIMESTAMPS - PDF
+                        // =========================================================
+                      
+                        function handleApprovalHistoryPDF() {
+                          const approvedItems = items
+                            .filter(
+                              (item) =>
+                                item.status === "approved"
+                            )
+                            .sort((a, b) => {
+                              const dateA = new Date(
+                                a.approved_at ||
+                                  a.updated_at ||
+                                  a.created_at
+                              ).getTime();
+                      
+                              const dateB = new Date(
+                                b.approved_at ||
+                                  b.updated_at ||
+                                  b.created_at
+                              ).getTime();
+                      
+                              return dateB - dateA;
+                            });
+                      
+                          const doc = new jsPDF({
+                            orientation: "landscape",
+                          });
+                      
+                          doc.setFontSize(16);
+                      
+                          doc.text(
+                            "QRPass - Approval History with Timestamps",
+                            14,
+                            18
+                          );
+                      
+                          doc.setFontSize(10);
+                      
+                          doc.text(
+                            `Generated: ${new Date().toLocaleString(
+                              "en-PH"
+                            )}`,
+                            14,
+                            27
+                          );
+                      
+                          doc.text(
+                            `Total Approved Items: ${approvedItems.length}`,
+                            14,
+                            34
+                          );
+                      
+                          const rows = approvedItems.map(
+                            (item) => [
+                              item.user?.name ??
+                                "Unknown",
+                      
+                              item.user?.username ??
+                                "—",
+                      
+                              item.item_name ??
+                                "—",
+                      
+                              item.item_type ??
+                                "—",
+                      
+                              item.serial_number ??
+                                "—",
+                      
+                              item.qr_code ??
+                                "—",
+                      
+                              formatDateTime(
+                                item.created_at
+                              ),
+                      
+                              formatDateTime(
+                                item.approved_at ||
+                                  item.updated_at
+                              ),
+                      
+                              "Approved",
+                            ]
+                          );
+                      
+                          autoTable(doc, {
+                            startY: 42,
+                      
+                            head: [
+                              [
+                                "Owner",
+                                "Owner ID",
+                                "Item",
+                                "Type",
+                                "Serial Number",
+                                "QR ID",
+                                "Registered At",
+                                "Approved At",
+                                "Status",
+                              ],
+                            ],
+                      
+                            body: rows,
+                      
+                            styles: {
+                              fontSize: 8,
+                            },
+                          });
+                      
+                          const fileDate = new Date()
+                            .toISOString()
+                            .slice(0, 10);
+                      
+                          doc.save(
+                            `QRPass-Approval-History-${fileDate}.pdf`
+                          );
+                        }
+                      
+                        // =========================================================
+                        // 4. ITEM REGISTRY EXPORT - EXCEL
+                        // =========================================================
+                      
+                        function handleItemRegistryExcel() {
+                          const rows = items.map(
+                            (item) => ({
+                              Owner:
+                                item.user?.name ??
+                                "Unknown",
+                      
+                              "Owner ID":
+                                item.user?.username ??
+                                "—",
+                      
+                              "Item Name":
+                                item.item_name ??
+                                "—",
+                      
+                              "Item Type":
+                                item.item_type ??
+                                "—",
+                      
+                              "Brand / Model":
+                                item.brand_model ??
+                                "—",
+                      
+                              "Serial Number":
+                                item.serial_number ??
+                                "—",
+                      
+                              Color:
+                                item.color ??
+                                "—",
+                      
+                              Purpose:
+                                item.purpose ??
+                                "—",
+                      
+                              "QR ID":
+                                item.qr_code ??
+                                "Not issued",
+                      
+                              "Date Registered":
+                                formatDateTime(
+                                  item.created_at
+                                ),
+                      
+                              "Approved At":
+                                item.status ===
+                                "approved"
+                                  ? formatDateTime(
+                                      item.approved_at ||
+                                        item.updated_at
+                                    )
+                                  : "Not approved",
+                      
+                              "QR Expiration":
+                                item.qr_expires_at
+                                  ? formatDateTime(
+                                      item.qr_expires_at
+                                    )
+                                  : "No expiration",
+                      
+                              "Registration Status":
+                                item.status ===
+                                "approved"
+                                  ? "Approved"
+                                  : item.status ===
+                                    "pending"
+                                  ? "Pending"
+                                  : item.status ??
+                                    "Unknown",
+                      
+                              "Registry Status":
+                                item.registry_status ??
+                                (item.is_flagged
+                                  ? "Flagged"
+                                  : item.is_expired
+                                  ? "Expired"
+                                  : item.is_active_qr
+                                  ? "Active"
+                                  : item.status ===
+                                    "pending"
+                                  ? "Pending"
+                                  : "Unknown"),
+                            })
+                          );
+                      
+                          const summaryRows = [
+                            {
+                              Statistic:
+                                "Total Registered",
+                              Value:
+                                totalRegistered,
+                            },
+                      
+                            {
+                              Statistic:
+                                "Approved Items",
+                              Value:
+                                approvedCount,
+                            },
+                      
+                            {
+                              Statistic:
+                                "QR Codes Issued",
+                              Value:
+                                qrIssuedCount,
+                            },
+                      
+                            {
+                              Statistic:
+                                "Pending Items",
+                              Value:
+                                pendingCount,
+                            },
+                      
+                            {
+                              Statistic:
+                                "Generated At",
+                              Value:
+                                new Date().toLocaleString(
+                                  "en-PH"
+                                ),
+                            },
+                          ];
+                      
+                          const workbook =
+                            XLSX.utils.book_new();
+                      
+                          const registrySheet =
+                            XLSX.utils.json_to_sheet(
+                              rows
+                            );
+                      
+                          const summarySheet =
+                            XLSX.utils.json_to_sheet(
+                              summaryRows
+                            );
+                      
+                          registrySheet["!cols"] = [
+                            { wch: 24 },
+                            { wch: 16 },
+                            { wch: 24 },
+                            { wch: 18 },
+                            { wch: 24 },
+                            { wch: 22 },
+                            { wch: 16 },
+                            { wch: 25 },
+                            { wch: 20 },
+                            { wch: 26 },
+                            { wch: 26 },
+                            { wch: 26 },
+                            { wch: 20 },
+                            { wch: 20 },
+                          ];
+                      
+                          summarySheet["!cols"] = [
+                            { wch: 25 },
+                            { wch: 30 },
+                          ];
+                      
+                          XLSX.utils.book_append_sheet(
+                            workbook,
+                            summarySheet,
+                            "Summary"
+                          );
+                      
+                          XLSX.utils.book_append_sheet(
+                            workbook,
+                            registrySheet,
+                            "Item Registry"
+                          );
+                      
+                          const fileDate = new Date()
+                            .toISOString()
+                            .slice(0, 10);
+                      
+                          XLSX.writeFile(
+                            workbook,
+                            `QRPass-Item-Registry-${fileDate}.xlsx`
+                          );
+                        }
+                      
+                        // =========================================================
+                        // REPORT DOWNLOAD HANDLER
+                        // =========================================================
+                      
+                        function handleReportDownload(
+                          reportName: string
+                        ) {
+                          if (
+                            reportName ===
+                            "Monthly Item Registration Summary"
+                          ) {
+                            handleMonthlyRegistrationPDF();
+                            return;
+                          }
+
+                      
+                          if (
+                            reportName ===
+                            "QR Code Issuance Log"
+                          ) {
+                            handleQrIssuanceExcel();
+                            return;
+                          }
+                      
+                          if (
+                            reportName ===
+                            "Approval History with Timestamps"
+                          ) {
+                            handleApprovalHistoryPDF();
+                            return;
+                          }
+                      
+                          if (
+                            reportName ===
+                            "Item Registry Export"
+                          ) {
+                            handleItemRegistryExcel();
+                          }
+                        }
+                      
+                        // =========================================================
+                        // REPORT LIST
+                        // =========================================================
+                      
+                        const reports = [
+                          {
+                            name:
+                              "Monthly Item Registration Summary",
+                            period:
+                              currentPeriod,
+                            format:
+                              "PDF",
+                          },
+                      
+                          {
+                            name:
+                              "QR Code Issuance Log",
+                            period:
+                              currentPeriod,
+                            format:
+                              "Excel",
+                          },
+                      
+                          {
+                            name:
+                              "Approval History with Timestamps",
+                            period:
+                              "All time",
+                            format:
+                              "PDF",
+                          },
+                      
+                          {
+                            name:
+                              "Item Registry Export",
+                            period:
+                              "All time",
+                            format:
+                              "Excel",
+                          },
+                        ];
+                      
+                        return (
+                          <div className="space-y-5">
+                            <PageHeader
+                              title="Reports"
+                              subtitle="Item registration, approval, QR issuance, and registry reports."
+                              action={
+                                <button
+                                  onClick={
+                                    loadReportData
+                                  }
+                                  disabled={
+                                    loading
+                                  }
+                                  className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+                                >
+                                  <RefreshCw
+                                    size={12}
+                                  />
+                      
+                                  {loading
+                                    ? "Refreshing..."
+                                    : "Refresh"}
+                                </button>
+                              }
+                            />
+                      
+                            {/* ERROR MESSAGE */}
+                            {error && (
+                              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-4 py-3">
+                                {error}
+                              </div>
+                            )}
+                      
+                            {/* STATISTICS */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              <StatCard
+                                label="Total Registered"
+                                value={
+                                  loading
+                                    ? "..."
+                                    : String(
+                                        totalRegistered
+                                      )
+                                }
+                                icon={
+                                  <Package
+                                    size={20}
+                                  />
+                                }
+                                color="#1a3a7b"
+                              />
+                      
+                              <StatCard
+                                label="Approved Items"
+                                value={
+                                  loading
+                                    ? "..."
+                                    : String(
+                                        approvedCount
+                                      )
+                                }
+                                icon={
+                                  <CheckCircle
+                                    size={20}
+                                  />
+                                }
+                                color="#2ecc71"
+                              />
+                      
+                              <StatCard
+                                label="QR Codes Issued"
+                                value={
+                                  loading
+                                    ? "..."
+                                    : String(
+                                        qrIssuedCount
+                                      )
+                                }
+                                icon={
+                                  <QrCode
+                                    size={20}
+                                  />
+                                }
+                                color="#557bdc"
+                              />
+                      
+                              <StatCard
+                                label="Pending"
+                                value={
+                                  loading
+                                    ? "..."
+                                    : String(
+                                        pendingCount
+                                      )
+                                }
+                                icon={
+                                  <Clock
+                                    size={20}
+                                  />
+                                }
+                                color="#2f5fd6"
+                              />
+                            </div>
+                      
+                            {/* AVAILABLE REPORTS */}
+                            <Card title="Available Reports">
+                              <div className="divide-y divide-border">
+                                {reports.map(
+                                  (report) => (
+                                    <div
+                                      key={
+                                        report.name
+                                      }
+                                      className="flex items-center justify-between px-4 py-3 hover:bg-[#eef2fc] transition-colors"
+                                    >
+                                      <div>
+                                        <p className="text-sm text-foreground font-medium">
+                                          {
+                                            report.name
+                                          }
+                                        </p>
+                      
+                                        <p className="text-xs text-muted-foreground">
+                                          {
+                                            report.period
+                                          }
+                                        </p>
+                                      </div>
+                      
+                                      <button
+                                        onClick={() =>
+                                          handleReportDownload(
+                                            report.name
+                                          )
+                                        }
+                                        disabled={
+                                          loading ||
+                                          items.length ===
+                                            0
+                                        }
+                                        className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline disabled:opacity-50"
+                                      >
+                                        <Download
+                                          size={13}
+                                        />
+                      
+                                        {
+                                          report.format
+                                        }
+                                      </button>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            </Card>
+                          </div>
+                        );
+                      }
+function PCONotifications() {
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [processingId, setProcessingId] = useState<number | null>(null);
+  const [markingAll, setMarkingAll] = useState(false);
+
+  async function loadNotifications(
+    showLoading = true
+  ) {
+    try {
+      if (showLoading) {
+        setLoading(true);
+      }
+
+      setError("");
+
+      const data =
+        await getNotifications();
+
+      setNotifications(
+        Array.isArray(
+          data?.notifications
+        )
+          ? data.notifications
+          : []
+      );
+
+      setUnreadCount(
+        Number(
+          data?.unread_count ??
+          0
+        )
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load PCO notifications:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load notifications."
+      );
+    } finally {
+      if (showLoading) {
+        setLoading(false);
+      }
+    }
+  }
+
+  useEffect(() => {
+    loadNotifications(true);
+
+    const interval =
+      window.setInterval(
+        () => {
+          loadNotifications(false);
+        },
+        15000
+      );
+
+    const handleFocus =
+      () => {
+        loadNotifications(false);
+      };
+
+    const handleVisibility =
+      () => {
+        if (
+          document.visibilityState ===
+          "visible"
+        ) {
+          loadNotifications(false);
+        }
+      };
+
+    window.addEventListener(
+      "focus",
+      handleFocus
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+    return () => {
+      window.clearInterval(
+        interval
+      );
+
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+    };
+  }, []);
+
+  async function handleMarkRead(id: number) {
+    try {
+      setProcessingId(id);
+
+      await markNotificationRead(id);
+
+      setNotifications((current) =>
+        current.map((notification) =>
+          notification.id === id
+            ? {
+                ...notification,
+                is_read: true,
+                read_at:
+                  notification.read_at ??
+                  new Date().toISOString(),
+              }
+            : notification
+        )
+      );
+
+      setUnreadCount((current) =>
+        Math.max(0, current - 1)
+      );
+    } catch (err) {
+      console.error(
+        "Failed to mark notification as read:",
+        err
+      );
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark notification as read."
+      );
+    } finally {
+      setProcessingId(null);
+    }
+  }
+
+  async function handleMarkAllRead() {
+    try {
+      setMarkingAll(true);
+
+      await markAllNotificationsRead();
+
+      setNotifications((current) =>
+        current.map((notification) => ({
+          ...notification,
+          is_read: true,
+          read_at:
+            notification.read_at ??
+            new Date().toISOString(),
+        }))
+      );
+
+      setUnreadCount(0);
+    } catch (err) {
+      console.error(
+        "Failed to mark all notifications as read:",
+        err
+      );
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark all notifications as read."
+      );
+    } finally {
+      setMarkingAll(false);
+    }
+  }
+
+  function formatNotificationDate(
+    dateString: string
+  ) {
+    if (!dateString) {
+      return "—";
+    }
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleString([], {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function getNotificationStyle(type: string) {
+    switch (
+      String(type ?? "").toLowerCase()
+    ) {
+      case "new_item_registration":
+        return {
+          background:
+            "bg-yellow-50 border-yellow-200",
+          iconBackground:
+            "bg-yellow-100 text-yellow-700",
+        };
+
+      case "item_approved":
+        return {
+          background:
+            "bg-green-50 border-green-200",
+          iconBackground:
+            "bg-green-100 text-green-700",
+        };
+
+      case "item_submitted":
+        return {
+          background:
+            "bg-blue-50 border-blue-200",
+          iconBackground:
+            "bg-blue-100 text-blue-700",
+        };
+
+      case "lost_found_claim":
+        return {
+          background:
+            "bg-purple-50 border-purple-200",
+          iconBackground:
+            "bg-purple-100 text-purple-700",
+        };
+
+      default:
+        return {
+          background:
+            "bg-muted/30 border-[#cfd8e6]",
+          iconBackground:
+            "bg-muted text-muted-foreground",
+        };
+    }
+  }
+
+  const readCount =
+    notifications.length - unreadCount;
+
+  return (
+    <div className="space-y-5">
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <PageHeader
+          title="Notifications"
+          subtitle="PCO item registration alerts and system updates."
+        />
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => loadNotifications(true)}
+            disabled={loading}
+            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+          >
+            {loading
+              ? "Refreshing..."
+              : "Refresh"}
+          </button>
+
+          <button
+            onClick={handleMarkAllRead}
+            disabled={
+              markingAll ||
+              unreadCount === 0
+            }
+            className="px-3 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            {markingAll
+              ? "Marking..."
+              : "Mark All as Read"}
+          </button>
+        </div>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* SUMMARY */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <StatCard
+          label="All Notifications"
+          value={String(
+            notifications.length
+          )}
+          icon={
+            <FileText size={20} />
+          }
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="Unread"
+          value={String(unreadCount)}
+          icon={
+            <AlertTriangle size={20} />
+          }
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Read"
+          value={String(readCount)}
+          icon={
+            <CheckCircle size={20} />
+          }
+          color="#2ecc71"
+        />
+      </div>
+
+      {/* NOTIFICATIONS */}
+      <Card title="All Notifications">
+        <div className="p-3">
+          {loading ? (
+            <div className="py-12 text-center">
+              <p className="text-sm text-muted-foreground">
+                Loading notifications...
+              </p>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="py-12 text-center">
+              <CheckCircle
+                size={36}
+                className="mx-auto mb-3 text-muted-foreground"
+              />
+
+              <p className="text-sm font-semibold text-foreground">
+                No notifications
+              </p>
+
+              <p className="text-xs text-muted-foreground mt-1">
+                New item registration
+                requests will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {notifications.map(
+                (notification: any) => {
+                  const styles =
+                    getNotificationStyle(
+                      notification.type
+                    );
+
+                  const isRead =
+                    Boolean(
+                      notification.is_read
+                    );
+
+                  return (
+                    <div
+                      key={
+                        notification.id
+                      }
+                      className={`border rounded-lg p-4 transition-colors ${
+                        isRead
+                          ? "bg-white border-[#cfd8e6]"
+                          : styles.background
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* ICON */}
+                        <div
+                          className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                            isRead
+                              ? "bg-muted text-muted-foreground"
+                              : styles.iconBackground
+                          }`}
+                        >
+                          {notification.type ===
+                          "new_item_registration" ? (
+                            <Clock
+                              size={17}
+                            />
+                          ) : notification.type ===
+                            "item_approved" ? (
+                            <CheckCircle
+                              size={17}
+                            />
+                          ) : (
+                            <FileText
+                              size={17}
+                            />
+                          )}
+                        </div>
+
+                        {/* CONTENT */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3
+                                  className={`text-sm ${
+                                    isRead
+                                      ? "font-medium"
+                                      : "font-bold"
+                                  }`}
+                                >
+                                  {notification.title ??
+                                    "Notification"}
+                                </h3>
+
+                                {!isRead && (
+                                  <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                                )}
+                              </div>
+
+                              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                {notification.message}
+                              </p>
+                            </div>
+
+                            <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                              {formatNotificationDate(
+                                notification.created_at
+                              )}
+                            </span>
+                          </div>
+
+                          {/* ACTION */}
+                          {!isRead && (
+                            <div className="mt-3">
+                              <button
+                                onClick={() =>
+                                  handleMarkRead(
+                                    notification.id
+                                  )
+                                }
+                                disabled={
+                                  processingId ===
+                                  notification.id
+                                }
+                                className="text-xs text-primary font-semibold hover:underline disabled:opacity-50"
+                              >
+                                {processingId ===
+                                notification.id
+                                  ? "Marking..."
+                                  : "Mark as Read"}
+                              </button>
+                            </div>
+                          )}
+
+                          {isRead &&
+                            notification.read_at && (
+                              <p className="text-[10px] text-muted-foreground mt-2">
+                                Read{" "}
+                                {formatNotificationDate(
+                                  notification.read_at
+                                )}
+                              </p>
+                            )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+              )}
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ADMIN PAGES
+// ══════════════════════════════════════════════════════════════════════════════
+function AdminDashboard() {
+  const [dashboardData, setDashboardData] =
+    useState<any>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function loadDashboard() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getDashboard();
+
+      setDashboardData(data);
+    } catch (err) {
+      console.error(
+        "Failed to load dashboard:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load dashboard data."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  function formatActivityTime(
+    dateString: string | null
+  ) {
+    if (!dateString) return "—";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  const stats = dashboardData?.stats ?? {
+    total_items: 0,
+    active_qr_codes: 0,
+    pending_registrations: 0,
+    scans_today: 0,
+    flagged_incidents: 0,
+    lost_found_items: 0,
+  };
+
+  const itemTypes =
+    dashboardData?.item_types ?? [];
+
+  const recentScans =
+    dashboardData?.recent_scans ?? [];
+
+  const recentIncidents =
+    dashboardData?.recent_incidents ?? [];
+
+  const maxItemTypeCount = Math.max(
+    ...itemTypes.map((item: any) =>
+      Number(item.total ?? 0)
+    ),
+    1
+  );
+
+  const recentActivity = [
+    ...recentScans.map((scan: any) => ({
+      id: `scan-${scan.id}`,
+      type: "scan",
+      date: scan.scanned_at,
+      message: `${
+        scan.direction ?? "QR"
+      } scan verified for ${
+        scan.item?.item_name ?? "registered item"
+      } at ${scan.gate ?? "campus gate"}.`,
+    })),
+
+    ...recentIncidents.map(
+      (incident: any) => ({
+        id: `incident-${incident.id}`,
+        type: "incident",
+        date: incident.reported_at,
+        message: `${
+          incident.incident_type ??
+          "Security incident"
+        } reported at ${
+          incident.gate ?? "campus gate"
+        }${
+          incident.scanned_code
+            ? ` — ${incident.scanned_code}`
+            : ""
+        }.`,
+      })
+    ),
+  ]
+    .sort(
+      (a, b) =>
+        new Date(b.date ?? 0).getTime() -
+        new Date(a.date ?? 0).getTime()
+    )
+    .slice(0, 8);
+
+  if (loading && !dashboardData) {
+    return (
+      <div className="space-y-5">
+        <PageHeader
+          title="Overview Dashboard"
+          subtitle="System-wide summary of QRpass operations."
+        />
+
+        <div className="bg-white border border-[#cfd8e6] rounded-lg p-10 text-center text-sm text-muted-foreground">
+          Loading dashboard data...
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-5">
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <PageHeader
+          title="Overview Dashboard"
+          subtitle="System-wide summary of QRpass operations."
+        />
+
+        <button
+          onClick={loadDashboard}
+          disabled={loading}
+          className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
+        >
+          {loading
+            ? "Refreshing..."
+            : "Refresh Dashboard"}
+        </button>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* MAIN STATISTICS */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <StatCard
+          label="Total Items"
+          value={String(stats.total_items)}
+          icon={<Package size={20} />}
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="Active QR"
+          value={String(stats.active_qr_codes)}
+          icon={<QrCode size={20} />}
+          color="#557bdc"
+        />
+
+        <StatCard
+          label="Scans Today"
+          value={String(stats.scans_today)}
+          icon={<ScanLine size={20} />}
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Flagged Incidents"
+          value={String(stats.flagged_incidents)}
+          icon={<AlertTriangle size={20} />}
+          color="#e8543a"
+        />
+
+        <StatCard
+          label="Pending"
+          value={String(
+            stats.pending_registrations
+          )}
+          icon={<Clock size={20} />}
+          color="#6b8ee6"
+        />
+
+        <StatCard
+          label="Lost & Found"
+          value={String(stats.lost_found_items)}
+          icon={<Search size={20} />}
+          color="#2ecc71"
+        />
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-5">
+        {/* ITEM TYPES */}
+        <Card title="Registered Items by Type">
+          <div className="p-4">
+            {itemTypes.length === 0 ? (
+              <div className="py-10 text-center">
+                <p className="text-sm font-semibold text-foreground">
+                  No registered items yet.
+                </p>
+
+                <p className="text-xs text-muted-foreground mt-1">
+                  Item statistics will appear here after
+                  students register items.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {itemTypes.map(
+                  (item: any, index: number) => {
+                    const count = Number(
+                      item.total ?? 0
+                    );
+
+                    const percentage =
+                      (count /
+                        maxItemTypeCount) *
+                      100;
+
+                    const colors = [
+                      "#1a3a7b",
+                      "#557bdc",
+                      "#2f5fd6",
+                      "#2ecc71",
+                      "#6b8ee6",
+                      "#e8543a",
+                    ];
+
+                    const color =
+                      colors[
+                        index %
+                          colors.length
+                      ];
+
+                    return (
+                      <div
+                        key={
+                          item.item_type ??
+                          index
+                        }
+                      >
+                        <div className="flex items-center justify-between gap-3 mb-1.5">
+                          <span className="text-xs font-medium text-foreground">
+                            {item.item_type ||
+                              "Other"}
+                          </span>
+
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            {count}
+                          </span>
+                        </div>
+
+                        <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-300"
+                            style={{
+                              width: `${Math.max(
+                                percentage,
+                                3
+                              )}%`,
+                              backgroundColor:
+                                color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* RECENT ACTIVITY */}
+        <Card title="Recent System Activity">
+          {recentActivity.length === 0 ? (
+            <div className="p-10 text-center">
+              <p className="text-sm font-semibold text-foreground">
+                No recent activity.
+              </p>
+
+              <p className="text-xs text-muted-foreground mt-1">
+                QR scans and security incidents will
+                appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {recentActivity.map(
+                (activity) => (
+                  <div
+                    key={activity.id}
+                    className="px-4 py-3 flex gap-3"
+                  >
+                    <div className="mt-0.5">
+                      {activity.type ===
+                      "incident" ? (
+                        <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
+                          <AlertTriangle
+                            size={15}
+                            className="text-red-600"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center">
+                          <CheckCircle
+                            size={15}
+                            className="text-green-600"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-foreground">
+                        {activity.message}
+                      </p>
+
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        {formatActivityTime(
+                          activity.date
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function AdminRecords() {
+  const [records, setRecords] = useState<any[]>([]);
+  const [summary, setSummary] = useState({
+    total_records: 0,
+    this_month: 0,
+    flagged: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("All");
+
+  async function loadRecords() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getSystemRecords();
+
+      setRecords(data.records ?? []);
+
+      setSummary(
+        data.summary ?? {
+          total_records: 0,
+          this_month: 0,
+          flagged: 0,
+        }
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load system records:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load system records."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadRecords();
+  }, []);
+
+  function formatDate(dateString: string) {
+    if (!dateString) return "—";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString();
+  }
+
+  function formatTime(dateString: string) {
+    if (!dateString) return "—";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  const recordTypes = [
+    "All",
+    "Item Registration",
+    "QR Scan",
+    "Security Incident",
+    "Lost & Found",
+  ];
+
+  const filteredRecords = records.filter(
+    (record) => {
+      const matchesType =
+        typeFilter === "All" ||
+        record.record_type === typeFilter;
+
+      const query = search
+        .trim()
+        .toLowerCase();
+
+      if (!matchesType) {
+        return false;
+      }
+
+      if (!query) {
+        return true;
+      }
+
+      return [
+        record.record_type,
+        record.title,
+        record.description,
+        record.user_name,
+        record.user_id,
+        record.status,
+      ].some((value) =>
+        String(value ?? "")
+          .toLowerCase()
+          .includes(query)
+      );
+    }
+  );
+
+  function exportCSV() {
+    if (filteredRecords.length === 0) {
+      alert(
+        "There are no system records to export."
+      );
+      return;
+    }
+
+    const headers = [
+      "Date",
+      "Time",
+      "Record Type",
+      "Title",
+      "Description",
+      "User",
+      "User ID",
+      "Status",
+    ];
+
+    const rows = filteredRecords.map(
+      (record) => [
+        formatDate(record.date),
+        formatTime(record.date),
+        record.record_type ?? "",
+        record.title ?? "",
+        record.description ?? "",
+        record.user_name ?? "",
+        record.user_id ?? "",
+        record.status ?? "",
+      ]
+    );
+
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((value) => {
+            const text = String(
+              value ?? ""
+            ).replace(/"/g, '""');
+
+            return `"${text}"`;
+          })
+          .join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob(
+      [csvContent],
+      {
+        type: "text/csv;charset=utf-8;",
+      }
+    );
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+
+    link.download = `qrpass-system-records-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  }
+
+  function getStatusClasses(status: string) {
+    const value = String(
+      status ?? ""
+    ).toLowerCase();
+
+    if (
+      value === "verified" ||
+      value === "approved" ||
+      value === "claimed" ||
+      value === "resolved"
+    ) {
+      return "bg-green-100 text-green-700";
+    }
+
+    if (
+      value === "flagged"
+    ) {
+      return "bg-red-100 text-red-700";
+    }
+
+    if (
+      value === "pending"
+    ) {
+      return "bg-yellow-100 text-yellow-700";
+    }
+
+    if (
+      value === "found"
+    ) {
+      return "bg-blue-100 text-blue-700";
+    }
+
+    return "bg-gray-100 text-gray-700";
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <PageHeader
+          title="System Records"
+          subtitle="Centralized records for all QRpass transactions."
+        />
+
+        <div className="flex gap-2">
+          <button
+            onClick={loadRecords}
+            disabled={loading}
+            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+          >
+            {loading
+              ? "Refreshing..."
+              : "Refresh"}
+          </button>
+
+          <button
+            onClick={exportCSV}
+            className="px-3 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90"
+          >
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* SUMMARY */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatCard
+          label="Total Records"
+          value={String(
+            summary.total_records
+          )}
+          icon={<Layers size={20} />}
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="This Month"
+          value={String(
+            summary.this_month
+          )}
+          icon={<FileText size={20} />}
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Flagged"
+          value={String(
+            summary.flagged
+          )}
+          icon={
+            <AlertTriangle
+              size={20}
+            />
+          }
+          color="#e8543a"
+        />
+      </div>
+
+      {/* SEARCH AND FILTER */}
+      <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-3">
+          <input
+            type="text"
+            value={search}
+            onChange={(event) =>
+              setSearch(
+                event.target.value
+              )
+            }
+            placeholder="Search records, users, items, status..."
+            className="w-full px-3 py-2.5 border border-[#cfd8e6] rounded-md text-sm bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+          />
+
+          <select
+            value={typeFilter}
+            onChange={(event) =>
+              setTypeFilter(
+                event.target.value
+              )
+            }
+            className="w-full px-3 py-2.5 border border-[#cfd8e6] rounded-md text-sm bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+          >
+            {recordTypes.map(
+              (type) => (
+                <option
+                  key={type}
+                  value={type}
+                >
+                  {type}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+      </div>
+
+      {/* RECORDS TABLE */}
+      <div className="bg-white border border-[#cfd8e6] rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-[#cfd8e6]">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-sm text-foreground">
+                System Transactions
+              </h2>
+
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Showing{" "}
+                {
+                  filteredRecords.length
+                }{" "}
+                record
+                {filteredRecords.length !==
+                1
+                  ? "s"
+                  : ""}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1100px]">
+            <thead>
+              <tr className="bg-[#fafbfc]">
+                {[
+                  "Date",
+                  "Time",
+                  "Type",
+                  "Record",
+                  "Description",
+                  "User",
+                  "Status",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="text-left py-3 px-3 text-xs text-muted-foreground font-semibold"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-border">
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    Loading system records...
+                  </td>
+                </tr>
+              ) : filteredRecords.length ===
+                0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center"
+                  >
+                    <p className="text-sm font-semibold text-foreground">
+                      No system records
+                      found.
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Try changing the
+                      search or filter.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredRecords.map(
+                  (record) => (
+                    <tr
+                      key={record.id}
+                      className="hover:bg-[#eef2fc]"
+                    >
+                      <td className="py-3 px-3 text-xs text-foreground whitespace-nowrap">
+                        {formatDate(
+                          record.date
+                        )}
+                      </td>
+
+                      <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                        {formatTime(
+                          record.date
+                        )}
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <span className="text-xs font-semibold text-primary">
+                          {record.record_type ??
+                            "Record"}
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <p className="text-xs font-semibold text-foreground">
+                          {record.title ??
+                            "—"}
+                        </p>
+
+                        {record.user_id && (
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {
+                              record.user_id
+                            }
+                          </p>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <p className="text-xs text-foreground max-w-[330px]">
+                          {record.description ??
+                            "—"}
+                        </p>
+                      </td>
+
+                      <td className="py-3 px-3 text-xs text-foreground">
+                        {record.user_name ??
+                          "—"}
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <span
+                          className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold ${getStatusClasses(
+                            record.status
+                          )}`}
+                        >
+                          {record.status ??
+                            "Unknown"}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+// =========================================================
+// QR CODE SCAN ACTIVITY EXCEL
+// =========================================================
+
+async function downloadQrScanActivityExcel() {
+  try {
+    const data = await getScanLogs();
+
+    const logs = data.logs ?? [];
+
+    if (logs.length === 0) {
+      alert(
+        "There are no QR scan records to export."
+      );
+
+      return;
+    }
+
+    const verifiedCount = logs.filter(
+      (log: any) =>
+        String(
+          log.result ?? ""
+        ).toLowerCase() ===
+        "verified"
+    ).length;
+
+    const entryCount = logs.filter(
+      (log: any) =>
+        String(
+          log.direction ?? ""
+        ).toUpperCase() === "IN"
+    ).length;
+
+    const exitCount = logs.filter(
+      (log: any) =>
+        String(
+          log.direction ?? ""
+        ).toUpperCase() === "OUT"
+    ).length;
+
+    // =====================================================
+    // SUMMARY SHEET
+    // =====================================================
+
+    const summaryRows = [
+      {
+        Metric: "Total QR Scans",
+        Value: logs.length,
+      },
+
+      {
+        Metric: "Verified Scans",
+        Value: verifiedCount,
+      },
+
+      {
+        Metric: "Entry Scans",
+        Value: entryCount,
+      },
+
+      {
+        Metric: "Exit Scans",
+        Value: exitCount,
+      },
+
+      {
+        Metric: "Report Generated",
+        Value:
+          new Date().toLocaleString(
+            "en-PH"
+          ),
+      },
+    ];
+
+    // =====================================================
+    // SCAN ACTIVITY SHEET
+    // =====================================================
+
+    const scanRows = logs.map(
+      (log: any) => ({
+        Date: log.scanned_at
+          ? new Date(
+              log.scanned_at
+            ).toLocaleDateString(
+              "en-PH"
+            )
+          : "—",
+
+        Time: log.scanned_at
+          ? new Date(
+              log.scanned_at
+            ).toLocaleTimeString(
+              "en-PH",
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+              }
+            )
+          : "—",
+
+        "QR ID":
+          log.qr_code ?? "—",
+
+        Item:
+          log.item?.item_name ??
+          "Unknown Item",
+
+        Type:
+          log.item?.item_type ??
+          "—",
+
+        "Serial Number":
+          log.item?.serial_number ??
+          "—",
+
+        Owner:
+          log.item?.user?.name ??
+          "Unknown",
+
+        "Owner ID":
+          log.item?.user?.username ??
+          "—",
+
+        Gate:
+          log.gate ?? "—",
+
+        Direction:
+          log.direction ?? "—",
+
+        Result:
+          log.result ?? "—",
+
+        "Scanned By":
+          log.scanner?.name ??
+          "—",
+
+        "Scanner ID":
+          log.scanner?.username ??
+          "—",
+      })
+    );
+
+    // =====================================================
+    // CREATE EXCEL WORKBOOK
+    // =====================================================
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    const summarySheet =
+      XLSX.utils.json_to_sheet(
+        summaryRows
+      );
+
+    const scanSheet =
+      XLSX.utils.json_to_sheet(
+        scanRows
+      );
+
+    summarySheet["!cols"] = [
+      { wch: 25 },
+      { wch: 25 },
+    ];
+
+    scanSheet["!cols"] = [
+      { wch: 14 }, // Date
+      { wch: 12 }, // Time
+      { wch: 25 }, // QR ID
+      { wch: 25 }, // Item
+      { wch: 20 }, // Type
+      { wch: 20 }, // Serial
+      { wch: 25 }, // Owner
+      { wch: 18 }, // Owner ID
+      { wch: 15 }, // Gate
+      { wch: 12 }, // Direction
+      { wch: 15 }, // Result
+      { wch: 25 }, // Scanned By
+      { wch: 18 }, // Scanner ID
+    ];
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      summarySheet,
+      "Summary"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      scanSheet,
+      "QR Scan Activity"
+    );
+
+    const today = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    XLSX.writeFile(
+      workbook,
+      `QRPass-QR-Scan-Activity-${today}.xlsx`
+    );
+  } catch (err) {
+    console.error(
+      "Failed to generate QR Scan Activity Excel:",
+      err
+    );
+
+    alert(
+      err instanceof Error
+        ? err.message
+        : "Failed to generate QR Scan Activity Excel report."
+    );
+  }
+}
+function AdminAnalytics() {
+  const [reportData, setReportData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function loadReports() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getReports();
+
+      setReportData(data);
+    } catch (err) {
+      console.error("Failed to load reports:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load report data."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  const summary = reportData?.summary ?? {
+    total_registered_items: 0,
+    active_qr_codes: 0,
+    pending_items: 0,
+    scans_today: 0,
+    scans_this_month: 0,
+    registrations_this_month: 0,
+    flagged_incidents: 0,
+    resolved_incidents: 0,
+    lost_found_available: 0,
+    lost_found_claimed: 0,
+  };
+
+  const itemTypes =
+    reportData?.item_types ?? [];
+
+  const dailyScans =
+    reportData?.daily_scans ?? [];
+
+  const monthlyRegistrations =
+    reportData?.monthly_registrations ?? [];
+
+  const recentRegistrations =
+    reportData?.recent_registrations ?? [];
+
+  const recentIncidents =
+    reportData?.recent_incidents ?? [];
+
+  function formatDate(dateString: string) {
+    if (!dateString) return "—";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString();
+  }
+
+  function formatTime(dateString: string) {
+    if (!dateString) return "—";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const maxItemType = Math.max(
+    ...itemTypes.map((item: any) =>
+      Number(item.total ?? 0)
+    ),
+    1
+  );
+
+  const maxDailyScans = Math.max(
+    ...dailyScans.map((item: any) =>
+      Number(item.total ?? 0)
+    ),
+    1
+  );
+
+  const maxMonthly = Math.max(
+    ...monthlyRegistrations.map((item: any) =>
+      Number(item.total ?? 0)
+    ),
+    1
+  );
+
+  // =========================================================
+  // DAILY QR SCAN PDF
+  // =========================================================
+
+  async function downloadDailyQrScanPDF() {
+    try {
+      const data = await getScanLogs();
+
+      const allLogs = data.logs ?? [];
+
+      const today = new Date();
+
+      const todayLogs = allLogs.filter(
+        (log: any) => {
+          if (!log.scanned_at) {
+            return false;
+          }
+
+          const scanDate = new Date(
+            log.scanned_at
+          );
+
+          return (
+            scanDate.getFullYear() ===
+              today.getFullYear() &&
+            scanDate.getMonth() ===
+              today.getMonth() &&
+            scanDate.getDate() ===
+              today.getDate()
+          );
+        }
+      );
+
+      if (todayLogs.length === 0) {
+        alert(
+          "There are no QR scan records for today."
+        );
+
+        return;
+      }
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+      });
+
+      const verifiedCount =
+        todayLogs.filter(
+          (log: any) =>
+            String(
+              log.result ?? ""
+            ).toLowerCase() === "verified"
+        ).length;
+
+      const inCount =
+        todayLogs.filter(
+          (log: any) =>
+            String(
+              log.direction ?? ""
+            ).toUpperCase() === "IN"
+        ).length;
+
+      const outCount =
+        todayLogs.filter(
+          (log: any) =>
+            String(
+              log.direction ?? ""
+            ).toUpperCase() === "OUT"
+        ).length;
+
+      doc.setFontSize(18);
+
+      doc.text(
+        "QRPass Daily QR Scan Summary",
+        14,
+        18
+      );
+
+      doc.setFontSize(10);
+
+      doc.text(
+        "University of Cebu - Main Campus",
+        14,
+        25
+      );
+
+      doc.text(
+        `Report Date: ${today.toLocaleDateString()}`,
+        14,
+        31
+      );
+
+      doc.text(
+        `Total QR Scans: ${todayLogs.length}`,
+        14,
+        37
+      );
+
+      doc.text(
+        `Verified Scans: ${verifiedCount}`,
+        14,
+        43
+      );
+
+      doc.text(
+        `Entry Scans: ${inCount}`,
+        75,
+        37
+      );
+
+      doc.text(
+        `Exit Scans: ${outCount}`,
+        75,
+        43
+      );
+
+      const tableRows =
+        todayLogs.map((log: any) => {
+          return [
+            formatDate(
+              log.scanned_at
+            ),
+
+            formatTime(
+              log.scanned_at
+            ),
+
+            log.item?.user?.name ??
+              "Unknown",
+
+            log.item?.user?.username ??
+              "—",
+
+            log.item?.item_name ??
+              "Unknown Item",
+
+            log.item?.serial_number ??
+              "—",
+
+            log.qr_code ?? "—",
+
+            log.gate ?? "—",
+
+            log.direction ?? "—",
+
+            log.result ?? "—",
+
+            log.scanner?.name ?? "—",
+          ];
+        });
+
+      autoTable(doc, {
+        startY: 50,
+
+        head: [
+          [
+            "Date",
+            "Time",
+            "Owner",
+            "Owner ID",
+            "Item",
+            "Serial No.",
+            "QR Code",
+            "Gate",
+            "Direction",
+            "Result",
+            "Scanned By",
+          ],
+        ],
+
+        body: tableRows,
+
+        styles: {
+          fontSize: 7,
+          cellPadding: 2,
+        },
+
+        headStyles: {
+          fillColor: [0, 48, 135],
+          textColor: [255, 255, 255],
+        },
+
+        alternateRowStyles: {
+          fillColor: [245, 247, 250],
+        },
+      });
+
+      const filenameDate = today
+        .toISOString()
+        .slice(0, 10);
+
+      doc.save(
+        `QRPass-Daily-QR-Scan-${filenameDate}.pdf`
+      );
+    } catch (err) {
+      console.error(
+        "Failed to generate daily QR scan PDF:",
+        err
+      );
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to generate Daily QR Scan PDF."
+      );
+    }
+  }
+
+  // =========================================================
+  // MONTHLY ITEM REGISTRATION PDF
+  // =========================================================
+
+  async function downloadMonthlyRegistrationPDF() {
+    try {
+      const data = await getAllItems();
+
+      const allItems = data.items ?? [];
+
+      const now = new Date();
+
+      const monthlyItems =
+        allItems.filter(
+          (item: any) => {
+            if (!item.created_at) {
+              return false;
+            }
+
+            const created =
+              new Date(
+                item.created_at
+              );
+
+            return (
+              created.getFullYear() ===
+                now.getFullYear() &&
+              created.getMonth() ===
+                now.getMonth()
+            );
+          }
+        );
+
+      if (
+        monthlyItems.length === 0
+      ) {
+        alert(
+          "There are no item registrations for this month."
+        );
+
+        return;
+      }
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+      });
+
+      const monthName =
+        now.toLocaleDateString(
+          "en-US",
+          {
+            month: "long",
+            year: "numeric",
+          }
+        );
+
+      const approvedCount =
+        monthlyItems.filter(
+          (item: any) =>
+            String(
+              item.status ?? ""
+            ).toLowerCase() === "approved"
+        ).length;
+
+      const pendingCount =
+        monthlyItems.filter(
+          (item: any) =>
+            String(
+              item.status ?? ""
+            ).toLowerCase() === "pending"
+        ).length;
+
+      doc.setFontSize(18);
+
+      doc.text(
+        "QRPass Monthly Item Registration Summary",
+        14,
+        18
+      );
+
+      doc.setFontSize(10);
+
+      doc.text(
+        "University of Cebu - Main Campus",
+        14,
+        25
+      );
+
+      doc.text(
+        `Reporting Period: ${monthName}`,
+        14,
+        31
+      );
+
+      doc.text(
+        `Total Registrations: ${monthlyItems.length}`,
+        14,
+        37
+      );
+
+      doc.text(
+        `Approved: ${approvedCount}`,
+        75,
+        37
+      );
+
+      doc.text(
+        `Pending: ${pendingCount}`,
+        120,
+        37
+      );
+
+      const tableRows =
+        monthlyItems.map(
+          (item: any) => {
+            return [
+              formatDate(
+                item.created_at
+              ),
+
+              item.user?.name ??
+                "Unknown",
+
+              item.user?.username ??
+                "—",
+
+              item.item_name ??
+                "—",
+
+              item.item_type ??
+                "—",
+
+              item.brand_model ??
+                "—",
+
+              item.serial_number ??
+                "—",
+
+              item.color ??
+                "—",
+
+              item.qr_code ??
+                "Not issued",
+
+              item.status ??
+                "—",
+            ];
+          }
+        );
+
+      autoTable(doc, {
+        startY: 45,
+
+        head: [
+          [
+            "Date",
+            "Owner",
+            "Owner ID",
+            "Item",
+            "Type",
+            "Brand / Model",
+            "Serial No.",
+            "Color",
+            "QR Code",
+            "Status",
+          ],
+        ],
+
+        body: tableRows,
+
+        styles: {
+          fontSize: 7,
+          cellPadding: 2,
+        },
+
+        headStyles: {
+          fillColor: [0, 48, 135],
+          textColor: [255, 255, 255],
+        },
+
+        alternateRowStyles: {
+          fillColor: [245, 247, 250],
+        },
+      });
+
+      const fileMonth =
+        `${now.getFullYear()}-${String(
+          now.getMonth() + 1
+        ).padStart(2, "0")}`;
+
+      doc.save(
+        `QRPass-Monthly-Item-Registration-${fileMonth}.pdf`
+      );
+    } catch (err) {
+      console.error(
+        "Failed to generate monthly registration PDF:",
+        err
+      );
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to generate Monthly Registration PDF."
+      );
+    }
+  }
+
+  // =========================================================
+  // SECURITY INCIDENT EXCEL
+  // =========================================================
+
+  // =========================================================
+// SECURITY INCIDENT EXCEL
+// =========================================================
+
+async function downloadFlaggedIncidentsExcel() {
+  try {
+    const data = await getSecurityIncidents();
+
+    const incidents = data.incidents ?? [];
+
+    if (incidents.length === 0) {
+      alert(
+        "There are no security incident records to export."
+      );
+
+      return;
+    }
+
+    const flaggedCount = incidents.filter(
+      (incident: any) =>
+        String(
+          incident.status ?? ""
+        ).toLowerCase() === "flagged"
+    ).length;
+
+    const resolvedCount = incidents.filter(
+      (incident: any) =>
+        String(
+          incident.status ?? ""
+        ).toLowerCase() === "resolved"
+    ).length;
+
+    const incidentRows = incidents.map(
+      (incident: any) => {
+        return {
+          Date: formatDate(
+            incident.reported_at
+          ),
+
+          Time: formatTime(
+            incident.reported_at
+          ),
+
+          "Incident Type":
+            incident.incident_type ??
+            "Security Incident",
+
+          "Scanned Code":
+            incident.scanned_code ?? "",
+
+          "Item Name":
+            incident.item?.item_name ??
+            incident.item_name ??
+            "Unknown Item",
+
+          "Serial Number":
+            incident.item?.serial_number ??
+            incident.serial_number ??
+            "",
+
+          Gate:
+            incident.gate ?? "",
+
+          "Reported By":
+            incident.reporter?.name ??
+            "Security Personnel",
+
+          "Reporter ID":
+            incident.reporter?.username ??
+            "",
+
+          Status:
+            incident.status ??
+            "Flagged",
+
+          Description:
+            incident.description ?? "",
+        };
+      }
+    );
+
+    const summaryRows = [
+      {
+        Metric:
+          "Total Security Incidents",
+        Value:
+          incidents.length,
+      },
+      {
+        Metric:
+          "Currently Flagged",
+        Value:
+          flaggedCount,
+      },
+      {
+        Metric:
+          "Resolved Incidents",
+        Value:
+          resolvedCount,
+      },
+      {
+        Metric:
+          "Report Generated",
+        Value:
+          new Date().toLocaleString(),
+      },
+    ];
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    const summarySheet =
+      XLSX.utils.json_to_sheet(
+        summaryRows
+      );
+
+    const incidentSheet =
+      XLSX.utils.json_to_sheet(
+        incidentRows
+      );
+
+    summarySheet["!cols"] = [
+      { wch: 25 },
+      { wch: 25 },
+    ];
+
+    incidentSheet["!cols"] = [
+      { wch: 14 },
+      { wch: 12 },
+      { wch: 22 },
+      { wch: 25 },
+      { wch: 25 },
+      { wch: 22 },
+      { wch: 15 },
+      { wch: 25 },
+      { wch: 20 },
+      { wch: 14 },
+      { wch: 45 },
+    ];
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      summarySheet,
+      "Summary"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      incidentSheet,
+      "Security Incidents"
+    );
+
+    const today = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    XLSX.writeFile(
+      workbook,
+      `QRPass-Security-Incidents-${today}.xlsx`
+    );
+  } catch (err) {
+    console.error(
+      "Failed to generate security incident Excel report:",
+      err
+    );
+
+    alert(
+      err instanceof Error
+        ? err.message
+        : "Failed to generate Security Incident Excel report."
+    );
+  }
+}
+
+// =========================================================
+// GATE ENTRY / EXIT LOG PDF
+// =========================================================
+
+async function downloadGateEntryExitPDF() {
+  try {
+    const data = await getScanLogs();
+
+    const logs = Array.isArray(data?.logs)
+      ? data.logs
+      : [];
+
+    const gateLogs = logs.filter(
+      (log: any) => {
+        const direction = String(
+          log.direction ?? ""
+        ).toUpperCase();
+
+        return (
+          direction === "IN" ||
+          direction === "OUT"
+        );
+      }
+    );
+
+    if (gateLogs.length === 0) {
+      alert(
+        "There are no Gate Entry/Exit records to generate."
+      );
+      return;
+    }
+
+    const entryCount = gateLogs.filter(
+      (log: any) =>
+        String(
+          log.direction ?? ""
+        ).toUpperCase() === "IN"
+    ).length;
+
+    const exitCount = gateLogs.filter(
+      (log: any) =>
+        String(
+          log.direction ?? ""
+        ).toUpperCase() === "OUT"
+    ).length;
+
+    const verifiedCount = gateLogs.filter(
+      (log: any) =>
+        String(
+          log.result ?? ""
+        ).toLowerCase() === "verified"
+    ).length;
+
+    const uniqueOwners = new Set(
+      gateLogs
+        .map(
+          (log: any) =>
+            log.item?.user?.id ??
+            log.item?.user?.username ??
+            null
+        )
+        .filter(Boolean)
+    ).size;
+
+    const doc = new jsPDF({
+      orientation: "landscape",
+    });
+
+    doc.setFontSize(18);
+
+    doc.text(
+      "QRPass Gate Entry / Exit Log",
+      14,
+      18
+    );
+
+    doc.setFontSize(10);
+
+    doc.text(
+      "University of Cebu - Main Campus",
+      14,
+      25
+    );
+
+    doc.text(
+      `Generated: ${new Date().toLocaleString(
+        "en-PH"
+      )}`,
+      14,
+      31
+    );
+
+    doc.text(
+      `Total Transactions: ${gateLogs.length}`,
+      14,
+      39
+    );
+
+    doc.text(
+      `Entries: ${entryCount}`,
+      14,
+      45
+    );
+
+    doc.text(
+      `Exits: ${exitCount}`,
+      65,
+      39
+    );
+
+    doc.text(
+      `Verified: ${verifiedCount}`,
+      65,
+      45
+    );
+
+    doc.text(
+      `Unique Owners: ${uniqueOwners}`,
+      115,
+      39
+    );
+
+    const rows = gateLogs.map(
+      (log: any) => {
+        const scanDate = log.scanned_at
+          ? new Date(log.scanned_at)
+          : null;
+
+        return [
+          scanDate &&
+          !Number.isNaN(
+            scanDate.getTime()
+          )
+            ? scanDate.toLocaleDateString(
+                "en-PH"
+              )
+            : "—",
+
+          scanDate &&
+          !Number.isNaN(
+            scanDate.getTime()
+          )
+            ? scanDate.toLocaleTimeString(
+                "en-PH",
+                {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }
+              )
+            : "—",
+
+          log.qr_code ?? "—",
+
+          log.item?.item_name ??
+            "Unknown Item",
+
+          log.item?.item_type ?? "—",
+
+          log.item?.serial_number ??
+            "—",
+
+          log.item?.user?.name ??
+            "Unknown",
+
+          log.item?.user?.username ??
+            "—",
+
+          log.gate ?? "—",
+
+          log.direction ?? "—",
+
+          log.result ?? "—",
+
+          log.scanner?.name ?? "—",
+        ];
+      }
+    );
+
+    autoTable(doc, {
+      startY: 52,
+
+      head: [
+        [
+          "Date",
+          "Time",
+          "QR ID",
+          "Item",
+          "Type",
+          "Serial No.",
+          "Owner",
+          "Owner ID",
+          "Gate",
+          "Direction",
+          "Result",
+          "Scanned By",
+        ],
+      ],
+
+      body: rows,
+
+      styles: {
+        fontSize: 6.5,
+        cellPadding: 2,
+      },
+
+      headStyles: {
+        fillColor: [26, 58, 123],
+        textColor: [255, 255, 255],
+      },
+
+      alternateRowStyles: {
+        fillColor: [245, 247, 250],
+      },
+    });
+
+    const today = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    doc.save(
+      `QRPass-Gate-Entry-Exit-Log-${today}.pdf`
+    );
+  } catch (err) {
+    console.error(
+      "Failed to generate Gate Entry/Exit Log PDF:",
+      err
+    );
+
+    alert(
+      err instanceof Error
+        ? err.message
+        : "Failed to generate Gate Entry/Exit Log PDF."
+    );
+  }
+}
+
+return (
+    <div className="space-y-5">
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <PageHeader
+          title="Reports & Analytics"
+          subtitle="Real-time QRpass statistics and downloadable system reports."
+        />
+
+        <button
+          onClick={loadReports}
+          disabled={loading}
+          className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+        >
+          {loading
+            ? "Refreshing..."
+            : "Refresh Reports"}
+        </button>
+      </div>
+
+      {/* =====================================================
+          DOWNLOADABLE REPORTS
+      ====================================================== */}
+      <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+        <div className="mb-4">
+          <h2 className="text-sm font-bold text-foreground">
+            Download Reports
+          </h2>
+
+          <p className="text-xs text-muted-foreground mt-1">
+            Generate reports using current QRPass database records.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={downloadQrScanActivityExcel}
+            className="px-4 py-2.5 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
+          >
+            <Download size={14} />
+            QR Scan Activity Excel
+          </button>
+
+          <button
+            type="button"
+            onClick={downloadDailyQrScanPDF}
+            className="px-4 py-2.5 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
+          >
+            <Download size={14} />
+            Daily QR Scan PDF
+          </button>
+
+            <button
+            type="button"
+            onClick={downloadGateEntryExitPDF}
+            className="px-4 py-2.5 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
+          >
+            <Download size={14} />
+            Gate Entry/Exit Log PDF
+          </button>
+
+          <button
+            type="button"
+            onClick={downloadMonthlyRegistrationPDF}
+            className="px-4 py-2.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
+          >
+            <Download size={14} />
+            Monthly Registration PDF
+          </button>
+
+          <button
+            type="button"
+            onClick={downloadFlaggedIncidentsExcel}
+            className="px-4 py-2.5 bg-green-600 text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-2"
+          >
+            <Download size={14} />
+            Security Incidents Excel
+          </button>
+        </div>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* MAIN SUMMARY */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <StatCard
+          label="Registered Items"
+          value={String(
+            summary.total_registered_items
+          )}
+          icon={
+            <Package size={20} />
+          }
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="Active QR"
+          value={String(
+            summary.active_qr_codes
+          )}
+          icon={
+            <QrCode size={20} />
+          }
+          color="#557bdc"
+        />
+
+        <StatCard
+          label="Pending"
+          value={String(
+            summary.pending_items
+          )}
+          icon={
+            <Clock size={20} />
+          }
+          color="#6b8ee6"
+        />
+
+        <StatCard
+          label="Scans Today"
+          value={String(
+            summary.scans_today
+          )}
+          icon={
+            <ScanLine size={20} />
+          }
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Flagged"
+          value={String(
+            summary.flagged_incidents
+          )}
+          icon={
+            <AlertTriangle
+              size={20}
+            />
+          }
+          color="#e8543a"
+        />
+
+        <StatCard
+          label="Resolved"
+          value={String(
+            summary.resolved_incidents
+          )}
+          icon={
+            <CheckCircle
+              size={20}
+            />
+          }
+          color="#2ecc71"
+        />
+      </div>
+
+      {/* SECONDARY SUMMARY */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          label="Scans This Month"
+          value={String(
+            summary.scans_this_month
+          )}
+          icon={
+            <BarChart2 size={20} />
+          }
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="Registrations This Month"
+          value={String(
+            summary.registrations_this_month
+          )}
+          icon={
+            <FileText size={20} />
+          }
+          color="#557bdc"
+        />
+
+        <StatCard
+          label="Found Items"
+          value={String(
+            summary.lost_found_available
+          )}
+          icon={
+            <Search size={20} />
+          }
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Claimed Items"
+          value={String(
+            summary.lost_found_claimed
+          )}
+          icon={
+            <CheckCircle
+              size={20}
+            />
+          }
+          color="#2ecc71"
+        />
+      </div>
+
+      {/* ANALYTICS */}
+      <div className="grid lg:grid-cols-3 gap-5">
+        {/* ITEMS BY TYPE */}
+        <Card title="Items by Type">
+          <div className="p-4 space-y-4">
+            {itemTypes.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No item data available.
+              </p>
+            ) : (
+              itemTypes.map(
+                (
+                  item: any,
+                  index: number
+                ) => {
+                  const total =
+                    Number(
+                      item.total ?? 0
+                    );
+
+                  const percentage =
+                    (total /
+                      maxItemType) *
+                    100;
+
+                  const colors = [
+                    "#1a3a7b",
+                    "#557bdc",
+                    "#2f5fd6",
+                    "#2ecc71",
+                    "#6b8ee6",
+                    "#e8543a",
+                  ];
+
+                  return (
+                    <div
+                      key={
+                        item.item_type ??
+                        index
+                      }
+                    >
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="font-medium">
+                          {item.item_type ||
+                            "Other"}
+                        </span>
+
+                        <span className="text-muted-foreground">
+                          {total}
+                        </span>
+                      </div>
+
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${Math.max(
+                              percentage,
+                              3
+                            )}%`,
+
+                            backgroundColor:
+                              colors[
+                                index %
+                                  colors.length
+                              ],
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+              )
+            )}
+          </div>
+        </Card>
+
+        {/* LAST 7 DAYS */}
+        <Card title="QR Scans - Last 7 Days">
+          <div className="p-4 space-y-4">
+            {dailyScans.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No scan activity recorded.
+              </p>
+            ) : (
+              dailyScans.map(
+                (entry: any) => {
+                  const total =
+                    Number(
+                      entry.total ?? 0
+                    );
+
+                  return (
+                    <div
+                      key={
+                        entry.date
+                      }
+                    >
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>
+                          {formatDate(
+                            entry.date
+                          )}
+                        </span>
+
+                        <span className="font-semibold">
+                          {total}
+                        </span>
+                      </div>
+
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full"
+                          style={{
+                            width: `${Math.max(
+                              (total /
+                                maxDailyScans) *
+                                100,
+                              3
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+              )
+            )}
+          </div>
+        </Card>
+
+        {/* MONTHLY REGISTRATIONS */}
+        <Card title="Monthly Registrations">
+          <div className="p-4 space-y-4">
+            {monthlyRegistrations.length ===
+            0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No registration data available.
+              </p>
+            ) : (
+              monthlyRegistrations.map(
+                (entry: any) => {
+                  const total =
+                    Number(
+                      entry.total ?? 0
+                    );
+
+                  const month =
+                    monthNames[
+                      Number(
+                        entry.month
+                      ) - 1
+                    ] ??
+                    `Month ${entry.month}`;
+
+                  return (
+                    <div
+                      key={
+                        entry.month
+                      }
+                    >
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>
+                          {month}
+                        </span>
+
+                        <span className="font-semibold">
+                          {total}
+                        </span>
+                      </div>
+
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${Math.max(
+                              (total /
+                                maxMonthly) *
+                                100,
+                              3
+                            )}%`,
+
+                            backgroundColor:
+                              "#557bdc",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+              )
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* RECENT REGISTRATIONS */}
+      <div className="bg-white border border-[#cfd8e6] rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-[#cfd8e6]">
+          <h2 className="font-semibold text-sm">
+            Recent Item Registrations
+          </h2>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[850px]">
+            <thead>
+              <tr className="bg-[#fafbfc]">
+                {[
+                  "Date",
+                  "Student",
+                  "Item",
+                  "Type",
+                  "Serial Number",
+                  "Status",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="text-left px-3 py-3 text-xs text-muted-foreground font-semibold"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-border">
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="py-10 text-center text-sm text-muted-foreground"
+                  >
+                    Loading reports...
+                  </td>
+                </tr>
+              ) : recentRegistrations.length ===
+                0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="py-10 text-center text-sm text-muted-foreground"
+                  >
+                    No registration records found.
+                  </td>
+                </tr>
+              ) : (
+                recentRegistrations.map(
+                  (item: any) => (
+                    <tr key={item.id}>
+                      <td className="px-3 py-3 text-xs">
+                        {formatDate(
+                          item.created_at
+                        )}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        <div className="font-semibold">
+                          {item.user?.name ??
+                            "Unknown"}
+                        </div>
+
+                        <div className="text-muted-foreground">
+                          {item.user?.username ??
+                            ""}
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-3 text-xs font-semibold">
+                        {item.item_name}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        {item.item_type}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        {item.serial_number}
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                            String(
+                              item.status
+                            ).toLowerCase() ===
+                            "approved"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {item.status}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* SECURITY INCIDENTS */}
+      <div className="bg-white border border-[#cfd8e6] rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-[#cfd8e6]">
+          <h2 className="font-semibold text-sm">
+            Recent Security Incidents
+          </h2>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[850px]">
+            <thead>
+              <tr className="bg-[#fafbfc]">
+                {[
+                  "Date",
+                  "Incident",
+                  "Code",
+                  "Gate",
+                  "Reported By",
+                  "Status",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="text-left px-3 py-3 text-xs text-muted-foreground font-semibold"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-border">
+              {recentIncidents.length ===
+              0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="py-10 text-center text-sm text-muted-foreground"
+                  >
+                    No security incidents found.
+                  </td>
+                </tr>
+              ) : (
+                recentIncidents.map(
+                  (incident: any) => (
+                    <tr
+                      key={
+                        incident.id
+                      }
+                    >
+                      <td className="px-3 py-3 text-xs">
+                        {formatDate(
+                          incident.reported_at
+                        )}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs font-semibold">
+                        {incident.incident_type}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs font-mono">
+                        {incident.scanned_code ||
+                          "—"}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        {incident.gate}
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        {incident.reporter?.name ??
+                          "Security Personnel"}
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                            String(
+                              incident.status
+                            ).toLowerCase() ===
+                            "resolved"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {incident.status}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminNotifications() {
+  return (
+    <div className="space-y-5">
+      <PageHeader title="Notifications" subtitle="Administrative alerts and system updates." />
+      <Card title="All Notifications">
+        <div className="p-3 space-y-2">
+          <NotifItem type="warning" message="4 flagged QR scan incidents require administrative review." time="Jun 16, 2026 – 8:00 AM" />
+          <NotifItem type="info" message="Monthly system report due by June 30, 2026." time="Jun 14, 2026 – 9:00 AM" />
+          <NotifItem type="success" message="Campus-wide QR inspection for June 18 has been scheduled." time="Jun 13, 2026 – 3:00 PM" />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SYSADMIN PAGES
+// ══════════════════════════════════════════════════════════════════════════════
+function SysAdminUserAccounts() {
+  const [users, setUsers] = useState<any[]>([]);
+
+  const [summary, setSummary] = useState<any>({
+    total_users: 0,
+    active_users: 0,
+    inactive_users: 0,
+    students: 0,
+    security: 0,
+    pco: 0,
+    system_admins: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [search, setSearch] = useState("");
+
+  const [updatingId, setUpdatingId] =
+    useState<number | null>(null);
+
+  const [showAddUser, setShowAddUser] =
+    useState(false);
+
+  const [creatingUser, setCreatingUser] =
+    useState(false);
+
+  const [savingEdit, setSavingEdit] =
+    useState(false);
+
+  const [editUser, setEditUser] =
+    useState<any | null>(null);
+
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    username: "",
+    role: "student",
+    password: "",
+  });
+
+  async function loadUsers() {
+  try {
+    setLoading(true);
+    setError("");
+
+    const data =
+      await getUsers();
+
+    const userList =
+      Array.isArray(data?.users)
+        ? data.users
+        : [];
+
+    /*
+    |--------------------------------------------------------------------------
+    | USER LIST
+    |--------------------------------------------------------------------------
+    */
+
+    setUsers(userList);
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUMMARY COUNTS
+    |--------------------------------------------------------------------------
+    */
+
+    const totalUsers =
+      userList.length;
+
+    const students =
+      userList.filter(
+        (user: any) =>
+          String(
+            user.role ?? ""
+          ).toLowerCase() ===
+          "student"
+      ).length;
+
+    const security =
+      userList.filter(
+        (user: any) =>
+          String(
+            user.role ?? ""
+          ).toLowerCase() ===
+          "security"
+      ).length;
+
+    const pco =
+      userList.filter(
+        (user: any) =>
+          String(
+            user.role ?? ""
+          ).toLowerCase() ===
+          "pco"
+      ).length;
+
+    const systemAdmins =
+      userList.filter(
+        (user: any) =>
+          String(
+            user.role ?? ""
+          ).toLowerCase() ===
+          "sysadmin"
+      ).length;
+
+    const activeUsers =
+      userList.filter(
+        (user: any) =>
+          String(
+            user.status ?? ""
+          ).toLowerCase() ===
+          "approved"
+      ).length;
+
+    const inactiveUsers =
+      userList.filter(
+        (user: any) =>
+          String(
+            user.status ?? ""
+          ).toLowerCase() !==
+          "approved"
+      ).length;
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE SUMMARY CARDS
+    |--------------------------------------------------------------------------
+    */
+
+    setSummary({
+      total_users:
+        totalUsers,
+
+      active_users:
+        activeUsers,
+
+      inactive_users:
+        inactiveUsers,
+
+      students:
+        students,
+
+      security:
+        security,
+
+      pco:
+        pco,
+
+      system_admins:
+        systemAdmins,
+    });
+  } catch (err) {
+    console.error(
+      "Failed to load users:",
+      err
+    );
+
+    setError(
+      err instanceof Error
+        ? err.message
+        : "Failed to load user accounts."
+    );
+
+    setUsers([]);
+
+    setSummary({
+      total_users: 0,
+      active_users: 0,
+      inactive_users: 0,
+      students: 0,
+      security: 0,
+      pco: 0,
+      system_admins: 0,
+    });
+  } finally {
+    setLoading(false);
+  }
+}
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  function getRoleLabel(role: string) {
+    switch (
+      String(role ?? "").toLowerCase()
+    ) {
+      case "student":
+        return "Student";
+
+      case "security":
+        return "Security Personnel (CSU)";
+
+      case "pco":
+        return "PCO Staff";
+
+      case "sysadmin":
+        return "System Administrator";
+
+      default:
+        return role || "Unknown";
+    }
+  }
+
+  function getStatusLabel(status: string) {
+    return String(
+      status ?? ""
+    ).toLowerCase() === "approved"
+      ? "Active"
+      : "Disabled";
+  }
+
+  function formatDate(dateString: string) {
+    if (!dateString) {
+      return "—";
+    }
+
+    const date =
+      new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString(
+      "en-US",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }
+    );
+  }
+
+  async function handleAddUser(
+    event: any
+  ) {
+    event.preventDefault();
+
+    setError("");
+    setSuccess("");
+
+    if (
+      !newUser.name.trim() ||
+      !newUser.email.trim() ||
+      !newUser.username.trim() ||
+      !newUser.password.trim()
+    ) {
+      setError(
+        "Please complete all required fields."
+      );
+
+      return;
+    }
+
+    if (newUser.password.length < 6) {
+      setError(
+        "Password must contain at least 6 characters."
+      );
+
+      return;
+    }
+
+    try {
+      setCreatingUser(true);
+
+      const data = await createUser({
+        name: newUser.name.trim(),
+
+        email: newUser.email.trim(),
+
+        username:
+          newUser.username.trim(),
+
+        role:
+          newUser.role as
+            | "student"
+            | "security"
+            | "pco"
+            | "sysadmin",
+
+        password: newUser.password,
+      });
+
+      setSuccess(
+        data.message ??
+          "User account created successfully."
+      );
+
+      setNewUser({
+        name: "",
+        email: "",
+        username: "",
+        role: "student",
+        password: "",
+      });
+
+      setShowAddUser(false);
+
+      await loadUsers();
+    } catch (err) {
+      console.error(
+        "Failed to create user:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to create user account."
+      );
+    } finally {
+      setCreatingUser(false);
+    }
+  }
+
+  function handleStartEdit(user: any) {
+    setError("");
+    setSuccess("");
+    setShowAddUser(false);
+
+    setEditUser({
+      id: user.id,
+      name: user.name ?? "",
+      email: user.email ?? "",
+      username: user.username ?? "",
+      role: user.role ?? "student",
+    });
+  }
+
+  function handleCancelEdit() {
+    setEditUser(null);
+    setError("");
+  }
+
+  async function handleSaveEdit(
+    event: any
+  ) {
+    event.preventDefault();
+
+    if (!editUser) {
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+
+    if (
+      !editUser.name.trim() ||
+      !editUser.email.trim() ||
+      !editUser.username.trim()
+    ) {
+      setError(
+        "Name, email, and username are required."
+      );
+
+      return;
+    }
+
+    try {
+      setSavingEdit(true);
+
+      const data = await updateUser(
+        editUser.id,
+        {
+          name:
+            editUser.name.trim(),
+
+          email:
+            editUser.email.trim(),
+
+          username:
+            editUser.username.trim(),
+
+          role:
+            editUser.role as
+              | "student"
+              | "security"
+              | "pco"
+              | "sysadmin",
+        }
+      );
+
+      setSuccess(
+        data.message ??
+          "User account updated successfully."
+      );
+
+      setEditUser(null);
+
+      await loadUsers();
+    } catch (err) {
+      console.error(
+        "Failed to update user:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update user account."
+      );
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
+  async function handleToggleStatus(
+    user: any
+  ) {
+    const currentStatus =
+      String(
+        user.status ?? ""
+      ).toLowerCase();
+
+    const newStatus =
+      currentStatus === "approved"
+        ? "inactive"
+        : "approved";
+
+    const action =
+      newStatus === "inactive"
+        ? "disable"
+        : "enable";
+
+    const confirmed =
+      window.confirm(
+        `Are you sure you want to ${action} the account of ${user.name}?`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setUpdatingId(user.id);
+
+      setError("");
+      setSuccess("");
+
+      const data =
+        await updateUserStatus(
+          user.id,
+          newStatus
+        );
+
+      setSuccess(
+        data.message ??
+          "User account updated successfully."
+      );
+
+      await loadUsers();
+    } catch (err) {
+      console.error(
+        "Failed to update user status:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update user status."
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  const filteredUsers =
+    users.filter((user: any) => {
+      const keyword =
+        search
+          .trim()
+          .toLowerCase();
+
+      if (!keyword) {
+        return true;
+      }
+
+      const searchableText = [
+        user.name,
+        user.username,
+        user.email,
+        getRoleLabel(user.role),
+        getStatusLabel(user.status),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(
+        keyword
+      );
+    });
+
+  const totalPersonnel =
+    Number(summary.security ?? 0) +
+    Number(summary.pco ?? 0) +
+    Number(summary.system_admins ?? 0);
+
+  return (
+    <div className="space-y-5">
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <PageHeader
+          title="User Accounts"
+          subtitle="Manage QRpass user accounts and role-based access."
+        />
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={loadUsers}
+            disabled={loading}
+            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+          >
+            {loading
+              ? "Refreshing..."
+              : "Refresh Users"}
+          </button>
+
+          <button
+            onClick={() => {
+              setShowAddUser(
+                !showAddUser
+              );
+
+              setEditUser(null);
+              setError("");
+              setSuccess("");
+            }}
+            className="px-3 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-1.5"
+          >
+            <Plus size={14} />
+
+            {showAddUser
+              ? "Close Form"
+              : "Add User"}
+          </button>
+        </div>
+      </div>
+
+      {/* SUCCESS MESSAGE */}
+      {success && (
+        <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
+      {/* ERROR MESSAGE */}
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* ADD USER FORM */}
+      {showAddUser && (
+        <Card title="Add New User Account">
+          <form
+            onSubmit={handleAddUser}
+            className="p-4 space-y-4"
+          >
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Full Name *
+                </label>
+
+                <input
+                  type="text"
+                  value={newUser.name}
+                  onChange={(e) =>
+                    setNewUser(
+                      (current) => ({
+                        ...current,
+                        name:
+                          e.target.value,
+                      })
+                    )
+                  }
+                  placeholder="e.g. Juan Dela Cruz"
+                  required
+                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Email Address *
+                </label>
+
+                <input
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) =>
+                    setNewUser(
+                      (current) => ({
+                        ...current,
+                        email:
+                          e.target.value,
+                      })
+                    )
+                  }
+                  placeholder="e.g. student@uc.edu.ph"
+                  required
+                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Username / ID *
+                </label>
+
+                <input
+                  type="text"
+                  value={
+                    newUser.username
+                  }
+                  onChange={(e) =>
+                    setNewUser(
+                      (current) => ({
+                        ...current,
+                        username:
+                          e.target.value,
+                      })
+                    )
+                  }
+                  placeholder="e.g. 26-1234"
+                  required
+                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Role *
+                </label>
+
+                <select
+                  value={newUser.role}
+                  onChange={(e) =>
+                    setNewUser(
+                      (current) => ({
+                        ...current,
+                        role:
+                          e.target.value,
+                      })
+                    )
+                  }
+                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                >
+                  <option value="student">
+                    Student
+                  </option>
+
+                  <option value="security">
+                    Security Personnel
+                    (CSU)
+                  </option>
+
+                  <option value="pco">
+                    PCO Staff
+                  </option>
+
+                  <option value="sysadmin">
+                    System Administrator
+                  </option>
+                </select>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold mb-1">
+                  Temporary Password *
+                </label>
+
+                <input
+                  type="password"
+                  value={
+                    newUser.password
+                  }
+                  onChange={(e) =>
+                    setNewUser(
+                      (current) => ({
+                        ...current,
+                        password:
+                          e.target.value,
+                      })
+                    )
+                  }
+                  placeholder="Minimum 6 characters"
+                  minLength={6}
+                  required
+                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                />
+
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  The user can use this
+                  password when logging
+                  into QRpass.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddUser(
+                    false
+                  );
+
+                  setNewUser({
+                    name: "",
+                    email: "",
+                    username: "",
+                    role: "student",
+                    password: "",
+                  });
+
+                  setError("");
+                }}
+                disabled={
+                  creatingUser
+                }
+                className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={
+                  creatingUser
+                }
+                className="px-4 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+              >
+                {creatingUser
+                  ? "Creating..."
+                  : "Create User Account"}
+              </button>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      {/* EDIT USER FORM */}
+      {editUser && (
+        <Card title="Edit User Account">
+          <form
+            onSubmit={handleSaveEdit}
+            className="p-4 space-y-4"
+          >
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* EDIT NAME */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Full Name *
+                </label>
+
+                <input
+                  type="text"
+                  value={editUser.name}
+                  onChange={(e) =>
+                    setEditUser({
+                      ...editUser,
+                      name:
+                        e.target.value,
+                    })
+                  }
+                  required
+                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                />
+              </div>
+
+              {/* EDIT EMAIL */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Email Address *
+                </label>
+
+                <input
+                  type="email"
+                  value={editUser.email}
+                  onChange={(e) =>
+                    setEditUser({
+                      ...editUser,
+                      email:
+                        e.target.value,
+                    })
+                  }
+                  required
+                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                />
+              </div>
+
+              {/* EDIT USERNAME */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Username / ID *
+                </label>
+
+                <input
+                  type="text"
+                  value={
+                    editUser.username
+                  }
+                  onChange={(e) =>
+                    setEditUser({
+                      ...editUser,
+                      username:
+                        e.target.value,
+                    })
+                  }
+                  required
+                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                />
+              </div>
+
+              {/* EDIT ROLE */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Role *
+                </label>
+
+                <select
+                  value={editUser.role}
+                  onChange={(e) =>
+                    setEditUser({
+                      ...editUser,
+                      role:
+                        e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                >
+                  <option value="student">
+                    Student
+                  </option>
+
+                  <option value="security">
+                    Security Personnel
+                    (CSU)
+                  </option>
+
+                  <option value="pco">
+                    PCO Staff
+                  </option>
+
+                  <option value="sysadmin">
+                    System Administrator
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-md px-3 py-2 text-xs text-amber-700">
+              Changing the role changes
+              which QRpass modules this
+              account is allowed to use.
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={
+                  handleCancelEdit
+                }
+                disabled={savingEdit}
+                className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={savingEdit}
+                className="px-4 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+              >
+                {savingEdit
+                  ? "Saving..."
+                  : "Save Changes"}
+              </button>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      {/* SUMMARY CARDS */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <StatCard
+          label="Total Users"
+          value={String(
+            summary.total_users ?? 0
+          )}
+          icon={<Users size={20} />}
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="Students"
+          value={String(
+            summary.students ?? 0
+          )}
+          icon={<Users size={20} />}
+          color="#557bdc"
+        />
+
+        <StatCard
+          label="Staff / Personnel"
+          value={String(
+            totalPersonnel
+          )}
+          icon={<Users size={20} />}
+          color="#6b8ee6"
+        />
+
+        <StatCard
+          label="Active Accounts"
+          value={String(
+            summary.active_users ?? 0
+          )}
+          icon={
+            <CheckCircle size={20} />
+          }
+          color="#2ecc71"
+        />
+
+        <StatCard
+          label="Disabled"
+          value={String(
+            summary.inactive_users ?? 0
+          )}
+          icon={<X size={20} />}
+          color="#e8543a"
+        />
+
+        <StatCard
+          label="System Admins"
+          value={String(
+            summary.system_admins ?? 0
+          )}
+          icon={<Shield size={20} />}
+          color="#2f5fd6"
+        />
+      </div>
+
+      {/* ROLE BREAKDOWN */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+          <p className="text-xs text-muted-foreground">
+            Students
+          </p>
+
+          <p className="text-xl font-bold mt-1">
+            {summary.students ?? 0}
+          </p>
+        </div>
+
+        <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+          <p className="text-xs text-muted-foreground">
+            Security Personnel
+          </p>
+
+          <p className="text-xl font-bold mt-1">
+            {summary.security ?? 0}
+          </p>
+        </div>
+
+        <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+          <p className="text-xs text-muted-foreground">
+            PCO Staff
+          </p>
+
+          <p className="text-xl font-bold mt-1">
+            {summary.pco ?? 0}
+          </p>
+        </div>
+
+        <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
+          <p className="text-xs text-muted-foreground">
+            System Administrators
+          </p>
+
+          <p className="text-xl font-bold mt-1">
+            {summary.system_admins ??
+              0}
+          </p>
+        </div>
+      </div>
+
+      {/* USER LIST */}
+      <Card
+        title="User List"
+        action={
+          <div className="relative">
+            <Search
+              size={13}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+
+            <input
+              value={search}
+              onChange={(e) =>
+                setSearch(
+                  e.target.value
+                )
+              }
+              placeholder="Search users..."
+              className="pl-7 pr-3 py-1.5 text-xs border border-[#cfd8e6] rounded-md bg-[#fafbfc] w-48 md:w-64 focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+            />
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1000px]">
+            <thead>
+              <tr className="bg-[#fafbfc]">
+                {[
+                  "Name",
+                  "User ID",
+                  "Email",
+                  "Role",
+                  "Created",
+                  "Status",
+                  "Actions",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="text-left py-3 px-3 text-xs text-muted-foreground font-semibold"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-border">
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    Loading user
+                    accounts...
+                  </td>
+                </tr>
+              ) : filteredUsers.length ===
+                0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    No user accounts
+                    found.
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map(
+                  (user: any) => {
+                    const isActive =
+                      String(
+                        user.status ??
+                          ""
+                      ).toLowerCase() ===
+                      "approved";
+
+                    const isUpdating =
+                      updatingId ===
+                      user.id;
+
+                    return (
+                      <tr
+                        key={user.id}
+                        className="hover:bg-[#eef2fc] transition-colors"
+                      >
+                        {/* NAME */}
+                        <td className="py-3 px-3">
+                          <div className="text-sm font-semibold">
+                            {user.name ??
+                              "Unknown User"}
+                          </div>
+
+                        </td>
+
+                        {/* USER ID */}
+                        <td className="py-3 px-3 text-xs font-mono text-muted-foreground">
+                          {user.id ?? "—"}
+                        </td>
+
+                        {/* EMAIL */}
+                        <td className="py-3 px-3 text-xs text-muted-foreground">
+                          {user.email ??
+                            "—"}
+                        </td>
+
+                        {/* ROLE */}
+                        <td className="py-3 px-3">
+                          <span className="inline-flex px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-[11px] font-semibold">
+                            {getRoleLabel(
+                              user.role
+                            )}
+                          </span>
+                        </td>
+
+                        {/* CREATED */}
+                        <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDate(
+                            user.created_at
+                          )}
+                        </td>
+
+                        {/* STATUS */}
+                        <td className="py-3 px-3">
+                          <span
+                            className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                              isActive
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {isActive
+                              ? "Active"
+                              : "Disabled"}
+                          </span>
+                        </td>
+
+                        {/* ACTIONS */}
+                        <td className="py-3 px-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() =>
+                                handleStartEdit(
+                                  user
+                                )
+                              }
+                              className="text-xs text-primary font-semibold hover:underline"
+                            >
+                              Edit
+                            </button>
+
+                            <span className="text-muted-foreground">
+                              |
+                            </span>
+
+                            <button
+                              onClick={() =>
+                                handleToggleStatus(
+                                  user
+                                )
+                              }
+                              disabled={
+                                isUpdating
+                              }
+                              className={`text-xs font-semibold hover:underline disabled:opacity-50 ${
+                                isActive
+                                  ? "text-red-600"
+                                  : "text-green-600"
+                              }`}
+                            >
+                              {isUpdating
+                                ? "Updating..."
+                                : isActive
+                                ? "Disable"
+                                : "Enable"}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {!loading &&
+          users.length > 0 && (
+            <div className="px-4 py-3 border-t border-[#cfd8e6] flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">
+                Showing{" "}
+                {filteredUsers.length}{" "}
+                of {users.length} user
+                accounts
+              </p>
+
+              <p className="text-[11px] text-muted-foreground">
+                Data loaded from QRpass
+                MySQL database
+              </p>
+            </div>
+          )}
+      </Card>
+    </div>
+  );
+}
+function SysAdminSettings() {
+  const [settings, setSettings] = useState({
+    system_name: "QRpass",
+    institution: "University of Cebu - Main Campus",
+    academic_year: "2026-2027",
+    semester: "1st Semester",
+    session_timeout: 30,
+    max_login_attempts: 5,
+    qr_code_validity_months: 6,
+    two_factor_enabled: false,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [savingGeneral, setSavingGeneral] = useState(false);
+  const [savingPolicy, setSavingPolicy] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  async function loadSettings() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getSystemSettings();
+
+      if (data?.settings) {
+        setSettings({
+          system_name:
+            data.settings.system_name ?? "QRpass",
+
+          institution:
+            data.settings.institution ??
+            "University of Cebu - Main Campus",
+
+          academic_year:
+            data.settings.academic_year ?? "2026-2027",
+
+          semester:
+            data.settings.semester ?? "1st Semester",
+
+          session_timeout:
+            Number(data.settings.session_timeout) || 30,
+
+          max_login_attempts:
+            Number(data.settings.max_login_attempts) || 5,
+
+          qr_code_validity_months:
+            Number(data.settings.qr_code_validity_months) || 6,
+
+          two_factor_enabled:
+            Boolean(data.settings.two_factor_enabled),
+        });
+      }
+    } catch (err) {
+      console.error(
+        "Failed to load system settings:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load system settings."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function saveGeneralSettings() {
+    try {
+      setSavingGeneral(true);
+      setError("");
+      setSuccess("");
+
+      const data = await updateSystemSettings(settings);
+
+      if (data?.settings) {
+        setSettings({
+          ...settings,
+          ...data.settings,
+
+          session_timeout:
+            Number(data.settings.session_timeout) ||
+            settings.session_timeout,
+
+          max_login_attempts:
+            Number(data.settings.max_login_attempts) ||
+            settings.max_login_attempts,
+
+          qr_code_validity_months:
+            Number(data.settings.qr_code_validity_months) ||
+            settings.qr_code_validity_months,
+
+          two_factor_enabled:
+            Boolean(data.settings.two_factor_enabled),
+        });
+      }
+
+      setSuccess(
+        "General settings saved successfully."
+      );
+    } catch (err) {
+      console.error(
+        "Failed to save general settings:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to save general settings."
+      );
+    } finally {
+      setSavingGeneral(false);
+    }
+  }
+
+  async function saveSecurityPolicy() {
+    try {
+      setSavingPolicy(true);
+      setError("");
+      setSuccess("");
+
+      const data = await updateSystemSettings(settings);
+
+      if (data?.settings) {
+        setSettings({
+          ...settings,
+          ...data.settings,
+
+          session_timeout:
+            Number(data.settings.session_timeout) ||
+            settings.session_timeout,
+
+          max_login_attempts:
+            Number(data.settings.max_login_attempts) ||
+            settings.max_login_attempts,
+
+          qr_code_validity_months:
+            Number(data.settings.qr_code_validity_months) ||
+            settings.qr_code_validity_months,
+
+          two_factor_enabled:
+            Boolean(data.settings.two_factor_enabled),
+        });
+      }
+
+      setSuccess(
+        "Security policy saved successfully."
+      );
+    } catch (err) {
+      console.error(
+        "Failed to save security policy:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to save security policy."
+      );
+    } finally {
+      setSavingPolicy(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-5">
+        <PageHeader
+          title="System Settings"
+          subtitle="Configure QRpass portal settings and security policies."
+        />
+
+        <Card title="Loading Settings">
+          <div className="p-6 text-sm text-muted-foreground">
+            Loading system settings...
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="System Settings"
+        subtitle="Configure QRpass portal settings and security policies."
+      />
+
+      {error && (
+        <div className="p-3 border border-red-200 bg-red-50 rounded-md text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="p-3 border border-green-200 bg-green-50 rounded-md text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-5">
+        <Card title="General Settings">
+          <div className="p-4 space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                System Name
+              </label>
+
+              <input
+                type="text"
+                value={settings.system_name}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    system_name: e.target.value,
+                  }))
+                }
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Institution
+              </label>
+
+              <input
+                type="text"
+                value={settings.institution}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    institution: e.target.value,
+                  }))
+                }
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Academic Year
+              </label>
+
+              <input
+                type="text"
+                value={settings.academic_year}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    academic_year: e.target.value,
+                  }))
+                }
+                placeholder="2026-2027"
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Semester
+              </label>
+
+              <select
+                value={settings.semester}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    semester: e.target.value,
+                  }))
+                }
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              >
+                <option value="1st Semester">
+                  1st Semester
+                </option>
+
+                <option value="2nd Semester">
+                  2nd Semester
+                </option>
+
+                <option value="Summer">
+                  Summer
+                </option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={saveGeneralSettings}
+              disabled={savingGeneral}
+              className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+            >
+              {savingGeneral
+                ? "Saving..."
+                : "Save Settings"}
+            </button>
+          </div>
+        </Card>
+
+        <Card title="QR & Security Policy">
+          <div className="p-4 space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Session Timeout (minutes)
+              </label>
+
+              <input
+                type="number"
+                min={5}
+                max={1440}
+                value={settings.session_timeout}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    session_timeout:
+                      Number(e.target.value) || 0,
+                  }))
+                }
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Max Login Attempts
+              </label>
+
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={settings.max_login_attempts}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    max_login_attempts:
+                      Number(e.target.value) || 0,
+                  }))
+                }
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                QR Code Validity (months)
+              </label>
+
+              <input
+                type="number"
+                min={1}
+                max={60}
+                value={settings.qr_code_validity_months}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    qr_code_validity_months:
+                      Number(e.target.value) || 0,
+                  }))
+                }
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-3 border border-[#cfd8e6] rounded-md">
+              <div>
+                <span className="text-sm text-foreground">
+                  Enable Two-Factor Auth
+                </span>
+
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Stores the system-wide 2FA policy.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    two_factor_enabled:
+                      !prev.two_factor_enabled,
+                  }))
+                }
+                className={`w-10 h-5 rounded-full relative transition-colors ${
+                  settings.two_factor_enabled
+                    ? "bg-primary"
+                    : "bg-gray-300"
+                }`}
+                aria-label="Toggle two-factor authentication"
+              >
+                <div
+                  className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${
+                    settings.two_factor_enabled
+                      ? "right-0.5"
+                      : "left-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={saveSecurityPolicy}
+              disabled={savingPolicy}
+              className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+            >
+              {savingPolicy
+                ? "Saving..."
+                : "Save Policy"}
+            </button>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function SysAdminAuditLogs() {
+  const [logs, setLogs] = useState<any[]>([]);
+
+  const [stats, setStats] = useState({
+    logs_today: 0,
+    qr_scan_events: 0,
+    data_changes: 0,
+    errors: 0,
+  });
+
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    loadAuditLogs();
+  }, []);
+
+  async function loadAuditLogs(
+    customSearch = search,
+    customStatus = statusFilter,
+    customDate = dateFilter
+  ) {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getAuditLogs({
+        search: customSearch || undefined,
+        status: customStatus || undefined,
+        date: customDate || undefined,
+        limit: 500,
+      });
+
+      setLogs(
+        Array.isArray(data?.logs)
+          ? data.logs
+          : []
+      );
+
+      setStats({
+        logs_today:
+          Number(data?.stats?.logs_today) || 0,
+
+        qr_scan_events:
+          Number(data?.stats?.qr_scan_events) || 0,
+
+        data_changes:
+          Number(data?.stats?.data_changes) || 0,
+
+        errors:
+          Number(data?.stats?.errors) || 0,
+      });
+    } catch (err) {
+      console.error(
+        "Failed to load audit logs:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load audit logs."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleSearch(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    loadAuditLogs();
+  }
+
+  function clearFilters() {
+    setSearch("");
+    setStatusFilter("");
+    setDateFilter("");
+
+    loadAuditLogs("", "", "");
+  }
+
+  function formatAuditDate(
+    value: string | null | undefined
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }
+    );
+  }
+
+  function formatAuditTime(
+    value: string | null | undefined
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleTimeString(
+      "en-PH",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  function getStatusClasses(
+    status: string | null | undefined
+  ) {
+    const normalized =
+      String(status ?? "").toLowerCase();
+
+    if (
+      normalized === "failed" ||
+      normalized === "error"
+    ) {
+      return "bg-red-100 text-red-700";
+    }
+
+    if (
+      normalized === "warning" ||
+      normalized === "flagged"
+    ) {
+      return "bg-yellow-100 text-yellow-700";
+    }
+
+    if (
+      normalized === "success" ||
+      normalized === "resolved"
+    ) {
+      return "bg-green-100 text-green-700";
+    }
+
+    return "bg-blue-100 text-blue-700";
+  }
+
+  function getIconClasses(
+    status: string | null | undefined
+  ) {
+    const normalized =
+      String(status ?? "").toLowerCase();
+
+    if (
+      normalized === "failed" ||
+      normalized === "error"
+    ) {
+      return "bg-red-100 text-red-600";
+    }
+
+    if (
+      normalized === "warning" ||
+      normalized === "flagged"
+    ) {
+      return "bg-yellow-100 text-yellow-600";
+    }
+
+    if (
+      normalized === "success" ||
+      normalized === "resolved"
+    ) {
+      return "bg-green-100 text-green-600";
+    }
+
+    return "bg-primary/10 text-primary";
+  }
+
+  function exportAuditLogsExcel() {
+    if (logs.length === 0) {
+      alert(
+        "There are no audit logs to export."
+      );
+      return;
+    }
+
+    const rows = logs.map(
+      (log: any) => ({
+        Date: formatAuditDate(
+          log.created_at
+        ),
+
+        Time: formatAuditTime(
+          log.created_at
+        ),
+
+        "Actor Name":
+          log.actor_name ??
+          log.user?.name ??
+          "System",
+
+        Username:
+          log.actor_username ??
+          log.user?.username ??
+          "",
+
+        Role:
+          log.user?.role ?? "",
+
+        "Event Type":
+          log.event_type ?? "activity",
+
+        Action:
+          log.action ?? "",
+
+        Module:
+          log.module ?? "",
+
+        Description:
+          log.description ?? "",
+
+        Status:
+          log.status ?? "",
+
+        "IP Address":
+          log.ip_address ?? "",
+      })
+    );
+
+    const worksheet =
+      XLSX.utils.json_to_sheet(rows);
+
+    worksheet["!cols"] = [
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 24 },
+      { wch: 20 },
+      { wch: 16 },
+      { wch: 18 },
+      { wch: 24 },
+      { wch: 22 },
+      { wch: 55 },
+      { wch: 15 },
+      { wch: 18 },
+    ];
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Audit Logs"
+    );
+
+    const today = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    XLSX.writeFile(
+      workbook,
+      `QRPass-Audit-Logs-${today}.xlsx`
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Audit Logs"
+        subtitle="Complete record of QRPass system activity and user actions."
+      />
+
+      {error && (
+        <div className="p-3 border border-red-200 bg-red-50 rounded-md text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          label="Logs Today"
+          value={stats.logs_today.toLocaleString()}
+          icon={
+            <FileText size={20} />
+          }
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="QR Scan Events"
+          value={stats.qr_scan_events.toLocaleString()}
+          icon={
+            <ScanLine size={20} />
+          }
+          color="#557bdc"
+        />
+
+        <StatCard
+          label="Data Changes"
+          value={stats.data_changes.toLocaleString()}
+          icon={
+            <RefreshCw size={20} />
+          }
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Errors"
+          value={stats.errors.toLocaleString()}
+          icon={
+            <AlertTriangle size={20} />
+          }
+          color="#e8543a"
+        />
+      </div>
+
+      <Card title="Audit Log Records">
+        <div className="p-4 border-b border-[#cfd8e6]">
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-col xl:flex-row gap-3"
+          >
+            <div className="relative flex-1">
+              <Search
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+
+              <input
+                type="text"
+                value={search}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+                placeholder="Search user, action, module, description..."
+                className="w-full pl-9 pr-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6]"
+              />
+            </div>
+
+            <select
+              value={statusFilter}
+              onChange={(e) =>
+                setStatusFilter(
+                  e.target.value
+                )
+              }
+              className="px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none"
+            >
+              <option value="">
+                All Statuses
+              </option>
+
+              <option value="success">
+                Success
+              </option>
+
+              <option value="warning">
+                Warning
+              </option>
+
+              <option value="failed">
+                Failed
+              </option>
+
+              <option value="error">
+                Error
+              </option>
+            </select>
+
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) =>
+                setDateFilter(
+                  e.target.value
+                )
+              }
+              className="px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none"
+            />
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <Filter size={14} />
+
+              {loading
+                ? "Loading..."
+                : "Apply"}
+            </button>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted"
+            >
+              Clear
+            </button>
+
+            <button
+              type="button"
+              onClick={
+                exportAuditLogsExcel
+              }
+              className="px-4 py-2 border border-[#cfd8e6] text-primary rounded-md text-xs font-semibold hover:bg-primary/5 flex items-center justify-center gap-2"
+            >
+              <Download size={14} />
+              Export Excel
+            </button>
+          </form>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            Loading audit logs...
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="p-8 text-center">
+            <ClipboardList
+              size={32}
+              className="mx-auto mb-2 text-muted-foreground/50"
+            />
+
+            <p className="text-sm font-medium text-foreground">
+              No audit logs found.
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              New system activities will appear here once they are recorded.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {logs.map(
+              (log: any) => {
+                const actor =
+                  log.actor_name ??
+                  log.user?.name ??
+                  "System";
+
+                const username =
+                  log.actor_username ??
+                  log.user?.username ??
+                  "";
+
+                return (
+                  <div
+                    key={log.id}
+                    className="px-4 py-3 flex gap-3 hover:bg-[#eef2fc] transition-colors"
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${getIconClasses(
+                        log.status
+                      )}`}
+                    >
+                      <User size={14} />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs font-semibold text-foreground">
+                            {actor}
+                          </p>
+
+                          {username && (
+                            <span className="text-xs text-muted-foreground">
+                              ({username})
+                            </span>
+                          )}
+
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${getStatusClasses(
+                              log.status
+                            )}`}
+                          >
+                            {String(
+                              log.status ??
+                                "activity"
+                            ).toUpperCase()}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatAuditDate(
+                            log.created_at
+                          )}{" "}
+                          {formatAuditTime(
+                            log.created_at
+                          )}
+                        </p>
+                      </div>
+
+                      <p className="text-sm text-foreground mt-1">
+                        {log.description ??
+                          "System activity"}
+                      </p>
+
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5">
+                        {log.module && (
+                          <span className="text-xs text-muted-foreground">
+                            Module:{" "}
+                            <span className="font-medium">
+                              {log.module}
+                            </span>
+                          </span>
+                        )}
+
+                        {log.action && (
+                          <span className="text-xs text-muted-foreground">
+                            Action:{" "}
+                            <span className="font-medium">
+                              {log.action}
+                            </span>
+                          </span>
+                        )}
+
+                        {log.event_type && (
+                          <span className="text-xs text-muted-foreground">
+                            Event:{" "}
+                            <span className="font-medium">
+                              {log.event_type}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            )}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function SysAdminActiveSessions() {
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [activeCount, setActiveCount] = useState(0);
+  const [totalSessions, setTotalSessions] = useState(0);
+  const [sessionTimeout, setSessionTimeout] = useState(30);
+
+  const [loading, setLoading] = useState(true);
+  const [revokingId, setRevokingId] =
+    useState<number | null>(null);
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD ACTIVE SESSIONS
+  |--------------------------------------------------------------------------
+  */
+
+  async function loadSessions() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data =
+        await getActiveSessions();
+
+      setSessions(
+        Array.isArray(data.sessions)
+          ? data.sessions
+          : []
+      );
+
+      setActiveCount(
+        Number(
+          data.active_count ?? 0
+        )
+      );
+
+      setTotalSessions(
+        Number(
+          data.total_sessions ?? 0
+        )
+      );
+
+      setSessionTimeout(
+        Number(
+          data.session_timeout_minutes ??
+            30
+        )
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load active sessions:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load active sessions."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD ON PAGE OPEN
+  |--------------------------------------------------------------------------
+  */
+
+  useEffect(() => {
+    loadSessions();
+  }, []);
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | REVOKE SESSION
+  |--------------------------------------------------------------------------
+  */
+
+  async function handleRevoke(
+    session: any
+  ) {
+    if (session.is_current) {
+      setError(
+        "You cannot revoke your current administrator session from this page."
+      );
+
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        `Revoke the session for ${
+          session.name ??
+          session.username ??
+          "this user"
+        }?`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setRevokingId(
+        Number(session.id)
+      );
+
+      setError("");
+      setSuccess("");
+
+      const result =
+        await revokeActiveSession(
+          Number(session.id)
+        );
+
+      setSuccess(
+        result?.message ||
+          "Session revoked successfully."
+      );
+
+      await loadSessions();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 4000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to revoke session."
+      );
+    } finally {
+      setRevokingId(null);
+    }
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | FORMAT DATE / TIME
+  |--------------------------------------------------------------------------
+  */
+
+  function formatDateTime(
+    value?: string | null
+  ) {
+    if (!value) {
+      return "Never";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "—";
+    }
+
+    return date.toLocaleString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | ROLE LABEL
+  |--------------------------------------------------------------------------
+  */
+
+  function roleLabel(
+    role?: string
+  ) {
+    switch (
+      String(role ?? "").toLowerCase()
+    ) {
+      case "student":
+        return "Student";
+
+      case "security":
+        return "Security (CSU)";
+
+      case "pco":
+        return "PCO Staff";
+
+      case "sysadmin":
+        return "System Administrator";
+
+      default:
+        return role || "Unknown";
+    }
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | PAGE
+  |--------------------------------------------------------------------------
+  */
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Active Sessions"
+        subtitle="Monitor authenticated QRPass sessions and revoke access when necessary."
+      />
+
+
+      {/* STATUS MESSAGES */}
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="flex items-start gap-2">
+            <AlertCircle
+              size={16}
+              className="mt-0.5 shrink-0"
+            />
+
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          <div className="flex items-start gap-2">
+            <CheckCircle
+              size={16}
+              className="mt-0.5 shrink-0"
+            />
+
+            <span>
+              {success}
+            </span>
+          </div>
+        </div>
+      )}
+
+
+      {/* STAT CARDS */}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <StatCard
+          label="Active Sessions"
+          value={String(activeCount)}
+          icon={
+            <Eye size={20} />
+          }
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="Stored Sessions"
+          value={String(totalSessions)}
+          icon={
+            <Users size={20} />
+          }
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Session Timeout"
+          value={`${sessionTimeout} min`}
+          icon={
+            <Clock size={20} />
+          }
+          color="#d49b17"
+        />
+      </div>
+
+
+      {/* SESSION TABLE */}
+
+      <Card title="Authenticated Sessions">
+        <div className="p-4 border-b border-[#dce3ee] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              Session Management
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Sessions are considered active when they have activity within the configured{" "}
+              {sessionTimeout}-minute timeout period.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={loadSessions}
+            disabled={loading}
+            className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-[#cfd8e6] bg-white text-sm font-medium text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50"
+          >
+            <RefreshCw
+              size={15}
+              className={
+                loading
+                  ? "animate-spin"
+                  : ""
+              }
+            />
+
+            Refresh
+          </button>
+        </div>
+
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#fafbfc] border-b border-[#dce3ee]">
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  User
+                </th>
+
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Role
+                </th>
+
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Session
+                </th>
+
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Created
+                </th>
+
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Last Activity
+                </th>
+
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Status
+                </th>
+
+                <th className="text-right py-3 px-4 text-xs text-muted-foreground font-medium">
+                  Action
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading &&
+              sessions.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    Loading active sessions...
+                  </td>
+                </tr>
+              ) : sessions.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center"
+                  >
+                    <Users
+                      size={28}
+                      className="mx-auto mb-2 text-muted-foreground"
+                    />
+
+                    <p className="text-sm font-semibold">
+                      No sessions found
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-1">
+                      There are currently no stored authentication sessions.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                sessions.map(
+                  (session: any) => (
+                    <tr
+                      key={session.id}
+                      className="border-b border-[#edf0f5] hover:bg-[#fafbfc]"
+                    >
+                      <td className="py-3 px-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground">
+                              {session.name ||
+                                "Unknown User"}
+                            </p>
+
+                            {session.is_current && (
+                              <span className="rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                                Current
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {session.username ||
+                              "—"}
+                          </p>
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-4 text-sm">
+                        {roleLabel(
+                          session.role
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <p className="text-xs font-mono text-foreground">
+                          #{session.id}
+                        </p>
+
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {session.token_name ||
+                            "qrpass-token"}
+                        </p>
+                      </td>
+
+                      <td className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDateTime(
+                          session.created_at
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDateTime(
+                          session.last_activity
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        {session.is_active ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-xs font-semibold text-green-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-600">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+
+                            Inactive
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4 text-right">
+                        {session.is_current ? (
+                          <span className="text-xs text-muted-foreground">
+                            Current Session
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRevoke(
+                                session
+                              )
+                            }
+                            disabled={
+                              revokingId ===
+                              Number(
+                                session.id
+                              )
+                            }
+                            className="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            <XCircle
+                              size={14}
+                            />
+
+                            {revokingId ===
+                            Number(
+                              session.id
+                            )
+                              ? "Revoking..."
+                              : "Revoke"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function SysAdminPerformance() {
+  type PerformanceMetrics = {
+    server_uptime_seconds: number | null;
+    active_sessions: number;
+    qr_response_ms: number | null;
+    errors_today: number;
+    session_timeout_minutes: number;
+  };
+
+  type PerformanceService = {
+    name: string;
+    status: string;
+    response_ms: number | null;
+    last_run?: string | null;
+  };
+
+  type PerformanceResponse = {
+    metrics: PerformanceMetrics;
+    services: PerformanceService[];
+  };
+
+  const [metrics, setMetrics] =
+    useState<PerformanceMetrics>({
+      server_uptime_seconds: null,
+      active_sessions: 0,
+      qr_response_ms: null,
+      errors_today: 0,
+      session_timeout_minutes: 30,
+    });
+
+  const [services, setServices] =
+    useState<PerformanceService[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD PERFORMANCE
+  |--------------------------------------------------------------------------
+  */
+
+  async function loadPerformance() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data =
+        (await getPerformance()) as PerformanceResponse;
+
+      setMetrics({
+        server_uptime_seconds:
+          data.metrics?.server_uptime_seconds ??
+          null,
+
+        active_sessions:
+          Number(
+            data.metrics?.active_sessions ??
+              0
+          ),
+
+        qr_response_ms:
+          data.metrics?.qr_response_ms ??
+          null,
+
+        errors_today:
+          Number(
+            data.metrics?.errors_today ??
+              0
+          ),
+
+        session_timeout_minutes:
+          Number(
+            data.metrics
+              ?.session_timeout_minutes ??
+              30
+          ),
+      });
+
+      setServices(
+        Array.isArray(data.services)
+          ? data.services
+          : []
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load performance data:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load performance data."
+      );
+
+      setServices([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadPerformance();
+  }, []);
+
+  /*
+  |--------------------------------------------------------------------------
+  | FORMAT UPTIME
+  |--------------------------------------------------------------------------
+  */
+
+  function formatUptime(
+    seconds: number | null
+  ) {
+    if (
+      seconds === null ||
+      seconds === undefined
+    ) {
+      return "—";
+    }
+
+    const totalSeconds =
+      Number(seconds);
+
+    if (
+      Number.isNaN(totalSeconds)
+    ) {
+      return "—";
+    }
+
+    const days =
+      Math.floor(
+        totalSeconds / 86400
+      );
+
+    const hours =
+      Math.floor(
+        (totalSeconds % 86400) /
+          3600
+      );
+
+    const minutes =
+      Math.floor(
+        (totalSeconds % 3600) /
+          60
+      );
+
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m`;
+    }
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+
+    return `${minutes}m`;
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | FORMAT RESPONSE TIME
+  |--------------------------------------------------------------------------
+  */
+
+  function formatResponseTime(
+    value: number | null | undefined
+  ) {
+    if (
+      value === null ||
+      value === undefined
+    ) {
+      return "—";
+    }
+
+    const numberValue =
+      Number(value);
+
+    if (
+      Number.isNaN(numberValue)
+    ) {
+      return "—";
+    }
+
+    return `${numberValue.toFixed(
+      2
+    )}ms`;
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | FORMAT LAST RUN
+  |--------------------------------------------------------------------------
+  */
+
+  function formatLastRun(
+    value?: string | null
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return value;
+    }
+
+    return date.toLocaleString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | STATUS COLOR
+  |--------------------------------------------------------------------------
+  */
+
+  function statusColor(
+    status: string
+  ) {
+    const normalized =
+      String(status)
+        .trim()
+        .toLowerCase();
+
+    if (
+      normalized === "online" ||
+      normalized === "available"
+    ) {
+      return "bg-green-500";
+    }
+
+    if (
+      normalized === "offline"
+    ) {
+      return "bg-red-500";
+    }
+
+    return "bg-yellow-500";
+  }
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Performance"
+        subtitle="Real-time QRPass system health and resource monitoring."
+        action={
+          <button
+            type="button"
+            onClick={
+              loadPerformance
+            }
+            disabled={loading}
+            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50"
+          >
+            <RefreshCw
+              size={12}
+              className={
+                loading
+                  ? "animate-spin"
+                  : ""
+              }
+            />
+
+            {loading
+              ? "Refreshing..."
+              : "Refresh"}
+          </button>
+        }
+      />
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          label="Server Uptime"
+          value={
+            loading
+              ? "..."
+              : formatUptime(
+                  metrics.server_uptime_seconds
+                )
+          }
+          icon={
+            <CheckCircle
+              size={20}
+            />
+          }
+          color="#2ecc71"
+        />
+
+        <StatCard
+          label="Active Sessions"
+          value={
+            loading
+              ? "..."
+              : String(
+                  metrics.active_sessions
+                )
+          }
+          icon={
+            <Eye size={20} />
+          }
+          color="#1a3a7b"
+        />
+
+        <StatCard
+          label="QR Response"
+          value={
+            loading
+              ? "..."
+              : formatResponseTime(
+                  metrics.qr_response_ms
+                )
+          }
+          icon={
+            <Clock size={20} />
+          }
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Errors Today"
+          value={
+            loading
+              ? "..."
+              : String(
+                  metrics.errors_today
+                )
+          }
+          icon={
+            <AlertTriangle
+              size={20}
+            />
+          }
+          color="#e8543a"
+        />
+      </div>
+
+      <Card title="System Status">
+        {loading ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            Loading system
+            performance...
+          </div>
+        ) : services.length ===
+          0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            No service information
+            available.
+          </div>
+        ) : (
+          <div className="p-4 space-y-4">
+            {services.map(
+              (
+                service,
+                index
+              ) => (
+                <div
+                  key={`${service.name}-${index}`}
+                  className="flex items-center justify-between gap-4 p-3 bg-muted/40 rounded-md"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full ${statusColor(
+                        service.status
+                      )}`}
+                    />
+
+                    <div>
+                      <p className="text-sm text-foreground font-medium">
+                        {
+                          service.name
+                        }
+                      </p>
+
+                      {service.last_run && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Last run:{" "}
+                          {formatLastRun(
+                            service.last_run
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    {service.response_ms !==
+                      null &&
+                      service.response_ms !==
+                        undefined && (
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {formatResponseTime(
+                            service.response_ms
+                          )}
+                        </span>
+                      )}
+
+                    <span className="text-xs text-muted-foreground">
+                      {
+                        service.status
+                      }
+                    </span>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        )}
+      </Card>
+
+      <Card title="Session Policy">
+        <div className="p-4">
+          <div className="flex items-center justify-between p-3 bg-muted/40 rounded-md">
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                Session Timeout
+              </p>
+
+              <p className="text-xs text-muted-foreground mt-1">
+                Current inactivity
+                timeout configured
+                in System Settings.
+              </p>
+            </div>
+
+            <span className="text-sm font-semibold text-primary">
+              {
+                metrics.session_timeout_minutes
+              }{" "}
+              minutes
+            </span>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function SysAdminSecurityConfig() {
+  type PermissionKey =
+    | "register_items"
+    | "view_qr_codes"
+    | "approve_requests"
+    | "scan_verify"
+    | "view_reports"
+    | "manage_users";
+
+  type RolePermission = {
+    id?: number;
+    role: string;
+    register_items: boolean;
+    view_qr_codes: boolean;
+    approve_requests: boolean;
+    scan_verify: boolean;
+    view_reports: boolean;
+    manage_users: boolean;
+  };
+
+  const [permissions, setPermissions] =
+    useState<RolePermission[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  /*
+  |--------------------------------------------------------------------------
+  | FIXED QRPass ROLE PERMISSION MATRIX
+  |--------------------------------------------------------------------------
+  */
+
+  const fixedPermissionMatrix: Record<
+    string,
+    Omit<RolePermission, "id" | "role">
+  > = {
+    student: {
+      register_items: true,
+      view_qr_codes: true,
+      approve_requests: false,
+      scan_verify: false,
+      view_reports: false,
+      manage_users: false,
+    },
+
+    security: {
+      register_items: false,
+      view_qr_codes: false,
+      approve_requests: false,
+      scan_verify: true,
+      view_reports: true,
+      manage_users: false,
+    },
+
+    pco: {
+      register_items: false,
+      view_qr_codes: true,
+      approve_requests: true,
+      scan_verify: false,
+      view_reports: true,
+      manage_users: false,
+    },
+
+    sysadmin: {
+      register_items: false,
+      view_qr_codes: false,
+      approve_requests: false,
+      scan_verify: false,
+      view_reports: true,
+      manage_users: true,
+    },
+  };
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | PERMISSION COLUMNS
+  |--------------------------------------------------------------------------
+  */
+
+  const permissionColumns: {
+    key: PermissionKey;
+    label: string;
+  }[] = [
+    {
+      key: "register_items",
+      label: "Register Items",
+    },
+    {
+      key: "view_qr_codes",
+      label: "View QR Codes",
+    },
+    {
+      key: "approve_requests",
+      label: "Approve Requests",
+    },
+    {
+      key: "scan_verify",
+      label: "Scan & Verify",
+    },
+    {
+      key: "view_reports",
+      label: "View Reports",
+    },
+    {
+      key: "manage_users",
+      label: "Manage Users",
+    },
+  ];
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | ROLE LABEL
+  |--------------------------------------------------------------------------
+  */
+
+  function getRoleLabel(
+    role: string
+  ) {
+    switch (role) {
+      case "student":
+        return "Student";
+
+      case "security":
+        return "Security (CSU)";
+
+      case "pco":
+        return "PCO Staff";
+
+      case "sysadmin":
+        return "System Administrator";
+
+      default:
+        return role;
+    }
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD PERMISSIONS
+  |--------------------------------------------------------------------------
+  */
+
+  async function loadPermissions() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data =
+        await getRolePermissions();
+
+      const rows =
+        Array.isArray(
+          data.permissions
+        )
+          ? data.permissions
+          : [];
+
+      const roleOrder = [
+        "student",
+        "security",
+        "pco",
+        "sysadmin",
+      ];
+
+      const fixedRows =
+        roleOrder.map(
+          (role) => {
+            const databaseRow =
+              rows.find(
+                (row: any) =>
+                  String(
+                    row.role ?? ""
+                  ) === role
+              );
+
+            return {
+              id:
+                databaseRow?.id,
+
+              role,
+
+              ...fixedPermissionMatrix[
+                role
+              ],
+            };
+          }
+        );
+
+      setPermissions(
+        fixedRows
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load role permissions:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load role permissions."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD PAGE
+  |--------------------------------------------------------------------------
+  */
+
+  useEffect(() => {
+    loadPermissions();
+  }, []);
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | PAGE
+  |--------------------------------------------------------------------------
+  */
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Security Config"
+        subtitle="View the fixed QRPass role-based access permissions."
+      />
+
+
+      {/* ERROR MESSAGE */}
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="flex items-start gap-2">
+            <AlertCircle
+              size={16}
+              className="mt-0.5 shrink-0"
+            />
+
+            <span>
+              {error}
+            </span>
+          </div>
+        </div>
+      )}
+
+
+      {/* INFORMATION */}
+
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+        <div className="flex gap-3">
+          <Shield
+            size={18}
+            className="text-[#1a3a7b] mt-0.5 shrink-0"
+          />
+
+          <div>
+            <p className="text-sm font-semibold text-[#1a3a7b]">
+              Fixed Role-Based Access Control
+            </p>
+
+            <p className="text-xs text-[#52637a] mt-1 leading-relaxed">
+              QRPass permissions are predefined for each role and cannot be edited.
+              This prevents accidental changes to the system's access-control rules.
+            </p>
+          </div>
+        </div>
+      </div>
+
+
+      {/* PERMISSION MATRIX */}
+
+      <Card title="Role Permissions">
+        <div className="p-4 border-b border-[#dce3ee] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold">
+              Permission Matrix
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              All permissions are fixed and synchronized with the QRPass database.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={
+              loadPermissions
+            }
+            disabled={
+              loading
+            }
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-[#cfd8e6] bg-white px-3 py-2 text-sm font-medium text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50"
+          >
+            <RefreshCw
+              size={15}
+              className={
+                loading
+                  ? "animate-spin"
+                  : ""
+              }
+            />
+
+            Refresh
+          </button>
+        </div>
+
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#fafbfc] border-b border-[#dce3ee]">
+                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium min-w-[180px]">
+                  Role
+                </th>
+
+                {permissionColumns.map(
+                  (permission) => (
+                    <th
+                      key={
+                        permission.key
+                      }
+                      className="text-center py-3 px-3 text-xs text-muted-foreground font-medium min-w-[125px]"
+                    >
+                      {
+                        permission.label
+                      }
+                    </th>
+                  )
+                )}
+
+                <th className="text-right py-3 px-4 text-xs text-muted-foreground font-medium min-w-[110px]">
+                  Status
+                </th>
+              </tr>
+            </thead>
+
+
+            <tbody>
+              {loading &&
+              permissions.length ===
+                0 ? (
+                <tr>
+                  <td
+                    colSpan={
+                      permissionColumns.length +
+                      2
+                    }
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    Loading role permissions...
+                  </td>
+                </tr>
+              ) : permissions.length ===
+                0 ? (
+                <tr>
+                  <td
+                    colSpan={
+                      permissionColumns.length +
+                      2
+                    }
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    No role permissions found.
+                  </td>
+                </tr>
+              ) : (
+                permissions.map(
+                  (row) => (
+                    <tr
+                      key={
+                        row.role
+                      }
+                      className="border-b border-[#edf0f5]"
+                    >
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            {getRoleLabel(
+                              row.role
+                            )}
+                          </p>
+
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Fixed role permissions
+                          </p>
+                        </div>
+                      </td>
+
+
+                      {permissionColumns.map(
+                        (
+                          permission
+                        ) => {
+                          const enabled =
+                            Boolean(
+                              row[
+                                permission
+                                  .key
+                              ]
+                            );
+
+                          return (
+                            <td
+                              key={
+                                permission.key
+                              }
+                              className="py-3 px-3 text-center"
+                            >
+                              <div
+                                title={`${permission.label}: ${
+                                  enabled
+                                    ? "Enabled"
+                                    : "Disabled"
+                                } (Fixed)`}
+                                className={`mx-auto inline-flex h-8 w-8 items-center justify-center rounded-md border cursor-default ${
+                                  enabled
+                                    ? "border-green-200 bg-green-50 text-green-600"
+                                    : "border-[#dce3ee] bg-white text-muted-foreground"
+                                }`}
+                              >
+                                {enabled ? (
+                                  <CheckCircle
+                                    size={
+                                      16
+                                    }
+                                  />
+                                ) : (
+                                  <X
+                                    size={
+                                      16
+                                    }
+                                  />
+                                )}
+                              </div>
+                            </td>
+                          );
+                        }
+                      )}
+
+
+                      <td className="py-3 px-4 text-right">
+                        <span className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                          Fixed
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+
+      {/* ROLE GUIDE */}
+
+      <Card title="Role Access Guide">
+        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="rounded-md border border-[#dce3ee] p-3">
+            <p className="text-sm font-semibold">
+              Student
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Can register personal items and view approved QR codes.
+            </p>
+          </div>
+
+          <div className="rounded-md border border-[#dce3ee] p-3">
+            <p className="text-sm font-semibold">
+              Security (CSU)
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Can scan and verify QR codes and view security reports.
+            </p>
+          </div>
+
+          <div className="rounded-md border border-[#dce3ee] p-3">
+            <p className="text-sm font-semibold">
+              PCO Staff
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Can view QR codes, approve item-registration requests,
+              and view reports.
+            </p>
+          </div>
+
+          <div className="rounded-md border border-[#dce3ee] p-3">
+            <p className="text-sm font-semibold">
+              System Administrator
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Can view reports and manage user accounts.
+            </p>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ── Page registry ─────────────────────────────────────────────────────────────
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SYSTEM ADMINISTRATOR - ANNOUNCEMENT MANAGEMENT
+// ══════════════════════════════════════════════════════════════════════════════
+
+type ManagedAnnouncement = {
+  id: number;
+  title: string;
+  message: string;
+  audience:
+    | "everyone"
+    | "student"
+    | "security"
+    | "pco"
+    | "sysadmin";
+  priority:
+    | "info"
+    | "important"
+    | "urgent";
+  start_at?: string | null;
+  end_at?: string | null;
+  is_published: boolean;
+  display_status?:
+    | "draft"
+    | "scheduled"
+    | "active"
+    | "expired"
+    | string;
+  created_at?: string | null;
+  updated_at?: string | null;
+  creator?: {
+    id?: number;
+    name?: string;
+    username?: string;
+  } | null;
+};
+
+type AnnouncementFormState = {
+  title: string;
+  message: string;
+  audience:
+    | "everyone"
+    | "student"
+    | "security"
+    | "pco"
+    | "sysadmin";
+  priority:
+    | "info"
+    | "important"
+    | "urgent";
+  start_at: string;
+  end_at: string;
+  is_published: boolean;
+};
+
+function SysAdminAnnouncementManagement() {
+  const emptyForm: AnnouncementFormState = {
+    title: "",
+    message: "",
+    audience: "everyone",
+    priority: "info",
+    start_at: "",
+    end_at: "",
+    is_published: false,
+  };
+
+  const [
+    announcements,
+    setAnnouncements,
+  ] = useState<ManagedAnnouncement[]>([]);
+
+  const [form, setForm] =
+    useState<AnnouncementFormState>(
+      emptyForm
+    );
+
+  const [editingId, setEditingId] =
+    useState<number | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [
+    changingPublishId,
+    setChangingPublishId,
+  ] = useState<number | null>(null);
+
+  const [
+    deletingId,
+    setDeletingId,
+  ] = useState<number | null>(null);
+
+  const [error, setError] =
+    useState("");
+
+  const [success, setSuccess] =
+    useState("");
+
+  function toLocalDateTimeInput(
+    value?: string | null
+  ) {
+    if (!value) {
+      return "";
+    }
+
+    const date = new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "";
+    }
+
+    const offset =
+      date.getTimezoneOffset();
+
+    return new Date(
+      date.getTime() -
+        offset * 60 * 1000
+    )
+      .toISOString()
+      .slice(0, 16);
+  }
+
+  function toApiDateTime(
+    value: string
+  ) {
+    if (!value) {
+      return null;
+    }
+
+    const date = new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return null;
+    }
+
+    return date.toISOString();
+  }
+
+  function formatDateTime(
+    value?: string | null
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "—";
+    }
+
+    return date.toLocaleString(
+      "en-PH",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  function audienceLabel(
+    audience: string
+  ) {
+    const labels:
+      Record<string, string> = {
+        everyone: "Everyone",
+        student: "Students",
+        security: "CSU / Security",
+        pco: "PCO Staff",
+        sysadmin:
+          "System Administrators",
+      };
+
+    return (
+      labels[audience] ??
+      audience
+    );
+  }
+
+  function priorityLabel(
+    priority: string
+  ) {
+    const labels:
+      Record<string, string> = {
+        info: "Information",
+        important: "Important",
+        urgent: "Urgent",
+      };
+
+    return (
+      labels[priority] ??
+      priority
+    );
+  }
+
+  function statusStyle(
+    status?: string
+  ) {
+    const normalized =
+      String(status ?? "")
+        .toLowerCase();
+
+    if (
+      normalized === "active"
+    ) {
+      return {
+        label: "Active",
+        className:
+          "bg-green-100 text-green-700 border-green-200",
+      };
+    }
+
+    if (
+      normalized === "scheduled"
+    ) {
+      return {
+        label: "Scheduled",
+        className:
+          "bg-blue-100 text-blue-700 border-blue-200",
+      };
+    }
+
+    if (
+      normalized === "expired"
+    ) {
+      return {
+        label: "Expired",
+        className:
+          "bg-gray-100 text-gray-600 border-gray-200",
+      };
+    }
+
+    return {
+      label: "Draft",
+      className:
+        "bg-yellow-100 text-yellow-700 border-yellow-200",
+    };
+  }
+
+  function priorityStyle(
+    priority: string
+  ) {
+    if (
+      priority === "urgent"
+    ) {
+      return "bg-red-100 text-red-700 border-red-200";
+    }
+
+    if (
+      priority === "important"
+    ) {
+      return "bg-amber-100 text-amber-700 border-amber-200";
+    }
+
+    return "bg-blue-100 text-blue-700 border-blue-200";
+  }
+
+  async function loadAnnouncements() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data =
+        await getManagedAnnouncements();
+
+      setAnnouncements(
+        Array.isArray(
+          data?.announcements
+        )
+          ? data.announcements
+          : []
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load announcements:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load announcements."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadAnnouncements();
+  }, []);
+
+  function resetForm() {
+    setEditingId(null);
+
+    setForm(
+      emptyForm
+    );
+
+    setError("");
+  }
+
+  function startEdit(
+    announcement:
+      ManagedAnnouncement
+  ) {
+    setEditingId(
+      announcement.id
+    );
+
+    setForm({
+      title:
+        announcement.title ?? "",
+      message:
+        announcement.message ?? "",
+      audience:
+        announcement.audience ??
+        "everyone",
+      priority:
+        announcement.priority ??
+        "info",
+      start_at:
+        toLocalDateTimeInput(
+          announcement.start_at
+        ),
+      end_at:
+        toLocalDateTimeInput(
+          announcement.end_at
+        ),
+      is_published:
+        Boolean(
+          announcement.is_published
+        ),
+    });
+
+    setError("");
+    setSuccess("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  async function handleSubmit(
+    event: React.FormEvent
+  ) {
+    event.preventDefault();
+
+    if (!form.title.trim()) {
+      setError(
+        "Please enter an announcement title."
+      );
+      return;
+    }
+
+    if (!form.message.trim()) {
+      setError(
+        "Please enter the announcement message."
+      );
+      return;
+    }
+
+    if (
+      form.end_at &&
+      !form.start_at
+    ) {
+      setError(
+        "Please set a start date and time before adding an expiration date."
+      );
+      return;
+    }
+
+    if (
+      form.start_at &&
+      form.end_at &&
+      new Date(
+        form.end_at
+      ).getTime() <
+        new Date(
+          form.start_at
+        ).getTime()
+    ) {
+      setError(
+        "Expiration date and time cannot be earlier than the start date and time."
+      );
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError("");
+      setSuccess("");
+
+      const payload = {
+        title:
+          form.title.trim(),
+        message:
+          form.message.trim(),
+        audience:
+          form.audience,
+        priority:
+          form.priority,
+        start_at:
+          toApiDateTime(
+            form.start_at
+          ),
+        end_at:
+          toApiDateTime(
+            form.end_at
+          ),
+        is_published:
+          form.is_published,
+      };
+
+      const result =
+        editingId
+          ? await updateAnnouncement(
+              editingId,
+              payload
+            )
+          : await createAnnouncement(
+              payload
+            );
+
+      setSuccess(
+        result?.message ||
+          (editingId
+            ? "Announcement updated successfully."
+            : "Announcement created successfully.")
+      );
+
+      setEditingId(null);
+      setForm(emptyForm);
+
+      await loadAnnouncements();
+
+      window.setTimeout(
+        () => {
+          setSuccess("");
+        },
+        5000
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to save announcement."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handlePublishToggle(
+    announcement:
+      ManagedAnnouncement
+  ) {
+    try {
+      setChangingPublishId(
+        announcement.id
+      );
+
+      setError("");
+      setSuccess("");
+
+      const nextPublished =
+        !announcement.is_published;
+
+      const result =
+        await setAnnouncementPublished(
+          announcement.id,
+          nextPublished
+        );
+
+      setSuccess(
+        result?.message ||
+          (nextPublished
+            ? "Announcement published successfully."
+            : "Announcement unpublished successfully.")
+      );
+
+      await loadAnnouncements();
+
+      window.setTimeout(
+        () => {
+          setSuccess("");
+        },
+        4000
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update announcement publication status."
+      );
+    } finally {
+      setChangingPublishId(
+        null
+      );
+    }
+  }
+
+  async function handleDelete(
+    announcement:
+      ManagedAnnouncement
+  ) {
+    const confirmed =
+      window.confirm(
+        `Delete the announcement "${announcement.title}"? This cannot be undone.`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingId(
+        announcement.id
+      );
+
+      setError("");
+      setSuccess("");
+
+      const result =
+        await deleteAnnouncement(
+          announcement.id
+        );
+
+      if (
+        editingId ===
+        announcement.id
+      ) {
+        resetForm();
+      }
+
+      setSuccess(
+        result?.message ||
+          "Announcement deleted successfully."
+      );
+
+      await loadAnnouncements();
+
+      window.setTimeout(
+        () => {
+          setSuccess("");
+        },
+        4000
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete announcement."
+      );
+    } finally {
+      setDeletingId(
+        null
+      );
+    }
+  }
+
+  const activeCount =
+    announcements.filter(
+      (announcement) =>
+        announcement.display_status ===
+        "active"
+    ).length;
+
+  const scheduledCount =
+    announcements.filter(
+      (announcement) =>
+        announcement.display_status ===
+        "scheduled"
+    ).length;
+
+  const draftCount =
+    announcements.filter(
+      (announcement) =>
+        announcement.display_status ===
+        "draft"
+    ).length;
+
+  const expiredCount =
+    announcements.filter(
+      (announcement) =>
+        announcement.display_status ===
+        "expired"
+    ).length;
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Announcement Management"
+        subtitle="Create, schedule, publish, and manage QRPass announcements for specific user roles."
+        action={
+          <button
+            type="button"
+            onClick={
+              loadAnnouncements
+            }
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-lg border border-[#cfd8e6] bg-white px-3 py-2 text-xs font-semibold text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50"
+          >
+            <RefreshCw
+              size={14}
+              className={
+                loading
+                  ? "animate-spin"
+                  : ""
+              }
+            />
+            Refresh
+          </button>
+        }
+      />
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="flex items-start gap-2">
+            <AlertCircle
+              size={16}
+              className="mt-0.5 shrink-0"
+            />
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          <div className="flex items-start gap-2">
+            <CheckCircle
+              size={16}
+              className="mt-0.5 shrink-0"
+            />
+            <span>{success}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard
+          label="Active"
+          value={String(
+            activeCount
+          )}
+          icon={
+            <Bell size={20} />
+          }
+          color="#15803d"
+        />
+
+        <StatCard
+          label="Scheduled"
+          value={String(
+            scheduledCount
+          )}
+          icon={
+            <Clock size={20} />
+          }
+          color="#2f5fd6"
+        />
+
+        <StatCard
+          label="Drafts"
+          value={String(
+            draftCount
+          )}
+          icon={
+            <EyeOff size={20} />
+          }
+          color="#b7791f"
+        />
+
+        <StatCard
+          label="Expired"
+          value={String(
+            expiredCount
+          )}
+          icon={
+            <AlertCircle
+              size={20}
+            />
+          }
+          color="#64748b"
+        />
+      </div>
+
+      <Card
+        title={
+          editingId
+            ? "Edit Announcement"
+            : "Create Announcement"
+        }
+        action={
+          editingId ? (
+            <button
+              type="button"
+              onClick={
+                resetForm
+              }
+              className="text-xs font-semibold text-[#64748b] hover:text-[#1a3a7b]"
+            >
+              Cancel Editing
+            </button>
+          ) : undefined
+        }
+      >
+        <form
+          onSubmit={
+            handleSubmit
+          }
+          className="p-4 space-y-4"
+        >
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="lg:col-span-2">
+              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
+                Announcement Title
+              </label>
+
+              <input
+                type="text"
+                value={form.title}
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      title:
+                        event.target.value,
+                    })
+                  )
+                }
+                maxLength={255}
+                placeholder="e.g. Campus QR Item Inspection"
+                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
+                Target Audience
+              </label>
+
+              <select
+                value={
+                  form.audience
+                }
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      audience:
+                        event.target
+                          .value as AnnouncementFormState["audience"],
+                    })
+                  )
+                }
+                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6]"
+              >
+                <option value="everyone">
+                  Everyone
+                </option>
+                <option value="student">
+                  Students
+                </option>
+                <option value="security">
+                  CSU / Security
+                </option>
+                <option value="pco">
+                  PCO Staff
+                </option>
+                
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
+                Priority
+              </label>
+
+              <select
+                value={
+                  form.priority
+                }
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      priority:
+                        event.target
+                          .value as AnnouncementFormState["priority"],
+                    })
+                  )
+                }
+                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6]"
+              >
+                <option value="info">
+                  Information
+                </option>
+                <option value="important">
+                  Important
+                </option>
+                <option value="urgent">
+                  Urgent
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
+                Start Date & Time
+              </label>
+
+              <input
+                type="datetime-local"
+                value={
+                  form.start_at
+                }
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      start_at:
+                        event.target.value,
+                    })
+                  )
+                }
+                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6]"
+              />
+
+              <p className="mt-1 text-[10px] text-[#94a3b8]">
+                Leave blank to start immediately after publishing.
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
+                Expiration Date & Time
+              </label>
+
+              <input
+                type="datetime-local"
+                value={
+                  form.end_at
+                }
+                min={
+                  form.start_at ||
+                  undefined
+                }
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      end_at:
+                        event.target.value,
+                    })
+                  )
+                }
+                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6]"
+              />
+
+              <p className="mt-1 text-[10px] text-[#94a3b8]">
+                Leave blank if the announcement should stay active until manually unpublished.
+              </p>
+            </div>
+
+            <div className="lg:col-span-2">
+              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
+                Message
+              </label>
+
+              <textarea
+                value={
+                  form.message
+                }
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      message:
+                        event.target.value,
+                    })
+                  )
+                }
+                maxLength={5000}
+                rows={5}
+                placeholder="Enter the complete announcement message..."
+                className="w-full resize-y rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              />
+
+              <div className="mt-1 text-right text-[10px] text-[#94a3b8]">
+                {
+                  form.message
+                    .length
+                }
+                /5000
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-lg border border-[#d7e0f3] bg-[#f8faff] p-3 sm:flex-row sm:items-center sm:justify-between">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={
+                  form.is_published
+                }
+                onChange={(event) =>
+                  setForm(
+                    (current) => ({
+                      ...current,
+                      is_published:
+                        event.target.checked,
+                    })
+                  )
+                }
+                className="mt-0.5 h-4 w-4 accent-[#1a3a7b]"
+              />
+
+              <span>
+                <span className="block text-sm font-semibold text-[#111827]">
+                  Publish announcement
+                </span>
+
+                <span className="block text-xs text-[#64748b]">
+                  If unchecked, the announcement is saved as a draft and is invisible to users.
+                </span>
+              </span>
+            </label>
+
+            <div className="flex items-center justify-end gap-2">
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={
+                    resetForm
+                  }
+                  disabled={saving}
+                  className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#334155] hover:bg-[#eef2fc] disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              )}
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#1a3a7b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#153164] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving ? (
+                  <RefreshCw
+                    size={14}
+                    className="animate-spin"
+                  />
+                ) : (
+                  <CheckCircle
+                    size={14}
+                  />
+                )}
+
+                {saving
+                  ? "Saving..."
+                  : editingId
+                    ? "Save Changes"
+                    : form.is_published
+                      ? "Create & Publish"
+                      : "Save Draft"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </Card>
+
+      <Card
+        title="All Announcements"
+        action={
+          <span className="rounded-full bg-[#eef2fc] px-2.5 py-1 text-[10px] font-bold text-[#1a3a7b]">
+            {
+              announcements.length
+            }{" "}
+            total
+          </span>
+        }
+      >
+        {loading ? (
+          <div className="py-14 text-center text-sm text-[#64748b]">
+            Loading announcements...
+          </div>
+        ) : announcements.length ===
+          0 ? (
+          <div className="py-14 text-center">
+            <Bell
+              size={28}
+              className="mx-auto text-[#b8c4d6]"
+            />
+
+            <p className="mt-3 text-sm font-semibold text-[#334155]">
+              No announcements yet.
+            </p>
+
+            <p className="mt-1 text-xs text-[#94a3b8]">
+              Create the first QRPass announcement using the form above.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-[#e5eaf2]">
+            {announcements.map(
+              (
+                announcement
+              ) => {
+                const status =
+                  statusStyle(
+                    announcement.display_status
+                  );
+
+                return (
+                  <div
+                    key={
+                      announcement.id
+                    }
+                    className="p-4 hover:bg-[#fbfcfe]"
+                  >
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-sm font-bold text-[#111827]">
+                            {
+                              announcement.title
+                            }
+                          </h3>
+
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${status.className}`}
+                          >
+                            {
+                              status.label
+                            }
+                          </span>
+
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${priorityStyle(
+                              announcement.priority
+                            )}`}
+                          >
+                            {priorityLabel(
+                              announcement.priority
+                            )}
+                          </span>
+                        </div>
+
+                        <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[#52637a]">
+                          {
+                            announcement.message
+                          }
+                        </p>
+
+                        <div className="mt-3 grid gap-2 text-xs text-[#64748b] sm:grid-cols-2 xl:grid-cols-4">
+                          <div>
+                            <span className="font-semibold text-[#334155]">
+                              Audience:
+                            </span>{" "}
+                            {audienceLabel(
+                              announcement.audience
+                            )}
+                          </div>
+
+                          <div>
+                            <span className="font-semibold text-[#334155]">
+                              Starts:
+                            </span>{" "}
+                            {announcement.start_at
+                              ? formatDateTime(
+                                  announcement.start_at
+                                )
+                              : "Immediately"}
+                          </div>
+
+                          <div>
+                            <span className="font-semibold text-[#334155]">
+                              Expires:
+                            </span>{" "}
+                            {announcement.end_at
+                              ? formatDateTime(
+                                  announcement.end_at
+                                )
+                              : "No expiration"}
+                          </div>
+
+                          <div>
+                            <span className="font-semibold text-[#334155]">
+                              Created by:
+                            </span>{" "}
+                            {announcement.creator
+                              ?.name ??
+                              "System Administrator"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            startEdit(
+                              announcement
+                            )
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#cfd8e6] bg-white px-3 py-2 text-xs font-semibold text-[#1a3a7b] hover:bg-[#eef2fc]"
+                        >
+                          <Settings
+                            size={13}
+                          />
+                          Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handlePublishToggle(
+                              announcement
+                            )
+                          }
+                          disabled={
+                            changingPublishId ===
+                            announcement.id
+                          }
+                          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-50 ${
+                            announcement.is_published
+                              ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                              : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
+                          }`}
+                        >
+                          {announcement.is_published ? (
+                            <EyeOff
+                              size={13}
+                            />
+                          ) : (
+                            <Eye
+                              size={13}
+                            />
+                          )}
+
+                          {changingPublishId ===
+                          announcement.id
+                            ? "Updating..."
+                            : announcement.is_published
+                              ? "Unpublish"
+                              : "Publish"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDelete(
+                              announcement
+                            )
+                          }
+                          disabled={
+                            deletingId ===
+                            announcement.id
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                        >
+                          <XCircle
+                            size={13}
+                          />
+
+                          {deletingId ===
+                          announcement.id
+                            ? "Deleting..."
+                            : "Delete"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            )}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+
+const PAGES: Record<Role, React.ComponentType[]> = {
+  student: [
+    StudentRegisterItem,
+    StudentMyQRCodes,
+    StudentPermitStatus,
+    StudentLostAndFound,
+  ],
+
+  security: [
+    SecurityScanVerify,
+    SecurityEntryExitLog,
+    SecurityLostFound,
+    SecurityReports,
+  ],
+
+  pco: [
+    PCOPermitRequests,
+    PCOItemRegistry,
+    PCOReports,
+  ],
+
+ sysadmin: [
+  AdminDashboard,
+  PCOItemRegistry,
+  AdminRecords,
+  AdminAnalytics,
+  SysAdminUserAccounts,
+  SysAdminSettings,
+  SysAdminAuditLogs,
+  SysAdminActiveSessions,
+  SysAdminPerformance,
+  SysAdminSecurityConfig,
+  SysAdminAnnouncementManagement,
+],
+};
+
+const NAV: Record<
+  Role,
+  {
+    icon: React.ReactNode;
+    label: string;
+    badge?: number;
+  }[]
+> = {
+  student: [
+    {
+      icon: <Package size={16} />,
+      label: "Register Item",
+    },
+    {
+      icon: <QrCode size={16} />,
+      label: "QR Codes",
+    },
+    {
+      icon: <Eye size={16} />,
+      label: "Permit Status",
+    },
+    {
+      icon: <BookOpen size={16} />,
+      label: "Lost & Found",
+    },
+  ],
+
+  security: [
+    {
+      icon: <ScanLine size={16} />,
+      label: "Scan & Verify",
+    },
+    {
+      icon: <Map size={16} />,
+      label: "Entry / Exit Log",
+    },
+    {
+      icon: <BookOpen size={16} />,
+      label: "Lost & Found",
+    },
+    {
+      icon: <BarChart2 size={16} />,
+      label: "Reports",
+    },
+  ],
+
+  pco: [
+    {
+      icon: <FileText size={16} />,
+      label: "Registration Requests",
+    },
+    {
+      icon: <Layers size={16} />,
+      label: "Item Registry",
+    },
+    {
+      icon: <BarChart2 size={16} />,
+      label: "Reports",
+    },
+  ],
+
+  sysadmin: [
+    {
+      icon: <BarChart2 size={16} />,
+      label: "Overview Dashboard",
+    },
+    {
+      icon: <Package size={16} />,
+      label: "Item Registry",
+    },
+    {
+      icon: <Layers size={16} />,
+      label: "System Records",
+    },
+    {
+      icon: <BarChart2 size={16} />,
+      label: "Overview Dashboard",
+    },
+    {
+      icon: <Layers size={16} />,
+      label: "System Records",
+    },
+    {
+      icon: <FileText size={16} />,
+      label: "Reports & Analytics",
+    },
+    {
+      icon: <Users size={16} />,
+      label: "User Accounts",
+    },
+    {
+      icon: <Settings size={16} />,
+      label: "System Settings",
+    },
+    {
+      icon: <ClipboardList size={16} />,
+      label: "Audit Logs",
+    },
+
+    {
+      icon: <Eye size={16} />,
+      label: "Active Sessions",
+    },
+
+    {
+      icon: <BarChart2 size={16} />,
+      label: "Performance",
+    },
+    {
+      icon: <Shield size={16} />,
+      label: "Security Config",
+    },
+    {
+      icon: <Bell size={16} />,
+      label: "Announcement Management",
+    },
+  ],
+};
+
+// ── Login page ────────────────────────────────────────────────────────────────
+// ── Registration field definitions per role ───────────────────────────────────
+const REG_FIELDS: Record<Role, { label: string; type: string; placeholder: string; options?: string[] }[]> = {
+  student: [
+    { label: "Full Name", type: "text", placeholder: "e.g. Juan Dela Cruz" },
+    { label: "Student ID No.", type: "text", placeholder: "e.g. 22-1234" },
+    { label: "Email Address", type: "email", placeholder: "e.g. juan@uc.edu.ph" },
+    { label: "Contact Number", type: "text", placeholder: "e.g. 09XX-XXX-XXXX" },
+    { label: "Course / Program", type: "text", placeholder: "e.g. BS Information Technology" },
+    { label: "Year Level", type: "select", placeholder: "", options: ["1st Year", "2nd Year", "3rd Year", "4th Year"] },
+    { label: "Password", type: "password", placeholder: "Create a password" },
+    { label: "Confirm Password", type: "password", placeholder: "Repeat password" },
+  ],
+  security: [
+    { label: "Full Name", type: "text", placeholder: "e.g. Ramon Santos" },
+    { label: "Employee ID", type: "text", placeholder: "e.g. EMP-0012" },
+    { label: "Email Address", type: "email", placeholder: "e.g. rsantos@uc.edu.ph" },
+    { label: "Contact Number", type: "text", placeholder: "e.g. 09XX-XXX-XXXX" },
+    { label: "Position / Rank", type: "text", placeholder: "e.g. Security Guard II" },
+    { label: "Password", type: "password", placeholder: "Create a password" },
+    { label: "Confirm Password", type: "password", placeholder: "Repeat password" },
+  ],
+  pco: [
+    { label: "Full Name", type: "text", placeholder: "e.g. Maria Cruz" },
+    { label: "Employee ID", type: "text", placeholder: "e.g. EMP-0045" },
+    { label: "Email Address", type: "email", placeholder: "e.g. mcruz@uc.edu.ph" },
+    { label: "Contact Number", type: "text", placeholder: "e.g. 09XX-XXX-XXXX" },
+    { label: "Password", type: "password", placeholder: "Create a password" },
+    { label: "Confirm Password", type: "password", placeholder: "Repeat password" },
+  ],
+  sysadmin: [
+    { label: "Full Name", type: "text", placeholder: "e.g. System Administrator" },
+    { label: "Username", type: "text", placeholder: "e.g. sysadmin" },
+    { label: "Email Address", type: "email", placeholder: "e.g. admin@uc.edu.ph" },
+    { label: "Contact Number", type: "text", placeholder: "e.g. 09XX-XXX-XXXX" },
+    { label: "Password", type: "password", placeholder: "Create a password" },
+    { label: "Confirm Password", type: "password", placeholder: "Repeat password" },
+  ],
+};
+
+// ── Role selector shared UI ───────────────────────────────────────────────────
+function RoleSelector({ selected, onSelect, excludeRoles = [] }: { selected: Role | null; onSelect: (r: Role) => void; excludeRoles?: Role[] }) {
+  const visible = ROLES.filter(r => !excludeRoles.includes(r.id));
+  const isOdd = visible.length % 2 !== 0;
+
+  const btnStyle = (r: typeof visible[0]) => ({
+    backgroundColor: selected === r.id ? r.color : "white",
+    color: selected === r.id ? r.textColor : "#111827",
+    borderColor: selected === r.id ? r.color : "#dce3ee",
+    boxShadow: selected === r.id ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
+  });
+
+  // Separate the last item when count is odd so we can center it alone
+  const pairs = isOdd ? visible.slice(0, -1) : visible;
+  const lastItem = isOdd ? visible[visible.length - 1] : null;
+
+  return (
+    <div className="w-full max-w-xl mx-auto space-y-2">
+      <div className="grid grid-cols-2 gap-2">
+        {pairs.map(r => (
+          <button key={r.id} onClick={() => onSelect(r.id)}
+            className="py-3 px-3 rounded-md font-semibold text-sm transition-all duration-150 border-2 text-center"
+            style={btnStyle(r)}>
+            {r.label}
+          </button>
+        ))}
+      </div>
+      {lastItem && (
+        <div className="flex justify-center">
+          <button onClick={() => onSelect(lastItem.id)}
+            className="py-3 px-3 rounded-md font-semibold text-sm transition-all duration-150 border-2 text-center"
+            style={{ ...btnStyle(lastItem), width: "calc(50% - 4px)" }}>
+            {lastItem.label}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Login page ────────────────────────────────────────────────────────────────
+type LoginMode =
+  | "login"
+  | "two-factor"
+  | "register"
+  | "forgot"
+  | "verify"
+  | "reset"
+  | "reset-done";
+
+function LoginPage({ onLogin }: { onLogin: (role: Role) => void }) {
+  // Two-factor authentication state
+const [showHelp, setShowHelp] = useState(false);
+const [twoFactorChallenge, setTwoFactorChallenge] =
+  useState("");
+
+const [twoFactorCode, setTwoFactorCode] =
+  useState("");
+
+const [twoFactorError, setTwoFactorError] =
+  useState("");
+
+const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
+  useState(false);
+  const [mode, setMode] = useState<LoginMode>("login");
+
+  // Login state
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Registration state
+  const [regRole, setRegRole] = useState<Role | null>(null);
+  const [regFields, setRegFields] = useState<Record<string, string>>({});
+  const [regSubmitted, setRegSubmitted] = useState(false);
+
+  // Forgot password state
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [codeInputs, setCodeInputs] = useState([
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ]);
+  const [newPass, setNewPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
+  const [codeError, setCodeError] = useState(false);
+
+  const [verifiedResetCode, setVerifiedResetCode] = useState("");
+
+  // ==========================================================================
+  // LOGIN
+  // ==========================================================================
+
+  async function handleLogin(
+  e: React.FormEvent
+) {
+  e.preventDefault();
+
+  setLoginError("");
+  setIsLoggingIn(true);
+
+  try {
+    const data =
+      await login(
+        username.trim(),
+        password
+      );
+
+    /*
+    |--------------------------------------------------------------------------
+    | TWO-FACTOR AUTHENTICATION REQUIRED
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      data?.requires_2fa === true
+    ) {
+      if (
+        !data.challenge_token
+      ) {
+        throw new Error(
+          "The server did not return a two-factor authentication challenge."
+        );
+      }
+
+      setTwoFactorChallenge(
+        data.challenge_token
+      );
+
+      setTwoFactorCode("");
+      setTwoFactorError("");
+
+      setMode(
+        "two-factor"
+      );
+
+      return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | NORMAL LOGIN
+    |--------------------------------------------------------------------------
+    */
+
+    if (!data?.token) {
+      throw new Error(
+        "Login token was not returned by the server."
+      );
+    }
+
+    localStorage.setItem(
+      "token",
+      data.token
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(
+        data.user
+      )
+    );
+
+    localStorage.setItem(
+      "role",
+      data.user?.role ??
+        ""
+    );
+
+    const userRole =
+      data.user?.role as Role;
+
+    if (!userRole) {
+      throw new Error(
+        "User role was not returned by the server."
+      );
+    }
+
+    const validRoles: Role[] = [
+      "student",
+      "security",
+      "pco",
+      "sysadmin",
+    ];
+
+    if (
+      !validRoles.includes(
+        userRole
+      )
+    ) {
+      throw new Error(
+        "This account has an invalid access role."
+      );
+    }
+
+    onLogin(
+      userRole
+    );
+  } catch (error) {
+    setLoginError(
+      error instanceof Error
+        ? error.message
+        : "Unable to sign in. Please try again."
+    );
+  } finally {
+    setIsLoggingIn(false);
+  }
+}
+
+  // ==========================================================================
+  // REGISTRATION
+  // ==========================================================================
+
+  async function handleRegister(
+    e: React.FormEvent
+  ) {
+    e.preventDefault();
+
+    if (!regRole) {
+      return;
+    }
+
+    const name =
+      regFields["Full Name"]?.trim();
+
+    const email =
+      regFields["Email Address"]?.trim();
+
+    const registrationUsername =
+      regRole === "student"
+        ? regFields["Student ID No."]?.trim()
+        : regFields["Employee ID"]?.trim();
+
+    const registrationPassword =
+      regFields["Password"] ?? "";
+
+    const confirmPassword =
+      regFields["Confirm Password"] ?? "";
+
+    if (
+      !name ||
+      !email ||
+      !registrationUsername ||
+      !registrationPassword
+    ) {
+      alert(
+        "Please complete all required fields."
+      );
+      return;
+    }
+
+    if (
+      registrationPassword !==
+      confirmPassword
+    ) {
+      alert(
+        "Passwords do not match."
+      );
+      return;
+    }
+
+    try {
+      await register(
+        name,
+        email,
+        registrationUsername,
+        registrationPassword,
+        regRole
+      );
+
+      setRegSubmitted(true);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Registration failed."
+      );
+    }
+  }
+
+  // ==========================================================================
+  // FORGOT PASSWORD
+  // ==========================================================================
+
+  async function handleForgotSubmit(
+  e: React.FormEvent
+) {
+  e.preventDefault();
+
+  try {
+    await requestPasswordReset(
+      forgotEmail.trim()
+    );
+
+    setCodeInputs([
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ]);
+
+    setCodeError(false);
+
+    setMode("verify");
+  } catch (error) {
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Unable to send verification code."
+    );
+  }
+}
+
+
+async function handleVerifySubmit(
+  e: React.FormEvent
+) {
+  e.preventDefault();
+
+  const enteredCode =
+    codeInputs.join("");
+
+  if (enteredCode.length !== 6) {
+    setCodeError(true);
+    return;
+  }
+
+  try {
+    await verifyPasswordResetCode(
+      forgotEmail.trim(),
+      enteredCode
+    );
+
+    setVerifiedResetCode(
+      enteredCode
+    );
+
+    setCodeError(false);
+
+    setMode("reset");
+  } catch (error) {
+    setCodeError(true);
+  }
+}
+
+
+async function handleResetSubmit(
+  e: React.FormEvent
+) {
+  e.preventDefault();
+
+  if (!newPass) {
+    return;
+  }
+
+  if (newPass !== confirmPass) {
+    return;
+  }
+
+  try {
+    await resetPassword(
+      forgotEmail.trim(),
+      verifiedResetCode,
+      newPass
+    );
+
+    setMode("reset-done");
+  } catch (error) {
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Unable to reset password."
+    );
+  }
+}
+async function handleTwoFactorSubmit(
+  e: React.FormEvent
+) {
+  e.preventDefault();
+
+  setTwoFactorError("");
+
+  const code =
+    twoFactorCode.trim();
+
+  if (!twoFactorChallenge) {
+    setTwoFactorError(
+      "Your login verification session is missing. Please sign in again."
+    );
+
+    return;
+  }
+
+  if (!/^\d{6}$/.test(code)) {
+    setTwoFactorError(
+      "Please enter the 6-digit verification code."
+    );
+
+    return;
+  }
+
+  try {
+    setIsVerifyingTwoFactor(
+      true
+    );
+
+    const data =
+      await verifyTwoFactor(
+        twoFactorChallenge,
+        code
+      );
+
+    if (!data?.token) {
+      throw new Error(
+        "Login token was not returned by the server."
+      );
+    }
+
+    const userRole =
+      data.user?.role as Role;
+
+    const validRoles: Role[] = [
+      "student",
+      "security",
+      "pco",
+      "sysadmin",
+    ];
+
+    if (
+      !userRole ||
+      !validRoles.includes(
+        userRole
+      )
+    ) {
+      throw new Error(
+        "This account has an invalid access role."
+      );
+    }
+
+    localStorage.setItem(
+      "token",
+      data.token
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(
+        data.user
+      )
+    );
+
+    localStorage.setItem(
+      "role",
+      userRole
+    );
+
+    setTwoFactorChallenge("");
+    setTwoFactorCode("");
+    setTwoFactorError("");
+
+    onLogin(
+      userRole
+    );
+  } catch (error) {
+    setTwoFactorError(
+      error instanceof Error
+        ? error.message
+        : "Unable to verify the code."
+    );
+  } finally {
+    setIsVerifyingTwoFactor(
+      false
+    );
+  }
+}
+  // ==========================================================================
+  // SWITCH PAGE
+  // ==========================================================================
+
+  function switchMode(
+    newMode: LoginMode
+  ) {
+    setMode(newMode);
+
+    setRegSubmitted(false);
+    setRegRole(null);
+    setRegFields({});
+
+    setForgotEmail("");
+
+    setCodeInputs([
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ]);
+
+    setNewPass("");
+    setConfirmPass("");
+    setCodeError(false);
+
+    setLoginError("");
+    setShowPassword(false);
+
+    setTwoFactorChallenge("");
+    setTwoFactorCode("");
+    setTwoFactorError("");
+    setIsVerifyingTwoFactor(false);
+  }
+
+  const fields =
+    regRole
+      ? REG_FIELDS[regRole]
+      : [];
+
+  // ==========================================================================
+  // SHARED TOP BAR
+  // ==========================================================================
+
+  const TopBar = (
+    <div className="bg-primary h-1.5 w-full" />
+  );
+
+    // ==========================================================================
+  // SHARED NAVBAR
+  // ==========================================================================
+
+  const NavBar = (
+    <>
+      <div className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-[#cfd8e6] shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <QRpassLogo size={90} showText />
+
+          <div>
+            <p
+              className="text-xs font-semibold text-primary"
+              style={{
+                fontFamily: "Barlow, sans-serif",
+              }}
+            >
+              QRpass
+            </p>
+
+            <p className="text-xs text-muted-foreground">
+              Campus Item Registration & Verification System
+            </p>
+          </div>
+        </div>
+
+        <div className="text-xs text-muted-foreground">
+          V1.0
+          &nbsp;|&nbsp;
+
+          <button
+            type="button"
+            onClick={() => setShowHelp(true)}
+            className="text-primary font-medium cursor-pointer hover:underline bg-transparent border-0 p-0"
+          >
+            Help
+          </button>
+        </div>
+      </div>
+
+      {showHelp && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4"
+          onClick={() => setShowHelp(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white border border-[#dce3ee] shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#dce3ee]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#eef2fc] flex items-center justify-center">
+                  <BookOpen
+                    size={20}
+                    className="text-primary"
+                  />
+                </div>
+
+                <div>
+                  <h2 className="text-base font-bold text-[#111827]">
+                    QRPass Help
+                  </h2>
+
+                  <p className="text-xs text-muted-foreground">
+                    Campus Item Registration & Verification System
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowHelp(false)}
+                className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                aria-label="Close Help"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <div className="flex items-start gap-3">
+                  <Shield
+                    size={18}
+                    className="text-blue-700 mt-0.5 flex-shrink-0"
+                  />
+
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900">
+                      Need Assistance?
+                    </p>
+
+                    <p className="text-xs text-blue-800 mt-1 leading-relaxed">
+                      If you need assistance using QRPass, encounter an
+                      unexpected problem, or have questions about your account,
+                      item registration, QR codes, or verification, please
+                      contact the QRPass System Administrator.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-md bg-[#eef2fc] flex items-center justify-center flex-shrink-0">
+                    <User
+                      size={16}
+                      className="text-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">
+                      Account Assistance
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Contact the System Administrator for login, account,
+                      password, or access-related concerns.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-md bg-[#eef2fc] flex items-center justify-center flex-shrink-0">
+                    <Package
+                      size={16}
+                      className="text-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">
+                      Item Registration
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Register your item and wait for the required approval
+                      before a QR code is issued.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-md bg-[#eef2fc] flex items-center justify-center flex-shrink-0">
+                    <QrCode
+                      size={16}
+                      className="text-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">
+                      QR Code Assistance
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      For problems with QR code viewing, scanning, or
+                      verification, contact the QRPass System Administrator.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-md bg-[#eef2fc] flex items-center justify-center flex-shrink-0">
+                    <Shield
+                      size={16}
+                      className="text-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">
+                      Security Concerns
+                    </p>
+
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Report suspicious activity, verification issues, or
+                      security-related concerns to authorized QRPass personnel.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between px-5 py-3 border-t border-[#dce3ee] bg-[#fafbfc] rounded-b-xl">
+              <p className="text-xs text-muted-foreground">
+                QRPass System • V1.0
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setShowHelp(false)}
+                className="text-xs font-semibold bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 transition-opacity"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  // ==========================================================================
+  // BOTTOM UC COLOR STRIP
+  // ==========================================================================
+
+  const BottomColorStrip = (
+    <div className="flex h-2">
+      <div
+        className="flex-1"
+        style={{
+          backgroundColor: "#1a3a7b",
+        }}
+      />
+
+      <div
+        className="flex-1"
+        style={{
+          backgroundColor: "#2f5fd6",
+        }}
+      />
+
+      <div
+        className="flex-1"
+        style={{
+          backgroundColor: "#557bdc",
+        }}
+      />
+
+      <div
+        className="flex-1"
+        style={{
+          backgroundColor: "#f6f8fb",
+        }}
+      />
+    </div>
+  );
+
+  // ==========================================================================
+  // SHARED PAGE SHELL
+  // ==========================================================================
+
+  const PageShell = React.useMemo(
+  () =>
+    function AuthPageShell({
+      children,
+    }: {
+      children: React.ReactNode;
+    }) {
+      return (
+        <div
+          className="min-h-screen flex flex-col"
+          style={{
+            fontFamily: "Inter, sans-serif",
+            background: "#f6f8fb",
+          }}
+        >
+          {TopBar}
+
+          {NavBar}
+
+          <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
+            {children}
+
+            <p className="mt-8 text-xs text-muted-foreground text-center">
+              QRpass V1.0
+              <span className="mx-2">|</span>
+              QRpass V1.0
+            </p>
+          </div>
+
+          {BottomColorStrip}
+        </div>
+      );
+    },
+  []
+);
+
+  // ==========================================================================
+  // TWO-FACTOR AUTHENTICATION PAGE
+  // ==========================================================================
+
+  if (mode === "two-factor") {
+    return (
+      <PageShell>
+        <div className="flex flex-col items-center mb-6">
+          <QRpassLogo
+            size={72}
+            showText
+          />
+        </div>
+
+        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+          <div className="bg-primary px-6 py-4">
+            <h2
+              className="text-white font-bold text-base"
+              style={{
+                fontFamily:
+                  "Barlow, sans-serif",
+              }}
+            >
+              Two-Factor Authentication
+            </h2>
+
+            <p className="text-white/70 text-xs mt-1">
+              Enter the verification code sent to your registered email address.
+            </p>
+          </div>
+
+          <form
+            onSubmit={
+              handleTwoFactorSubmit
+            }
+            className="p-6 space-y-4"
+          >
+            <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-3">
+              <div className="flex items-start gap-2">
+                <Shield
+                  size={16}
+                  className="text-blue-700 mt-0.5 flex-shrink-0"
+                />
+
+                <p className="text-xs text-blue-800 leading-relaxed">
+                  For your security, QRPass sent a 6-digit login verification
+                  code to the email registered with this account. The code
+                  expires after 10 minutes.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                Verification Code
+              </label>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={
+                  twoFactorCode
+                }
+                onChange={(e) => {
+                  const value =
+                    e.target.value
+                      .replace(
+                        /\D/g,
+                        ""
+                      )
+                      .slice(
+                        0,
+                        6
+                      );
+
+                  setTwoFactorCode(
+                    value
+                  );
+
+                  setTwoFactorError(
+                    ""
+                  );
+                }}
+                placeholder="000000"
+                maxLength={6}
+                autoFocus
+                disabled={
+                  isVerifyingTwoFactor
+                }
+                className="w-full px-3 py-3 text-center text-2xl font-bold tracking-[0.45em] border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 disabled:opacity-50"
+              />
+            </div>
+
+            {twoFactorError && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5"
+              >
+                <AlertCircle
+                  size={15}
+                  className="mt-0.5 flex-shrink-0 text-red-600"
+                />
+
+                <p className="text-xs leading-relaxed text-red-700">
+                  {twoFactorError}
+                </p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={
+                isVerifyingTwoFactor ||
+                twoFactorCode.length !==
+                  6
+              }
+              className="w-full bg-primary text-white py-2.5 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isVerifyingTwoFactor
+                ? "Verifying..."
+                : "Verify & Sign In"}
+            </button>
+
+            <button
+              type="button"
+              disabled={
+                isVerifyingTwoFactor
+              }
+              onClick={() => {
+                setTwoFactorChallenge(
+                  ""
+                );
+
+                setTwoFactorCode(
+                  ""
+                );
+
+                setTwoFactorError(
+                  ""
+                );
+
+                setPassword("");
+
+                setMode(
+                  "login"
+                );
+              }}
+              className="w-full text-xs text-muted-foreground hover:text-primary hover:underline disabled:opacity-50"
+            >
+              Back to Sign In
+            </button>
+          </form>
+        </div>
+      </PageShell>
+    );
+  }
+
+  // ==========================================================================
+  // REGISTER PAGE
+  // ==========================================================================
+
+  if (mode === "register") {
+    return (
+      <div
+        className="min-h-screen flex flex-col"
+        style={{
+          fontFamily:
+            "Inter, sans-serif",
+          background: "#f6f8fb",
+        }}
+      >
+        {TopBar}
+
+        {NavBar}
+
+        <div className="flex-1 flex flex-col items-center px-4 py-8">
+          <div className="flex flex-col items-center mb-6">
+            <QRpassLogo
+              size={72}
+              showText
+            />
+          </div>
+
+          <div className="w-full max-w-2xl bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+
+            {/* HEADER */}
+            <div className="bg-primary px-6 py-4">
+              <h2
+                className="text-white font-bold text-base"
+                style={{
+                  fontFamily:
+                    "Barlow, sans-serif",
+                }}
+              >
+                Create an Account
+              </h2>
+
+              <p className="text-white/70 text-xs mt-0.5">
+                Fill in your details to
+                register for QRpass access.
+              </p>
+            </div>
+
+            {!regSubmitted ? (
+              <div className="p-6">
+
+                {/* ROLE */}
+                <div className="mb-5">
+                  <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-3">
+                    Step 1 — Select your role
+                  </p>
+
+                  <RoleSelector
+                    selected={regRole}
+                    onSelect={(role) => {
+                      setRegRole(role);
+                      setRegFields({});
+                    }}
+                    excludeRoles={[
+                      "sysadmin",
+                    ]}
+                  />
+                </div>
+
+                {/* REGISTRATION FORM */}
+                {regRole && (
+                  <form
+                    onSubmit={
+                      handleRegister
+                    }
+                  >
+                    <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-3">
+                      Step 2 —{" "}
+
+                      {
+                        ROLES.find(
+                          (role) =>
+                            role.id ===
+                            regRole
+                        )?.label
+                      }{" "}
+
+                      Information
+                    </p>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {fields.map(
+                        (field) => (
+                          <div
+                            key={
+                              field.label
+                            }
+                          >
+                            <label className="block text-xs font-semibold text-foreground mb-1">
+                              {
+                                field.label
+                              }
+                            </label>
+
+                            {field.type ===
+                            "select" ? (
+                              <select
+                                value={
+                                  regFields[
+                                    field
+                                      .label
+                                  ] ?? ""
+                                }
+                                onChange={(
+                                  e
+                                ) =>
+                                  setRegFields(
+                                    (
+                                      previous
+                                    ) => ({
+                                      ...previous,
+
+                                      [field.label]:
+                                        e
+                                          .target
+                                          .value,
+                                    })
+                                  )
+                                }
+                                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                              >
+                                <option value="">
+                                  Select…
+                                </option>
+
+                                {field.options?.map(
+                                  (
+                                    option
+                                  ) => (
+                                    <option
+                                      key={
+                                        option
+                                      }
+                                      value={
+                                        option
+                                      }
+                                    >
+                                      {
+                                        option
+                                      }
+                                    </option>
+                                  )
+                                )}
+                              </select>
+                            ) : (
+                              <input
+                                type={
+                                  field.type
+                                }
+                                placeholder={
+                                  field.placeholder
+                                }
+                                value={
+                                  regFields[
+                                    field
+                                      .label
+                                  ] ?? ""
+                                }
+                                onChange={(
+                                  e
+                                ) =>
+                                  setRegFields(
+                                    (
+                                      previous
+                                    ) => ({
+                                      ...previous,
+
+                                      [field.label]:
+                                        e
+                                          .target
+                                          .value,
+                                    })
+                                  )
+                                }
+                                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                              />
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
+
+                    <div className="mt-5 bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800">
+                      <strong>
+                        Note:
+                      </strong>{" "}
+                      Complete the required
+                      account information
+                      before submitting your
+                      registration.
+                    </div>
+
+                    <div className="flex gap-3 mt-5 justify-end">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          switchMode(
+                            "login"
+                          )
+                        }
+                        className="text-xs px-4 py-2 border border-[#cfd8e6] rounded-md text-muted-foreground hover:bg-muted transition-colors"
+                      >
+                        ← Back to Login
+                      </button>
+
+                      <button
+                        type="submit"
+                        className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90 transition-opacity"
+                      >
+                        Submit Registration
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {!regRole && (
+                  <div className="pt-2">
+                    <div className="text-center text-xs text-muted-foreground py-4">
+                      Select a role above to
+                      continue with
+                      registration.
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        switchMode(
+                          "login"
+                        )
+                      }
+                      className="w-full py-2.5 border border-[#cfd8e6] rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      ← Back to Login
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-10 flex flex-col items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                  <CheckCircle
+                    size={32}
+                    className="text-green-500"
+                  />
+                </div>
+
+                <div className="text-center">
+                  <h3
+                    className="font-bold text-foreground text-base"
+                    style={{
+                      fontFamily:
+                        "Barlow, sans-serif",
+                    }}
+                  >
+                    Registration
+                    Submitted!
+                  </h3>
+
+                  <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                    Your account has been
+                    registered successfully.
+                    You may return to the
+                    login page.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    switchMode(
+                      "login"
+                    )
+                  }
+                  className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90"
+                >
+                  ← Back to Login
+                </button>
+              </div>
+            )}
+          </div>
+
+          <p className="mt-6 text-xs text-muted-foreground text-center">
+           QRpass V1.0
+
+            <span className="mx-2">
+              |
+            </span>
+
+            QRpass V1.0
+          </p>
+        </div>
+
+        {BottomColorStrip}
+      </div>
+    );
+  }
+
+  // ==========================================================================
+  // FORGOT PASSWORD PAGE
+  // ==========================================================================
+
+  if (mode === "forgot") {
+    return (
+      <PageShell>
+        <div className="flex flex-col items-center mb-6">
+          <QRpassLogo
+            size={72}
+            showText
+          />
+        </div>
+
+        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+          <div className="bg-primary px-6 py-4">
+            <h2
+              className="text-white font-bold text-base"
+              style={{
+                fontFamily:
+                  "Barlow, sans-serif",
+              }}
+            >
+              Forgot Password
+            </h2>
+
+            <p className="text-white/70 text-xs mt-0.5">
+              Enter your registered email
+              address to receive a
+              verification code.
+            </p>
+          </div>
+
+          <form
+            onSubmit={
+              handleForgotSubmit
+            }
+            className="p-6 space-y-4"
+          >
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                Email Address
+              </label>
+
+              <div className="relative">
+                <User
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+
+                <input
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) =>
+                    setForgotEmail(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Enter your registered email"
+                  required
+                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800">
+              A 6-digit verification code
+              will be sent to your
+              registered email address.
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-md font-semibold text-sm"
+              style={{
+                backgroundColor:
+                  "#1a3a7b",
+                color: "#fff",
+              }}
+            >
+              Send Verification Code
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                switchMode("login")
+              }
+              className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Back to Login
+            </button>
+          </form>
+        </div>
+      </PageShell>
+    );
+  }
+
+  // ==========================================================================
+  // VERIFY CODE PAGE
+  // ==========================================================================
+
+  if (mode === "verify") {
+    return (
+      <PageShell>
+        <div className="flex flex-col items-center mb-6">
+          <QRpassLogo
+            size={72}
+            showText
+          />
+        </div>
+
+        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+
+          <div className="bg-primary px-6 py-4">
+            <h2
+              className="text-white font-bold text-base"
+              style={{
+                fontFamily:
+                  "Barlow, sans-serif",
+              }}
+            >
+              Enter Verification Code
+            </h2>
+
+            <p className="text-white/70 text-xs mt-0.5">
+              A 6-digit code was sent to{" "}
+
+              <strong>
+                {forgotEmail}
+              </strong>
+            </p>
+          </div>
+
+          <form
+            onSubmit={
+              handleVerifySubmit
+            }
+            className="p-6 space-y-5"
+          >
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-3 uppercase tracking-wide text-center">
+                6-Digit Code
+              </label>
+
+              <div className="flex gap-2 justify-center">
+                {codeInputs.map((value, index) => (
+  <input
+    key={index}
+    id={`code-${index}`}
+    type="text"
+    inputMode="numeric"
+    maxLength={1}
+    value={value}
+
+    onChange={(e) => {
+  const input =
+    e.target.value.replace(
+      /\D/,
+      ""
+    );
+
+  const form =
+    e.currentTarget.form;
+
+  const next = [
+    ...codeInputs,
+  ];
+
+  next[index] =
+    input;
+
+  setCodeInputs(next);
+  setCodeError(false);
+
+  // Move to next box
+  if (
+    input &&
+    index < 5
+  ) {
+    (
+      document.getElementById(
+        `code-${index + 1}`
+      ) as HTMLInputElement
+    )?.focus();
+  }
+
+  // Automatically verify after the 6th digit
+  if (
+    input &&
+    index === 5 &&
+    next.every(
+      (digit) => digit !== ""
+    )
+  ) {
+    setTimeout(() => {
+      form?.requestSubmit();
+    }, 0);
+  }
+}}
+
+    onKeyDown={(e) => {
+      // ENTER = Verify Code
+      if (e.key === "Enter") {
+        e.preventDefault();
+
+        e.currentTarget.form?.requestSubmit();
+
+        return;
+      }
+
+      // BACKSPACE = previous box
+      if (
+        e.key === "Backspace" &&
+        !codeInputs[index] &&
+        index > 0
+      ) {
+        (
+          document.getElementById(
+            `code-${index - 1}`
+          ) as HTMLInputElement
+        )?.focus();
+      }
+    }}
+
+    className={`w-10 h-12 text-center text-lg font-bold rounded-md border-2 focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 transition-colors ${
+      codeError
+        ? "border-red-400 bg-red-50"
+        : "border-[#cfd8e6] bg-[#fafbfc] focus:border-primary"
+    }`}
+  />
+))}
+              </div>
+
+              {codeError && (
+                <p className="text-center text-xs text-red-500 mt-2">
+                  Incorrect code. Please
+                  try again.
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-md font-semibold text-sm"
+              style={{
+                backgroundColor:
+                  "#1a3a7b",
+                color: "#fff",
+              }}
+            >
+              Verify Code
+            </button>
+
+            <div className="text-center space-y-1">
+              <p className="text-xs text-muted-foreground">
+                Didn{"'"}t receive a
+                code?{" "}
+
+                <button
+  type="button"
+  onClick={async () => {
+    try {
+      await requestPasswordReset(
+        forgotEmail.trim()
+      );
+
+      setCodeInputs([
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+      ]);
+
+      setCodeError(false);
+
+      (
+        document.getElementById(
+          "code-0"
+        ) as HTMLInputElement
+      )?.focus();
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to resend verification code."
+      );
+    }
+  }}
+  className="text-primary font-medium hover:underline"
+>
+  Resend
+</button>
+              </p>
+
+              <button
+                type="button"
+                onClick={() =>
+                  switchMode(
+                    "forgot"
+                  )
+                }
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ← Change email
+              </button>
+            </div>
+          </form>
+        </div>
+      </PageShell>
+    );
+  }
+
+  // ==========================================================================
+  // RESET PASSWORD PAGE
+  // ==========================================================================
+
+  if (mode === "reset") {
+    return (
+      <PageShell>
+        <div className="flex flex-col items-center mb-6">
+          <QRpassLogo
+            size={72}
+            showText
+          />
+        </div>
+
+        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden">
+          <div className="bg-primary px-6 py-4">
+            <h2
+              className="text-white font-bold text-base"
+              style={{
+                fontFamily:
+                  "Barlow, sans-serif",
+              }}
+            >
+              Set New Password
+            </h2>
+
+            <p className="text-white/70 text-xs mt-0.5">
+              Choose a strong new password
+              for your account.
+            </p>
+          </div>
+
+          <form
+            onSubmit={
+              handleResetSubmit
+            }
+            className="p-6 space-y-4"
+          >
+            {/* NEW PASSWORD */}
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                New Password
+              </label>
+
+              <div className="relative">
+                <Lock
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+
+                <input
+                  type="password"
+                  value={newPass}
+                  onChange={(e) =>
+                    setNewPass(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Enter new password"
+                  required
+                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* CONFIRM */}
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                Confirm New Password
+              </label>
+
+              <div className="relative">
+                <Lock
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+
+                <input
+                  type="password"
+                  value={confirmPass}
+                  onChange={(e) =>
+                    setConfirmPass(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Confirm new password"
+                  required
+                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors"
+                />
+              </div>
+            </div>
+
+            {confirmPass &&
+              newPass !==
+                confirmPass && (
+                <p className="text-xs text-red-500">
+                  Passwords do not match.
+                </p>
+              )}
+
+            <button
+              type="submit"
+              disabled={
+                !newPass ||
+                newPass !== confirmPass
+              }
+              className="w-full py-2.5 rounded-md font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor:
+                  "#1a3a7b",
+                color: "#fff",
+              }}
+            >
+              Change Password
+            </button>
+          </form>
+        </div>
+      </PageShell>
+    );
+  }
+
+  // ==========================================================================
+  // RESET COMPLETE PAGE
+  // ==========================================================================
+
+  if (mode === "reset-done") {
+    return (
+      <PageShell>
+        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md p-10 flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+            <CheckCircle
+              size={32}
+              className="text-green-500"
+            />
+          </div>
+
+          <div className="text-center">
+            <h3
+              className="font-bold text-foreground text-base"
+              style={{
+                fontFamily:
+                  "Barlow, sans-serif",
+              }}
+            >
+              Password Changed!
+            </h3>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Your password has been
+              updated successfully. You
+              can now log in using your
+              new password.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              switchMode("login")
+            }
+            className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90"
+          >
+            Back to Login
+          </button>
+        </div>
+      </PageShell>
+    );
+  }
+
+  // ==========================================================================
+  // LOGIN PAGE
+  // ==========================================================================
+
+  return (
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        fontFamily:
+          "Inter, sans-serif",
+        background: "#f6f8fb",
+      }}
+    >
+      {TopBar}
+
+      {NavBar}
+
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
+
+        {/* QRPass LOGO */}
+        <div className="flex flex-col items-center mb-8">
+          <QRpassLogo
+            size={120}
+            showText
+          />
+
+          <p className="text-sm text-muted-foreground mt-3 text-center max-w-sm">
+            Enhancing Campus Security
+            Through QR-Based Item
+            Registration & Verification
+          </p>
+        </div>
+
+        {/* LOGIN CARD */}
+        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md p-6">
+
+          <form
+            onSubmit={handleLogin}
+            className="space-y-4"
+          >
+
+            {/* LOGIN HEADING */}
+            <div className="text-center mb-5">
+              <h2
+                className="text-xl font-bold text-foreground"
+                style={{
+                  fontFamily:
+                    "Barlow, sans-serif",
+                }}
+              >
+                Sign in
+              </h2>
+
+              <p className="text-xs text-muted-foreground mt-1">
+                Use your institutional account to continue.
+              </p>
+
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Your account access level
+                is identified
+                automatically.
+              </p>
+            </div>
+
+            {/* USERNAME */}
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                ID NUMBER
+              </label>
+
+              <div className="relative">
+                <User
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(
+                      e.target.value
+                    );
+
+                    if (loginError) {
+                      setLoginError("");
+                    }
+                  }}
+                  placeholder="Enter Student ID or Employee ID"
+                  required
+                  autoComplete="username"
+                  disabled={isLoggingIn}
+                  className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors disabled:opacity-60"
+                />
+              </div>
+            </div>
+
+            {/* PASSWORD */}
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                Password
+              </label>
+
+              <div className="relative">
+                <Lock
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+
+                <input
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(
+                      e.target.value
+                    );
+
+                    if (loginError) {
+                      setLoginError("");
+                    }
+                  }}
+                  placeholder="Enter your password"
+                  required
+                  autoComplete="current-password"
+                  disabled={isLoggingIn}
+                  className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors disabled:opacity-60"
+                />
+
+                {/* SHOW / HIDE PASSWORD */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPassword(
+                      (current) =>
+                        !current
+                    )
+                  }
+                  disabled={isLoggingIn}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                  aria-label={
+                    showPassword
+                      ? "Hide password"
+                      : "Show password"
+                  }
+                  title={
+                    showPassword
+                      ? "Hide password"
+                      : "Show password"
+                  }
+                >
+                  {showPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* FORGOT PASSWORD */}
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() =>
+                  switchMode(
+                    "forgot"
+                  )
+                }
+                disabled={isLoggingIn}
+                className="text-xs text-primary font-medium hover:underline disabled:opacity-50"
+              >
+                Forgot Password?
+              </button>
+            </div>
+
+            {/* LOGIN ERROR */}
+            {loginError && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5"
+              >
+                <AlertCircle
+                  size={15}
+                  className="mt-0.5 flex-shrink-0 text-red-600"
+                />
+
+                <p className="text-xs leading-relaxed text-red-700">
+                  {loginError}
+                </p>
+              </div>
+            )}
+
+            {/* LOGIN BUTTON */}
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              className="w-full py-2.5 rounded-md font-semibold text-sm transition-all duration-150 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              style={{
+                backgroundColor:
+                  "#1a3a7b",
+                color: "#fff",
+              }}
+            >
+              {isLoggingIn ? (
+                <>
+                  <RefreshCw
+                    size={15}
+                    className="animate-spin"
+                  />
+
+                  Signing in...
+                </>
+              ) : (
+                "Log In"
+              )}
+            </button>
+
+            {/* SECURITY NOTICE */}
+            <div className="bg-blue-50 border border-blue-100 rounded-md px-3 py-2.5">
+              <div className="flex items-start gap-2">
+                <Shield
+                  size={14}
+                  className="text-primary mt-0.5 flex-shrink-0"
+                />
+
+                <p className="text-[10px] leading-relaxed text-blue-800">
+                  Authorized institutional users only. System activity may be recorded for security and auditing purposes.
+                </p>
+              </div>
+            </div>
+          </form>
+
+          {/* REGISTER */}
+          <div className="mt-4 pt-4 border-t border-[#cfd8e6] text-center">
+            <p className="text-xs text-muted-foreground">
+              Don{"'"}t have an
+              account?{" "}
+
+              <button
+                type="button"
+                onClick={() =>
+                  switchMode(
+                    "register"
+                  )
+                }
+                className="text-primary font-semibold hover:underline"
+              >
+                Register here
+              </button>
+            </p>
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <p className="mt-8 text-xs text-muted-foreground text-center">
+          © 2026 QRpass System
+
+          <span className="mx-2">
+            |
+          </span>
+
+          QRpass V1.0
+        </p>
+      </div>
+
+      {BottomColorStrip}
+    </div>
+  );
+}
+
+
+// ── Dashboard layout ──────────────────────────────────────────────────────────
+function Dashboard({
+  role,
+  onLogout,
+}: {
+  role: Role;
+  onLogout: () => void;
+}) {
+  const navItems = NAV[role];
+  const pages = PAGES[role];
+
+  const [activeNav, setActiveNav] =
+    useState(0);
+
+  const [isMobile, setIsMobile] =
+    useState(window.innerWidth < 768);
+
+  const [sidebarOpen, setSidebarOpen] =
+    useState(window.innerWidth >= 768);
+
+  // =========================================================
+  // HEADER MENUS
+  // =========================================================
+
+  const [notificationOpen, setNotificationOpen] =
+    useState(false);
+
+  const [accountOpen, setAccountOpen] =
+    useState(false);
+
+  const [accountSettingsOpen, setAccountSettingsOpen] =
+    useState(false);
+
+    const [changePasswordOpen, setChangePasswordOpen] =
+  useState(false);
+
+  const [currentPassword, setCurrentPassword] =
+    useState("");
+
+  const [newPassword, setNewPassword] =
+    useState("");
+
+  const [confirmPassword, setConfirmPassword] =
+    useState("");
+
+  const [changingPassword, setChangingPassword] =
+    useState(false);
+
+  const [passwordMessage, setPasswordMessage] =
+    useState("");
+
+  const [profileName, setProfileName] =
+    useState("");
+
+  const [profileEmail, setProfileEmail] =
+    useState("");
+
+  const [savingProfile, setSavingProfile] =
+    useState(false);
+
+  const [profileMessage, setProfileMessage] =
+    useState("");
+
+    const [uploadingProfilePhoto, setUploadingProfilePhoto] =
+  useState(false);
+  // =========================================================
+  // NOTIFICATIONS
+  // =========================================================
+
+  const [headerNotifications, setHeaderNotifications] =
+    useState<any[]>([]);
+
+  const [notificationsLoading, setNotificationsLoading] =
+    useState(false);
+
+  const [
+    markingNotificationId,
+    setMarkingNotificationId,
+  ] = useState<number | null>(null);
+
+  const [
+    markingAllNotifications,
+    setMarkingAllNotifications,
+  ] = useState(false);
+
+  const [notificationFilter, setNotificationFilter] =
+  useState<"all" | "unread" | "read">("unread");
+
+  // =========================================================
+  // ACTIVE ANNOUNCEMENTS
+  // =========================================================
+
+  const [
+    activeAnnouncements,
+    setActiveAnnouncements,
+  ] = useState<any[]>([]);
+
+  const [
+    announcementsLoading,
+    setAnnouncementsLoading,
+  ] = useState(false);
+
+  // =========================================================
+  // CURRENT USER
+  // =========================================================
+
+  const [currentUser, setCurrentUser] = useState<any>(() => {
+    try {
+      const savedUser =
+        localStorage.getItem("user");
+
+      return savedUser
+        ? JSON.parse(savedUser)
+        : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // =========================================================
+  // LOAD ACTIVE ANNOUNCEMENTS FOR CURRENT ROLE
+  // =========================================================
+
+  async function loadActiveAnnouncements(
+    showLoading = true
+  ) {
+    try {
+      if (showLoading) {
+        setAnnouncementsLoading(
+          true
+        );
+      }
+
+      const data =
+        await getAnnouncements();
+
+     const announcements =
+  Array.isArray(
+    data?.announcements
+  )
+    ? data.announcements
+    : [];
+
+const userId =
+  currentUser?.id ??
+  currentUser?.username ??
+  "user";
+
+const storageKey =
+  `qrpass-viewed-announcements-${userId}`;
+
+let viewedIds: number[] = [];
+
+try {
+  const saved =
+    localStorage.getItem(
+      storageKey
+    );
+
+  viewedIds = saved
+    ? JSON.parse(saved)
+    : [];
+} catch {
+  viewedIds = [];
+}
+
+setActiveAnnouncements(
+  announcements.filter(
+    (announcement: any) =>
+      !viewedIds.includes(
+        Number(announcement.id)
+      )
+  )
+);
+    } catch (error) {
+      console.error(
+        "Failed to load active announcements:",
+        error
+      );
+
+      setActiveAnnouncements(
+        []
+      );
+    } finally {
+      if (showLoading) {
+        setAnnouncementsLoading(
+          false
+        );
+      }
+    }
+  }
+
+  useEffect(() => {
+    loadActiveAnnouncements(
+      true
+    );
+
+    const intervalId =
+      window.setInterval(
+        () => {
+          loadActiveAnnouncements(
+            false
+          );
+        },
+        60000
+      );
+
+    const handleFocus = () => {
+      loadActiveAnnouncements(
+        false
+      );
+    };
+
+    const handleVisibility =
+      () => {
+        if (
+          document.visibilityState ===
+          "visible"
+        ) {
+          loadActiveAnnouncements(
+            false
+          );
+        }
+      };
+
+    window.addEventListener(
+      "focus",
+      handleFocus
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+    return () => {
+      window.clearInterval(
+        intervalId
+      );
+
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+    };
+  }, [role]);
+
+  function getAnnouncementBannerStyle(
+    priority:
+      | string
+      | null
+      | undefined
+  ) {
+    if (
+      String(priority).toLowerCase() ===
+      "urgent"
+    ) {
+      return {
+        wrapper:
+          "bg-red-50 border-red-200",
+        icon:
+          "bg-red-100 text-red-700",
+        title:
+          "text-red-800",
+        badge:
+          "bg-red-100 text-red-700 border-red-200",
+      };
+    }
+
+    if (
+      String(priority).toLowerCase() ===
+      "important"
+    ) {
+      return {
+        wrapper:
+          "bg-amber-50 border-amber-200",
+        icon:
+          "bg-amber-100 text-amber-700",
+        title:
+          "text-amber-800",
+        badge:
+          "bg-amber-100 text-amber-700 border-amber-200",
+      };
+    }
+
+    return {
+      wrapper:
+        "bg-[#eef2fc] border-[#d7e0f3]",
+      icon:
+        "bg-[#dfe7fb] text-[#2f5fd6]",
+      title:
+        "text-[#1a3a7b]",
+      badge:
+        "bg-blue-100 text-blue-700 border-blue-200",
+    };
+  }
+
+  function formatAnnouncementEnd(
+    value:
+      | string
+      | null
+      | undefined
+  ) {
+    if (!value) {
+      return "";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "";
+    }
+
+    return date.toLocaleString(
+      "en-PH",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  // =========================================================
+// LOAD LATEST ACCOUNT DATA
+// =========================================================
+
+useEffect(() => {
+  let cancelled = false;
+
+  const loadAccountData = async () => {
+    try {
+      const data = await getAccount();
+
+      if (cancelled) {
+        return;
+      }
+
+      if (data?.user) {
+        setCurrentUser(data.user);
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify(data.user)
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Failed to load account information:",
+        error
+      );
+    }
+  };
+
+  loadAccountData();
+
+  return () => {
+    cancelled = true;
+  };
+}, [role]);
+
+  // Keep the editable profile fields in sync with the
+  // current user loaded from the backend.
+  useEffect(() => {
+    if (accountSettingsOpen && currentUser) {
+      setProfileName(currentUser.name ?? "");
+      setProfileEmail(currentUser.email ?? "");
+      setProfileMessage("");
+    }
+  }, [accountSettingsOpen, currentUser]);
+const handleProfilePhotoUpload = async (
+  event: React.ChangeEvent<HTMLInputElement>
+) => {
+  const file = event.target.files?.[0];
+
+  if (!file) {
+    return;
+  }
+
+  try {
+    setUploadingProfilePhoto(true);
+    setProfileMessage("");
+
+    const data =
+      await uploadAccountProfilePhoto(file);
+
+    const updatedUser = {
+      ...currentUser,
+      profile_photo: data.profile_photo,
+      profile_photo_url: data.profile_photo_url,
+    };
+
+    setCurrentUser(updatedUser);
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(updatedUser)
+    );
+
+    setProfileMessage(
+      data.message ||
+        "Profile photo updated successfully."
+    );
+  } catch (error: any) {
+    setProfileMessage(
+      error?.errors?.profile_photo?.[0] ||
+        error?.message ||
+        "Failed to upload profile photo."
+    );
+  } finally {
+    setUploadingProfilePhoto(false);
+
+    // Allows selecting the same image again later.
+    event.target.value = "";
+  }
+};
+
+const handleRemoveProfilePhoto = async () => {
+  if (!currentUser?.profile_photo_url) {
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Remove your current profile photo?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    setUploadingProfilePhoto(true);
+    setProfileMessage("");
+
+    const data = await removeAccountProfilePhoto();
+
+    const updatedUser =
+      data?.user ?? {
+        ...currentUser,
+        profile_photo:
+          data?.profile_photo ?? null,
+        profile_photo_url:
+          data?.profile_photo_url ?? null,
+      };
+
+    setCurrentUser(updatedUser);
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(updatedUser)
+    );
+
+    setProfileMessage(
+      data?.message ||
+        "Profile photo removed successfully."
+    );
+  } catch (error: any) {
+    setProfileMessage(
+      error?.message ||
+        "Failed to remove profile photo."
+    );
+  } finally {
+    setUploadingProfilePhoto(false);
+  }
+};
+
+
+// =========================================================
+// CHANGE PASSWORD
+// =========================================================
+
+const handleChangePassword = async () => {
+  if (!currentPassword.trim()) {
+    setPasswordMessage(
+      "Please enter your current password."
+    );
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    setPasswordMessage(
+      "New password must be at least 8 characters."
+    );
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    setPasswordMessage(
+      "New password and confirmation do not match."
+    );
+    return;
+  }
+
+  try {
+    setChangingPassword(true);
+    setPasswordMessage("");
+
+    const data = await updateAccountPassword({
+      current_password: currentPassword,
+      password: newPassword,
+      password_confirmation: confirmPassword,
+    });
+
+    setPasswordMessage(
+      data.message ||
+        "Password changed successfully."
+    );
+
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+
+    setTimeout(() => {
+      setChangePasswordOpen(false);
+      setPasswordMessage("");
+    }, 1200);
+  } catch (error: any) {
+    setPasswordMessage(
+      error?.errors?.current_password?.[0] ||
+        error?.errors?.password?.[0] ||
+        error?.message ||
+        "Failed to change password."
+    );
+  } finally {
+    setChangingPassword(false);
+  }
+};
+
+
+const handleSaveAccountProfile = async () => {
+  try {
+    setSavingProfile(true);
+    setProfileMessage("");
+
+    const data = await updateAccountProfile({
+      name: profileName.trim(),
+      email: profileEmail.trim(),
+    });
+
+    if (data.user) {
+      setCurrentUser(data.user);
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(data.user)
+      );
+    }
+
+    setProfileMessage(
+      data.message ||
+        "Account information updated successfully."
+    );
+
+    // SUCCESS POPUP
+    window.alert("Saved Changes");
+
+  } catch (error: any) {
+    setProfileMessage(
+      error?.errors?.email?.[0] ||
+        error?.errors?.name?.[0] ||
+        error?.message ||
+        "Failed to update account."
+    );
+  } finally {
+    setSavingProfile(false);
+  }
+};
+
+  const roleInfo =
+    ROLES.find((r) => r.id === role)!;
+
+  const ActivePage =
+    pages[activeNav] ?? pages[0];
+
+  // =========================================================
+  // RESPONSIVE SIDEBAR
+  // =========================================================
+
+  useEffect(() => {
+    const handler = () => {
+      const mobile =
+        window.innerWidth < 768;
+
+      setIsMobile(mobile);
+
+      if (!mobile) {
+        setSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener(
+      "resize",
+      handler
+    );
+
+    return () => {
+      window.removeEventListener(
+        "resize",
+        handler
+      );
+    };
+  }, []);
+
+  // =========================================================
+  // LOAD HEADER NOTIFICATIONS
+  // =========================================================
+
+  async function loadHeaderNotifications(
+    showLoading = true
+  ) {
+    try {
+      if (showLoading) {
+        setNotificationsLoading(true);
+      }
+
+      const data =
+        await getNotifications();
+
+      setHeaderNotifications(
+        Array.isArray(
+          data?.notifications
+        )
+          ? data.notifications
+          : []
+      );
+    } catch (error) {
+      console.error(
+        "Failed to load notifications:",
+        error
+      );
+    } finally {
+      if (showLoading) {
+        setNotificationsLoading(false);
+      }
+    }
+  }
+
+  useEffect(() => {
+    /*
+    |--------------------------------------------------------------------------
+    | INITIAL LOAD
+    |--------------------------------------------------------------------------
+    */
+
+    loadHeaderNotifications(true);
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTOMATIC REFRESH
+    |--------------------------------------------------------------------------
+    */
+
+    const notificationInterval =
+      window.setInterval(
+        () => {
+          loadHeaderNotifications(
+            false
+          );
+        },
+        15000
+      );
+
+    /*
+    |--------------------------------------------------------------------------
+    | REFRESH WHEN USER RETURNS TO WINDOW / TAB
+    |--------------------------------------------------------------------------
+    */
+
+    const handleWindowFocus =
+      () => {
+        loadHeaderNotifications(
+          false
+        );
+      };
+
+    const handleVisibilityChange =
+      () => {
+        if (
+          document.visibilityState ===
+          "visible"
+        ) {
+          loadHeaderNotifications(
+            false
+          );
+        }
+      };
+
+    window.addEventListener(
+      "focus",
+      handleWindowFocus
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    return () => {
+      window.clearInterval(
+        notificationInterval
+      );
+
+      window.removeEventListener(
+        "focus",
+        handleWindowFocus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+    };
+  }, [role]);
+
+  const unreadNotificationCount =
+    headerNotifications.filter(
+      (notification) =>
+        !notification.is_read
+    ).length;
+
+  const readNotificationCount =
+    headerNotifications.length -
+    unreadNotificationCount;
+
+  const filteredHeaderNotifications =
+    headerNotifications.filter(
+      (notification) => {
+        if (
+          notificationFilter ===
+          "unread"
+        ) {
+          return !notification.is_read;
+        }
+
+        if (
+          notificationFilter ===
+          "read"
+        ) {
+          return Boolean(
+            notification.is_read
+          );
+        }
+
+        return true;
+      }
+    );
+
+  // =========================================================
+  // MARK SINGLE NOTIFICATION READ
+  // =========================================================
+
+  async function handleHeaderMarkRead(
+  id: number
+) {
+  try {
+    setMarkingNotificationId(id);
+
+    await markNotificationRead(id);
+
+    setHeaderNotifications(
+      (previous) =>
+        previous.map(
+          (notification) =>
+            notification.id === id
+              ? {
+                  ...notification,
+                  is_read: true,
+                  read_at:
+                    notification.read_at ??
+                    new Date().toISOString(),
+                }
+              : notification
+        )
+    );
+
+    // After viewing/reading a notification,
+    // return the bell dropdown to unread notifications.
+    // The notification will disappear from the current list.
+    setNotificationFilter("unread");
+
+  } catch (error) {
+    console.error(
+      "Failed to mark notification as read:",
+      error
+    );
+  } finally {
+    setMarkingNotificationId(null);
+  }
+}
+
+  // =========================================================
+  // MARK ALL NOTIFICATIONS READ
+  // =========================================================
+
+  async function handleHeaderMarkAllRead() {
+    if (
+      unreadNotificationCount === 0
+    ) {
+      return;
+    }
+
+    try {
+      setMarkingAllNotifications(true);
+
+      await markAllNotificationsRead();
+
+      setHeaderNotifications(
+        (previous) =>
+          previous.map(
+            (notification) => ({
+              ...notification,
+
+              is_read: true,
+
+              read_at:
+                notification.read_at ??
+                new Date().toISOString(),
+            })
+          )
+      );
+    } catch (error) {
+      console.error(
+        "Failed to mark all notifications as read:",
+        error
+      );
+    } finally {
+      setMarkingAllNotifications(false);
+    }
+  }
+
+  // =========================================================
+  // DATE FORMATTER
+  // =========================================================
+
+  function formatNotificationDate(
+    value:
+      | string
+      | null
+      | undefined
+  ) {
+    if (!value) {
+      return "";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "";
+    }
+
+    return date.toLocaleString(
+      "en-PH",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    );
+  }
+
+
+  // =========================================================
+  // NOTIFICATION DISPLAY HELPERS
+  // =========================================================
+
+  function getNotificationStyle(
+    type:
+      | string
+      | null
+      | undefined
+  ) {
+    const normalizedType =
+      String(type ?? "")
+        .toLowerCase();
+
+    /*
+    |--------------------------------------------------------------------------
+    | ITEM REGISTRATION / REQUESTS
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      normalizedType ===
+        "new_item_registration" ||
+      normalizedType.includes(
+        "admin_item_registration"
+      )
+    ) {
+      return {
+        card:
+          "bg-yellow-50 border-yellow-200",
+        icon:
+          "bg-yellow-100 text-yellow-700",
+        badge:
+          "bg-yellow-100 text-yellow-700",
+      };
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | APPROVED ITEMS / QR READY
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      normalizedType ===
+        "item_approved" ||
+      normalizedType.includes(
+        "admin_item_approved"
+      ) ||
+      normalizedType.includes(
+        "security_item_ready"
+      )
+    ) {
+      return {
+        card:
+          "bg-green-50 border-green-200",
+        icon:
+          "bg-green-100 text-green-700",
+        badge:
+          "bg-green-100 text-green-700",
+      };
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | STUDENT SUBMISSION
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      normalizedType ===
+      "item_submitted"
+    ) {
+      return {
+        card:
+          "bg-blue-50 border-blue-200",
+        icon:
+          "bg-blue-100 text-blue-700",
+        badge:
+          "bg-blue-100 text-blue-700",
+      };
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOST & FOUND
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      normalizedType.includes(
+        "lost_found"
+      ) ||
+      normalizedType.includes(
+        "lost"
+      ) ||
+      normalizedType.includes(
+        "found"
+      )
+    ) {
+      return {
+        card:
+          "bg-purple-50 border-purple-200",
+        icon:
+          "bg-purple-100 text-purple-700",
+        badge:
+          "bg-purple-100 text-purple-700",
+      };
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | USER ACCOUNT ACTIVITY
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      normalizedType.includes(
+        "user_account"
+      ) ||
+      normalizedType.includes(
+        "account"
+      )
+    ) {
+      return {
+        card:
+          "bg-cyan-50 border-cyan-200",
+        icon:
+          "bg-cyan-100 text-cyan-700",
+        badge:
+          "bg-cyan-100 text-cyan-700",
+      };
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SECURITY / INCIDENT ACTIVITY
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      normalizedType.includes(
+        "incident"
+      ) ||
+      normalizedType.includes(
+        "warning"
+      ) ||
+      normalizedType.includes(
+        "failed"
+      ) ||
+      normalizedType.includes(
+        "flagged"
+      )
+    ) {
+      return {
+        card:
+          "bg-red-50 border-red-200",
+        icon:
+          "bg-red-100 text-red-700",
+        badge:
+          "bg-red-100 text-red-700",
+      };
+    }
+
+    return {
+      card:
+        "bg-muted/30 border-[#cfd8e6]",
+      icon:
+        "bg-muted text-muted-foreground",
+      badge:
+        "bg-muted text-muted-foreground",
+    };
+  }
+
+  function getNotificationIcon(
+    type:
+      | string
+      | null
+      | undefined
+  ) {
+    const normalizedType =
+      String(type ?? "")
+        .toLowerCase();
+
+    if (
+      normalizedType ===
+        "new_item_registration" ||
+      normalizedType.includes(
+        "admin_item_registration"
+      )
+    ) {
+      return <Clock size={14} />;
+    }
+
+    if (
+      normalizedType ===
+        "item_approved" ||
+      normalizedType.includes(
+        "admin_item_approved"
+      ) ||
+      normalizedType.includes(
+        "security_item_ready"
+      )
+    ) {
+      return (
+        <CheckCircle size={14} />
+      );
+    }
+
+    if (
+      normalizedType.includes(
+        "incident"
+      ) ||
+      normalizedType.includes(
+        "warning"
+      ) ||
+      normalizedType.includes(
+        "failed"
+      ) ||
+      normalizedType.includes(
+        "flagged"
+      )
+    ) {
+      return (
+        <AlertTriangle size={14} />
+      );
+    }
+
+    if (
+      normalizedType.includes(
+        "lost_found"
+      ) ||
+      normalizedType.includes(
+        "lost"
+      ) ||
+      normalizedType.includes(
+        "found"
+      )
+    ) {
+      return <BookOpen size={14} />;
+    }
+
+    if (
+      normalizedType.includes(
+        "user_account"
+      ) ||
+      normalizedType.includes(
+        "account"
+      )
+    ) {
+      return <User size={14} />;
+    }
+
+    if (
+      normalizedType ===
+      "item_submitted"
+    ) {
+      return <FileText size={14} />;
+    }
+
+    return <Bell size={14} />;
+  }
+
+  function getNotificationTypeLabel(
+    type:
+      | string
+      | null
+      | undefined
+  ) {
+    const value =
+      String(type ?? "").trim();
+
+    if (!value) {
+      return "General";
+    }
+
+    return value
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (letter) =>
+        letter.toUpperCase()
+      );
+  }
+
+  // =========================================================
+  // CLICKABLE NOTIFICATION NAVIGATION
+  // =========================================================
+
+  function getNotificationTargetIndex(
+    type: string | null | undefined
+  ): number | null {
+    const normalizedType = String(type ?? "").toLowerCase();
+  
+    /*
+    |--------------------------------------------------------------------------
+    | STUDENT
+    |--------------------------------------------------------------------------
+    */
+  
+    if (role === "student") {
+      if (normalizedType === "item_approved") {
+        return 1; // QR Codes
+      }
+  
+      if (
+        normalizedType === "item_submitted" ||
+        normalizedType.includes("permit")
+      ) {
+        return 2; // Permit Status
+      }
+  
+      if (
+        normalizedType.includes("lost_found") ||
+        normalizedType.includes("lost") ||
+        normalizedType.includes("found")
+      ) {
+        return 3; // Lost & Found
+      }
+  
+      return 0; // Register Item
+    }
+  
+    /*
+    |--------------------------------------------------------------------------
+    | PCO
+    |--------------------------------------------------------------------------
+    */
+  
+    if (role === "pco") {
+      if (
+        normalizedType === "new_item_registration" ||
+        normalizedType === "item_submitted" ||
+        normalizedType.includes("approval")
+      ) {
+        return 0; // Registration Requests
+      }
+  
+      if (
+        normalizedType === "item_approved" ||
+        normalizedType.includes("registry") ||
+        normalizedType.includes("qr")
+      ) {
+        return 1; // Item Registry
+      }
+  
+      return 0;
+    }
+  
+    /*
+    |--------------------------------------------------------------------------
+    | CSU / SECURITY
+    |--------------------------------------------------------------------------
+    */
+  
+    if (role === "security") {
+      if (
+        normalizedType.includes("lost_found") ||
+        normalizedType.includes("lost") ||
+        normalizedType.includes("found")
+      ) {
+        return 2; // Lost & Found
+      }
+  
+      if (
+        normalizedType.includes("incident") ||
+        normalizedType.includes("flagged") ||
+        normalizedType.includes("warning") ||
+        normalizedType.includes("scan") ||
+        normalizedType.includes("security_item_ready") ||
+        normalizedType.includes("item_approved") ||
+        normalizedType.includes("qr")
+      ) {
+        return 0; // Scan & Verify
+      }
+  
+      if (
+        normalizedType.includes("entry") ||
+        normalizedType.includes("exit")
+      ) {
+        return 1; // Entry / Exit Log
+      }
+  
+      if (normalizedType.includes("report")) {
+        return 3; // Reports
+      }
+  
+      return 0; // Scan & Verify
+    }
+  
+    /*
+    |--------------------------------------------------------------------------
+    | SYSTEM ADMINISTRATOR
+    |--------------------------------------------------------------------------
+    |
+    | 0 = Overview Dashboard
+    | 1 = Item Registry
+    | 2 = System Records
+    | 3 = Reports & Analytics
+    | 4 = User Accounts
+    | 5 = System Settings
+    | 6 = Audit Logs
+    | 7 = Active Sessions
+    | 8 = Performance
+    | 9 = Security Config
+    | 10 = Announcement Management
+    |
+    */
+  
+    if (role === "sysadmin") {
+      if (
+        normalizedType.includes("user_account") ||
+        normalizedType.includes("user") ||
+        normalizedType.includes("account")
+      ) {
+        return 4; // User Accounts
+      }
+  
+      if (
+        normalizedType.includes("security_config") ||
+        normalizedType.includes("permission")
+      ) {
+        return 9; // Security Config
+      }
+  
+      if (normalizedType.includes("setting")) {
+        return 5; // System Settings
+      }
+  
+      if (
+        normalizedType.includes("incident") ||
+        normalizedType.includes("audit") ||
+        normalizedType.includes("login") ||
+        normalizedType.includes("failed") ||
+        normalizedType.includes("warning")
+      ) {
+        return 6; // Audit Logs
+      }
+  
+      if (normalizedType.includes("report")) {
+        return 3; // Reports & Analytics
+      }
+  
+      if (
+        normalizedType.includes("lost_found") ||
+        normalizedType.includes("lost") ||
+        normalizedType.includes("found")
+      ) {
+        return 2; // System Records
+      }
+  
+      if (
+        normalizedType.includes("item") ||
+        normalizedType.includes("registration") ||
+        normalizedType.includes("qr")
+      ) {
+        return 1; // Item Registry
+      }
+  
+      return 0; // Overview Dashboard
+    }
+  
+    return null;
+  }
+
+
+// ── App root ──────────────────────────────────────────────────────────────────
+export default function App() {
+  const [view, setView] =
+    useState<View>("login");
+
+  const [role, setRole] =
+    useState<Role>("student");
+
+        /*
+    |--------------------------------------------------------------------------
+    | AUTOMATIC SESSION INACTIVITY TIMEOUT
+    |--------------------------------------------------------------------------
+    */
+
+    useEffect(() => {
+      if (view !== "dashboard") {
+        return;
+      }
+
+      let timeoutId:
+        ReturnType<typeof setTimeout> | null =
+          null;
+
+      let timeoutMinutes = 30;
+
+      let disposed = false;
+
+      async function loadTimeoutPolicy() {
+        try {
+          const data =
+            await getSessionPolicy();
+
+          timeoutMinutes =
+            Math.max(
+              1,
+              Number(
+                data
+                  ?.session_timeout_minutes ??
+                  30
+              )
+            );
+
+      resetInactivityTimer();
+    } catch (error) {
+      console.error(
+        "Failed to load session timeout policy:",
+        error
+      );
+
+      timeoutMinutes = 30;
+
+      resetInactivityTimer();
+    }
+  }
+
+  function expireSession() {
+    if (disposed) {
+      return;
+    }
+
+    localStorage.removeItem(
+      "token"
+    );
+
+    localStorage.removeItem(
+      "user"
+    );
+
+    localStorage.removeItem(
+      "role"
+    );
+
+    alert(
+      "Your session has expired due to inactivity. Please log in again."
+    );
+
+    setRole("student");
+    setView("login");
+  }
+
+  function resetInactivityTimer() {
+    if (disposed) {
+      return;
+    }
+
+    if (timeoutId) {
+      clearTimeout(
+        timeoutId
+      );
+    }
+
+    timeoutId =
+      setTimeout(
+        expireSession,
+        timeoutMinutes *
+          60 *
+          1000
+      );
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | REAL USER ACTIVITY
+  |--------------------------------------------------------------------------
+  */
+
+  const activityEvents = [
+    "mousedown",
+    "mousemove",
+    "keydown",
+    "scroll",
+    "touchstart",
+    "click",
+  ];
+
+  activityEvents.forEach(
+    (eventName) => {
+      window.addEventListener(
+        eventName,
+        resetInactivityTimer,
+        {
+          passive: true,
+        }
+      );
+    }
+  );
+
+  loadTimeoutPolicy();
+
+  return () => {
+    disposed = true;
+
+    if (timeoutId) {
+      clearTimeout(
+        timeoutId
+      );
+    }
+
+    activityEvents.forEach(
+      (eventName) => {
+        window.removeEventListener(
+          eventName,
+          resetInactivityTimer
+        );
+      }
+    );
+  };
+}, [view]);
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOGIN
+  |--------------------------------------------------------------------------
+  */
+
+  function handleLogin(r: Role) {
+    setRole(r);
+    setView("dashboard");
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | REAL LOGOUT
+  |--------------------------------------------------------------------------
+  |
+  | 1. Ask Laravel to revoke the current Sanctum token.
+  | 2. Clear the token from the browser.
+  | 3. Return the user to the login page.
+  |
+  */
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } catch (error) {
+      console.error(
+        "Server logout failed:",
+        error
+      );
+    } finally {
+      /*
+      |--------------------------------------------------------------------------
+      | Clear Local Session
+      |--------------------------------------------------------------------------
+      */
+
+      localStorage.removeItem(
+        "token"
+      );
+
+      localStorage.removeItem(
+        "user"
+      );
+
+      localStorage.removeItem(
+        "role"
+      );
+
+      /*
+      |--------------------------------------------------------------------------
+      | Reset QRPass UI
+      |--------------------------------------------------------------------------
+      */
+
+      setRole("student");
+
+      setView("login");
+    }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | PAGE RENDERING
+  |--------------------------------------------------------------------------
+  */
+
+  if (view === "dashboard") {
+    return (
+      <Dashboard
+        role={role}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  return (
+    <LoginPage
+      onLogin={handleLogin}
+    />
+  );
+}
