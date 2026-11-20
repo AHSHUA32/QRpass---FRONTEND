@@ -191,3 +191,21 @@
   outline-offset: 3px !important;
   border-radius: 3px !important;
 }
+
+
+/* QRPass login heading refinement v1 */
+#root .qrpass-login-form .qrpass-welcome-v71 h2 {
+    font-family: "Inter", sans-serif !important;
+    font-size: 23px !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+    letter-spacing: -0.02em !important;
+    color: #17336d !important;
+    text-align: center !important;
+}
+
+@media (max-width: 480px) {
+    #root .qrpass-login-form .qrpass-welcome-v71 h2 {
+        font-size: 21px !important;
+    }
+}

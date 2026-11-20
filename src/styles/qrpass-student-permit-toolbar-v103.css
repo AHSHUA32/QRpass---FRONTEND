@@ -1,0 +1,60 @@
+/* Student Permit Status - uniform toolbar styling */
+
+/* Search field */
+#root input[aria-label="Search permit requests"] {
+  width: 100% !important;
+  min-height: 48px !important;
+  background-color: #eef2ff !important;
+  border: 1px solid #bfceff !important;
+  border-radius: 12px !important;
+  padding-left: 44px !important;
+  font-size: 14px !important;
+}
+
+/* White background when selected */
+#root input[aria-label="Search permit requests"]:focus {
+  background-color: #ffffff !important;
+  border-color: #6488ff !important;
+  box-shadow: 0 0 0 3px rgba(100,136,255,.16) !important;
+  outline: none !important;
+}
+
+/* Newest / Oldest dropdown */
+#root select[aria-label="Sort permit requests"] {
+  min-height: 48px !important;
+  min-width: 148px !important;
+  background-color: #eef2ff !important;
+  border: 1px solid #bfceff !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+}
+
+#root select[aria-label="Sort permit requests"]:focus {
+  background-color: #ffffff !important;
+  border-color: #6488ff !important;
+  box-shadow: 0 0 0 3px rgba(100,136,255,.16) !important;
+  outline: none !important;
+}
+
+/* Toolbar alignment */
+@media (min-width: 1024px) {
+  #root div:has(> div > input[aria-label="Search permit requests"]):has(> select[aria-label="Sort permit requests"]) {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  #root div:has(> div > input[aria-label="Search permit requests"]):has(> select[aria-label="Sort permit requests"]) > div:first-child {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+}
+
+/* Refresh aligned with search and dropdown */
+#root div:has(> select[aria-label="Sort permit requests"]) > button {
+  min-height: 48px !important;
+  padding: 0 10px !important;
+}
+
+/* Existing filter buttons and their active state are preserved */
