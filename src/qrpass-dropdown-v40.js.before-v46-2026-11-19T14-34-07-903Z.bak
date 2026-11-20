@@ -1,0 +1,348 @@
+/* QRPass v40: native-select enhancement only. No checkmark icons. */
+(() => {
+  if (typeof document === 'undefined' || window.__qrpassDropdownV40) return;
+  window.__qrpassDropdownV40 = true;
+
+  const style = document.createElement('style');
+  style.id = 'qrpass-dropdown-v40-style';
+  style.textContent = `
+    .qrp-v40-popup {
+      position: fixed; z-index: 2147483000; box-sizing: border-box;
+      overflow-y: auto; overscroll-behavior: contain;
+      padding: 6px; background: #fff; border: 1px solid #c7d2fe;
+      border-radius: 12px; box-shadow: 0 14px 36px rgba(23,51,109,.16);
+      font: 500 14px/1.35 Inter,system-ui,sans-serif; color: #17336d;
+      animation: qrp-v40-appear 150ms ease-out both;
+    }
+    .qrp-v40-option { display: flex; width: 100%; box-sizing: border-box;
+      text-align: left; align-items: center; border: 0; border-radius: 8px;
+      background: transparent; padding: 10px 12px; min-height: 37px;
+      color: #17336d; font: inherit; cursor: pointer; white-space: normal;
+    }
+    .qrp-v40-option:hover, .qrp-v40-option.qrp-v40-active { background: #edf2ff; }
+    .qrp-v40-option[aria-selected="true"] { background: #dfe8ff; font-weight: 600; }
+    .qrp-v40-option[aria-selected="true"]:hover,
+    .qrp-v40-option[aria-selected="true"].qrp-v40-active { background: #d4e1ff; }
+    .qrp-v40-option:disabled { opacity: .45; cursor: not-allowed; }
+    .qrp-v40-open { background-color: #fff !important; border-color: #5278e7 !important;
+      box-shadow: 0 0 0 3px rgba(82,120,231,.15) !important; }
+    @keyframes qrp-v40-appear { from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { .qrp-v40-popup { animation: none; } }
+  `;
+
+  // QRPass v41: compact polished menu, no checkmarks
+  // Overrides only the visuals of the existing dropdown popup.
+  style.textContent += `
+    .qrp-v40-popup {
+      padding: 5px !important;
+      border-color: #d1dcf4 !important;
+      border-radius: 13px !important;
+      background: #ffffff !important;
+      box-shadow: 0 9px 22px rgba(23, 51, 109, .12), 0 1px 3px rgba(23, 51, 109, .05) !important;
+      animation-duration: 140ms !important;
+    }
+    .qrp-v40-option {
+      min-height: 38px !important;
+      padding: 9px 12px !important;
+      border-radius: 9px !important;
+      color: #17336d !important;
+      font-size: 14px !important;
+      font-weight: 500;
+      transition: background-color .14s ease, color .14s ease !important;
+    }
+    .qrp-v40-option:hover, .qrp-v40-option.qrp-v40-active {
+      background: #eef3ff !important;
+    }
+    .qrp-v40-option[aria-selected="true"] {
+      background: #e1eaff !important;
+      color: #17336d !important;
+      font-weight: 600 !important;
+    }
+    .qrp-v40-option[aria-selected="true"]:hover,
+    .qrp-v40-option[aria-selected="true"].qrp-v40-active {
+      background: #dbe7ff !important;
+    }
+    .qrp-v40-open {
+      background: #ffffff !important;
+      border-color: #7c9cf6 !important;
+      box-shadow: 0 0 0 2px rgba(82,120,231,.12) !important;
+      outline: none !important;
+    }
+    .qrp-v40-popup .qrp-v40-option::before,
+    .qrp-v40-popup .qrp-v40-option::after { content: none !important; }
+    @media (prefers-reduced-motion: reduce) {
+      .qrp-v40-option { transition: none !important; }
+    }
+  `;
+
+
+  /* QRPass v43 exact-width and option-spacing correction */
+  style.textContent += `
+    .qrp-v40-popup {
+      padding: 7px !important;
+      border-radius: 14px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 8px !important;
+      overflow-x: hidden !important;
+      background: #ffffff !important;
+      box-sizing: border-box !important;
+    }
+    .qrp-v40-popup .qrp-v40-option {
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      flex: 0 0 auto !important;
+      width: 100% !important;
+      min-height: 40px !important;
+      padding: 9px 12px !important;
+      border-radius: 9px !important;
+      line-height: 1.35 !important;
+    }
+  `;
+
+  /* QRPass v44 consistent global select menus */
+  style.textContent += ` 
+    .qrp-v40-popup {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 9px !important;
+      padding: 8px !important;
+      border: 1px solid #c7d2fe !important;
+      background: #fff !important;
+      border-radius: 14px !important;
+      box-shadow: 0 10px 25px rgba(23,51,109,.12) !important;
+      box-sizing: border-box !important;
+      overflow-x: hidden !important;
+    }
+    .qrp-v40-popup .qrp-v40-option {
+      display: flex !important;
+      flex: 0 0 auto !important;
+      align-items: center !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      min-height: 42px !important;
+      padding: 10px 12px !important;
+      border-radius: 10px !important;
+      background: #fff !important;
+      color: #17336d !important;
+      font-size: 14px !important;
+      line-height: 1.35 !important;
+      transition: background-color 140ms ease !important;
+    }
+    .qrp-v40-popup .qrp-v40-option[aria-selected="true"] { 
+      background: #dfe8ff !important;
+      font-weight: 600 !important;
+    }
+    .qrp-v40-popup .qrp-v40-option:hover,
+    .qrp-v40-popup .qrp-v40-option.qrp-v40-active { 
+      background: #edf2ff !important;
+    }
+    .qrp-v40-popup .qrp-v40-option[aria-selected="true"]:hover,
+    .qrp-v40-popup .qrp-v40-option[aria-selected="true"].qrp-v40-active {
+      background: #d6e3ff !important;
+    }
+    .qrp-v40-popup .qrp-v40-option::before,
+    .qrp-v40-popup .qrp-v40-option::after { content: none !important; }
+  `;
+
+
+  /* QRPASS V45 GLOBAL DROPDOWN STYLES */
+  style.textContent += `
+    /* All native select popups: Student / CSU / PCO / Admin. */
+    .qrp-v40-popup {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+      padding: 9px !important;
+      background: #fff !important;
+      border: 1px solid #c7d2fe !important;
+      border-radius: 14px !important;
+      box-shadow: 0 12px 28px rgba(23,51,109,.13) !important;
+      box-sizing: border-box !important;
+      overflow-x: hidden !important;
+      scroll-padding: 10px;
+    }
+    .qrp-v40-popup > .qrp-v40-option {
+      box-sizing: border-box !important;
+      display: flex !important;
+      flex: 0 0 auto !important;
+      width: 100% !important;
+      min-height: 43px !important;
+      padding: 10px 13px !important;
+      margin: 0 !important;
+      border: 0 !important;
+      border-radius: 9px !important;
+      background: #fff !important;
+      color: #17336d !important;
+      font-size: 14px !important;
+      font-weight: 500 !important;
+      line-height: 1.4 !important;
+      text-align: left !important;
+      box-shadow: none !important;
+    }
+    .qrp-v40-popup > .qrp-v40-option[aria-selected="true"] {
+      background: #dfe8ff !important;
+      color: #17336d !important;
+      font-weight: 600 !important;
+    }
+    .qrp-v40-popup > .qrp-v40-option:hover,
+    .qrp-v40-popup > .qrp-v40-option.qrp-v40-active {
+      background: #eef3ff !important;
+      color: #17336d !important;
+    }
+    .qrp-v40-popup > .qrp-v40-option[aria-selected="true"]:hover,
+    .qrp-v40-popup > .qrp-v40-option[aria-selected="true"].qrp-v40-active {
+      background: #d6e3ff !important;
+    }
+    .qrp-v40-popup > .qrp-v40-option:disabled {
+      opacity: .48 !important;
+      cursor: not-allowed !important;
+    }
+    .qrp-v40-popup > .qrp-v40-option::before,
+    .qrp-v40-popup > .qrp-v40-option::after {
+      content: none !important;
+    }
+  `;
+
+  document.head.appendChild(style);
+
+  let select = null;
+  let menu = null;
+  let active = -1;
+  let entries = [];
+  let resizeWatcher = null;
+
+  function usable(el) {
+    return el instanceof HTMLSelectElement && !el.multiple && el.size <= 1 &&
+      !el.disabled && !el.closest('[data-qrpass-native-select]');
+  }
+  function close() {
+    if (resizeWatcher) { resizeWatcher.disconnect(); resizeWatcher = null; }
+    if (menu) menu.remove();
+    if (select) { select.classList.remove('qrp-v40-open'); select.removeAttribute('aria-expanded'); }
+    menu = null; select = null; entries = []; active = -1;
+  }
+  function position() {
+    if (!select || !menu || !select.isConnected) { close(); return; }
+    const r = select.getBoundingClientRect();
+    const winW = document.documentElement.clientWidth;
+    const winH = window.innerHeight;
+    const width = Math.min(r.width, winW - 16);
+    const left = Math.max(8, Math.min(r.left, winW - width - 8));
+    const below = winH - r.bottom - 12;
+    const above = r.top - 12;
+    const showAbove = below < 150 && above > below;
+    const maxHeight = Math.max(80, Math.min(320, (showAbove ? above : below) - 5));
+    menu.style.width = `${width}px`;
+    menu.style.left = `${left}px`;
+    menu.style.maxHeight = `${maxHeight}px`;
+    if (showAbove) {
+      menu.style.top = 'auto';
+      menu.style.bottom = `${winH - r.top + 5}px`;
+    } else {
+      menu.style.bottom = 'auto';
+      menu.style.top = `${r.bottom + 8}px`;
+    }
+  }
+  function setActive(index, scroll = true) {
+    if (!menu || !entries.length) return;
+    if (!entries[index] || entries[index].option.disabled) return;
+    active = index;
+    for (const [i, entry] of entries.entries()) {
+      entry.button.classList.toggle('qrp-v40-active', i === index);
+    }
+    if (scroll) entries[index].button.scrollIntoView({ block: 'nearest' });
+  }
+  function choose(index) {
+    if (!select || !entries[index] || entries[index].option.disabled) return;
+    const el = select;
+    const option = entries[index].option;
+    const changed = el.value !== option.value || el.selectedIndex !== option.index;
+    // Preserve the native element and dispatch its real events so React forms keep working.
+    el.selectedIndex = option.index;
+    if (changed) {
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    close();
+    el.focus({ preventScroll: true });
+  }
+  function open(el) {
+    if (!usable(el)) return;
+    if (select === el && menu) { close(); return; }
+    close();
+    select = el;
+    const popup = document.createElement('div');
+    popup.className = 'qrp-v40-popup';
+    popup.setAttribute('role', 'listbox');
+    popup.setAttribute('aria-label', el.getAttribute('aria-label') || 'Select an option');
+    popup.addEventListener('pointerdown', e => e.preventDefault());
+    menu = popup;
+    const opts = Array.from(el.options);
+    opts.forEach(opt => {
+      if (opt.hidden) return;
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'qrp-v40-option';
+      row.setAttribute('role', 'option');
+      row.setAttribute('aria-selected', String(opt.selected));
+      row.textContent = opt.textContent.trim();
+      row.disabled = opt.disabled || !!opt.parentElement?.disabled;
+      const index = entries.length;
+      row.addEventListener('pointerenter', () => setActive(index, false));
+      row.addEventListener('click', () => choose(index));
+      popup.appendChild(row);
+      entries.push({ option: opt, button: row });
+    });
+    if (!entries.length) { close(); return; }
+    document.body.appendChild(popup);
+    el.classList.add('qrp-v40-open');
+    el.setAttribute('aria-expanded', 'true');
+    position();
+    const selected = entries.findIndex(x => x.option.selected);
+    const first = entries.findIndex(x => !x.option.disabled);
+    setActive(selected >= 0 ? selected : first);
+    if (window.ResizeObserver) {
+      resizeWatcher = new ResizeObserver(position);
+      resizeWatcher.observe(el);
+    }
+  }
+  document.addEventListener('pointerdown', e => {
+    const el = e.target.closest?.('select');
+    if (usable(el)) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      el.focus({ preventScroll: true });
+      open(el);
+    } else if (menu && !menu.contains(e.target)) close();
+  }, true);
+  // Prevent native picker from opening after the custom menu is shown.
+  document.addEventListener('click', e => {
+    if (usable(e.target.closest?.('select'))) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+  document.addEventListener('keydown', e => {
+    if (menu && select && (e.target === select || menu.contains(e.target))) {
+      if (e.key === 'Escape' || e.key === 'Tab') { close(); return; }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End') {
+        e.preventDefault();
+        const valid = entries.map((x, i) => !x.button.disabled ? i : -1).filter(i => i >= 0);
+        if (!valid.length) return;
+        let i = valid.indexOf(active);
+        if (e.key === 'Home') i = 0;
+        else if (e.key === 'End') i = valid.length - 1;
+        else i = (i + (e.key === 'ArrowDown' ? 1 : -1) + valid.length) % valid.length;
+        setActive(valid[i]); return;
+      }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(active); return; }
+    }
+    if (!menu && usable(e.target) && ['Enter', ' ', 'ArrowDown', 'ArrowUp'].includes(e.key)) {
+      e.preventDefault(); open(e.target);
+    }
+  }, true);
+  document.addEventListener('focusin', e => { if (menu && e.target !== select && !menu.contains(e.target)) close(); });
+  window.addEventListener('resize', () => { if (menu) position(); });
+  window.addEventListener('scroll', () => { if (menu) position(); }, true);
+})();

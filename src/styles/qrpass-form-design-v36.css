@@ -1,0 +1,93 @@
+/* QRPass v36 — consistent input & dropdown styling.
+   Reference: lavender-blue select fields in Item Registration.
+   This file changes appearance only. It does not modify component behavior. */
+
+#root :is(
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  input[type="url"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  select,
+  textarea,
+  button[role="combobox"],
+  [data-slot="select-trigger"]
+):not([data-qrpass-keep-style]) {
+  background-color: #eef2ff !important;
+  border: 1px solid #c7d2fe !important;
+  border-radius: 12px !important;
+  color: #102b60;
+  box-sizing: border-box;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+#root :is(
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  input[type="url"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  select,
+  button[role="combobox"],
+  [data-slot="select-trigger"]
+):not([data-qrpass-keep-style]) {
+  min-height: 48px;
+}
+
+#root textarea:not([data-qrpass-keep-style]) {
+  min-height: 96px;
+  padding-block: 12px;
+  resize: vertical;
+}
+
+#root :is(input, textarea)::placeholder {
+  color: #8292b0;
+  opacity: 1;
+}
+
+#root :is(
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  input[type="url"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  select,
+  textarea,
+  button[role="combobox"],
+  [data-slot="select-trigger"]
+):not([data-qrpass-keep-style]):focus-visible {
+  border-color: #5278e7 !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(82,120,231,.16) !important;
+}
+
+#root select:not([data-qrpass-keep-style]) option {
+  color: #102b60;
+  background-color: #eef2ff;
+}
+
+#root :is(input, select, textarea):disabled {
+  opacity: .62;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  #root :is(input, select, textarea) {
+    max-width: 100%;
+  }
+}

@@ -1,0 +1,204 @@
+/* QRPass v53: actual React combobox/listbox visual consistency.
+ * This specifically targets the custom dropdowns visible in Chrome Elements
+ * (button[role="combobox"] + div[role="listbox"]), NOT only native <select>.
+ * Appearance only: no option values, click handlers, form events, or layout changes.
+ */
+(() => {
+  if (typeof document === 'undefined' || window.__qrpassCustomDropdownV53) return;
+  window.__qrpassCustomDropdownV53 = true;
+
+  const colors = {
+    menu: '#ffffff',
+    normal: '#f7f9ff',
+    selected: '#dfe8ff',
+    hover: '#eef3ff',
+    hoverSelected: '#d6e3ff',
+    text: '#17336d',
+    border: '#c7d2fe'
+  };
+  const menuQuery = '[role="listbox"]';
+  let scheduled = false;
+  let lastSelected = [];
+
+  // Separate scoped stylesheet for pointer states; runtime painting below
+  // also wins against Tailwind classes such as bg-[#234886].
+  const css = document.createElement('style');
+  css.id = 'qrpass-custom-dropdown-v53';
+  css.textContent = `
+    [role="listbox"][data-qrp-v53="true"] {
+      background: ${colors.menu} !important;
+      border: 1px solid ${colors.border} !important;
+      border-radius: 14px !important;
+      padding: 7px !important;
+      box-shadow: 0 12px 28px rgba(23,51,109,.14) !important;
+      scrollbar-color: #a8b6d2 transparent;
+      max-height: min(260px, 55vh) !important;
+      overflow-y: auto !important;
+      box-sizing: border-box !important;
+    }
+    [role="listbox"][data-qrp-v53="true"] [role="option"] {
+      border-radius: 11px !important;
+      background: ${colors.normal} !important;
+      color: ${colors.text} !important;
+      min-height: 42px !important;
+      margin: 0 !important;
+      text-align: left !important;
+      box-shadow: none !important;
+      transition: background-color 140ms ease !important;
+    }
+    [role="listbox"][data-qrp-v53="true"] [role="option"][aria-selected="true"],
+    [role="listbox"][data-qrp-v53="true"] [role="option"][data-state="checked"] {
+      background: ${colors.selected} !important;
+      color: ${colors.text} !important;
+      font-weight: 600 !important;
+    }
+    [role="listbox"][data-qrp-v53="true"] [role="option"]:hover {
+      background: ${colors.hover} !important;
+    }
+  `;
+  document.head.appendChild(css);
+
+  function setImportant(el, property, value) {
+    if (el.style.getPropertyValue(property).trim() !== value ||
+      el.style.getPropertyPriority(property) !== 'important') {
+      el.style.setProperty(property, value, 'important');
+    }
+  }
+
+  function cleanText(s) {
+    return String(s || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function optionsFor(panel) {
+    let opts = Array.from(panel.querySelectorAll('[role="option"]'));
+    if (opts.length === 0) {
+      // Some hand-written custom listboxes use buttons rather than role=option.
+      opts = Array.from(panel.querySelectorAll('button:not([role="combobox"])'));
+    }
+    if (opts.length === 0) {
+      opts = Array.from(panel.children).filter(el =>
+        el instanceof HTMLElement && el !== panel &&
+        cleanText(el.textContent) && !el.matches('style, script'));
+    }
+    return opts.filter(el => el instanceof HTMLElement);
+  }
+
+  function isConnectedToCombobox(panel) {
+    if (!panel.id) return null;
+    for (const trigger of document.querySelectorAll('[role="combobox"][aria-controls]')) {
+      if (trigger.getAttribute('aria-controls') === panel.id) return trigger;
+    }
+    return null;
+  }
+
+  function repaint() {
+    scheduled = false;
+    const report = [];
+    for (const panel of document.querySelectorAll(menuQuery)) {
+      // Native <select> floating overlays are already handled by v51;
+      // only repaint React custom listboxes.
+      if (panel.classList.contains('qrp-v40-popup') ||
+          panel.classList.contains('qrp-v50-popup') ||
+          panel.classList.contains('qrp-v51-popup') ||
+          panel.classList.contains('qrp-v52-popup')) continue;
+      if (!(panel instanceof HTMLElement)) continue;
+      const trigger = isConnectedToCombobox(panel);
+      if (!trigger && !panel.closest('#root')) continue;
+      const opts = optionsFor(panel);
+      if (!opts.length) continue;
+
+      if (panel.getAttribute('data-qrp-v53') !== 'true')
+        panel.setAttribute('data-qrp-v53', 'true');
+
+      setImportant(panel, 'background', colors.menu);
+      setImportant(panel, 'border-radius', '14px');
+      setImportant(panel, 'padding', '7px');
+      setImportant(panel, 'box-shadow', '0 12px 28px rgba(23, 51, 109, 0.14)');
+      setImportant(panel, 'max-height', 'min(260px, 55vh)');
+      setImportant(panel, 'overflow-y', 'auto');
+      // Gap only affects layouts that already use flex. This leaves absolute
+      // popup placement and scroll behavior to the original React component.
+      if (getComputedStyle(panel).display.includes('flex')) {
+        setImportant(panel, 'gap', '8px');
+      }
+      const currentLabel = cleanText(trigger?.textContent);
+      const selectedByAttr = opts.some(el =>
+        el.getAttribute('aria-selected') === 'true' ||
+        el.getAttribute('data-selected') === 'true' ||
+        el.getAttribute('data-state') === 'checked'
+      );
+      let selectedText = '';
+
+      for (const el of opts) {
+        const optionText = cleanText(el.textContent);
+        // Prefer semantic state. Compare trigger text as a safe fallback for
+        // custom dropdowns that don't expose aria-selected on each option.
+        const selected = selectedByAttr
+          ? (el.getAttribute('aria-selected') === 'true' ||
+             el.getAttribute('data-selected') === 'true' ||
+             el.getAttribute('data-state') === 'checked')
+          : (!!currentLabel && currentLabel === optionText);
+        if (selected) selectedText = optionText;
+        const hovered = el.matches(':hover');
+        const bg = selected
+          ? (hovered ? colors.hoverSelected : colors.selected)
+          : (hovered ? colors.hover : colors.normal);
+
+        // In contrast to earlier v40-v52 fixes, this writes inline *background
+        // shorthand* to the actual custom option node, overriding dark-blue
+        // Tailwind bg utilities (not merely native-select popup styles).
+        setImportant(el, 'background', bg);
+        setImportant(el, 'background-image', 'none');
+        setImportant(el, 'color', colors.text);
+        setImportant(el, 'font-weight', selected ? '600' : '500');
+        setImportant(el, 'box-shadow', 'none');
+        setImportant(el, 'border-radius', '11px');
+        setImportant(el, 'min-height', '42px');
+        setImportant(el, 'transition', 'background-color 140ms ease');
+        // Leave click handlers, aria state, widths, and keyboard focus intact.
+      }
+      report.push({ menu: panel.getAttribute('aria-label') || panel.id || 'dropdown',
+        selected: selectedText,
+        color: selectedText ? getComputedStyle(opts.find(x => cleanText(x.textContent) === selectedText)).backgroundColor : null });
+    }
+    lastSelected = report;
+  }
+
+  function schedule() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(repaint);
+  }
+
+  function start() {
+    const observer = new MutationObserver(changes => {
+      // A guarded repaint watches newly mounted React popups, selected/hover
+      // class changes, and any later React inline-style rewrites.
+      if (changes.some(m => m.type === 'childList' ||
+        (m.target instanceof Element && (m.target.matches('[role="option"], [role="listbox"]') ||
+          m.target.closest('[role="listbox"]'))))) schedule();
+    });
+    observer.observe(document.documentElement, {
+      subtree: true, childList: true, attributes: true,
+      attributeFilter: ['class', 'aria-selected', 'data-selected', 'data-state', 'style']
+    });
+    document.addEventListener('pointerover', e => {
+      if (e.target instanceof Element && e.target.closest(menuQuery)) schedule();
+    }, true);
+    document.addEventListener('pointerout', e => {
+      if (e.target instanceof Element && e.target.closest(menuQuery)) schedule();
+    }, true);
+    document.addEventListener('click', () => schedule(), true);
+    schedule();
+    console.info('[QRPass] v53 React custom dropdown styling active (role=listbox).');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else start();
+
+  // Read-only confirmation, available when a dropdown is open in Chrome.
+  window.qrpassCustomDropdownStatus = () => ({ version: 'v53',
+    panels: lastSelected.slice() });
+})();
+

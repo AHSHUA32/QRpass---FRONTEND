@@ -1,0 +1,82 @@
+/* QRPass Dropdown Size + Gap v42 */
+/* Makes the floating menu match the trigger width better and adds cleaner spacing between options. */
+
+.qrpass-floating-dropdown,
+.qrpass-dropdown,
+[data-qrpass-dropdown] {
+  position: relative;
+}
+
+.qrpass-floating-dropdown-menu,
+.qrpass-dropdown-menu,
+.qrpass-sort-menu,
+[data-qrpass-dropdown-menu] {
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin-top: 10px !important;
+  padding: 10px !important;
+  border-radius: 18px !important;
+  border: 1px solid #d6e1f3 !important;
+  background: #ffffff !important;
+  box-shadow: 0 14px 30px rgba(23, 59, 122, 0.12) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  overflow: hidden !important;
+}
+
+.qrpass-floating-dropdown-option,
+.qrpass-dropdown-option,
+.qrpass-sort-option,
+[data-qrpass-dropdown-option] {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  border-radius: 12px !important;
+  padding: 14px 16px !important;
+  min-height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  font-size: 15px !important;
+  line-height: 1.2 !important;
+  border: 1px solid transparent !important;
+  background: #ffffff !important;
+  color: #173b7a !important;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease !important;
+}
+
+.qrpass-floating-dropdown-option:hover,
+.qrpass-dropdown-option:hover,
+.qrpass-sort-option:hover,
+[data-qrpass-dropdown-option]:hover {
+  background: #f3f7ff !important;
+  border-color: #d8e4ff !important;
+}
+
+.qrpass-floating-dropdown-option:active,
+.qrpass-dropdown-option:active,
+.qrpass-sort-option:active,
+[data-qrpass-dropdown-option]:active {
+  transform: translateY(1px) !important;
+}
+
+.qrpass-floating-dropdown-option.is-selected,
+.qrpass-dropdown-option.is-selected,
+.qrpass-sort-option.is-selected,
+[data-qrpass-dropdown-option][data-selected='true'] {
+  background: #eaf1ff !important;
+  color: #173b7a !important;
+  border-color: #c9d9fb !important;
+  font-weight: 600 !important;
+}
+
+/* Fallback for menus where the selected option is just the first child */
+.qrpass-floating-dropdown-menu > :first-child,
+.qrpass-dropdown-menu > :first-child,
+.qrpass-sort-menu > :first-child,
+[data-qrpass-dropdown-menu] > :first-child {
+  margin-top: 0 !important;
+}

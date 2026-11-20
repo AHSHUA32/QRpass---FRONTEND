@@ -1,0 +1,26 @@
+/* QRPass v39 — white field background only while focused.
+   Keep all existing sizes, layout, border color, and input behavior. */
+#root :is(
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  input[type="url"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  select,
+  textarea,
+  button[role="combobox"],
+  [data-slot="select-trigger"]
+):not([data-qrpass-keep-style]):focus {
+  background-color: #ffffff !important;
+}
+
+/* Keep focused fields white while Chrome autofill is active. */
+#root input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+}

@@ -1,0 +1,6 @@
+import "./qrpass-uniform-blue-buttons-v57.js";
+import "./qrpass-dropdown-v51.js";
+import React from "react";import { createRoot } from "react-dom/client";import App from "./app/App.tsx";import "./styles/index.css";
+import "./qrpass-dropdown-v52-runtime.js";
+import "./qrpass-custom-dropdown-v53.js";
+createRoot(document.getElementById("root")!).render(<App />);

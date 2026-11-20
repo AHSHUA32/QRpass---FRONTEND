@@ -642,13 +642,137 @@ const COMMON_ITEM_COLORS = [
   "Gold", "Beige", "Multicolor",
 ];
 
+// QRPASS_INLINE_OTHER_V80: one field for choosing or typing Others (Specify).
+// QRPASS_INLINE_OTHER_V80 — same field for Others, preserved from v80/v81.
+// QRPASS_INLINE_OTHER_ONE_CLICK_V82 — open existing choices on first arrow click.
+function QRPassInlineOtherSelect({
+  label, value, options, onChange, placeholder, specifyPlaceholder,
+  required = false, maxLength = 255,
+  className = "w-full min-h-[44px] rounded-lg border border-[#c7d2fe] bg-[#eef2ff] px-3 py-2.5 text-sm text-[#17336d] outline-none transition-[background-color,border-color,box-shadow] duration-150 focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20",
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+  placeholder?: string;
+  specifyPlaceholder?: string;
+  required?: boolean;
+  maxLength?: number;
+  className?: string;
+}) {
+  const isCustom = value === "__OTHER__" || (value !== "" && !options.includes(value));
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+  const [choicesOpen, setChoicesOpen] = React.useState(false);
+
+  // Keep the typing cursor in the same field when Others is first selected.
+  React.useEffect(() => {
+    if (isCustom && value === "__OTHER__") inputRef.current?.focus();
+  }, [isCustom, value === "__OTHER__"]);
+
+  // Clicking elsewhere or pressing Escape closes the floating list.
+  React.useEffect(() => {
+    if (!choicesOpen) return;
+    const outside = (event: PointerEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setChoicesOpen(false);
+      }
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setChoicesOpen(false);
+    };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [choicesOpen]);
+
+  React.useEffect(() => {
+    if (!isCustom) setChoicesOpen(false);
+  }, [isCustom]);
+
+  if (isCustom) {
+    return (
+      <div ref={wrapperRef} className="relative w-full min-w-0" style={{ zIndex: choicesOpen ? 90 : undefined }}>
+        <input
+          ref={inputRef}
+          type="text"
+          value={value === "__OTHER__" ? "" : value}
+          onChange={e => onChange(e.target.value || "__OTHER__")}
+          placeholder={specifyPlaceholder || `Specify ${label.toLowerCase()}`}
+          aria-label={`Specify ${label}`}
+          required={required}
+          maxLength={maxLength}
+          className={`${className} !pr-12 focus:!bg-white`}
+        />
+        <button
+          type="button"
+          aria-label={`Show ${label} choices`}
+          aria-haspopup="menu"
+          aria-expanded={choicesOpen}
+          title="Show choices"
+          onClick={() => setChoicesOpen(open => !open)}
+          className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg !border-0 !bg-transparent !shadow-none text-[#31539b] transition-[background-color,transform] duration-150 hover:!bg-[#e5edff] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]"
+        >
+          <ChevronRight size={17} className={`transition-transform duration-150 ${choicesOpen ? "-rotate-90" : "rotate-90"}`} aria-hidden="true" />
+        </button>
+
+        {choicesOpen && (
+          <div
+            role="menu"
+            aria-label={`${label} choices`}
+            data-qrpass-others-menu="v82"
+            className="absolute left-0 right-0 top-[calc(100%+8px)] z-[100] flex min-w-0 flex-col gap-2 overflow-y-auto rounded-2xl border border-[#c7d2fe] bg-white p-2 shadow-[0_12px_26px_rgba(23,51,109,0.14)]"
+            style={{ maxHeight: "min(280px, 48vh)", overscrollBehavior: "contain" }}
+          >
+            {options.map(option => (
+              <button
+                key={option}
+                type="button"
+                role="menuitem"
+                onClick={() => { onChange(option); setChoicesOpen(false); }}
+                className="min-h-[44px] w-full shrink-0 rounded-xl !border-0 !bg-[#f7f9ff] px-4 py-2.5 text-left text-sm font-medium !text-[#17336d] !shadow-none transition-colors duration-150 hover:!bg-[#dfe8ff] focus-visible:!bg-[#dfe8ff] focus-visible:outline-none active:!bg-[#d6e3ff]"
+              >
+                {option}
+              </button>
+            ))}
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => { setChoicesOpen(false); inputRef.current?.focus(); }}
+              className="min-h-[44px] w-full shrink-0 rounded-xl !border-0 !bg-[#dfe8ff] px-4 py-2.5 text-left text-sm font-semibold !text-[#17336d] !shadow-none transition-colors duration-150 hover:!bg-[#d6e3ff] focus-visible:outline-none active:!bg-[#c8d8f4]"
+            >
+              Others (Specify)
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // When a predefined option is shown, keep the same QRPass dropdown
+  // implementation and the original option values as before.
+  return (
+    <select
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      aria-label={label}
+      required={required}
+      className={className}
+    >
+      <option value="" disabled hidden>{placeholder || `Select ${label}`}</option>
+      {options.map(option => (
+        <option key={option} value={option}>{option}</option>
+      ))}
+      <option value="__OTHER__">Others (Specify)</option>
+    </select>
+  );
+}
+
 function RegistrationDropdown({
-  label,
-  field,
-  value,
-  options,
-  onChange,
-  optional = false,
+  label, field, value, options, onChange, optional = false,
 }: {
   label: string;
   field: string;
@@ -657,43 +781,21 @@ function RegistrationDropdown({
   onChange: (field: string, value: string) => void;
   optional?: boolean;
 }) {
-  const isOther = value === "__OTHER__" || (value !== "" && !options.includes(value));
-  const selectValue = isOther ? "__OTHER__" : value;
-  const fieldClass =
-    "w-full px-3 py-2.5 text-sm border border-[#c7d2fe] rounded-lg bg-[#eef2ff] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15";
-
   return (
-    <div>
+    <div className="min-w-0">
       <label className="block text-xs font-semibold text-foreground mb-1.5">
         {label}
         {optional && (
-          <span className="ml-1 text-[11px] font-normal text-muted-foreground">
-            (Optional)
-          </span>
+          <span className="ml-1 text-[11px] font-normal text-muted-foreground">(Optional)</span>
         )}
       </label>
-      <select
-        value={selectValue}
-        onChange={(e) => onChange(field, e.target.value)}
-        className={fieldClass}
-        aria-label={label}
-      >
-        <option value="" disabled hidden>Select {label}</option>
-        {options.map((option) => (
-          <option key={option} value={option}>{option}</option>
-        ))}
-        <option value="__OTHER__">Others (Specify)</option>
-      </select>
-      {isOther && (
-        <input
-          className={`${fieldClass} mt-2`}
-          type="text"
-          value={value === "__OTHER__" ? "" : value}
-          placeholder={`Specify ${label.toLowerCase()}`}
-          onChange={(e) => onChange(field, e.target.value || "__OTHER__")}
-          aria-label={`Specify ${label}`}
-        />
-      )}
+      <QRPassInlineOtherSelect
+        label={label}
+        value={value}
+        options={options}
+        onChange={next => onChange(field, next)}
+        specifyPlaceholder={`Specify ${label.toLowerCase()}`}
+      />
     </div>
   );
 }
@@ -1285,9 +1387,6 @@ function StudentRegisterItem() {
                 {activeGroup.name}
               </h3>
 
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Registration Form
-              </p>
             </div>
           </div>
 
@@ -1386,9 +1485,6 @@ options={["Acer", "ASUS", "Dell", "HP", "Lenovo", "Apple", "MSI"]}
                       Computer / Laptop Specifications
                     </p>
 
-                    <p className="text-xs text-white/75 mt-0.5">
-                      Complete the applicable specifications based on the UC Computer Equipment Gate Pass.
-                    </p>
                   </div>
 
                   <div className="p-4 grid md:grid-cols-2 gap-4 bg-blue-50/30">
@@ -1610,9 +1706,6 @@ options={["Samsung", "LG", "Sony", "ASUS", "Acer", "Lenovo", "HP", "Dell", "Cano
                       High-Value Equipment Specifications
                     </p>
 
-                    <p className="text-xs text-white/75 mt-0.5">
-                      Complete the applicable specifications for the unit being registered.
-                    </p>
                   </div>
 
                   <div className="p-4 grid md:grid-cols-2 gap-4 bg-[#fafbfc]">
@@ -2032,9 +2125,6 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
                 Select an Item Category
               </h3>
 
-              <p className="mt-1 text-xs text-muted-foreground">
-                Choose the category that best matches the item you want to register.
-              </p>
             </div>
 
             <div className="divide-y divide-[#dce3ee]">
@@ -2083,7 +2173,7 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
                       category.key as RegistrationGroupId
                     )
                   }
-                  className="group flex w-full min-w-0 items-center gap-3 px-3 py-4 text-left transition-colors hover:bg-[#eef2fc]/10 sm:gap-4 sm:px-5"
+                  className="group flex w-full min-w-0 items-center gap-3 px-3 py-3.5 text-left transition-colors hover:bg-[#eef2fc]/10 sm:gap-4 sm:px-5"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#d6dde8] bg-white text-[#1a3a7b]">
                     {category.icon}
@@ -2094,9 +2184,6 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
                       {category.title}
                     </p>
 
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {category.description}
-                    </p>
                   </div>
 
                   <ChevronRight
@@ -2468,15 +2555,6 @@ function StudentMyQRCodes() {
       <PageHeader
         title="QR Codes"
         subtitle="Approved items with their QR codes. Present these to security during inspection or exit."
-        action={
-          <button
-            onClick={loadMyItems}
-            className="text-xs flex items-center gap-1 text-primary font-medium inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          >
-            <RefreshCw size={12} />
-            Refresh
-          </button>
-        }
       />
 
       {/* Same search and sort controls as Lost & Found */}
@@ -3045,20 +3123,6 @@ function StudentPermitStatus() {
       <PageHeader
         title="Permit Status"
         subtitle="Track all of your item registration requests and permit details."
-        action={
-          <button
-            onClick={loadItems}
-            disabled={loading}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          >
-            <RefreshCw
-              size={12}
-            />
-            {loading
-              ? "Refreshing..."
-              : "Refresh"}
-          </button>
-        }
       />
 
       {/* SUMMARY */}
@@ -3337,13 +3401,6 @@ function StudentPermitStatus() {
                         : "No expired permit requests found."}
                     </p>
 
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {permitSearch.trim()
-                        ? "Try another item name, QR ID, or category."
-                        : permitFilter === "all"
-                        ? "Register an item to create your first permit request."
-                        : "Try selecting a different filter."}
-                    </p>
                   </td>
                 </tr>
               ) : (
@@ -4114,17 +4171,6 @@ function StudentLostAndFound() {
       <PageHeader
         title="Lost & Found"
         subtitle="Browse found items and lost-item reports recorded by the Security office."
-        action={
-          <button
-            type="button"
-            onClick={loadItems}
-            disabled={loading}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          >
-            <RefreshCw size={12} />
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
-        }
       />
 
       {error && (
@@ -4298,9 +4344,6 @@ function StudentLostAndFound() {
               No Lost & Found records found.
             </p>
 
-            <p className="mt-1 text-xs text-muted-foreground">
-              Try changing your search or filter.
-            </p>
           </div>
         )}
 
@@ -8727,72 +8770,45 @@ function SecurityLostFound() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">Item Name *</label>
-            <select
-              value={categoryNames.includes(form.item_name) ? form.item_name : form.item_name ? "__OTHER__" : ""}
-              onChange={e => setForm(current => ({...current, item_name: e.target.value === "__OTHER__" ? "__OTHER__" : e.target.value}))}
+            <QRPassInlineOtherSelect
+              label="Item Name"
+              value={form.item_name}
+              options={categoryNames}
+              onChange={value => setForm(current => ({...current, item_name: value}))}
+              placeholder="Item Name"
+              specifyPlaceholder="Specify item name"
+              maxLength={255}
               required
-              className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="" disabled hidden>Item Name</option>
-              {categoryNames.map(name => <option key={name} value={name}>{name}</option>)}
-              <option value="__OTHER__">Others (Specify)</option>
-            </select>
-            {(form.item_name === "__OTHER__" || (form.item_name && !categoryNames.includes(form.item_name))) && (
-              <input
-                type="text"
-                maxLength={255}
-                required
-                aria-label="Specify item name"
-                className="mt-2 w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                value={form.item_name === "__OTHER__" ? "" : form.item_name}
-                placeholder="Specify item name"
-                onChange={e => setForm(current => ({...current, item_name: e.target.value || "__OTHER__"}))}
-              />
-            )}
+              className="w-full min-h-[44px] rounded-lg border border-[#c7d2fe] bg-[#eef2ff] px-3 py-2.5 text-sm text-[#17336d] outline-none transition-[background-color,border-color,box-shadow] duration-150 focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20"
+            />
           </div>
 
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">Brand / Model (if known)</label>
-            <select
-              value={categoryBrands.includes(form.brand_model) ? form.brand_model : form.brand_model ? "__OTHER__" : ""}
-              onChange={e => setForm(current => ({ ...current, brand_model: e.target.value }))}
-              className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-              aria-label="Brand / Model"
-            >
-              <option value="" disabled hidden>Brand / Model (optional)</option>
-              {categoryBrands.map(brand => <option key={brand} value={brand}>{brand}</option>)}
-              <option value="__OTHER__">Others (Specify)</option>
-            </select>
-            {(form.brand_model === "__OTHER__" || (form.brand_model && !categoryBrands.includes(form.brand_model))) && (
-              <input type="text" maxLength={255} aria-label="Specify brand or model"
-                className="mt-2 w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                value={form.brand_model === "__OTHER__" ? "" : form.brand_model}
-                placeholder="Specify brand and model (optional)"
-                onChange={e => setForm(current => ({ ...current, brand_model: e.target.value || "__OTHER__" }))}
-              />
-            )}
+            <QRPassInlineOtherSelect
+              label="Brand / Model"
+              value={form.brand_model}
+              options={categoryBrands}
+              onChange={value => setForm(current => ({...current, brand_model: value}))}
+              placeholder="Brand / Model (optional)"
+              specifyPlaceholder="Specify brand and model (optional)"
+              maxLength={255}
+              className="w-full min-h-[44px] rounded-lg border border-[#c7d2fe] bg-[#eef2ff] px-3 py-2.5 text-sm text-[#17336d] outline-none transition-[background-color,border-color,box-shadow] duration-150 focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20"
+            />
           </div>
 
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">Color (if known)</label>
-            <select
-              value={COMMON_ITEM_COLORS.includes(form.color) ? form.color : form.color ? "__OTHER__" : ""}
-              onChange={e => setForm(current => ({ ...current, color: e.target.value }))}
-              className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-              aria-label="Item Color"
-            >
-              <option value="" disabled hidden>Color (optional)</option>
-              {COMMON_ITEM_COLORS.map(color => <option key={color} value={color}>{color}</option>)}
-              <option value="__OTHER__">Others (Specify)</option>
-            </select>
-            {(form.color === "__OTHER__" || (form.color && !COMMON_ITEM_COLORS.includes(form.color))) && (
-              <input type="text" maxLength={100} aria-label="Specify item color"
-                className="mt-2 w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                value={form.color === "__OTHER__" ? "" : form.color}
-                placeholder="Specify item color (optional)"
-                onChange={e => setForm(current => ({ ...current, color: e.target.value || "__OTHER__" }))}
-              />
-            )}
+            <QRPassInlineOtherSelect
+              label="Item Color"
+              value={form.color}
+              options={COMMON_ITEM_COLORS}
+              onChange={value => setForm(current => ({...current, color: value}))}
+              placeholder="Color (optional)"
+              specifyPlaceholder="Specify item color (optional)"
+              maxLength={100}
+              className="w-full min-h-[44px] rounded-lg border border-[#c7d2fe] bg-[#eef2ff] px-3 py-2.5 text-sm text-[#17336d] outline-none transition-[background-color,border-color,box-shadow] duration-150 focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20"
+            />
           </div>
 
           <div>
@@ -10889,9 +10905,6 @@ function SecurityLostFound() {
                   <h3 className="text-sm font-semibold text-foreground">
                     Select an Item Category
                   </h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Choose the category that best matches the lost or found item.
-                  </p>
                 </div>
                 <div className="divide-y divide-[#dce3ee]">
                   {reportCategories.map((category) => (
@@ -10899,7 +10912,7 @@ function SecurityLostFound() {
                       key={category.id}
                       type="button"
                       onClick={() => chooseReportCategory(category.id)}
-                      className="group flex w-full min-w-0 items-center gap-3 px-3 py-4 text-left transition-colors hover:bg-[#eef2fc]/10 sm:gap-4 sm:px-5"
+                      className="group flex w-full min-w-0 items-center gap-3 px-3 py-3.5 text-left transition-colors hover:bg-[#eef2fc]/10 sm:gap-4 sm:px-5"
                     >
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#d6dde8] bg-white text-[#1a3a7b]">
                         {category.icon}
@@ -10907,9 +10920,6 @@ function SecurityLostFound() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-foreground">
                           {category.name}
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {category.description}
                         </p>
                       </div>
                       <ChevronRight
@@ -21714,6 +21724,126 @@ type LoginMode =
   | "reset"
   | "reset-done";
 
+// QRPass rounded student registration dropdowns — UI only
+function QRPassRegistrationSelect({
+  label,
+  value,
+  options,
+  placeholder,
+  onValueChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  placeholder: string;
+  onValueChange: (next: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [openAbove, setOpenAbove] = React.useState(false);
+  const [activeIndex, setActiveIndex] = React.useState(0);
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const listboxId = React.useId();
+
+  React.useEffect(() => {
+    if (!open) return;
+    function closeIfOutside(event: PointerEvent) {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('pointerdown', closeIfOutside);
+    return () => document.removeEventListener('pointerdown', closeIfOutside);
+  }, [open]);
+
+  const showOptions = () => {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    const panelHeight = Math.min(240, options.length * 40 + 8);
+    if (rect) {
+      setOpenAbove(window.innerHeight - rect.bottom < panelHeight + 12 && rect.top > window.innerHeight - rect.bottom);
+    }
+    const selected = options.indexOf(value);
+    setActiveIndex(selected >= 0 ? selected : 0);
+    setOpen(true);
+  };
+
+  const choose = (next: string) => {
+    onValueChange(next);
+    setOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  const keyHandler = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Escape') {
+      if (open) { event.preventDefault(); setOpen(false); }
+      return;
+    }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!open) { showOptions(); return; }
+      setActiveIndex((index) => (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length);
+      return;
+    }
+    if (event.key === 'Home' || event.key === 'End') {
+      if (!open) return;
+      event.preventDefault();
+      setActiveIndex(event.key === 'Home' ? 0 : options.length - 1);
+      return;
+    }
+    if ((event.key === 'Enter' || event.key === ' ') && open) {
+      event.preventDefault();
+      choose(options[activeIndex]);
+    }
+  };
+
+  return (
+    <div className="relative w-full" ref={rootRef}>
+      <button
+        ref={triggerRef}
+        type="button"
+        role="combobox"
+        aria-label={label}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? listboxId : undefined}
+        aria-activedescendant={open ? `${listboxId}-${activeIndex}` : undefined}
+        onClick={() => open ? setOpen(false) : showOptions()}
+        onKeyDown={keyHandler}
+        onBlur={(event) => {
+          if (!rootRef.current?.contains(event.relatedTarget as Node)) setOpen(false);
+        }}
+        className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 py-2 text-left text-sm text-[#17336d] shadow-sm transition-colors hover:border-[#8ba9eb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f5fd6]/30"
+      >
+        <span className={value ? 'truncate' : 'truncate text-[#667d9e]'}>{value || placeholder}</span>
+        <ChevronRight size={16} aria-hidden="true" className={`shrink-0 transition-transform ${open ? '-rotate-90' : 'rotate-90'}`} />
+      </button>
+      {open && (
+        <div
+          id={listboxId}
+          role="listbox"
+          aria-label={label}
+          className={`absolute left-0 right-0 z-[200] max-h-60 overflow-y-auto rounded-xl border border-[#c7d2fe] bg-[#f8faff] p-1 shadow-[0_12px_28px_rgba(24,52,108,0.18)] ${openAbove ? 'bottom-[calc(100%+6px)]' : 'top-[calc(100%+6px)]'}`}
+        >
+          {options.map((option, index) => (
+            <div
+              key={option}
+              id={`${listboxId}-${index}`}
+              role="option"
+              aria-selected={value === option}
+              onMouseEnter={() => setActiveIndex(index)}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => choose(option)}
+              className={`cursor-pointer select-none rounded-lg px-3 py-2.5 text-sm transition-colors ${value === option ? 'bg-[#1e448b] font-semibold text-white' : activeIndex === index ? 'bg-[#dce6ff] text-[#17336d]' : 'text-[#17336d] hover:bg-[#e5edff]'}`}
+            >
+              {option}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LoginPage({ onLogin }: { onLogin: (role: Role) => void }) {
   // Two-factor authentication state
 const [twoFactorChallenge, setTwoFactorChallenge] =
@@ -22308,6 +22438,10 @@ async function handleTwoFactorSubmit(
   const AuthThemeStyles = (
     <style>{`
       /* QRPASS UNIFIED AUTH THEME - register and password recovery */
+      /* Student registration dropdown menu may extend beyond its card. */
+      .qrpass-auth-register-card { overflow: visible !important; }
+      .qrpass-auth-register-card > .bg-primary { border-radius: 19px 19px 0 0; }
+
       .qrpass-auth-page {
         width: 100%;
         min-height: 100vh;
@@ -22415,7 +22549,136 @@ async function handleTwoFactorSubmit(
           width: 100% !important;
         }
       }
-    `}</style>
+    
+      /* QRPASS_CREATE_ACCOUNT_POLISH_V34: visual polish scoped exclusively to the student registration card */
+      .qrpass-auth-register-card > .bg-primary {
+        padding: 18px 24px 17px !important;
+      }
+      .qrpass-auth-register-card > .bg-primary h2 {
+        font-size: 22px !important;
+        line-height: 1.3 !important;
+        letter-spacing: -0.015em;
+      }
+      .qrpass-auth-register-card > .p-5 {
+        padding: 22px 24px 24px !important;
+      }
+      .qrpass-auth-register-card > .p-5 form > p:first-child {
+        margin-bottom: 15px !important;
+        letter-spacing: 0.035em;
+        color: #17336d;
+      }
+      .qrpass-auth-register-card > .p-5 form .grid {
+        column-gap: 15px !important;
+        row-gap: 15px !important;
+      }
+      .qrpass-auth-register-card > .p-5 form label {
+        display: block;
+        margin-bottom: 7px !important;
+        font-size: 13px !important;
+        line-height: 1.4;
+        font-weight: 600 !important;
+        color: #172c4f;
+      }
+      .qrpass-auth-register-card > .p-5 form input:not([type="checkbox"]),
+      .qrpass-auth-register-card > .p-5 form select {
+        height: 48px !important;
+        min-height: 48px !important;
+        width: 100%;
+        border: 1px solid #cbd7ea !important;
+        border-radius: 12px !important;
+        font-size: 15px !important;
+        box-shadow: none;
+        transition: border-color .16s ease, box-shadow .16s ease;
+      }
+      .qrpass-auth-register-card > .p-5 form input:not([type="checkbox"]) {
+        background: #fbfcff !important;
+      }
+      .qrpass-auth-register-card > .p-5 form select {
+        background-color: #f1f5ff !important;
+      }
+      .qrpass-auth-register-card > .p-5 form input:focus,
+      .qrpass-auth-register-card > .p-5 form select:focus {
+        border-color: #3563c8 !important;
+        box-shadow: 0 0 0 3px rgba(53,99,200,.12) !important;
+      }
+      .qrpass-auth-register-card > .p-5 form > .mt-4.flex.items-start {
+        margin-top: 20px !important;
+        padding: 13px 15px !important;
+        gap: 9px !important;
+        border-radius: 12px !important;
+        line-height: 1.6 !important;
+      }
+      .qrpass-auth-register-card > .p-5 form > .flex.gap-3.mt-5.justify-end {
+        margin-top: 22px !important;
+        gap: 12px !important;
+        flex-wrap: wrap;
+      }
+      .qrpass-auth-register-card > .p-5 form > .flex.gap-3.mt-5.justify-end button {
+        min-height: 46px !important;
+        padding: 10px 19px !important;
+        border-radius: 11px !important;
+        font-weight: 600;
+        font-size: 13px !important;
+      }
+      @media (max-width: 640px) {
+        .qrpass-auth-register-card > .bg-primary { padding: 16px 18px !important; }
+        .qrpass-auth-register-card > .p-5 { padding: 18px 18px 22px !important; }
+        .qrpass-auth-register-card > .p-5 form .grid { row-gap: 13px !important; }
+        .qrpass-auth-register-card > .p-5 form > .flex.gap-3.mt-5.justify-end button { flex: 1 1 140px; }
+      }
+
+      /* QRPASS_CREATE_ACCOUNT_LOGIN_SIZE_V35: registration size and spacing only; preserve existing top accent */
+      .qrpass-auth-register-card {
+        width: 100% !important;
+        max-width: 435px !important;
+        margin-inline: auto !important;
+      }
+      .qrpass-auth-register-card > .bg-primary {
+        padding: 15px 20px 13px !important;
+      }
+      .qrpass-auth-register-card > .bg-primary h2 {
+        font-size: 21px !important;
+      }
+      .qrpass-auth-register-card > .p-5 {
+        padding: 17px 20px 20px !important;
+      }
+      .qrpass-auth-register-card > .p-5 form > p:first-child {
+        margin-bottom: 11px !important;
+      }
+      .qrpass-auth-register-card > .p-5 form .grid {
+        column-gap: 12px !important;
+        row-gap: 10px !important;
+      }
+      .qrpass-auth-register-card > .p-5 form label {
+        margin-bottom: 5px !important;
+        font-size: 12px !important;
+      }
+      .qrpass-auth-register-card > .p-5 form input:not([type="checkbox"]),
+      .qrpass-auth-register-card > .p-5 form select {
+        height: 43px !important;
+        min-height: 43px !important;
+        font-size: 14px !important;
+      }
+      .qrpass-auth-register-card > .p-5 form > .mt-4.flex.items-start {
+        margin-top: 14px !important;
+        padding: 10px 12px !important;
+        line-height: 1.45 !important;
+      }
+      .qrpass-auth-register-card > .p-5 form > .flex.gap-3.mt-5.justify-end {
+        margin-top: 15px !important;
+        gap: 9px !important;
+      }
+      .qrpass-auth-register-card > .p-5 form > .flex.gap-3.mt-5.justify-end button {
+        min-height: 41px !important;
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+      }
+      @media (max-width: 480px) {
+        .qrpass-auth-register-card > .p-5 { padding: 15px !important; }
+        .qrpass-auth-register-card > .bg-primary { padding: 15px !important; }
+        .qrpass-auth-register-card > .p-5 form > .flex.gap-3.mt-5.justify-end button { flex: 1 1 130px; }
+      }
+`}</style>
   );
   const PageShell = React.useMemo(
   () =>
@@ -22466,7 +22729,7 @@ async function handleTwoFactorSubmit(
         </div>
 
         <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden qrpass-auth-card">
-          <div className="bg-primary px-6 py-4">
+          <div className="rounded-t-xl bg-primary px-6 py-4">
             <h2
               className="text-white font-bold text-base"
               style={{
@@ -22628,7 +22891,7 @@ async function handleTwoFactorSubmit(
 
         <div className="flex-1 flex flex-col items-center px-4 py-8 qrpass-auth-content qrpass-auth-register-content">
 
-          <div className="w-full max-w-[540px] bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden qrpass-auth-card qrpass-auth-register-card">
+          <div className="w-full max-w-[540px] bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-visible qrpass-auth-card qrpass-auth-register-card">
 
             {/* HEADER */}
             <div className="bg-primary px-6 py-4">
@@ -22639,7 +22902,7 @@ async function handleTwoFactorSubmit(
                     "Barlow, sans-serif",
                 }}
               >
-                Create Student Account
+                Create Account
               </h2>
             </div>
 
@@ -22653,7 +22916,6 @@ async function handleTwoFactorSubmit(
                       handleRegister
                     }
                   >
-                    <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-3">Student Information</p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-3">
                       {fields.filter(field => !(field.label === "College / Department" && regFields["Year Level"] === "Senior High School")).map(
@@ -22670,44 +22932,20 @@ async function handleTwoFactorSubmit(
 
                             {field.type ===
                             "select" ? (
-                              <select
-                                value={
-                                  regFields[
-                                    field
-                                      .label
-                                  ] ?? ""
-                                }
-                                onChange={(e) => setRegFields((previous) => ({
+                              <QRPassRegistrationSelect
+                                label={field.label}
+                                value={regFields[field.label] ?? ""}
+                                options={field.options ?? []}
+                                placeholder={field.label === "Year Level" ? "Select year level" : "Select college"}
+                                onValueChange={(next) => setRegFields((previous) => ({
                                   ...previous,
-                                  [field.label]: e.target.value,
-                                  ...(field.label === "Year Level" && e.target.value === "Senior High School" ? { "College / Department": "" } : {}),
+                                  [field.label]: next,
+                                  ...(field.label === "Year Level" && next === "Senior High School"
+                                    ? { "College / Department": "" }
+                                    : {}),
                                 }))}
-                                required
-                                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-                              >
-                                <option value="" disabled hidden>
-                                  {field.label === "College / Department" ? "Select college" : "Select year level"}
-                                </option>
-
-                                {field.options?.map(
-                                  (
-                                    option
-                                  ) => (
-                                    <option
-                                      key={
-                                        option
-                                      }
-                                      value={
-                                        option
-                                      }
-                                    >
-                                      {
-                                        option
-                                      }
-                                    </option>
-                                  )
-                                )}
-                              </select>
+                              />
+                            
                             ) : (
                               <div className="relative">
                                 <input
@@ -22850,7 +23088,7 @@ async function handleTwoFactorSubmit(
     return (
       <PageShell>
 
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden qrpass-auth-card">
+        <div className="qrpass-auth-forgot-card w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden qrpass-auth-card">
           <div className="bg-primary px-6 py-4">
             <h2
               className="text-white font-bold text-base"
@@ -22862,11 +23100,7 @@ async function handleTwoFactorSubmit(
               Forgot Password
             </h2>
 
-            <p className="text-white/70 text-xs mt-0.5">
-              Enter your registered email
-              address to receive a
-              verification code.
-            </p>
+            
           </div>
 
           <form
@@ -22876,7 +23110,7 @@ async function handleTwoFactorSubmit(
             className="p-6 space-y-4"
           >
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+              <label className="block text-sm font-semibold text-[#17336d] mb-2">
                 Email Address
               </label>
 
@@ -23599,23 +23833,43 @@ async function handleTwoFactorSubmit(
               className="space-y-5 qrpass-login-form"
             >
               {/* QRPass logo inside the white login card */}
-              <div className="flex items-center justify-center qrpass-login-card-logo">
-                <QRpassLogo size={100} showText />
+              {/* v75: real shield-only PNG, extracted from original asset (no CSS cropping) */}
+              <div className="flex items-center justify-center qrpass-login-card-logo qrpass-shield-only-v75" style={{ marginBottom: 2 }}>
+                <img src="/qrpass-shield-only.png" alt="QRPass shield" style={{ width: 61, height: "auto", objectFit: "contain" }} />
               </div>
+              <style>{`
+                #root .qrpass-login-card-logo.qrpass-shield-only-v75 {
+                  min-height: 64px !important;
+                  margin: 0 auto 1px !important;
+                  display: flex !important;
+                  justify-content: center !important;
+                  align-items: center !important;
+                }
+                #root .qrpass-login-card-logo.qrpass-shield-only-v75 img {
+                  display: block !important;
+                  width: 61px !important;
+                  height: auto !important;
+                  max-width: 61px !important;
+                  position: static !important;
+                  transform: none !important;
+                  object-fit: contain !important;
+                }
+                @media (max-width: 380px) {
+                  #root .qrpass-login-card-logo.qrpass-shield-only-v75 img {
+                    width: 56px !important;
+                    max-width: 56px !important;
+                  }
+                }
+              `}</style>
 
               {/* LOGIN HEADING */}
-              <div className="mb-1 text-center">
+              <div className="mb-1 text-center qrpass-welcome-v71">
                 <h2
-                  className="text-[27px] font-bold leading-tight text-[#17336d]"
-                  style={{
-                    fontFamily:
-                      "Barlow, sans-serif",
-                  }}
+                  className="text-[26px] sm:text-[28px] font-bold leading-tight text-[#17336d]"
+                  style={{ fontFamily: "Barlow, sans-serif", letterSpacing: "-0.025em" }}
                 >
-                  Sign In
+                  Welcome back!
                 </h2>
-
-
               </div>
 
               {/* USERNAME */}
@@ -26238,15 +26492,7 @@ const handleSaveAccountProfile = async () => {
             showText
           />
 
-          <span
-            className="font-bold text-sm tracking-wide"
-            style={{
-              fontFamily:
-                "Barlow, sans-serif",
-            }}
-          >
-            QRpass
-          </span>
+          
 
 
         </div>
