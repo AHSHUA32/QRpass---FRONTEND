@@ -1,0 +1,46 @@
+/* QRPass Sysadmin view only — v3. No global changes to Student, CSU or PCO. */
+.qrpass-admin-page {position:relative;}
+.qrpass-admin-page .qrpass-manage-logs-shortcut-v3 {
+ position:absolute; top:0; right:0; z-index:5; display:inline-flex; gap:8px;
+ align-items:center; justify-content:center; border:1px solid #d2dbea;
+ background:#f9fbff; color:#193b7b; padding:8px 13px; border-radius:12px;
+ font-size:12px; font-weight:600; cursor:pointer; min-height:37px;
+}
+.qrpass-admin-page .qrpass-manage-logs-shortcut-v3:hover {background:#edf2ff;}
+/* Lost & Found: remove outer card around the search/filter toolbar.
+   Keep the data table and footer in a separate bordered surface. */
+.qrpass-admin-page div.bg-white.rounded-xl.overflow-hidden:has(> div input[placeholder^="Search item, reporter"]) {
+ display:flex !important; flex-direction:column !important; gap:12px !important;
+ background:transparent !important; border:0 !important; box-shadow:none !important;
+ overflow:visible !important; border-radius:0 !important;
+}
+.qrpass-admin-page div.bg-white.rounded-xl.overflow-hidden:has(> div input[placeholder^="Search item, reporter"]) > div:has(input[placeholder^="Search item, reporter"]) {
+ order:0; padding:0 !important; border:0 !important; background:transparent !important;
+}
+.qrpass-admin-page div.bg-white.rounded-xl.overflow-hidden:has(> div input[placeholder^="Search item, reporter"]) > div:not(:has(input[placeholder^="Search item, reporter"])) {
+ background:var(--card, #ffffff); border-color:var(--border, #d6e0ee);
+}
+/* In the latest Lost & Found build the toolbar is the first child, count next, table next. */
+.qrpass-admin-page div.bg-white.rounded-xl.overflow-hidden:has(> div input[placeholder^="Search item, reporter"]) > div:has(table) {
+ border:1px solid var(--border, #d6e0ee); border-radius:12px; overflow:hidden;
+}
+.qrpass-admin-page .qrpass-empty-state-v3 {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#5572a4;font-size:13px;}
+.qrpass-admin-page .qrpass-empty-state-v3 strong {font-weight:700;color:#1c376a;}
+.dark .qrpass-admin-page .qrpass-manage-logs-shortcut-v3 {background:#14223b;color:#f8fafc;border-color:#30435e;}
+.dark .qrpass-admin-page .qrpass-empty-state-v3 strong {color:#f8fafc;}
+/* Empty/placeholder rows on Sysadmin tables: consistent centered icon and bold text.
+   This also applies to a loading placeholder; underlying data/filter logic is untouched. */
+.qrpass-admin-page tbody td[colspan]:not(:has(button)):not(:has(input)) {
+  font-weight:700; text-align:center; color:#1b376b;
+}
+.qrpass-admin-page tbody td[colspan]:not(:has(button)):not(:has(input))::before {
+  content:""; display:block; width:28px; height:28px; margin:0 auto 10px;
+  background:#8ca3ca;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Cpath d='M8 9h8M8 13h8M8 17h5'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Cpath d='M8 9h8M8 13h8M8 17h5'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.dark .qrpass-admin-page tbody td[colspan]:not(:has(button)):not(:has(input)) {color:#f8fafc;}
+
+@media(max-width:768px){
+ .qrpass-admin-page .qrpass-manage-logs-shortcut-v3 {position:static;margin:0 0 12px auto;}
+}

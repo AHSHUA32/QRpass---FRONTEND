@@ -1,0 +1,9 @@
+/* Page-specific Sysadmin management shortcuts. Keep the existing header positioning. */
+.qrpass-admin-page .qrpass-manage-logs-shortcut-v3.qrpass-page-manage-v1 {
+  width:auto!important; min-width:126px!important; max-width:220px!important;
+  padding-left:12px!important; padding-right:12px!important;
+}
+.qrpass-admin-page:has(input[placeholder^="Search name, user ID"]) > div > div.flex.flex-col.md\:flex-row { padding-right:230px!important; }
+@media(max-width:768px){
+ .qrpass-admin-page:has(input[placeholder^="Search name, user ID"]) > div > div.flex.flex-col.md\:flex-row {padding-right:0!important;}
+}
