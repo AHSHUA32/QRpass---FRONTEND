@@ -1,0 +1,70 @@
+
+/*
+ QRPass CSU Scan & Verify
+ Balanced desktop sizing
+ No scanner logic or theme changes
+*/
+
+@media (min-width: 768px) {
+
+  /* Main scanner card */
+  main.qrpass-main :is(div, section):has(
+    > .flex.flex-col.items-center:has(#qr-reader)
+  ) {
+    width: 100% !important;
+    max-width: 740px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: 24px !important;
+  }
+
+  /* Camera container */
+  main.qrpass-main div:has(> #qr-reader) {
+    width: 100% !important;
+    max-width: 430px !important;
+  }
+
+  /* Current Gate above camera */
+  main.qrpass-main
+  .flex.flex-col.items-center:has(#qr-reader)
+  > div:has(+ div > #qr-reader) {
+    width: 100% !important;
+    max-width: 430px !important;
+  }
+
+  /* Manual verification input below camera */
+  main.qrpass-main
+  .flex.flex-col.items-center:has(#qr-reader)
+  > div:has(> #qr-reader) + div {
+    width: 100% !important;
+    max-width: 430px !important;
+  }
+}
+
+/* Camera remains within container */
+main.qrpass-main #qr-reader {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+main.qrpass-main #qr-reader video,
+main.qrpass-main #qr-reader canvas {
+  max-width: 100% !important;
+}
+
+/* Mobile sizing */
+@media (max-width: 767px) {
+  main.qrpass-main :is(div, section):has(
+    > .flex.flex-col.items-center:has(#qr-reader)
+  ) {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 14px !important;
+  }
+
+  main.qrpass-main div:has(> #qr-reader) {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}

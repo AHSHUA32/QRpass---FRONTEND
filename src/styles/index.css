@@ -3,3 +3,22 @@
 @import './theme.css';
 @import './qrpass-form-design-v36.css';
 @import './qrpass-white-on-focus-v39.css';
+@import './qrpass-student-permit-toolbar-v103.css';
+
+
+/* QRPass non-admin subtitle fix v4 */
+
+/* Shared PageHeader descriptions */
+main[data-qrpass-hide-page-subtitles="true"]
+.flex.min-w-0.flex-wrap.items-start.justify-between.gap-3.mb-5
+> .min-w-0 > h2 + p {
+  display: none !important;
+}
+
+/* Also cover previous PageHeader class patches */
+main[data-qrpass-hide-page-subtitles="true"]
+.qrpass-page-header-subtitle,
+main[data-qrpass-hide-page-subtitles="true"]
+[data-qrpass-heading-subtitle="true"] {
+  display: none !important;
+}

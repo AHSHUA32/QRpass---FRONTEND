@@ -71,6 +71,7 @@ import {
 // =========================================================
 
 import {
+  API_URL,
   login,
   register,
   logout,
@@ -206,7 +207,7 @@ function QRCodeDisplay({
 
 type Role = "student" | "security" | "pco" | "sysadmin";
 
-type View = "login" | "dashboard";
+type View = "login" | "dashboard" | "checking" | "restore-error";
 
 const ROLES: { id: Role; label: string; color: string; textColor: string }[] = [
   { id: "student", label: "Student", color: "#1a3a7b", textColor: "#fff" },
@@ -231,7 +232,7 @@ function StatCard({
 }) {
   return (
     <div
-      className={`bg-white border border-[#dce3ee] flex items-center gap-4 p-4 ${className}`}
+      className={`bg-white border border-[#dce3ee] flex min-h-[92px] w-full items-center gap-4 p-4 ${className}`}
       style={{borderRadius: "14px", boxShadow: "0 6px 18px rgba(16, 26, 51, 0.08)"}}
     >
       <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -248,21 +249,12 @@ function StatCard({
 
 // Hide/show applies to the statistical cards as a group, not to the rest of the page.
 function StatisticalCardsSection({ children }: { children: React.ReactNode }) {
-  const [visible, setVisible] = useState(true);
   return (
     <section className="space-y-2" aria-label="Statistics">
-      <div className="flex items-center justify-end">
-        <button type="button" onClick={() => setVisible(current => !current)}
-          aria-expanded={visible}
-          className="rounded-xl border border-[#dce3ee] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] hover:bg-[#f2f5fc]">
-          {visible ? "Hide Cards" : "Show Cards"}
-        </button>
-      </div>
-      {visible && children}
+      {children}
     </section>
   );
 }
-
 function NotifItem({ type, message, time }: { type: "success" | "warning" | "info"; message: string; time: string }) {
   const icons = {
     success: <CheckCircle size={15} className="text-green-500" />,
@@ -408,6 +400,8 @@ function Card({
   );
 }
 
+const QRPassPageSubtitleContext = React.createContext(true);
+
 function PageHeader({
   title,
   subtitle,
@@ -417,6 +411,7 @@ function PageHeader({
   subtitle?: string;
   action?: React.ReactNode;
 }) {
+  const showSubtitle = React.useContext(QRPassPageSubtitleContext);
   return (
     <div className="flex min-w-0 flex-wrap items-start justify-between gap-3 mb-5 sm:gap-4">
       <div className="min-w-0">
@@ -429,8 +424,8 @@ function PageHeader({
           {title}
         </h2>
 
-        {subtitle && (
-          <p className="text-xs text-[#64748b] mt-1 leading-relaxed">
+        {showSubtitle && subtitle && (
+          <p className="qrpass-page-header-subtitle text-xs text-[#64748b] mt-1 leading-relaxed">
             {subtitle}
           </p>
         )}
@@ -941,6 +936,27 @@ function StudentRegisterItem() {
   const [selectedGroup, setSelectedGroup] =
     useState<RegistrationGroupId | null>(null);
 
+  // Auto-scroll to the selected registration form
+  useEffect(() => {
+    if (!selectedGroup) return;
+
+    const frame = requestAnimationFrame(() => {
+      const form = document.getElementById(
+        "qrpass-student-selected-form"
+      );
+
+      form?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+        inline: "nearest",
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [selectedGroup]);
+
+  const [showRegistrationGuide, setShowRegistrationGuide] = useState(false);
+
   const [submitting, setSubmitting] =
     useState(false);
 
@@ -1368,7 +1384,7 @@ function StudentRegisterItem() {
     }
 
     return (
-      <div className="space-y-4">
+      <div id="qrpass-student-selected-form" className="space-y-4" style={{ scrollMarginTop: "96px" }}>
         <div
           className="bg-white border border-[#dce3ee] overflow-hidden"
           style={{
@@ -2073,15 +2089,6 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
               </div>
             )}
 
-            {/* NOTE */}
-            <div className="mt-5 bg-slate-50 border border-slate-200 border-l-4 border-l-slate-400 rounded-lg p-3 text-xs text-slate-600 leading-relaxed">
-              <strong className="text-slate-800">
-                Note:
-              </strong>{" "}
-              All fields are required except those marked
-              <strong> (Optional)</strong>. The form cannot be submitted until all required information is completed.
-            </div>
-
             {/* ACTIONS */}
             <div className="mt-5 flex justify-end gap-2">
               <button
@@ -2114,13 +2121,106 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
         title="Register Item"
         subtitle="Register an item for campus entry and exit verification. PCO approval is required before a QR code is issued."
       />
+      {/* Student How It Works button */}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setShowRegistrationGuide(v => !v)}
+          aria-expanded={showRegistrationGuide}
+          aria-controls="student-registration-guide"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#cfd8e6] bg-card px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-muted"
+        >
+          <BookOpen size={16} />
+          How it works
+          <ChevronRight size={14} />
+        </button>
+      </div>
+
+      {/* Student floating registration guide */}
+      {showRegistrationGuide && (
+        <div
+          id="student-registration-guide"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="How Registration Works"
+          onMouseDown={e => {
+            if (e.target === e.currentTarget) {
+              setShowRegistrationGuide(false);
+            }
+          }}
+        >
+          <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-[26px] border border-[#cfd8e6] bg-card p-6 shadow-2xl sm:p-8">
+
+            <button
+              type="button"
+              aria-label="Close guide"
+              onClick={() => setShowRegistrationGuide(false)}
+              className="absolute right-4 top-4 rounded-xl border border-border p-2.5 hover:bg-muted"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="mb-6 pr-12">
+              <h3 className="text-lg font-bold text-foreground sm:text-xl">
+                How Registration Works
+              </h3>
+
+              <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+                Register your item, wait for PCO approval, and receive your QR code for campus entry and exit verification.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {[
+                [
+                  "1",
+                  "Register",
+                  "Select a category, complete the required details, and submit your request."
+                ],
+                [
+                  "2",
+                  "PCO Approval",
+                  "Your request appears in Permit Status while PCO reviews the submitted information."
+                ],
+                [
+                  "3",
+                  "QR Code",
+                  "Once approved, the active permit becomes available in QR Codes for campus verification."
+                ]
+              ].map(([number, title, description]) => (
+                <div
+                  key={number}
+                  className="rounded-2xl border border-[#dce3ee] bg-[#f8fafc] p-5 dark:bg-muted/40 sm:p-6"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                      {number}
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        {title}
+                      </p>
+
+                      <p className="mt-2 text-xs leading-6 text-muted-foreground sm:text-sm">
+                        {description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedGroup ? (
         renderSelectedForm()
       ) : (
         <div className="space-y-5">
-          <div className="rounded-xl border border-[#cfd8e6] bg-card overflow-hidden">
-            <div className="border-b border-[#cfd8e6] px-5 py-4">
+          <div className="w-full rounded-xl border border-[#cfd8e6] bg-card overflow-hidden">
+            <div className="border-b border-[#cfd8e6] px-5 py-3">
               <h3 className="text-sm font-semibold text-foreground">
                 Select an Item Category
               </h3>
@@ -2195,73 +2295,6 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#cfd8e6] bg-card p-5">
-            <div className="mb-4">
-              <h3 className="text-sm font-semibold text-foreground">
-                How Registration Works
-              </h3>
-
-              <p className="mt-1 text-xs text-muted-foreground">
-                From registration to QR verification in three simple steps.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="rounded-lg border border-[#dce3ee] bg-[#f8fafc] p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-                    1
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">
-                      Register
-                    </p>
-
-                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-                      Select a category, complete the required details, and submit your request.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-[#dce3ee] bg-[#f8fafc] p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-                    2
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">
-                      PCO Approval
-                    </p>
-
-                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-                      Your request appears in Permit Status while PCO reviews the submitted information.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-[#dce3ee] bg-[#f8fafc] p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-                    3
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">
-                      QR Code
-                    </p>
-
-                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-                      Once approved, the active permit becomes available in QR Codes for campus verification.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       )}
     </div>
@@ -3193,7 +3226,31 @@ function StudentPermitStatus() {
             className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
           />
         </div>
-        <select
+        
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <select
+            aria-label="Filter permit requests"
+            value={permitFilter}
+            onChange={(e) =>
+              setPermitFilter(e.target.value as PermitFilter)
+            }
+            className="h-12 min-w-[165px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff] focus:bg-white focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none"
+          >
+            <option value="all">
+              All Permits ({items.length})
+            </option>
+            <option value="approved">
+              Approved ({approvedCount})
+            </option>
+            <option value="pending">
+              Pending ({pendingCount})
+            </option>
+            <option value="expired">
+              Expired ({expiredCount})
+            </option>
+          </select>
+
+          <select
           aria-label="Sort permit requests"
           value={permitSortOrder}
           onChange={(e) => setPermitSortOrder(e.target.value as "newest" | "oldest")}
@@ -3202,6 +3259,7 @@ function StudentPermitStatus() {
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
         </select>
+        </div>
         <button type="button" onClick={loadItems} disabled={loading}
           className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"> <RefreshCw size={13} className="shrink-0" />
           {loading ? "Refreshing..." : "Refresh"}
@@ -3209,51 +3267,7 @@ function StudentPermitStatus() {
       </div>
 
       {/* FILTERS — four equal-width buttons on mobile; natural width on desktop */}
-      <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
-        {(
-          [
-            [
-              "all",
-              "All",
-            ],
-            [
-              "approved",
-              "Approved",
-            ],
-            [
-              "pending",
-              "Pending",
-            ],
-            [
-              "expired",
-              "Expired",
-            ],
-          ] as const
-        ).map(
-          ([
-            value,
-            label,
-          ]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() =>
-                setPermitFilter(
-                  value
-                )
-              }
-              className={`min-w-0 whitespace-nowrap rounded-full border px-1 py-2 text-[11px] font-medium transition sm:px-5 sm:text-sm ${
-                permitFilter ===
-                value
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-foreground hover:bg-muted"
-              }`}
-            >
-              {label}
-            </button>
-          )
-        )}
-      </div>
+      
 
       <Card
         title={
@@ -4241,26 +4255,51 @@ function StudentLostAndFound() {
           />
         </div>
 
-        <select
-          value={sortOrder}
-          onChange={(e) =>
-            setSortOrder(
-              e.target.value as
-                | "newest"
-                | "oldest"
-            )
-          }
-          className="rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary"
-        >
-          <option value="newest">
-            Newest first
-          </option>
-          <option value="oldest">
-            Oldest first
-          </option>
-        </select>
+        
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
 
-        <button
+          <select
+            aria-label="Filter student Lost and Found reports"
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(
+                e.target.value as typeof statusFilter
+              )
+            }
+            className="h-12 min-w-[175px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff] focus:bg-white focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none"
+          >
+            <option value="all">
+              All Reports ({items.length})
+            </option>
+            <option value="found">
+              Found ({foundCount})
+            </option>
+            <option value="lost">
+              Lost ({lostCount})
+            </option>
+            <option value="pending">
+              Pending ({pendingCount})
+            </option>
+            <option value="recovered">
+              Recovered ({recoveredCount})
+            </option>
+          </select>
+
+          <select
+            aria-label="Sort student Lost and Found records"
+            value={sortOrder}
+            onChange={(e) =>
+              setSortOrder(
+                e.target.value as typeof sortOrder
+              )
+            }
+            className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff] focus:bg-white focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none"
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+
+          <button
           type="button"
           onClick={loadItems}
           disabled={loading}
@@ -4270,58 +4309,12 @@ function StudentLostAndFound() {
             ? "Refreshing..."
             : "Refresh"}
         </button>
+        </div>
+
       </div>
 
       {/* FILTERS */}
-      <div className="grid grid-cols-5 gap-1 sm:flex sm:flex-wrap sm:gap-2">
-        {(
-          [
-            [
-              "all",
-              "All",
-            ],
-            [
-              "found",
-              "Found",
-            ],
-            [
-              "lost",
-              "Lost",
-            ],
-            [
-              "pending",
-              "Pending",
-            ],
-            [
-              "recovered",
-              "Recovered",
-            ],
-          ] as const
-        ).map(
-          ([
-            value,
-            label,
-          ]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() =>
-                setStatusFilter(
-                  value
-                )
-              }
-              className={`min-w-0 whitespace-nowrap rounded-full border px-0.5 py-2 text-[10px] font-medium transition sm:px-5 sm:text-sm ${
-                statusFilter ===
-                value
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-foreground hover:bg-muted"
-              }`}
-            >
-              {label}
-            </button>
-          )
-        )}
-      </div>
+      
 
       {loading && (
         <div className="rounded-xl border border-border bg-card p-10 text-center">
@@ -5053,8 +5046,7 @@ function SecurityScanVerify() {
   const [gate, setGate] = useState("Gate 2");
   const [logging, setLogging] = useState(false);
 
-  const [recentLogs, setRecentLogs] = useState<any[]>([]);
-  const [loadingLogs, setLoadingLogs] = useState(false);
+
 
   const [incidentMessage, setIncidentMessage] = useState("");
 
@@ -5082,23 +5074,6 @@ function SecurityScanVerify() {
   useEffect(() => {
     gateRef.current = gate;
   }, [gate]);
-
-  async function loadRecentLogs() {
-    try {
-      setLoadingLogs(true);
-
-      const data = await getScanLogs();
-
-      setRecentLogs((data.logs ?? []).slice(0, 5));
-    } catch (error) {
-      console.error(
-        "Failed to load recent scan logs:",
-        error
-      );
-    } finally {
-      setLoadingLogs(false);
-    }
-  }
 
   function prepareSecurityIncident(
     code: string,
@@ -5139,26 +5114,35 @@ function SecurityScanVerify() {
     field: keyof typeof flaggedForm,
     value: string
   ) {
+    const cleanedValue =
+      field === "item_name" ||
+      field === "owner_name" ||
+      field === "carrier_name"
+        ? value.replace(/[^\p{L} ]/gu, "")
+        : field === "owner_id_number" ||
+          field === "carrier_id_number"
+        ? value.replace(/[^0-9]/g, "")
+        : value;
+
     setFlaggedForm((current) => {
       const next = {
         ...current,
-        [field]: value,
+        [field]: cleanedValue,
       };
 
       if (sameAsOwner) {
         if (field === "owner_name") {
-          next.carrier_name = value;
+          next.carrier_name = cleanedValue;
         }
 
         if (field === "owner_id_number") {
-          next.carrier_id_number = value;
+          next.carrier_id_number = cleanedValue;
         }
       }
 
       return next;
     });
   }
-
   function handleSameAsOwner(checked: boolean) {
     setSameAsOwner(checked);
 
@@ -5202,6 +5186,31 @@ function SecurityScanVerify() {
       return;
     }
 
+    // Strict validation before submitting the flagged item.
+    const nameFields: Array<[string, string]> = [
+      ["Item Name", flaggedForm.item_name],
+      ["Owner Name", flaggedForm.owner_name],
+      ["Person Carrying Item", flaggedForm.carrier_name],
+    ];
+
+    for (const [label, value] of nameFields) {
+      if (!/^[\p{L} ]+$/u.test(value.trim())) {
+        alert(`${label} must contain letters and spaces only.`);
+        return;
+      }
+    }
+
+    const idFields: Array<[string, string]> = [
+      ["Owner Student ID", flaggedForm.owner_id_number],
+      ["Carrier Student ID", flaggedForm.carrier_id_number],
+    ];
+
+    for (const [label, value] of idFields) {
+      if (!/^[0-9]+$/.test(value)) {
+        alert(`${label} must contain numbers only.`);
+        return;
+      }
+    }
     try {
       setSavingIncident(true);
 
@@ -5327,7 +5336,7 @@ function SecurityScanVerify() {
         direction
       );
 
-      await loadRecentLogs();
+      
 
       // Clear the verified item after a successful IN / OUT log
       // so CSU is ready to scan the next item immediately.
@@ -5351,10 +5360,7 @@ function SecurityScanVerify() {
     }
   }
 
-  // Load recent successful scans
-  useEffect(() => {
-    loadRecentLogs();
-  }, []);
+  
 
   // Start the camera directly when the CSU scanning page opens.
   // Manual QR ID / serial-number entry stays available if camera access is denied.
@@ -5423,10 +5429,10 @@ function SecurityScanVerify() {
       />
 
       {/* SCANNER */}
-      <div className="w-full min-w-0 rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
-        <div className="flex flex-col items-center gap-4">
+      <div className="mx-auto w-full max-w-[720px] min-w-0 rounded-xl border border-border bg-card p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col items-center gap-3">
           {/* GATE SELECTION */}
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-[420px]">
             <label className="block text-xs font-semibold text-foreground mb-1">
               Current Gate
             </label>
@@ -5438,9 +5444,6 @@ function SecurityScanVerify() {
               }
               className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
-              <option value="Gate 1">
-                Gate 1
-              </option>
 
               <option value="Gate 2">
                 Gate 2
@@ -5457,11 +5460,11 @@ function SecurityScanVerify() {
           </div>
 
           {/* LIVE QR CAMERA - automatically starts on page entry */}
-          <div className="w-full max-w-md space-y-3">
+          <div className="w-full max-w-[420px] space-y-2">
             <div key={cameraRetry} id="qr-reader" className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-slate-50" />
             {cameraError && <p role="alert" className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">{cameraError}</p>}
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs text-muted-foreground">Camera scans automatically. You may also verify a code manually.</p>
+            <div className="flex w-full items-center justify-center">
+              
               <button type="button" onClick={resumeCamera} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold hover:bg-muted">
                 <RefreshCw size={14} /> {cameraError ? "Retry Camera" : "Scan Next Item"}
               </button>
@@ -5469,7 +5472,7 @@ function SecurityScanVerify() {
           </div>
 
           {/* MANUAL INPUT */}
-          <div className="flex w-full max-w-md min-w-0 flex-col gap-2 sm:flex-row">
+          <div className="flex w-full max-w-[420px] min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
             <div className="relative min-w-0 flex-1">
               <QrCode
                 size={14}
@@ -5487,14 +5490,14 @@ function SecurityScanVerify() {
                   }
                 }}
                 placeholder="QR ID or serial number..."
-                className="h-11 w-full min-w-0 rounded-xl border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                className="h-12 w-full min-w-0 rounded-xl border border-[#bfceff] bg-[#eef2ff] pl-9 pr-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:ring-2 focus:ring-[#6488ff]/15 dark:border-[#35537e] dark:bg-[#1b2b49]"
               />
             </div>
 
             <button
               onClick={doScan}
               disabled={verifying}
-              className="h-11 w-full shrink-0 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 sm:w-auto"
+              className="h-12 w-full shrink-0 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 sm:w-auto"
             >
               {verifying
                 ? "Verifying..."
@@ -5526,38 +5529,58 @@ function SecurityScanVerify() {
 
           {/* FLAGGED ITEM DETAILS FORM */}
           {pendingIncident && (
-            <form
-              onSubmit={submitSecurityIncident}
-              className="w-full min-w-0 max-w-2xl rounded-xl border border-orange-300 bg-orange-50 p-4 sm:p-5"
+  <div
+    className="fixed inset-0 z-[400] flex items-center justify-center bg-black/55 p-3 backdrop-blur-[2px] sm:p-6"
+  >
+    <form
+      onSubmit={submitSecurityIncident}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="incident-modal-title"
+      className="flex w-full max-w-3xl min-h-0 max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-[24px] border border-[#cfd8e6] bg-white shadow-2xl sm:max-h-[90dvh]"
+    >
+      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[#e5eaf2] px-4 py-4 sm:px-6">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-50 text-orange-600">
+            <AlertTriangle size={20} />
+          </span>
+          <div className="min-w-0">
+            <h2
+              id="incident-modal-title"
+              className="text-base font-bold text-[#111827] sm:text-lg"
             >
-              <div className="flex items-start gap-3 mb-4">
-                <AlertTriangle
-                  size={20}
-                  className="text-orange-600 mt-0.5 flex-shrink-0"
-                />
+              {pendingIncident.incidentType.toUpperCase()} DETECTED
+            </h2>
+            <p className="mt-1 break-all text-xs text-[#64748b]">
+              QR / Code:{" "}
+              <span className="font-mono font-semibold text-orange-700">
+                {pendingIncident.code}
+              </span>
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-[#64748b]">
+              Complete the details below before recording this item as a security incident.
+            </p>
+          </div>
+        </div>
 
-                <div>
-                  <p className="text-sm font-bold text-orange-800">
-                    {pendingIncident.incidentType.toUpperCase()} DETECTED
-                  </p>
+        <button
+          type="button"
+          aria-label="Close incident form"
+          disabled={savingIncident}
+          onClick={() => {
+            setPendingIncident(null);
+            setSameAsOwner(false);
+            resumeCamera();
+          }}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#dce3ee] text-[#64748b] hover:bg-[#f1f5f9] disabled:opacity-50"
+        >
+          <X size={18} />
+        </button>
+      </div>
 
-                  <p className="text-xs text-orange-700 mt-1">
-                    QR / Code:{" "}
-                    <span className="font-mono font-semibold">
-                      {pendingIncident.code}
-                    </span>
-                  </p>
-
-                  <p className="text-xs text-orange-700 mt-1">
-                    Complete the details below before recording this
-                    item as a security incident.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5"><div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {/* ITEM NAME */}
-                <div className="md:col-span-2">
+                <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-gray-800 mb-1">
                     Item Name *
                   </label>
@@ -5571,9 +5594,9 @@ function SecurityScanVerify() {
                         e.target.value
                       )
                     }
-                    placeholder="e.g. Acer Laptop, iPhone 15, Camera"
+                    placeholder="e.g. Laptop, Camera, Phone"
                     required
-                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
+                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                   />
                 </div>
 
@@ -5594,33 +5617,35 @@ function SecurityScanVerify() {
                     }
                     placeholder="Full name of item owner"
                     required
-                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
+                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                   />
                 </div>
 
                 {/* OWNER ID */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-800 mb-1">
-                    Owner ID Number *
+                    Owner Student ID *
                   </label>
 
                   <input
                     type="text"
                     value={flaggedForm.owner_id_number}
+                    inputMode="numeric"
+                    pattern="[0-9]+"
                     onChange={(e) =>
                       updateFlaggedForm(
                         "owner_id_number",
                         e.target.value
                       )
                     }
-                    placeholder="Student / Employee ID"
+                    placeholder="Student ID"
                     required
-                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
+                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                   />
                 </div>
 
                 {/* SAME AS OWNER */}
-                <div className="md:col-span-2">
+                <div className="sm:col-span-2">
                   <label className="inline-flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
                     <input
                       type="checkbox"
@@ -5652,29 +5677,31 @@ function SecurityScanVerify() {
                     placeholder="Full name of person carrying item"
                     disabled={sameAsOwner}
                     required
-                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 disabled:bg-gray-100"
+                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 disabled:bg-gray-100"
                   />
                 </div>
 
                 {/* CARRIER ID */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-800 mb-1">
-                    Student / Employee ID *
+                    Student ID (Carrier) *
                   </label>
 
                   <input
                     type="text"
                     value={flaggedForm.carrier_id_number}
+                    inputMode="numeric"
+                    pattern="[0-9]+"
                     onChange={(e) =>
                       updateFlaggedForm(
                         "carrier_id_number",
                         e.target.value
                       )
                     }
-                    placeholder="ID of person carrying item"
+                    placeholder="Student ID of person carrying item"
                     disabled={sameAsOwner}
                     required
-                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 disabled:bg-gray-100"
+                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 disabled:bg-gray-100"
                   />
                 </div>
 
@@ -5693,7 +5720,7 @@ function SecurityScanVerify() {
                       }))
                     }
                     required
-                    className="w-full px-3 py-2 text-sm border border-orange-200 rounded-md bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
+                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                   >
                     <option value="OUT">OUT</option>
                     <option value="IN">IN</option>
@@ -5715,15 +5742,18 @@ function SecurityScanVerify() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap justify-end gap-2 mt-4 pt-3 border-t border-orange-200">
+                    </div>
+
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-[#e5eaf2] bg-[#fbfcfe] px-4 py-3 sm:px-6">
                 <button
                   type="button"
                   onClick={() => {
                     setPendingIncident(null);
                     setSameAsOwner(false);
+                    resumeCamera();
                   }}
                   disabled={savingIncident}
-                  className="h-10 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
+                  className="h-11 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -5731,15 +5761,16 @@ function SecurityScanVerify() {
                 <button
                   type="submit"
                   disabled={savingIncident}
-                  className="h-10 rounded-xl bg-red-600 px-4 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                  className="h-11 w-full shrink-0 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 sm:w-auto"
                 >
                   {savingIncident
                     ? "Saving Flagged Item..."
                     : "Flag Item"}
                 </button>
-              </div>
-            </form>
-          )}
+                    </div>
+    </form>
+  </div>
+)}
 
           {/* FLAGGED INCIDENT */}
           {incidentMessage && (
@@ -5917,7 +5948,7 @@ function SecurityScanVerify() {
                       handleLog("IN")
                     }
                     disabled={logging || verifying}
-                    className="h-10 w-full rounded-xl bg-green-600 px-5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50 sm:w-auto"
+                    className="h-10 w-full rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:w-auto"
                   >
                     {logging
                       ? "Saving..."
@@ -5929,7 +5960,7 @@ function SecurityScanVerify() {
                       handleLog("OUT")
                     }
                     disabled={logging || verifying}
-                    className="h-10 w-full rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50 sm:w-auto"
+                    className="h-10 w-full rounded-xl bg-slate-500 px-5 text-xs font-semibold text-white transition-colors hover:bg-slate-600 disabled:opacity-50 sm:w-auto"
                   >
                     {logging
                       ? "Saving..."
@@ -5942,19 +5973,72 @@ function SecurityScanVerify() {
         </div>
       )}
 
-      {/* RECENT SCANS */}
+      
+    </div>
+  );
+}
+
+
+
+function SecurityRecentScanLogs() {
+  const [csuListSearch, setCsuListSearch] = useState("");
+  const [csuListSort, setCsuListSort] =
+    useState<"newest" | "oldest">("newest");
+  const [recentLogs, setRecentLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(true);
+
+  async function loadRecentLogs() {
+    try {
+      setLoadingLogs(true);
+
+      const data = await getScanLogs();
+
+      setRecentLogs((data.logs ?? []).slice(0, 5));
+    } catch (error) {
+      console.error(
+        "Failed to load recent scan logs:",
+        error
+      );
+    } finally {
+      setLoadingLogs(false);
+    }
+  }
+
+
+
+  useEffect(() => {
+    void loadRecentLogs();
+  }, []);
+
+  const shownRecentLogs = [...recentLogs].filter((row: any) =>
+    [row.qr_code, row.item?.item_name,
+      row.item?.user?.name, row.item?.user?.username,
+      row.scanned_at, row.gate, row.direction, row.result]
+      .join(" ").toLowerCase()
+      .includes(csuListSearch.trim().toLowerCase())
+  ).sort((a: any, b: any) => {
+    const x = new Date(a.scanned_at ?? a.created_at ?? 0).getTime() || 0;
+    const y = new Date(b.scanned_at ?? b.created_at ?? 0).getTime() || 0;
+    return csuListSort === "newest" ? y - x : x - y;
+  });
+
+  return (
+    <div className="w-full min-w-0 space-y-5">
+      <PageHeader
+        title="Recent Scan Logs"
+        subtitle="Latest QR verification and gate scan records."
+      />
+
+      
+      <CSURecordToolbar
+        search={csuListSearch} onSearch={setCsuListSearch}
+        sort={csuListSort} onSort={setCsuListSort}
+        onRefresh={loadRecentLogs} loading={loadingLogs}
+        placeholder="Search QR ID, item, owner, gate..."
+      />
       <Card
         title="Recent Scan Logs"
-        action={
-          <button
-            onClick={loadRecentLogs}
-            disabled={loadingLogs}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          >
-            <RefreshCw size={12} />
-            Refresh
-          </button>
-        }
+        
       >
         <div className="w-full max-w-full overflow-x-auto overscroll-x-contain rounded-lg border border-border">
           <table className="w-full min-w-[760px]">
@@ -5989,7 +6073,7 @@ function SecurityScanVerify() {
                     Loading recent scans...
                   </td>
                 </tr>
-              ) : recentLogs.length === 0 ? (
+              ) : shownRecentLogs.length === 0 ? (
                 <tr>
                   <td
                     colSpan={7}
@@ -5999,7 +6083,7 @@ function SecurityScanVerify() {
                   </td>
                 </tr>
               ) : (
-                recentLogs.map((log) => (
+                shownRecentLogs.map((log) => (
                   <tr
                     key={log.id}
                     className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
@@ -6037,15 +6121,7 @@ function SecurityScanVerify() {
                     </td>
 
                     <td className="py-2.5 px-3">
-                      <span
-                        className={`text-xs font-bold ${
-                          log.direction === "IN"
-                            ? "text-green-600"
-                            : "text-blue-600"
-                        }`}
-                      >
-                        {log.direction}
-                      </span>
+                      <QRpassDirectionBadge direction={log.direction} />
                     </td>
 
                     <td className="py-2.5 px-3">
@@ -6159,7 +6235,78 @@ function CSUStatsPeriodFilter({
   );
 }
 
+
+function CSURecordToolbar({
+  search, onSearch, sort, onSort, onRefresh, loading, placeholder, filter
+}: {
+  search: string;
+  onSearch: (v: string) => void;
+  sort: "newest" | "oldest";
+  onSort: (v: "newest" | "oldest") => void;
+  onRefresh: () => void | Promise<void>;
+  loading?: boolean;
+  placeholder: string;
+  filter?: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+      <label className="relative min-w-0 flex-1">
+        <Search size={16}
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/>
+        <input
+          aria-label="Search records"
+          value={search}
+          onChange={e => onSearch(e.target.value)}
+          placeholder={placeholder}
+          className="h-12 w-full rounded-xl border border-[#bfceff] bg-[#eef2ff] pl-10 pr-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:ring-2 focus:ring-[#6488ff]/15 dark:border-[#35537e] dark:bg-[#1b2b49]"
+        />
+      </label>
+      <div className="flex flex-wrap items-center gap-2">
+        {filter}
+        <select aria-label="Sort records" value={sort}
+          onChange={e => onSort(e.target.value as "newest" | "oldest")}
+          className="h-12 min-w-[148px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+        <button type="button"
+          onClick={() => { void onRefresh(); }}
+          disabled={loading}
+          className="inline-flex h-12 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-primary hover:bg-muted disabled:opacity-50">
+          <RefreshCw size={14}/>
+          {loading ? "Refreshing..." : "Refresh"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function QRpassDirectionBadge({
+  direction,
+}: {
+  direction?: string | null;
+}) {
+  const value = String(direction ?? "").trim().toUpperCase();
+
+  const colors =
+    value === "IN"
+      ? "border-blue-200 bg-blue-100 text-blue-700 hover:bg-blue-200 dark:border-blue-400/30 dark:bg-blue-500/20 dark:text-blue-200 dark:hover:bg-blue-500/30"
+      : value === "OUT"
+        ? "border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200 dark:border-slate-500/30 dark:bg-slate-500/20 dark:text-slate-200 dark:hover:bg-slate-500/30"
+        : "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300";
+
+  return (
+    <span
+      className={`inline-flex min-w-10 items-center justify-center rounded-full border px-2.5 py-1 text-[11px] font-bold leading-4 transition-colors duration-150 ${colors}`}
+    >
+      {value || "—"}
+    </span>
+  );
+}
 function SecurityEntryExitLog() {
+  const [csuListSearch, setCsuListSearch] = useState("");
+  const [csuListSort, setCsuListSort] =
+    useState<"newest" | "oldest">("newest");
   const [logs, setLogs] = useState<any[]>([]);
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -6503,6 +6650,26 @@ const resolvedIncidents = periodIncidents.filter((incident) =>
 const entryLogs = periodLogs.filter((log) => String(log.direction ?? "").toUpperCase() === "IN");
 const exitLogs = periodLogs.filter((log) => String(log.direction ?? "").toUpperCase() === "OUT");
 const visibleLogs = entryExitTab === "entry" ? entryLogs : entryExitTab === "exit" ? exitLogs : periodLogs;
+  const csuFilterRow = (row: any) =>
+    [row.qr_code, row.scanned_code, row.item_name,
+      row.item?.item_name, row.item?.user?.name,
+      row.item?.user?.username, row.owner_name,
+      row.owner_id_number, row.carrier_name,
+      row.gate, row.direction, row.status, row.result]
+      .join(" ").toLowerCase()
+      .includes(csuListSearch.trim().toLowerCase());
+
+  const csuOrderRows = (arr: any[]) =>
+    [...arr].filter(csuFilterRow).sort((a, b) => {
+      const x = new Date(a.scanned_at ?? a.reported_at ?? a.created_at ?? 0).getTime() || 0;
+      const y = new Date(b.scanned_at ?? b.reported_at ?? b.created_at ?? 0).getTime() || 0;
+      return csuListSort === "newest" ? y - x : x - y;
+    });
+
+  const shownEntryLogs = csuOrderRows(visibleLogs);
+  const shownFlaggedIncidents = csuOrderRows(flaggedIncidents);
+  const shownResolvedIncidents = csuOrderRows(resolvedIncidents);
+
 
 // CSV export follows both the selected period and the selected tab.
 const exportLogs = entryExitTab === "flagged" || entryExitTab === "resolved" ? [] : visibleLogs;
@@ -6804,15 +6971,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
             {/* DIRECTION */}
             <td className="px-3 py-3">
               {incident.direction ? (
-                <span
-                  className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                    incident.direction === "IN"
-                      ? "border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/20 dark:text-blue-200"
-                      : "border-purple-200 bg-purple-100 text-purple-700 dark:border-purple-400/20 dark:bg-purple-500/20 dark:text-purple-200"
-                  }`}
-                >
-                  {incident.direction}
-                </span>
+                <QRpassDirectionBadge direction={incident.direction} />
               ) : (
                 <span className="text-slate-400 dark:text-slate-500">
                   —
@@ -6890,120 +7049,85 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
             Entry / Exit Log
           </h1>
 
-          <p className="mt-1 text-sm text-muted-foreground">
-            Monitor verified item scans and security
-            incidents.
-          </p>
+          
         </div>
 
-        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
-          <button
-            onClick={loadData}
-            disabled={loading}
-            className="h-10 w-full rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-50 sm:w-auto inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          > <RefreshCw size={13} className="shrink-0" />
-            {loading
-              ? "Refreshing..."
-              : "Refresh"}
-          </button>
-
-          <button
-            onClick={exportCSV}
-            className="h-10 w-full rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:w-auto"
-          >
-            Export CSV
-          </button>
-        </div>
-      </div>
-
-      {/* Apply the selected period to scan cards, tabs, and exports. */}
-      <div className="rounded-xl border border-border bg-card p-3 shadow-sm sm:p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <label htmlFor="csu-scan-period" className="text-sm font-semibold text-foreground">Reporting Period</label>
-          <select id="csu-scan-period" value={scanPeriod}
-            onChange={e => setScanPeriod(e.target.value as CSUDatePeriod)}
-            className="h-10 min-w-[160px] rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20">
-            {CSU_PERIOD_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
-          {scanPeriod === "custom" && (
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="text-xs text-muted-foreground">From <input type="date" value={scanStartDate} max={scanEndDate || undefined}
-                onChange={e => setScanStartDate(e.target.value)} className="ml-1 h-10 rounded-xl border border-border bg-card px-2 text-sm" /></label>
-              <label className="text-xs text-muted-foreground">To <input type="date" value={scanEndDate} min={scanStartDate || undefined}
-                onChange={e => setScanEndDate(e.target.value)} className="ml-1 h-10 rounded-xl border border-border bg-card px-2 text-sm" /></label>
-            </div>
-          )}
-          <span className="text-xs text-muted-foreground">Statistics and records reflect this period.</span>
-        </div>
+        
       </div>
 
       {/* SUMMARY */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4 xl:gap-4">
-        <div className="min-w-0 rounded-xl border border-border bg-card p-3 shadow-sm sm:p-5">
-          <p className="text-sm text-gray-500">
-            {`Scans (${csuPeriodName(scanPeriod, scanStartDate, scanEndDate)})`}
-          </p>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <StatCard
+          label={`Scans (${csuPeriodName(scanPeriod, scanStartDate, scanEndDate)})`}
+          value={String(scanCount)}
+          icon={<ScanLine size={20} />}
+          color="#1a3a7b"
+        />
 
-          <p className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">
-            {scanCount}
-          </p>
-        </div>
+        <StatCard
+          label="Verified"
+          value={String(verifiedCount)}
+          icon={<CheckCircle size={20} />}
+          color="#15803d"
+        />
 
-        <div className="min-w-0 rounded-xl border border-border bg-card p-3 shadow-sm sm:p-5">
-          <p className="text-sm text-gray-500">
-            Verified
-          </p>
+        <StatCard
+          label="Flagged"
+          value={String(flaggedCount)}
+          icon={<AlertTriangle size={20} />}
+          color="#d97706"
+        />
 
-          <p className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">
-            {verifiedCount}
-          </p>
-        </div>
-
-        <div className="min-w-0 rounded-xl border border-border bg-card p-3 shadow-sm sm:p-5">
-          <p className="text-sm text-gray-500">
-            Flagged
-          </p>
-
-          <p className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">
-            {flaggedCount}
-          </p>
-        </div>
-
-        <div className="min-w-0 rounded-xl border border-border bg-card p-3 shadow-sm sm:p-5">
-          <p className="text-sm text-gray-500">
-            Unique Students
-          </p>
-
-          <p className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">
-            {uniqueStudents}
-          </p>
-        </div>
+        <StatCard
+          label="Unique Students"
+          value={String(uniqueStudents)}
+          icon={<Users size={20} />}
+          color="#2f5fd6"
+        />
       </div>
 
-      {/* LOST & FOUND STYLE TABS: ONLY ONE SECTION VISIBLE AT A TIME */}
-      <div className="grid grid-cols-2 gap-2 border-b border-border pb-3 sm:flex sm:flex-wrap">
-        {([
-          { key: "all" as const, label: "All Records", count: periodLogs.length },
-          { key: "entry" as const, label: "Entry", count: entryLogs.length },
-          { key: "exit" as const, label: "Exit", count: exitLogs.length },
-          { key: "flagged" as const, label: "Flagged", count: flaggedIncidents.length },
-          { key: "resolved" as const, label: "Resolved", count: resolvedIncidents.length },
-        ]).map(({ key, label, count }) => (
-          <button
-            key={key}
-            type="button"
-            aria-pressed={entryExitTab === key}
-            onClick={() => setEntryExitTab(key)}
-            className={`min-h-11 w-full rounded-xl px-3 py-2 text-xs font-semibold transition-colors sm:w-auto sm:px-4 sm:text-sm ${
-              entryExitTab === key
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:text-foreground"
-            }`}
+      
+      <CSURecordToolbar
+        search={csuListSearch} onSearch={setCsuListSearch}
+        sort={csuListSort} onSort={setCsuListSort}
+        onRefresh={loadData} loading={loading}
+        placeholder="Search QR ID, owner, item, gate..."
+
+        filter={
+          <select
+            aria-label="Filter Entry / Exit records"
+            value={entryExitTab}
+            onChange={(e) =>
+              setEntryExitTab(
+                e.target.value as
+                  "all" | "entry" | "exit" | "flagged" | "resolved"
+              )
+            }
+            className="h-12 min-w-[180px] max-w-full rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49]"
           >
-            {label} ({count})
-          </button>
-        ))}
-      </div>
+            <option value="all">
+              All Records ({periodLogs.length})
+            </option>
+
+            <option value="entry">
+              Entry ({entryLogs.length})
+            </option>
+
+            <option value="exit">
+              Exit ({exitLogs.length})
+            </option>
+
+            <option value="flagged">
+              Flagged ({flaggedIncidents.length})
+            </option>
+
+            <option value="resolved">
+              Resolved ({resolvedIncidents.length})
+            </option>
+          </select>
+        }
+      />
+
 
       {/* SUCCESSFUL ENTRY / EXIT */}
       {(entryExitTab === "all" || entryExitTab === "entry" || entryExitTab === "exit") && (
@@ -7016,10 +7140,6 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                 ? "Exit Records"
                 : "Entry / Exit Records"}
           </h2>
-
-          <p className="mt-1 text-sm text-muted-foreground">
-            Successful QR verification records.
-          </p>
         </div>
 
         <div className="w-full max-w-full overflow-x-auto overscroll-x-contain">
@@ -7057,7 +7177,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                     Loading entry / exit records...
                   </td>
                 </tr>
-              ) : visibleLogs.length === 0 ? (
+              ) : shownEntryLogs.length === 0 ? (
                 <tr>
                   <td
                     colSpan={9}
@@ -7067,7 +7187,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                   </td>
                 </tr>
               ) : (
-                visibleLogs.map((log) => (
+                shownEntryLogs.map((log) => (
                   <tr
                     key={log.id}
                     className="hover:bg-gray-50"
@@ -7119,17 +7239,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                     </td>
 
                     <td className="py-3 px-3">
-                      <span
-                        className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          log.direction ===
-                          "IN"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-purple-100 text-purple-700"
-                        }`}
-                      >
-                        {log.direction ??
-                          "—"}
-                      </span>
+                      <QRpassDirectionBadge direction={log.direction} />
                     </td>
 
                     <td className="py-3 px-3">
@@ -7164,10 +7274,6 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
               <h2 className="text-lg font-bold text-red-800 dark:text-red-200">
                 Flagged / Unregistered Items
               </h2>
-
-              <p className="mt-1 text-sm text-red-600 dark:text-red-300/80">
-                Failed QR verification attempts that require security attention.
-              </p>
             </div>
 
             <span className="rounded-full border border-red-200 bg-red-100 px-3 py-1 text-xs font-bold text-red-700 dark:border-red-400/20 dark:bg-red-500/15 dark:text-red-300">
@@ -7206,7 +7312,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
             <tbody>
               {renderIncidentRows(
-                flaggedIncidents,
+                shownFlaggedIncidents,
                 false
               )}
             </tbody>
@@ -7227,10 +7333,6 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
               <h2 className="text-lg font-bold text-blue-900 dark:text-blue-100">
                 Resolved Items
               </h2>
-
-              <p className="mt-1 text-sm text-blue-600 dark:text-blue-200/70">
-                Security incidents that have already been reviewed and resolved.
-              </p>
             </div>
 
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-500/15 dark:text-emerald-300">
@@ -7269,7 +7371,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
             <tbody>
               {renderIncidentRows(
-                resolvedIncidents,
+                shownResolvedIncidents,
                 true
               )}
             </tbody>
@@ -7492,10 +7594,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                         Direction
                       </p>
 
-                      <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        {selectedIncident.direction ??
-                          "—"}
-                      </p>
+                      <div className="mt-1"><QRpassDirectionBadge direction={selectedIncident.direction} /></div>
                     </div>
 
                     <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-[#29415f] dark:bg-[#13243c]">
@@ -7926,14 +8025,121 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
   );
 }
 
+function QRpassReportDownloadButtons({
+  onPdf,
+  onExcel,
+  disabled = false,
+}: {
+  onPdf: () => void;
+  onExcel: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex w-full shrink-0 items-center gap-2 border-t border-border pt-3 sm:w-auto sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+      <button
+        type="button"
+        onClick={onPdf}
+        disabled={disabled}
+        className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-semibold text-primary transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:w-[104px] sm:flex-none"
+      >
+        <Download size={13} />
+        PDF
+      </button>
+
+      <button
+        type="button"
+        onClick={onExcel}
+        disabled={disabled}
+        className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-semibold text-primary transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:w-[104px] sm:flex-none"
+      >
+        <Download size={13} />
+        Excel
+      </button>
+    </div>
+  );
+}
+
+function QRpassWriteReport(
+  name: string,
+  rows: Array<Record<string, unknown>>,
+  format: "PDF" | "Excel",
+  period: string
+) {
+  if (!rows.length) {
+    alert("No records available for this report.");
+    return;
+  }
+
+  const columns = Object.keys(rows[0]);
+  const date = new Date().toISOString().slice(0, 10);
+  const slug = name.replace(/[^a-z0-9]+/gi, "-");
+  const filename = `QRpass-${slug}-${date}`;
+
+  if (format === "PDF") {
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    doc.setFontSize(16);
+    doc.setTextColor(23, 51, 109);
+    doc.text(`QRpass - ${name}`, 14, 18);
+
+    doc.setFontSize(10);
+    doc.setTextColor(80, 95, 115);
+    doc.text(`Period: ${period}`, 14, 27);
+    doc.text(`Total Records: ${rows.length}`, 14, 33);
+
+    autoTable(doc, {
+      startY: 40,
+      head: [columns],
+      body: rows.map(row =>
+        columns.map(key => String(row[key] ?? "—"))
+      ),
+      styles: { fontSize: 7, cellPadding: 2 },
+      headStyles: {
+        fillColor: [26, 58, 123],
+        textColor: [255, 255, 255],
+      },
+      alternateRowStyles: {
+        fillColor: [245, 247, 250],
+      },
+    });
+
+    doc.save(`${filename}.pdf`);
+    return;
+  }
+
+  const safeRows = rows.map(row =>
+    Object.fromEntries(
+      Object.entries(row).map(([key, value]) => {
+        const text = String(value ?? "—");
+        return [
+          key,
+          /^[=+\-@]/.test(text) ? "'" + text : text,
+        ];
+      })
+    )
+  );
+
+  const workbook = XLSX.utils.book_new();
+  const sheet = XLSX.utils.json_to_sheet(safeRows);
+
+  sheet["!cols"] = columns.map(() => ({ wch: 24 }));
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    sheet,
+    "Report"
+  );
+
+  XLSX.writeFile(workbook, `${filename}.xlsx`);
+}
 function SecurityReports() {
   const [logs, setLogs] = useState<any[]>([]);
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [reportPeriod, setReportPeriod] = useState<CSUDatePeriod>("all");
-  const [reportStart, setReportStart] = useState("");
-  const [reportEnd, setReportEnd] = useState("");
+  const [reportPeriod] = useState<CSUDatePeriod>("all");
+  const [reportStart] = useState("");
+  const [reportEnd] = useState("");
 
   // =========================================================
   // LOAD REAL SECURITY REPORT DATA
@@ -8345,6 +8551,72 @@ function SecurityReports() {
   // REPORT DOWNLOAD HANDLER
   // =========================================================
 
+  async function downloadCSUExcel(reportName: string) {
+    if (!periodValid) {
+      alert("Please select a valid reporting period.");
+      return;
+    }
+
+    try {
+      let rows: Array<Record<string, unknown>> = [];
+
+      if (reportName === "Monthly Item Registration Summary") {
+        const response = await getSecurityReports();
+
+        if (!Array.isArray(response?.registered_items)) {
+          throw new Error("Registration records are unavailable.");
+        }
+
+        rows = response.registered_items
+          .filter((item: any) =>
+            csuMatchesPeriod(
+              item.created_at,
+              reportPeriod,
+              reportStart,
+              reportEnd
+            )
+          )
+          .map((item: any) => ({
+            "Date Registered": formatDate(item.created_at),
+            Owner: item.user?.name ?? "Unknown",
+            "Owner ID": item.user?.username ?? "—",
+            Item: item.item_name ?? "—",
+            Category: item.item_type ?? "—",
+            "Brand / Model": item.brand_model ?? "—",
+            "Serial Number": item.serial_number ?? "—",
+            "QR ID": item.qr_code ?? "Not issued",
+            Status: item.status ?? "—",
+          }));
+      } else {
+        rows = periodScanLogs.map(log => ({
+          Date: formatDate(log.scanned_at),
+          Time: formatTime(log.scanned_at),
+          Owner: log.item?.user?.name ?? "Unknown",
+          "Owner ID": log.item?.user?.username ?? "—",
+          Item: log.item?.item_name ?? "—",
+          "Serial Number": log.item?.serial_number ?? "—",
+          "QR ID": log.qr_code ?? "—",
+          Gate: log.gate ?? "—",
+          Direction: log.direction ?? "—",
+          Result: log.result ?? "—",
+          "Scanned By": log.scanner?.name ?? "—",
+        }));
+      }
+
+      QRpassWriteReport(
+        reportName,
+        rows,
+        "Excel",
+        periodLabel
+      );
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to export report."
+      );
+    }
+  }
   function handleReportDownload(
     reportName: string
   ) {
@@ -8398,24 +8670,7 @@ function SecurityReports() {
       <PageHeader
         title="Reports"
         subtitle="Security inspection and QR verification reports."
-        action={
-          <button
-            type="button"
-            onClick={
-              loadSecurityReports
-            }
-            disabled={loading}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          >
-            <RefreshCw
-              size={12}
-            />
-
-            {loading
-              ? "Refreshing..."
-              : "Refresh"}
-          </button>
-        }
+        
       />
 
       {error && (
@@ -8425,61 +8680,6 @@ function SecurityReports() {
       )}
 
       <Card title="Available Reports">
-        <div className="border-b border-border bg-muted/10 p-4 sm:p-5">
-        <p className="mb-1 text-sm font-semibold text-foreground">Reporting Period</p>
-        <p className="mb-3 text-xs text-muted-foreground">Select a period for the downloadable reports listed below.</p>
-        <div className="flex flex-wrap items-center gap-2">
-          {([
-            { value: "today", label: "Daily" },
-            { value: "week", label: "Weekly" },
-            { value: "month", label: "Monthly" },
-          ] as { value: CSUDatePeriod; label: string }[]).map(option => (
-            <button
-              type="button"
-              key={option.value}
-              onClick={() => setReportPeriod(option.value)}
-              aria-pressed={reportPeriod === option.value}
-              className={`h-10 rounded-xl px-4 text-xs font-semibold transition-colors ${
-                reportPeriod === option.value
-                  ? "bg-primary text-white shadow-sm"
-                  : "border border-border bg-card text-foreground hover:bg-muted"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-          <select
-            aria-label="Additional date filter options"
-            value={reportPeriod === "custom" || reportPeriod === "all" ? reportPeriod : ""}
-            onChange={e => setReportPeriod(e.target.value as CSUDatePeriod)}
-            className={`h-10 rounded-xl border border-border px-3 text-xs font-semibold outline-none focus:ring-2 focus:ring-primary/15 ${
-              reportPeriod === "custom" || reportPeriod === "all"
-                ? "bg-primary text-white"
-                : "bg-card text-foreground"
-            }`}
-          >
-            <option value="" disabled hidden>More date options</option>
-            <option value="all">All Time</option>
-            <option value="custom">Custom Range</option>
-          </select>
-          <span className="text-xs text-muted-foreground">{periodScanLogs.length} scan records match · {periodLabel}</span>
-        </div>
-        {reportPeriod === "custom" && (
-          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/30 p-3">
-            <label className="text-xs font-medium">From
-              <input type="date" value={reportStart} max={reportEnd || undefined}
-                onChange={e => setReportStart(e.target.value)}
-                className="ml-2 h-10 rounded-xl border border-border bg-card px-2 text-sm" />
-            </label>
-            <label className="text-xs font-medium">To
-              <input type="date" value={reportEnd} min={reportStart || undefined}
-                onChange={e => setReportEnd(e.target.value)}
-                className="ml-2 h-10 rounded-xl border border-border bg-card px-2 text-sm" />
-            </label>
-            <span className="text-xs text-muted-foreground">Choose both From and To to enable report downloads.</span>
-          </div>
-        )}
-        </div>
         <div className="divide-y divide-border">
           {reports.map(
             (report) => (
@@ -8487,7 +8687,7 @@ function SecurityReports() {
                 key={
                   report.name
                 }
-                className="flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
+                className="flex min-w-0 flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <p className="text-sm text-foreground font-medium">
@@ -8503,32 +8703,11 @@ function SecurityReports() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleReportDownload(
-                      report.name
-                    )
-                  }
+                <QRpassReportDownloadButtons
                   disabled={loading || !periodValid}
-                  className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-primary hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:w-32"
-                >
-                  <Download
-                    size={13}
-                  />
-
-                  {
-                    report.format
-                  }
-                </button>
-                {report.name === "Entry / Exit Scan Report" && (
-                  <button type="button" onClick={downloadScanReportCSV} disabled={loading || !periodValid}
-                    className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-primary hover:bg-muted disabled:opacity-50 sm:w-32">
-                    <Download size={13} /> CSV
-                  </button>
-                )}
-                </div>
+                  onPdf={() => handleReportDownload(report.name)}
+                  onExcel={() => void downloadCSUExcel(report.name)}
+                />
               </div>
             )
           )}
@@ -8628,6 +8807,8 @@ function CSULocationPicker({
 }
 
 function SecurityLostFound() {
+  const [csuListSort, setCsuListSort] =
+    useState<"newest" | "oldest">("newest");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -8663,7 +8844,6 @@ function SecurityLostFound() {
   const [lostFoundPeriod, setLostFoundPeriod] = useState<CSUDatePeriod>("all");
   const [lostFoundStart, setLostFoundStart] = useState("");
   const [lostFoundEnd, setLostFoundEnd] = useState("");
-  // Help is hidden by default; CSU can expand it when needed.
   const [showLostFoundGuide, setShowLostFoundGuide] = useState(false);
 
   const [reportMode, setReportMode] =
@@ -9863,6 +10043,13 @@ function SecurityLostFound() {
     return searchableText.includes(query);
   });
 
+
+  const shownLostFound = [...filteredItems].sort((a, b) => {
+    const x = new Date(a.created_at ?? a.reported_at ?? a.date_found ?? 0).getTime() || 0;
+    const y = new Date(b.created_at ?? b.reported_at ?? b.date_found ?? 0).getTime() || 0;
+    return csuListSort === "newest" ? y - x : x - y;
+  });
+
   const foundCount = periodItems.filter(
     (item) =>
       String(item.report_type ?? "found").toLowerCase() ===
@@ -9952,13 +10139,6 @@ function SecurityLostFound() {
         </div>
       )}
 
-      <CSUStatsPeriodFilter
-        value={lostFoundPeriod} onChange={setLostFoundPeriod}
-        start={lostFoundStart} onStartChange={setLostFoundStart}
-        end={lostFoundEnd} onEndChange={setLostFoundEnd}
-        description="Summary cards and report records reflect the report creation date."
-      />
-
       <StatisticalCardsSection>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatCard
@@ -10000,43 +10180,104 @@ function SecurityLostFound() {
       </div>
       </StatisticalCardsSection>
 
-      <div className="grid grid-cols-2 gap-2 border-b border-border pb-3 sm:flex sm:flex-wrap">
+            
+
+      
+<div className="grid grid-cols-2 gap-2 border-b border-border pb-3 sm:flex sm:flex-wrap">
+        
         <button
           type="button"
+          aria-pressed={tab === "registry"}
           onClick={() => {
             setTab("registry");
             setError("");
           }}
-          className={`min-h-11 w-full rounded-xl px-3 py-2 text-xs font-semibold transition-colors sm:w-auto sm:px-4 sm:text-sm ${
-            tab === "registry"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:text-foreground"
-          }`}
+          className="min-h-11 w-full rounded-full border px-4 py-2 text-xs font-semibold transition-colors sm:w-auto sm:px-5 sm:text-sm"
+          ref={(button) => {
+            if (!button) return;
+
+            const active = tab === "registry";
+
+            button.style.setProperty(
+              "background",
+              active
+                ? "linear-gradient(180deg, #1a3a7b, #0c1c3a)"
+                : "#ffffff",
+              "important"
+            );
+
+            button.style.setProperty(
+              "color",
+              active ? "#ffffff" : "#1a3a7b",
+              "important"
+            );
+
+            button.style.setProperty(
+              "border-color",
+              active ? "transparent" : "#cfd8e6",
+              "important"
+            );
+
+            button.style.setProperty(
+              "box-shadow",
+              "none",
+              "important"
+            );
+          }}
         >
           Lost & Found Reports
         </button>
 
+        
         <button
           type="button"
+          aria-pressed={tab === "report"}
           onClick={() => {
             setTab("report");
             setError("");
             setSuccess("");
           }}
-          className={`min-h-11 w-full rounded-xl px-3 py-2 text-xs font-semibold transition-colors sm:w-auto sm:px-4 sm:text-sm ${
-            tab === "report"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:text-foreground"
-          }`}
+          className="min-h-11 w-full rounded-full border px-4 py-2 text-xs font-semibold transition-colors sm:w-auto sm:px-5 sm:text-sm"
+          ref={(button) => {
+            if (!button) return;
+
+            const active = tab === "report";
+
+            button.style.setProperty(
+              "background",
+              active
+                ? "linear-gradient(180deg, #1a3a7b, #0c1c3a)"
+                : "#ffffff",
+              "important"
+            );
+
+            button.style.setProperty(
+              "color",
+              active ? "#ffffff" : "#1a3a7b",
+              "important"
+            );
+
+            button.style.setProperty(
+              "border-color",
+              active ? "transparent" : "#cfd8e6",
+              "important"
+            );
+
+            button.style.setProperty(
+              "box-shadow",
+              "none",
+              "important"
+            );
+          }}
         >
           + Record Lost / Found Item
         </button>
       <button
         type="button"
-        onClick={() => setShowLostFoundGuide((visible) => !visible)}
+        onClick={() => setShowLostFoundGuide(v => !v)}
         aria-expanded={showLostFoundGuide}
         aria-controls="csu-lost-found-guide"
-        className="col-span-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-primary transition-colors hover:bg-muted sm:ml-auto sm:w-auto sm:text-sm"
+        className="col-span-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-primary hover:bg-muted sm:ml-auto sm:w-auto sm:text-sm"
       >
         <BookOpen size={15} />
         How it works
@@ -10047,6 +10288,7 @@ function SecurityLostFound() {
       </button>
       </div>
 
+      {/* Floating How It Works modal */}
       {showLostFoundGuide && (
         <div
           id="csu-lost-found-guide"
@@ -10054,9 +10296,14 @@ function SecurityLostFound() {
           role="dialog"
           aria-modal="true"
           aria-label="How Lost and Found works"
-          onMouseDown={e => { if (e.target === e.currentTarget) setShowLostFoundGuide(false); }}
+          onMouseDown={e => {
+            if (e.target === e.currentTarget) {
+              setShowLostFoundGuide(false);
+            }
+          }}
         >
-          <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-[#cfd8e6] bg-card p-6 shadow-2xl sm:p-8 lg:p-10">
+          <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-[26px] border border-[#cfd8e6] bg-card p-6 shadow-2xl sm:p-8">
+
             <button
               type="button"
               aria-label="Close guide"
@@ -10066,18 +10313,21 @@ function SecurityLostFound() {
               <X size={20} />
             </button>
 
-            <div className="mb-6 pr-12 sm:mb-8">
+            <div className="mb-6 pr-12">
               <h3 className="text-lg font-bold text-foreground sm:text-xl">
-                {tab === "registry" ? "How Lost & Found Reports Work" : "How Lost & Found Reporting Works"}
+                {tab === "registry"
+                  ? "How Lost & Found Reports Work"
+                  : "How Lost & Found Reporting Works"}
               </h3>
-              <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground sm:text-[15px]">
+
+              <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
                 {tab === "registry"
                   ? "View existing records, check the status of an item, and manage recovery or claims. Found Item is for an item surrendered to Security, while Lost Item is for an item reported missing."
-                  : "Choose the matching category, enter only the known identifying details, and save the report. Use Found Item for an item surrendered to Security and Lost Item for a missing-item report."}
+                  : "Choose the matching category, enter the identifying details, and save the report for monitoring and verification."}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-5">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {(tab === "registry"
                 ? [
                     ["1", "Find a Report", "Use Search or Refresh to quickly locate an existing Lost or Found record."],
@@ -10086,67 +10336,87 @@ function SecurityLostFound() {
                   ]
                 : [
                     ["1", "Choose Category", "Select the item category that best matches the reported item."],
-                    ["2", "Complete Details", "Enter identifying details, the finder or owner ID, building, floor, and the correct date and time."],
-                    ["3", "Save the Report", "Security saves the record so it can be monitored for recovery, claiming, or further verification."],
-                  ]).map(([number, title, description]) => (
-                <div key={number} className="rounded-2xl border border-[#dce3ee] bg-[#f8fafc] p-5 sm:p-6">
+                    ["2", "Complete Details", "Enter identifying details, the owner or finder ID, location, and date and time."],
+                    ["3", "Save the Report", "Security saves the record for recovery, claiming, or further verification."],
+                  ]
+              ).map(([number, title, description]) => (
+                <div
+                  key={number}
+                  className="rounded-2xl border border-[#dce3ee] bg-[#f8fafc] p-5 dark:bg-muted/40 sm:p-6"
+                >
                   <div className="flex items-start gap-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
                       {number}
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground sm:text-[15px]">{title}</p>
-                      <p className="mt-2 text-xs leading-6 text-muted-foreground sm:text-sm">{description}</p>
+
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        {title}
+                      </p>
+
+                      <p className="mt-2 text-xs leading-6 text-muted-foreground sm:text-sm">
+                        {description}
+                      </p>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+
           </div>
         </div>
       )}
-
       {tab === "registry" && (
         <div className="space-y-4">
-          <div className="flex flex-wrap gap-2 border-b border-border pb-3">
-            {([
-              { id: "all" as const, label: "All Reports", count: periodItems.length },
-              { id: "lost" as const, label: "Lost", count: periodItems.filter(item => String(item.report_type ?? "").toLowerCase() === "lost" && !["claimed", "recovered"].includes(String(item.status ?? "").toLowerCase())).length },
-              { id: "found" as const, label: "Found", count: periodItems.filter(item => String(item.report_type ?? "found").toLowerCase() === "found" && !["claimed", "recovered"].includes(String(item.status ?? "").toLowerCase())).length },
-              { id: "recovered" as const, label: "Recovered / Claimed", count: periodItems.filter(item => ["recovered", "claimed"].includes(String(item.status ?? "").toLowerCase())).length },
-            ]).map(option => (
-              <button type="button" key={option.id} aria-pressed={lostFoundFilter === option.id}
-                onClick={() => setLostFoundFilter(option.id)}
-                className={`min-h-10 rounded-xl px-4 py-2 text-xs font-semibold transition-colors ${lostFoundFilter === option.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
-                {option.label} ({option.count})
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="relative min-w-0 flex-1">
-              <Search
-                size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
+          
+          <CSURecordToolbar
+            search={search} onSearch={setSearch}
+            sort={csuListSort} onSort={setCsuListSort}
+            onRefresh={loadItems} loading={loading}
+            placeholder="Search report, item, owner/finder, claimant..."
+            filter={
+              <select
+                aria-label="Filter Lost and Found reports"
+                value={lostFoundFilter}
+                onChange={(e) =>
+                  setLostFoundFilter(
+                    e.target.value as
+                      "all" | "lost" | "found" | "recovered"
+                  )
+                }
+                className="h-12 min-w-[170px] max-w-full flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none"
+              >
+                <option value="all">
+                  All Reports ({periodItems.length})
+                </option>
+                <option value="lost">
+                  Lost ({periodItems.filter(item =>
+                    String(item.report_type ?? "").toLowerCase() === "lost" &&
+                    !["claimed", "recovered"].includes(
+                      String(item.status ?? "").toLowerCase()
+                    )
+                  ).length})
+                </option>
+                <option value="found">
+                  Found ({periodItems.filter(item =>
+                    String(item.report_type ?? "found").toLowerCase() === "found" &&
+                    !["claimed", "recovered"].includes(
+                      String(item.status ?? "").toLowerCase()
+                    )
+                  ).length})
+                </option>
+                <option value="recovered">
+                  Recovered / Claimed ({periodItems.filter(item =>
+                    ["recovered", "claimed"].includes(
+                      String(item.status ?? "").toLowerCase()
+                    )
+                  ).length})
+                </option>
+              </select>
+            }
+          />
+          
 
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search report, item, owner/finder, claimant, location..."
-                className="h-11 w-full rounded-xl border border-border bg-card py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={loadItems}
-              disabled={loading}
-              className="h-11 w-full rounded-xl border border-border bg-card px-4 text-sm font-semibold hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-            > <RefreshCw size={13} className="shrink-0" />
-              {loading ? "Refreshing..." : "Refresh"}
-            </button>
-          </div>
 
           {loading && (
             <div className="rounded-lg border border-[#cfd8e6] bg-card p-10 text-center text-sm text-muted-foreground">
@@ -10172,7 +10442,7 @@ function SecurityLostFound() {
           )}
 
           {!loading &&
-            filteredItems.map((item) => {
+            shownLostFound.map((item) => {
               const reportType = String(
                 item.report_type ?? "found"
               ).toLowerCase();
@@ -11463,24 +11733,13 @@ function PCOPermitRequests() {
       <PageHeader
         title="Item Registration Requests"
         subtitle="Review and approve student item registration requests. Approval triggers QR code generation."
-        action={
-          <button
-            onClick={loadPendingItems}
-            className="text-xs flex items-center gap-1 text-primary font-medium inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          >
-
-            <RefreshCw size={12} />
-            Refresh
-          </button>
-        }
-        
-      />
+        />
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
       {/* Requests is the pending approval queue; issued QR codes belong in Registered Items. */}
-      <StatisticalCardsSection>
+      <div className="space-y-2">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
         <StatCard
           label="Pending Review"
@@ -11489,7 +11748,7 @@ function PCOPermitRequests() {
           color="#2f5fd6"
         />
       </div>
-      </StatisticalCardsSection>
+      </div>
 
       <PCOResponsiveToolbar
         search={requestSearch}
@@ -11735,23 +11994,10 @@ function PCOItemRegistry() {
       <PageHeader
         title="Registered Items"
         subtitle="View and monitor the centralized records of registered items."
-        action={
-          <button
-            onClick={loadItems}
-            disabled={loading}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          >
-            <RefreshCw size={12} />
-
-            {loading
-              ? "Refreshing..."
-              : "Refresh"}
-          </button>
-        }
-      />
+        />
 
       {/* SUMMARY CARDS */}
-      <StatisticalCardsSection>
+      <div className="space-y-2">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
   <StatCard
     label="ALL"
@@ -11777,26 +12023,76 @@ function PCOItemRegistry() {
   </div>
 
 </div>
-      </StatisticalCardsSection>
-
-      <PCOResponsiveToolbar
-        search={search}
-        onSearchChange={setSearch}
-        sort={sortOrder}
-        onSortChange={(value) => setSortOrder(value as "newest" | "oldest")}
-        onRefresh={loadItems}
-        loading={loading}
-        placeholder="Search item, owner, serial number, QR ID..."
-      />
-      <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-2">
-        {([ ["all", "All"], ["active", "Active"], ["expired", "Expired"] ] as const)
-          .map(([value, label]) => (
-            <button key={value} type="button" onClick={() => setStatusFilter(value)}
-              className={`min-w-0 whitespace-nowrap rounded-full border px-2 py-2 text-xs font-medium transition sm:px-5 sm:text-sm ${
-                statusFilter === value ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:bg-muted"
-              }`}>{label}</button>
-          ))}
       </div>
+
+      
+      <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center">
+
+        <label className="relative block min-w-0 flex-1">
+          <Search
+            size={17}
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <input
+            type="search"
+            aria-label="Search PCO registered items"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search item, owner, serial number, QR ID..."
+            className="h-12 w-full rounded-xl border border-[#bfceff] bg-[#eef2ff] pl-11 pr-3 text-sm text-foreground outline-none transition focus:border-[#6488ff] focus:bg-white focus:ring-2 focus:ring-[#6488ff]/15 dark:border-[#35537e] dark:bg-[#1b2b49]"
+          />
+        </label>
+
+        <div className="flex flex-wrap items-center gap-2 lg:shrink-0">
+
+          <select
+            aria-label="Filter PCO registered items"
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(
+                e.target.value as "all" | "active" | "expired"
+              )
+            }
+            className="h-12 min-w-[160px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:bg-white dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none"
+          >
+            <option value="all">
+              All Items ({registeredItems.length})
+            </option>
+            <option value="active">
+              Active ({registeredItems.filter(item => !item.is_expired).length})
+            </option>
+            <option value="expired">
+              Expired ({expiredCount})
+            </option>
+          </select>
+
+          <select
+            aria-label="Sort PCO registered items"
+            value={sortOrder}
+            onChange={(e) =>
+              setSortOrder(
+                e.target.value as "newest" | "oldest"
+              )
+            }
+            className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:bg-white dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none"
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+
+          <button
+            type="button"
+            onClick={loadItems}
+            disabled={loading}
+            className="inline-flex h-12 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-medium text-[#17336d] transition hover:bg-[#edf2ff] disabled:opacity-50"
+          >
+            <RefreshCw size={14} />
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+
+        </div>
+      </div>
+
 
       <Card title="Registered Items"
       >
@@ -12973,7 +13269,94 @@ function PCOItemRegistry() {
                         // REPORT DOWNLOAD HANDLER
                         // =========================================================
                       
-                        function handleReportDownload(
+                          function handlePCOReportFormat(
+    reportName: string,
+    format: "PDF" | "Excel"
+  ) {
+    if (format === "PDF") {
+      if (reportName === "Monthly Item Registration Summary") {
+        handleMonthlyRegistrationPDF();
+        return;
+      }
+
+      if (reportName === "Approval History with Timestamps") {
+        handleApprovalHistoryPDF();
+        return;
+      }
+    }
+
+    if (format === "Excel") {
+      if (reportName === "QR Code Issuance Log") {
+        handleQrIssuanceExcel();
+        return;
+      }
+
+      if (reportName === "Registered Items Export") {
+        handleItemRegistryExcel();
+        return;
+      }
+    }
+
+    const now = new Date();
+
+    const isThisMonth = (dateValue: any) => {
+      if (!dateValue) return false;
+      const date = new Date(dateValue);
+
+      return !Number.isNaN(date.getTime()) &&
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear();
+    };
+
+    let filtered = [...items];
+
+    if (reportName === "Monthly Item Registration Summary") {
+      filtered = items.filter(item =>
+        isThisMonth(item.created_at)
+      );
+    } else if (reportName === "QR Code Issuance Log") {
+      filtered = items.filter(item =>
+        item.status === "approved" &&
+        Boolean(item.qr_code) &&
+        isThisMonth(
+          item.approved_at ||
+          item.updated_at ||
+          item.created_at
+        )
+      );
+    } else if (reportName === "Approval History with Timestamps") {
+      filtered = items.filter(item =>
+        item.status === "approved"
+      );
+    } else if (reportName !== "Registered Items Export") {
+      alert("Unknown report type.");
+      return;
+    }
+
+    const rows = filtered.map(item => ({
+      "Date Registered": formatDateTime(item.created_at),
+      Owner: item.user?.name ?? "Unknown",
+      "Owner ID": item.user?.username ?? "—",
+      Item: item.item_name ?? "—",
+      Category: item.item_type ?? "—",
+      "Brand / Model": item.brand_model ?? "—",
+      "Serial Number": item.serial_number ?? "—",
+      "QR ID": item.qr_code ?? "Not issued",
+      "Approved At": item.approved_at
+        ? formatDateTime(item.approved_at)
+        : "—",
+      Status: item.status ?? "—",
+    }));
+
+    const period =
+      reportName === "Monthly Item Registration Summary" ||
+      reportName === "QR Code Issuance Log"
+        ? currentPeriod
+        : "All time";
+
+    QRpassWriteReport(reportName, rows, format, period);
+  }
+function handleReportDownload(
                           reportName: string
                         ) {
                           if (
@@ -13056,25 +13439,7 @@ function PCOItemRegistry() {
                             <PageHeader
                               title="Reports"
                               subtitle="Item registration, approval, QR issuance, and registered-item reports."
-                              action={
-                                <button
-                                  onClick={
-                                    loadReportData
-                                  }
-                                  disabled={
-                                    loading
-                                  }
-                                  className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-                                >
-                                  <RefreshCw
-                                    size={12}
-                                  />
-                      
-                                  {loading
-                                    ? "Refreshing..."
-                                    : "Refresh"}
-                                </button>
-                              }
+                              
                             />
                       
                             {/* ERROR MESSAGE */}
@@ -13093,7 +13458,7 @@ function PCOItemRegistry() {
                                       key={
                                         report.name
                                       }
-                                      className="flex min-w-0 flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-muted sm:flex-row sm:items-center sm:justify-between"
+                                      className="flex min-w-0 flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
                                     >
                                       <div className="min-w-0 flex-1">
                                         <p className="break-words text-sm font-medium text-foreground">
@@ -13109,17 +13474,11 @@ function PCOItemRegistry() {
                                         </p>
                                       </div>
                       
-                                      <div className="flex shrink-0 items-center sm:w-[128px] sm:justify-end sm:border-l sm:border-border sm:pl-4">
-                                        <button
-                                          type="button"
-                                          onClick={() => handleReportDownload(report.name)}
+                                      <QRpassReportDownloadButtons
                                           disabled={loading || items.length === 0}
-                                          className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-primary transition-colors hover:bg-muted disabled:opacity-50"
-                                        >
-                                          <Download size={13} />
-                                          {report.format}
-                                        </button>
-                                      </div>
+                                          onPdf={() => handlePCOReportFormat(report.name, "PDF")}
+                                          onExcel={() => handlePCOReportFormat(report.name, "Excel")}
+                                        />
                                     </div>
                                   )
                                 )}
@@ -14637,7 +14996,6 @@ function SysAdminLostFound() {
 
 function AdminAnalytics() {
   const [reportRole, setReportRole] = useState<"student" | "security" | "pco" | "sysadmin" | null>(null);
-  const [showSummaryValues, setShowSummaryValues] = useState(true);
   const [showDownloadableReports, setShowDownloadableReports] = useState(true);
   const [registrationStatusFilter, setRegistrationStatusFilter] = useState("all");
   const [recentCategory, setRecentCategory] = useState<"registration" | "scan" | "entryexit" | "incidents" | "lostfound">("registration");
@@ -15978,10 +16336,10 @@ return (
           </div>
           <div className="flex items-center gap-2">
             <span className="rounded-full border border-[#dce3ee] bg-[#f8fafc] px-3 py-1 text-[11px] font-medium text-muted-foreground">Campus-wide</span>
-            <button type="button" aria-label={showSummaryValues ? "Hide statistic cards" : "Show statistic cards"} onClick={() => setShowSummaryValues(v => !v)} className="rounded-xl border border-[#dce3ee] bg-white px-3 py-1 text-xs font-semibold text-[#17336d]">{showSummaryValues ? "Hide Cards" : "Show Cards"}</button>
+            
           </div>
         </div>
-        {showSummaryValues && <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {([
             {category: "registration", label: "Registered Items", value: summary.total_registered_items, icon: <Package size={19}/>, color: "#1a3a7b"},
             {category: "registration", label: "Active QR", value: summary.active_qr_codes, icon: <QrCode size={19}/>, color: "#557bdc"},
@@ -16005,8 +16363,7 @@ return (
               </div>
             </div>
           ))}
-        </div>}
-      </div>}
+        </div></div>}
 
       {/* Reports are displayed as clear, role-specific rows rather than duplicate category tabs. */}
       <div className="overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-sm">
@@ -16084,7 +16441,7 @@ return (
                     <td className="px-3 py-3 text-xs font-semibold">{log.item?.item_name ?? log.item_name ?? '—'}</td>
                     <td className="px-3 py-3 text-xs">{log.item?.user?.name ?? log.owner?.name ?? '—'}</td>
                     <td className="px-3 py-3 text-xs">{log.gate ?? '—'}</td>
-                    <td className="px-3 py-3 text-xs">{log.direction ?? '—'}</td>
+                    <td className="px-3 py-3 text-xs"><QRpassDirectionBadge direction={log.direction} /></td>
                     <td className="px-3 py-3 text-xs">{log.result ?? '—'}</td>
                     <td className="px-3 py-3 text-xs">{log.scanner?.name ?? '—'}</td>
                   </tr>
@@ -21311,86 +21668,12 @@ function SysAdminAnnouncementManagement() {
 
 
 // =========================================================
-// CSU OVERVIEW - read-only operational statistics
-// =========================================================
-function SecurityOverview({ onNavigate }: { onNavigate?: (index: number) => void }) {
-  const [showCSUGuide, setShowCSUGuide] = useState(true);
-  const actions = [
-    { index: 1, title: "Scan & Verify", description: "Scan a QR code or manually verify an item.", icon: <ScanLine size={23} />, accent: "#1a3a7b" },
-    { index: 2, title: "Entry / Exit Log", description: "Review past scans and security incidents.", icon: <Map size={23} />, accent: "#2f5fd6" },
-    { index: 3, title: "Registered Items", description: "Find approved items and confirm ownership.", icon: <Layers size={23} />, accent: "#0f766e" },
-    { index: 4, title: "Lost & Found", description: "Record missing or surrendered property.", icon: <BookOpen size={23} />, accent: "#7c3aed" },
-    { index: 5, title: "Reports", description: "Export security reports for your selected dates.", icon: <FileText size={23} />, accent: "#c47c19" },
-  ];
-
-  const duties = [
-    { title: "Before allowing entry or exit", detail: "Check the QR verification result and match the registered owner with the person carrying the item.", icon: <Shield size={19} /> },
-    { title: "When an item is not verified", detail: "Follow CSU inspection procedures and record an incident if the item is unregistered or unapproved.", icon: <AlertTriangle size={19} /> },
-    { title: "When property is turned over", detail: "Record the item description and location, then verify the claimant before completing a claim.", icon: <Package size={19} /> },
-  ];
-
-  return (
-    <div className="w-full min-w-0 space-y-5">
-      <PageHeader title="CSU Overview" subtitle="Your daily campus security workspace at University of Cebu - Main Campus." />
-
-      <section className="rounded-2xl border border-[#dce3ee] bg-card px-4 py-6 shadow-sm sm:px-7 sm:py-8">
-        <div className="mx-auto mb-6 max-w-2xl text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef2fc] text-[#1a3a7b]"><Shield size={25} /></div>
-          <h3 className="text-lg font-bold text-foreground">CSU Quick Actions</h3>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">Open the module you need. Detailed scan statistics and records stay in Entry / Exit Log.</p>
-        </div>
-        <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-3 sm:gap-4">
-          {actions.map(action => (
-            <button
-              key={action.index}
-              type="button"
-              onClick={() => onNavigate?.(action.index)}
-              className="group flex min-h-[118px] w-full items-start gap-4 rounded-2xl border border-[#dce3ee] bg-[#fafbfe] p-5 text-left transition-all hover:border-[#a6bce1] hover:bg-[#eef2fc] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)]"
-            >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm" style={{ color: action.accent }}>{action.icon}</span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center justify-between gap-2"><span className="text-sm font-bold text-foreground">{action.title}</span><ChevronRight size={16} className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" /></span>
-                <span className="mt-2 block text-xs leading-5 text-muted-foreground">{action.description}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-[#dce3ee] bg-card p-5 shadow-sm sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="text-base font-bold text-foreground">CSU Duty Guide</h3>
-            <p className="mt-1 text-xs text-muted-foreground">Quick reminders for routine gate verification and property handling.</p>
-          </div>
-          <button type="button" aria-expanded={showCSUGuide} onClick={() => setShowCSUGuide(value => !value)}
-            className="rounded-xl border border-[#dce3ee] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] hover:bg-[#f2f5fc]">
-            {showCSUGuide ? "Hide Guide" : "Show Guide"}
-          </button>
-        </div>
-        {showCSUGuide && <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {duties.map(duty => (
-            <div key={duty.title} className="rounded-xl border border-border bg-muted/20 p-4">
-              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef2fc] text-[#1a3a7b]">{duty.icon}</div>
-              <h4 className="text-sm font-semibold text-foreground">{duty.title}</h4>
-              <p className="mt-2 text-xs leading-6 text-muted-foreground">{duty.detail}</p>
-            </div>
-          ))}
-        </div>}
-      </section>
-
-      <div className="rounded-xl border border-[#dce3ee] bg-[#f8fafc] px-5 py-4 text-xs leading-relaxed text-muted-foreground">
-        <strong className="text-foreground">Security reminder:</strong> Never approve a scan based on the QR image alone. Verify the displayed item and owner details before recording an IN or OUT transaction.
-      </div>
-    </div>
-  );
-}
-
-// =========================================================
 // CSU READ-ONLY ITEM REGISTRY - approved items only
 // Data is returned by the role-restricted /security-reports endpoint.
 // =========================================================
 function SecurityItemRegistry() {
+  const [csuListSort, setCsuListSort] =
+    useState<"newest" | "oldest">("newest");
   const [items, setItems] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -21434,6 +21717,12 @@ function SecurityItemRegistry() {
     const haystack = [item.item_name, item.item_type, item.serial_number, item.qr_code, item.brand_model, item.user?.name, item.user?.username].map(value => String(value ?? "").toLowerCase()).join(" ");
     return haystack.includes(search.trim().toLowerCase());
   });
+
+  const shownRegistryItems = [...visible].sort((a, b) => {
+    const x = new Date(a.created_at ?? a.registered_at ?? 0).getTime() || 0;
+    const y = new Date(b.created_at ?? b.registered_at ?? 0).getTime() || 0;
+    return csuListSort === "newest" ? y - x : x - y;
+  });
   function downloadCsv() {
     if (visible.length === 0) { alert("There are no registered items to export."); return; }
     const escape = (value: unknown) => {
@@ -21457,12 +21746,6 @@ function SecurityItemRegistry() {
   return (
     <div className="w-full min-w-0 space-y-5">
       <PageHeader title="Registered Items" subtitle="Read-only approved item registry for gate personnel. Pending and rejected applications remain restricted to PCO and System Admin."/>
-      <CSUStatsPeriodFilter
-        value={registeredPeriod} onChange={setRegisteredPeriod}
-        start={registeredStart} onStartChange={setRegisteredStart}
-        end={registeredEnd} onEndChange={setRegisteredEnd}
-        description="Summary cards, registry records and CSV reflect the registration date."
-      />
       <StatisticalCardsSection>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <StatCard label="Approved Items" value={loading ? "..." : String(periodItems.length)} icon={<Package size={20}/>} color="#1a3a7b"/>
@@ -21471,15 +21754,69 @@ function SecurityItemRegistry() {
       </div>
       </StatisticalCardsSection>
       <Card title="Approved Item Registry">
-        <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center">
-          <label className="relative min-w-0 flex-1"><Search size={15} className="pointer-events-none absolute left-3 top-3 text-muted-foreground"/><input aria-label="Search approved items" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search item, owner, QR ID or serial..." className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-primary"/></label>
-          <select aria-label="Filter QR status" value={statusFilter} onChange={event => setStatusFilter(event.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm"><option value="all">All QR Statuses</option><option value="active">Active</option><option value="expired">Expired</option><option value="flagged">Flagged</option><option value="no qr">No QR</option></select>
-          <button type="button" onClick={refresh} disabled={loading} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-primary disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"><RefreshCw size={14}/>Refresh</button>
-          <button type="button" onClick={downloadCsv} disabled={loading || visible.length === 0} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-semibold text-white disabled:opacity-50"><Download size={14}/>Export CSV</button>
+        <div className="flex min-w-0 flex-col gap-2 border-b border-border p-4 lg:flex-row lg:items-center">
+
+          {/* SEARCH BAR */}
+          <label className="relative block min-w-0 flex-1">
+            <Search
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              aria-label="Search approved items"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search item, owner, QR ID or serial..."
+              className="h-12 w-full rounded-xl border border-[#bfceff] bg-[#eef2ff] pl-10 pr-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:ring-2 focus:ring-[#6488ff]/15 dark:border-[#35537e] dark:bg-[#1b2b49]"
+            />
+          </label>
+
+          {/* DROPDOWNS AND REFRESH */}
+          <div className="flex flex-wrap items-center gap-2 lg:shrink-0">
+
+            <select
+              aria-label="Filter QR status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none"
+            >
+              <option value="all">All QR Statuses</option>
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+              <option value="flagged">Flagged</option>
+              <option value="no qr">No QR</option>
+            </select>
+
+            <select
+              aria-label="Sort records"
+              value={csuListSort}
+              onChange={(e) =>
+                setCsuListSort(
+                  e.target.value as "newest" | "oldest"
+                )
+              }
+              className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={() => { void refresh(); }}
+              disabled={loading}
+              className="inline-flex h-12 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-primary hover:bg-muted disabled:opacity-50"
+            >
+              <RefreshCw size={14} />
+              {loading ? "Refreshing..." : "Refresh"}
+            </button>
+
+          </div>
         </div>
+
         {error && <p role="alert" className="m-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}</p>}
         <div className="w-full overflow-x-auto"><table className="w-full min-w-[900px] text-sm"><thead className="bg-muted/40 text-left text-xs text-muted-foreground"><tr>{["Item", "Owner", "Serial No.", "QR ID", "Expiration", "Status"].map(label => <th key={label} className="px-4 py-3">{label}</th>)}</tr></thead><tbody className="divide-y divide-border">
-          {visible.map(item => <tr key={item.id} className="hover:bg-muted/30"><td className="px-4 py-3"><span className="font-semibold">{item.item_name ?? "—"}</span><p className="text-xs text-muted-foreground">{item.item_type ?? "—"}</p></td><td className="px-4 py-3">{item.user?.name ?? "—"}<p className="text-xs text-muted-foreground">{item.user?.username ?? ""}</p></td><td className="px-4 py-3 font-mono text-xs">{item.serial_number ?? "—"}</td><td className="px-4 py-3 font-mono text-xs">{item.qr_code ?? "—"}</td><td className="px-4 py-3 whitespace-nowrap">{item.qr_expires_at ? new Date(item.qr_expires_at).toLocaleDateString("en-PH") : "—"}</td><td className="px-4 py-3"><span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${itemStatus(item) === "Active" ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>{itemStatus(item)}</span></td></tr>)}
+          {shownRegistryItems.map(item => <tr key={item.id} className="hover:bg-muted/30"><td className="px-4 py-3"><span className="font-semibold">{item.item_name ?? "—"}</span><p className="text-xs text-muted-foreground">{item.item_type ?? "—"}</p></td><td className="px-4 py-3">{item.user?.name ?? "—"}<p className="text-xs text-muted-foreground">{item.user?.username ?? ""}</p></td><td className="px-4 py-3 font-mono text-xs">{item.serial_number ?? "—"}</td><td className="px-4 py-3 font-mono text-xs">{item.qr_code ?? "—"}</td><td className="px-4 py-3 whitespace-nowrap">{item.qr_expires_at ? new Date(item.qr_expires_at).toLocaleDateString("en-PH") : "—"}</td><td className="px-4 py-3"><span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${itemStatus(item) === "Active" ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>{itemStatus(item)}</span></td></tr>)}
           {!loading && visible.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">No approved items match your search.</td></tr>}
           {loading && <tr><td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">Loading approved item registry...</td></tr>}
         </tbody></table></div>
@@ -21505,8 +21842,8 @@ const PAGES: Record<Role, React.ComponentType<{ onNavigate?: (index: number) => 
   ],
 
   security: [
-    SecurityOverview,
     SecurityScanVerify,
+    SecurityRecentScanLogs,
     SecurityEntryExitLog,
     SecurityItemRegistry,
     SecurityLostFound,
@@ -21560,8 +21897,8 @@ const NAV: Record<
   ],
 
   security: [
-    {icon: <BarChart2 size={16}/>, label: "CSU Overview"},
     {icon: <ScanLine size={16}/>, label: "Scan & Verify"},
+    {icon: <Clock size={16}/>, label: "Recent Scan Logs"},
     {icon: <Map size={16}/>, label: "Entry / Exit Log"},
     {icon: <Layers size={16}/>, label: "Registered Items"},
     {icon: <BookOpen size={16}/>, label: "Lost & Found"},
@@ -22992,10 +23329,6 @@ async function handleTwoFactorSubmit(
                       )}
                     </div>
 
-                    <div className="mt-4 flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-3 text-left text-xs leading-relaxed text-blue-800">
-                      <span className="shrink-0 font-semibold">Note:</span>
-                      <span className="min-w-0">Complete the required account information before submitting your registration.</span>
-                    </div>
 
                     <div className="flex gap-3 mt-5 justify-end">
                       <button
@@ -23135,11 +23468,6 @@ async function handleTwoFactorSubmit(
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800">
-              A 6-digit verification code
-              will be sent to your
-              registered email address.
-            </div>
 
             <button
               type="submit"
@@ -23174,15 +23502,7 @@ async function handleTwoFactorSubmit(
 
   if (mode === "verify") {
     return (
-      <PageShell>
-        <div className="flex flex-col items-center mb-6 qrpass-auth-logo">
-          <QRpassLogo
-            size={72}
-            showText
-          />
-        </div>
-
-        <div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden qrpass-auth-card">
+      <PageShell><div className="w-full max-w-sm bg-white rounded-xl border border-[#cfd8e6] shadow-md overflow-hidden qrpass-auth-card">
 
           <div className="bg-primary px-6 py-4">
             <h2
@@ -23868,7 +24188,7 @@ async function handleTwoFactorSubmit(
                   className="text-[26px] sm:text-[28px] font-bold leading-tight text-[#17336d]"
                   style={{ fontFamily: "Barlow, sans-serif", letterSpacing: "-0.025em" }}
                 >
-                  Welcome back!
+                  Log in to QRpass
                 </h2>
               </div>
 
@@ -24120,8 +24440,52 @@ function Dashboard({
     return () => { mounted = false; window.removeEventListener("qrpass-settings-updated", refreshBrand); };
   }, []);
 
-  const [activeNav, setActiveNav] =
-    useState(0);
+  const [activeNav, setActiveNav] = useState<number>(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      const userId = String(user?.id ?? user?.username ?? "");
+
+      if (!userId) return 0;
+
+      const saved = JSON.parse(
+        sessionStorage.getItem("qrpass-active-page-v1") || "null"
+      );
+
+      if (!saved || saved.userId !== userId || saved.role !== role) {
+        return 0;
+      }
+
+      const index = navItems.findIndex(
+        item => item.label === saved.label
+      );
+
+      return index >= 0 && index < pages.length ? index : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  // Remember the last selected sidebar page for this user.
+  useEffect(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      const userId = String(user?.id ?? user?.username ?? "");
+      const page = navItems[activeNav];
+
+      if (!userId || !page) return;
+
+      sessionStorage.setItem(
+        "qrpass-active-page-v1",
+        JSON.stringify({
+          userId,
+          role,
+          label: page.label
+        })
+      );
+    } catch {
+      // Storage unavailable; navigation still works normally.
+    }
+  }, [activeNav, role]);
 
   const [isMobile, setIsMobile] =
     useState(window.innerWidth < 768);
@@ -24734,9 +25098,7 @@ const handleSaveAccountProfile = async () => {
 
       setIsMobile(mobile);
 
-      if (!mobile) {
-        setSidebarOpen(true);
-      }
+      if (!mobile) { setSidebarOpen(true); } else { setSidebarOpen(false); }
     };
 
     window.addEventListener(
@@ -25371,12 +25733,26 @@ const handleSaveAccountProfile = async () => {
     */
   
     if (role === "security") {
-      if (normalizedType.includes("lost_found") || normalizedType.includes("lost") || normalizedType.includes("found")) return 4; // Lost & Found
-      if (normalizedType.includes("entry") || normalizedType.includes("exit")) return 2; // Entry/Exit
-      if (normalizedType.includes("report")) return 5; // Reports
-      if (normalizedType.includes("registry") || normalizedType.includes("registered_item")) return 3; // Registry
-      if (normalizedType.includes("incident") || normalizedType.includes("flagged") || normalizedType.includes("warning") || normalizedType.includes("scan") || normalizedType.includes("security_item_ready") || normalizedType.includes("item_approved") || normalizedType.includes("qr")) return 1; // Scan & Verify
-      return 0; // CSU Overview (there is no separate Notifications page)
+      const destination = (label: string) => {
+        const index = navItems.findIndex(
+          item => item.label === label
+        );
+        return index >= 0 ? index : 0;
+      };
+
+      if (/lost_found|lost|found/.test(normalizedType))
+        return destination("Lost & Found");
+
+      if (/entry|exit/.test(normalizedType))
+        return destination("Entry / Exit Log");
+
+      if (normalizedType.includes("report"))
+        return destination("Reports");
+
+      if (/registry|registered_item/.test(normalizedType))
+        return destination("Registered Items");
+
+      return destination("Scan & Verify");
     }
   
     /*
@@ -25543,7 +25919,13 @@ const handleSaveAccountProfile = async () => {
 
   return (
     <div
-      className="qrpass-dashboard-root h-screen overflow-hidden flex flex-col"
+      data-qrpass-role={role}
+      data-qrpass-mobile-uniform={
+        role === "student" ||
+        role === "pco" ||
+        role === "security"
+      }
+      className={`qrpass-dashboard-root h-screen overflow-hidden flex flex-col ${role === "student" || role === "security" || role === "pco" ? "qrpass-web-responsive" : ""}`}
       style={{
         fontFamily: "Inter, sans-serif",
         background: darkMode
@@ -25552,6 +25934,20 @@ const handleSaveAccountProfile = async () => {
       }}
     >
       <style>{`
+
+        
+        /* QRPass role-based page subtitle removal */
+
+        .qrpass-dashboard-root[data-qrpass-role="student"]
+        .qrpass-page-header-subtitle,
+
+        .qrpass-dashboard-root[data-qrpass-role="pco"]
+        .qrpass-page-header-subtitle,
+
+        .qrpass-dashboard-root[data-qrpass-role="security"]
+        .qrpass-page-header-subtitle {
+          display: none !important;
+        }
 
         /* QRPass cross-role responsive foundation: Student / PCO / CSU / Admin */
         .qrpass-dashboard-root {
@@ -27244,6 +27640,8 @@ const handleSaveAccountProfile = async () => {
         ==================================================== */}
 
         <main
+          data-qrpass-csu={role === "security"}
+          data-qrpass-hide-page-subtitles={role !== "sysadmin"}
           className="qrpass-main flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden p-3 md:p-5"
           style={{ overflowAnchor: "none" }}
           onClick={() => {
@@ -27463,7 +27861,9 @@ const handleSaveAccountProfile = async () => {
             )}
 
           <div className={role === "sysadmin" ? "qrpass-admin-page mx-auto w-full max-w-[1480px]" : "w-full"}>
-            <ActivePage onNavigate={handleNavClick} />
+            <QRPassPageSubtitleContext.Provider value={role === "sysadmin"}>
+              <ActivePage onNavigate={handleNavClick} />
+            </QRPassPageSubtitleContext.Provider>
           </div>
         </main>
       </div>
@@ -27473,20 +27873,20 @@ const handleSaveAccountProfile = async () => {
 
 {accountSettingsOpen && (
   <div
-    className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+    className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4"
     style={{
       background: "rgba(15, 23, 42, 0.45)",
       backdropFilter: "blur(3px)",
     }}
   >
     <div
-      className="w-full max-w-2xl bg-white border border-[#dce3ee] rounded-2xl overflow-hidden"
+      className="w-full max-w-2xl bg-white border border-[#dce3ee] rounded-2xl overflow-hidden flex flex-col max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)]"
       style={{
         boxShadow: "0 24px 70px rgba(16, 26, 51, 0.22)",
       }}
     >
       {/* MODAL HEADER */}
-      <div className="px-5 py-4 border-b border-[#e5eaf2] bg-[#fbfcfe] flex items-center justify-between">
+      <div className="shrink-0 px-4 py-3 sm:px-5 sm:py-4 border-b border-[#e5eaf2] bg-[#fbfcfe] flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
             <Settings
@@ -27517,12 +27917,12 @@ const handleSaveAccountProfile = async () => {
       </div>
 
       {/* PROFILE AREA */}
-      <div className="p-5">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 pb-5 border-b border-[#e5eaf2]">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-5">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-5 pb-3 sm:pb-5 border-b border-[#e5eaf2]">
           {/* PROFILE PHOTO */}
           <div className="flex flex-col items-center gap-2">
             <div
-                className="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden flex items-center justify-center"
                 style={{
                   background:
                     "linear-gradient(135deg, #1a3a7b 0%, #2f5fd6 100%)",
@@ -27579,7 +27979,7 @@ const handleSaveAccountProfile = async () => {
 
           {/* ACCOUNT SUMMARY */}
           <div className="flex-1 min-w-0 text-center sm:text-left">
-            <h3 className="text-lg font-bold text-[#111827]">
+            <h3 className="text-base sm:text-lg font-bold text-[#111827]">
               {currentUser?.name ??
                 roleInfo.label}
             </h3>
@@ -27602,7 +28002,7 @@ const handleSaveAccountProfile = async () => {
         </div>
 
         {/* ACCOUNT INFORMATION */}
-        <div className="mt-5">
+        <div className="mt-3 sm:mt-5">
           <div className="flex items-center gap-2 mb-4">
             <User
               size={16}
@@ -27614,7 +28014,7 @@ const handleSaveAccountProfile = async () => {
             </h3>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-[11px] font-semibold text-[#64748b] mb-1.5">
                 Full Name
@@ -27664,8 +28064,8 @@ const handleSaveAccountProfile = async () => {
         </div>
 
         {/* SECURITY */}
-        <div className="mt-5 pt-5 border-t border-[#e5eaf2]">
-          <div className="flex items-center justify-between gap-3">
+        <div className="mt-3 pt-3 sm:mt-5 sm:pt-5 border-t border-[#e5eaf2]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-lg bg-[#eef2fc] text-[#1a3a7b] flex items-center justify-center">
                 <Lock size={16} />
@@ -27685,7 +28085,7 @@ const handleSaveAccountProfile = async () => {
             <button
             type="button"
             onClick={() => setChangePasswordOpen(true)}
-            className="border border-[#cfd8e6] bg-white text-[#1a3a7b] text-xs font-semibold px-3 py-2 rounded-lg hover:bg-[#eef2fc] transition-colors"
+            className="w-full sm:w-auto min-h-10 border border-[#cfd8e6] bg-white text-[#1a3a7b] text-xs font-semibold px-3 py-2 rounded-lg hover:bg-[#eef2fc] transition-colors"
           >
             Change Password
           </button>
@@ -27694,7 +28094,7 @@ const handleSaveAccountProfile = async () => {
       </div>
 
      {/* MODAL FOOTER */}
-<div className="px-5 py-3 border-t border-[#e5eaf2] bg-[#fbfcfe]">
+<div className="shrink-0 px-3 py-3 sm:px-5 border-t border-[#e5eaf2] bg-[#fbfcfe]">
   {profileMessage && (
     <div className="mb-3 px-3 py-2 rounded-lg bg-[#eef2fc] border border-[#d7e0f3] text-xs font-medium text-[#1a3a7b]">
       {profileMessage}
@@ -27906,7 +28306,10 @@ const handleSaveAccountProfile = async () => {
           FOOTER
       ====================================================== */}
 
-              <footer
+              
+      {/* QRPASS_FOOTER_SYSADMIN_ONLY */}
+      {role === "sysadmin" && (
+        <footer
           className="bg-white px-4 py-2 flex items-center justify-between gap-2 flex-wrap"
           style={{
             borderTop: "1px solid #e5eaf2",
@@ -27935,6 +28338,8 @@ const handleSaveAccountProfile = async () => {
             </span>
           </div>
         </footer>
+      )}
+  
     </div>
   );
 }
@@ -27942,11 +28347,92 @@ const handleSaveAccountProfile = async () => {
 
 // ── App root ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [view, setView] =
-    useState<View>("login");
+  const [view, setView] = useState<View>(() =>
+    localStorage.getItem("token") ? "checking" : "login"
+  );
 
-  const [role, setRole] =
-    useState<Role>("student");
+  const [role, setRole] = useState<Role>("student");
+  const [restoreAttempt, setRestoreAttempt] = useState(0);
+
+  // Restore an existing login only after backend verification.
+  useEffect(() => {
+    let cancelled = false;
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setView("login");
+      return;
+    }
+
+    async function restoreSession() {
+      try {
+        const response = await window.fetch(`${API_URL}/account`, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (cancelled) return;
+
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          localStorage.removeItem("role");
+          setRole("student");
+          setView("login");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Session check failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const user = data?.user;
+
+        const validRoles: Role[] = [
+          "student",
+          "security",
+          "pco",
+          "sysadmin",
+        ];
+
+        if (!user || !validRoles.includes(user.role as Role)) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          localStorage.removeItem("role");
+          setRole("student");
+          setView("login");
+          return;
+        }
+
+        if (cancelled) return;
+
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("role", user.role);
+
+        setRole(user.role as Role);
+        setView("dashboard");
+
+      } catch (error) {
+        if (cancelled) return;
+
+        console.error("Session restoration failed:", error);
+
+        // Network problems should not silently delete a valid login.
+        setView("restore-error");
+      }
+    }
+
+    void restoreSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [restoreAttempt]);
+
 
         /*
     |--------------------------------------------------------------------------
@@ -27996,6 +28482,7 @@ export default function App() {
   }
 
   function expireSession() {
+    sessionStorage.removeItem("qrpass-active-page-v1");
     if (disposed) {
       return;
     }
@@ -28120,6 +28607,7 @@ export default function App() {
         error
       );
     } finally {
+      sessionStorage.removeItem("qrpass-active-page-v1");
       /*
       |--------------------------------------------------------------------------
       | Clear Local Session
@@ -28156,6 +28644,100 @@ export default function App() {
   |--------------------------------------------------------------------------
   */
 
+  if (view === "checking") {
+    return (
+      <>
+        <style>{`
+          @keyframes qrpassSoftPulse {
+            0% {
+              transform: scale(0.98);
+              opacity: 0.88;
+            }
+            50% {
+              transform: scale(1);
+              opacity: 1;
+            }
+            100% {
+              transform: scale(0.98);
+              opacity: 0.88;
+            }
+          }
+
+          @keyframes qrpassSoftGlow {
+            0% {
+              box-shadow: 0 0 0 0 rgba(26, 58, 123, 0.12);
+            }
+            50% {
+              box-shadow: 0 0 0 16px rgba(47, 95, 214, 0.03);
+            }
+            100% {
+              box-shadow: 0 0 0 0 rgba(26, 58, 123, 0.12);
+            }
+          }
+        `}</style>
+
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#e1eafa] via-[#f6f9ff] to-[#dce8fa] px-6">
+          <div className="flex flex-col items-center justify-center text-center">
+            <div
+              className="flex h-28 w-28 items-center justify-center rounded-full border border-[#ccdaf2] bg-white/85 shadow-[0_8px_32px_rgba(26,58,123,0.10)]"
+              style={{
+                animation:
+                  "qrpassSoftPulse 1.8s ease-in-out infinite, qrpassSoftGlow 2.2s ease-in-out infinite",
+              }}
+            >
+              <img
+                src="/qrpass-shield-only.png"
+                alt="QRPass"
+                className="h-20 w-20 object-contain select-none"
+                draggable={false}
+              />
+            </div>
+
+            <div className="mt-6">
+              <h2 className="text-xl font-bold tracking-wide text-[#17336d]">
+                QRPass
+              </h2>
+              <p className="mt-2 text-sm text-[#64748b]">
+                Securing your session...
+              </p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (view === "restore-error") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#eef2fc] p-4">
+        <div className="w-full max-w-sm rounded-2xl border border-[#dce3ee] bg-white p-8 text-center shadow-lg">
+          <h2 className="text-xl font-bold text-[#1a3a7b]">
+            QRPass
+          </h2>
+          <p className="mt-3 text-sm text-[#64748b]">
+            Could not verify your session. Check your connection or backend server.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setView("checking");
+              setRestoreAttempt(value => value + 1);
+            }}
+            className="mt-5 w-full rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white"
+          >
+            Retry Connection
+          </button>
+          <button
+            type="button"
+            onClick={() => { void handleLogout(); }}
+            className="mt-3 text-sm font-semibold text-[#1a3a7b]"
+          >
+            Log In Again
+          </button>
+        </div>
+      </div>
+    );
+  }
   if (view === "dashboard") {
     return (
       <Dashboard

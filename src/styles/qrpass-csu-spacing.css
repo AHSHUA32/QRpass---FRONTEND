@@ -1,0 +1,68 @@
+/* QRPass CSU — Balanced spacing and sizing */
+/* No changes to colors, icons, or functionality */
+
+main.qrpass-main[data-qrpass-csu="true"] {
+  padding: 14px 18px 16px !important;
+}
+
+/* Breadcrumb spacing */
+main.qrpass-main[data-qrpass-csu="true"]
+> .flex.items-center.text-xs {
+  margin-bottom: 10px !important;
+}
+
+/* Consistent spacing between major page sections */
+main.qrpass-main[data-qrpass-csu="true"]
+> div > .space-y-5 > :not(:last-child) {
+  margin-block-end: 14px !important;
+}
+
+/* Uniform statistics cards */
+main.qrpass-main[data-qrpass-csu="true"]
+.grid > div:has(> .w-11.h-11),
+main.qrpass-main[data-qrpass-csu="true"]
+.grid > div > div:has(> .w-11.h-11) {
+  min-height: 82px !important;
+  padding: 12px 14px !important;
+  gap: 12px !important;
+}
+
+/* Comfortable, consistent table rows */
+main.qrpass-main[data-qrpass-csu="true"] table th,
+main.qrpass-main[data-qrpass-csu="true"] table td {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+  vertical-align: middle;
+}
+
+/* Scanner container */
+main.qrpass-main[data-qrpass-csu="true"]
+.space-y-5 > div:has(#qr-reader) {
+  padding: 16px !important;
+}
+
+/* Filter tab spacing */
+main.qrpass-main[data-qrpass-csu="true"]
+.grid.grid-cols-2.border-b {
+  padding-bottom: 10px !important;
+}
+
+/* Preserve usability on mobile */
+@media (max-width: 767px) {
+  main.qrpass-main[data-qrpass-csu="true"] {
+    padding: 12px !important;
+  }
+
+  main.qrpass-main[data-qrpass-csu="true"]
+  > div > .space-y-5 > :not(:last-child) {
+    margin-block-end: 12px !important;
+  }
+
+  main.qrpass-main[data-qrpass-csu="true"]
+  .grid > div:has(> .w-11.h-11),
+  main.qrpass-main[data-qrpass-csu="true"]
+  .grid > div > div:has(> .w-11.h-11) {
+    min-height: 84px !important;
+    padding: 12px !important;
+  }
+}

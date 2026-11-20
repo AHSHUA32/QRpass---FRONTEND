@@ -1,0 +1,142 @@
+/* QRpass responsive roles v101 */
+/* Student, CSU and PCO only. SysAdmin is excluded. */
+
+.qrpass-web-responsive {
+  height: 100vh;
+  height: 100dvh;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.qrpass-web-responsive,
+.qrpass-web-responsive * {
+  box-sizing: border-box;
+}
+
+.qrpass-web-responsive .qrpass-main {
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.qrpass-web-responsive .qrpass-main .grid > *,
+.qrpass-web-responsive .qrpass-main .flex > * {
+  min-width: 0;
+}
+
+.qrpass-web-responsive .qrpass-main img,
+.qrpass-web-responsive .qrpass-main video,
+.qrpass-web-responsive .qrpass-main canvas {
+  max-width: 100%;
+}
+
+/* Forms and dropdowns */
+.qrpass-web-responsive .qrpass-main input:not([type="checkbox"]):not([type="radio"]),
+.qrpass-web-responsive .qrpass-main select,
+.qrpass-web-responsive .qrpass-main textarea {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Keep tables scrollable within their containers */
+.qrpass-web-responsive .qrpass-main .overflow-x-auto,
+.qrpass-web-responsive .qrpass-main .overflow-auto,
+.qrpass-web-responsive .qrpass-main div:has(> table) {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .qrpass-web-responsive .qrpass-main {
+    padding: 16px !important;
+  }
+
+  .qrpass-web-responsive .qrpass-main .grid.grid-cols-5,
+  .qrpass-web-responsive .qrpass-main .grid.grid-cols-6 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .qrpass-web-responsive .qrpass-main .grid.grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+  .qrpass-web-responsive .qrpass-main {
+    padding: 12px !important;
+  }
+
+  .qrpass-web-responsive .qrpass-main .grid.grid-cols-3,
+  .qrpass-web-responsive .qrpass-main .grid.grid-cols-4,
+  .qrpass-web-responsive .qrpass-main .grid.grid-cols-5,
+  .qrpass-web-responsive .qrpass-main .grid.grid-cols-6 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .qrpass-web-responsive .qrpass-main .grid > .col-span-3,
+  .qrpass-web-responsive .qrpass-main .grid > .col-span-4,
+  .qrpass-web-responsive .qrpass-main .grid > .col-span-5,
+  .qrpass-web-responsive .qrpass-main .grid > .col-span-6 {
+    grid-column: 1 / -1;
+  }
+
+  .qrpass-web-responsive .qrpass-main input:not([type="checkbox"]):not([type="radio"]),
+  .qrpass-web-responsive .qrpass-main select,
+  .qrpass-web-responsive .qrpass-main textarea {
+    font-size: 16px;
+  }
+
+  .qrpass-web-responsive .qrpass-main table {
+    min-width: max-content;
+  }
+
+  .qrpass-web-responsive .qrpass-main :is(h1, h2, h3, p) {
+    overflow-wrap: break-word;
+  }
+
+  .qrpass-web-responsive [role="dialog"] {
+    padding: 12px;
+  }
+
+  .qrpass-web-responsive [role="dialog"] > div {
+    max-width: 100%;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+
+  .qrpass-web-responsive header button {
+    touch-action: manipulation;
+  }
+}
+
+/* Extra-small phones */
+@media (max-width: 359px) {
+  .qrpass-web-responsive .qrpass-main {
+    padding: 10px !important;
+  }
+
+  .qrpass-web-responsive .qrpass-main .grid.grid-cols-3,
+  .qrpass-web-responsive .qrpass-main .grid.grid-cols-4,
+  .qrpass-web-responsive .qrpass-main .grid.grid-cols-5,
+  .qrpass-web-responsive .qrpass-main .grid.grid-cols-6 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .qrpass-web-responsive *,
+  .qrpass-web-responsive *::before,
+  .qrpass-web-responsive *::after {
+    scroll-behavior: auto !important;
+  }
+}

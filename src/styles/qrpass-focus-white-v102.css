@@ -1,0 +1,33 @@
+/*
+ QRPass Uniform Focus Style
+ Unfocused: existing light-blue background
+ Focused: white background with blue border
+*/
+
+#root :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="hidden"]),
+  select,
+  textarea,
+  button[role="combobox"],
+  [data-slot="select-trigger"]
+):not([data-qrpass-keep-style]):focus {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #6488ff !important;
+  box-shadow: 0 0 0 3px rgba(100, 136, 255, 0.16) !important;
+  outline: none !important;
+  color: #102b60 !important;
+}
+
+/* Keep focused autofilled inputs white. */
+#root input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+}
+
+/* Smooth background transition. */
+#root :is(input, select, textarea) {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
