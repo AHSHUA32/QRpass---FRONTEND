@@ -1,0 +1,96 @@
+/* QRPass: dark-mode-only contrast overrides. No TSX template interpolation. */
+html.dark .qrpass-dashboard-root {
+  --qrpass-contrast-text: #f0f5ff;
+  --qrpass-contrast-muted: #b7c9dd;
+  --qrpass-contrast-link: #a8ccff;
+  --qrpass-contrast-surface: #172337;
+  --qrpass-contrast-border: #445875;
+}
+
+/* Many older screens use a fixed navy text class designed for light mode. */
+html.dark .qrpass-dashboard-root [class~="text-[#17336d]"],
+html.dark .qrpass-dashboard-root [class~="text-[#173b7a]"],
+html.dark .qrpass-dashboard-root [class~="text-[#16224b]"],
+html.dark .qrpass-dashboard-root [class~="text-[#1a3a7b]"],
+html.dark .qrpass-dashboard-root [class~="text-[#31539b]"],
+html.dark .qrpass-dashboard-root [class~="text-[#2f5fd6]"],
+html.dark .qrpass-dashboard-root .text-blue-900,
+html.dark .qrpass-dashboard-root .text-blue-800,
+html.dark .qrpass-dashboard-root .text-blue-700 {
+  color: var(--qrpass-contrast-link) !important;
+}
+html.dark .qrpass-dashboard-root [class~="text-[#111827]"],
+html.dark .qrpass-dashboard-root [class~="text-[#0f172a]"],
+html.dark .qrpass-dashboard-root [class~="text-[#172033]"],
+html.dark .qrpass-dashboard-root .text-gray-900,
+html.dark .qrpass-dashboard-root .text-slate-900,
+html.dark .qrpass-dashboard-root .text-slate-800 {
+  color: var(--qrpass-contrast-text) !important;
+}
+html.dark .qrpass-dashboard-root [class~="text-[#64748b]"],
+html.dark .qrpass-dashboard-root [class~="text-[#94a3b8]"],
+html.dark .qrpass-dashboard-root [class~="text-[#7186b5]"],
+html.dark .qrpass-dashboard-root .text-slate-500,
+html.dark .qrpass-dashboard-root .text-slate-600,
+html.dark .qrpass-dashboard-root .text-muted-foreground {
+  color: var(--qrpass-contrast-muted) !important;
+}
+
+/* Search inputs and sort/status dropdowns: dark text never on a dark surface. */
+html.dark .qrpass-dashboard-root select,
+html.dark .qrpass-dashboard-root input:not([type="checkbox"]):not([type="radio"]),
+html.dark .qrpass-dashboard-root textarea {
+  color: #eef6ff !important;
+  background-color: #182438 !important;
+  border-color: #4e6484 !important;
+  -webkit-text-fill-color: #eef6ff;
+  color-scheme: dark;
+}
+html.dark .qrpass-dashboard-root select option {
+  color: #eef6ff !important;
+  background-color: #182438 !important;
+}
+html.dark .qrpass-dashboard-root input::placeholder,
+html.dark .qrpass-dashboard-root textarea::placeholder {
+  color: #bdcce0 !important;
+  -webkit-text-fill-color: #bdcce0;
+  opacity: 1;
+}
+html.dark .qrpass-dashboard-root select:focus-visible,
+html.dark .qrpass-dashboard-root input:focus-visible,
+html.dark .qrpass-dashboard-root button:focus-visible {
+  outline: 2px solid #8cbaff;
+  outline-offset: 2px;
+}
+
+/* Existing buttons that inherited navy text and near-black backgrounds. */
+html.dark .qrpass-dashboard-root button:not([disabled]):not([aria-pressed="true"]):not([aria-selected="true"]):not([class*="bg-red-"]):not([class*="bg-green-"]):not([class*="bg-[#17336d]"]):not([class*="bg-[#1a3a7b]"]) {
+  color: #c6dcff;
+}
+html.dark .qrpass-dashboard-root button[aria-pressed="true"],
+html.dark .qrpass-dashboard-root button[aria-selected="true"],
+html.dark .qrpass-dashboard-root button[class*="bg-[#17336d]"],
+html.dark .qrpass-dashboard-root button[class*="bg-[#1a3a7b]"] {
+  color: #fff !important;
+}
+html.dark .qrpass-dashboard-root button:disabled {
+  opacity: 0.6;
+}
+/* Labels on currently visible cards, row selectors, tables, and headers. */
+html.dark .qrpass-dashboard-root h1,
+html.dark .qrpass-dashboard-root h2,
+html.dark .qrpass-dashboard-root h3,
+html.dark .qrpass-dashboard-root th,
+html.dark .qrpass-dashboard-root label {
+  color: #eaf2ff;
+}
+html.dark .qrpass-dashboard-root table tbody td {
+  color: #e2edfc;
+}
+html.dark .qrpass-dashboard-root a:not([class*="text-red-"]) {
+  color: #a8ccff;
+}
+/* Fix the dark-blue dynamic app name in the upper left without changing its logo asset. */
+html.dark .qrpass-dashboard-root header [class~="text-[#17336d]"] {
+  color: #c8ddff !important;
+}

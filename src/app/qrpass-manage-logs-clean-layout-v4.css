@@ -1,0 +1,23 @@
+/* Sysadmin-only: consistent Manage Logs shortcut for record-bearing pages. */
+.qrpass-admin-page .qrpass-manage-logs-shortcut-v3 {
+ box-sizing:border-box!important; width:126px!important; min-width:126px!important;
+ height:36px!important; min-height:36px!important; padding:0 11px!important;
+ display:inline-flex!important; align-items:center!important; justify-content:center!important;
+ font-size:12px!important; font-weight:600!important; white-space:nowrap!important;
+ position:absolute; top:0; right:0; z-index:4;
+}
+/* User Accounts: move the existing header action(s) left so Add User sits before Manage Logs. */
+.qrpass-admin-page > div > div:has(> :first-child > :is(h1,h2)) {box-sizing:border-box;}
+.qrpass-admin-page:has(input[placeholder^="Search name, user ID"]) > div > div:has(button):has(h1) {padding-right:136px;}
+/* Alternate header markup: PageHeader component followed by its action div. */
+.qrpass-admin-page:has(input[placeholder^="Search name, user ID"]) > div > div.flex.flex-col.md\:flex-row {padding-right:136px!important;}
+/* Avoid stacking an extra generated icon above existing SVG/illustration. */
+.qrpass-admin-page tbody td[colspan]:has(svg)::before,
+.qrpass-admin-page tbody td[colspan]:has(.qrpass-empty-state-v3)::before,
+.qrpass-admin-page tbody td[colspan]:has([class*="empty"] svg)::before {display:none!important;content:none!important;}
+/* If the prior patch already added its own empty-state icon, don't show any CSS pseudo-icon. */
+.qrpass-admin-page tbody td[colspan]:has(.qrpass-empty-state-v3) .qrpass-empty-state-v3 svg {display:block;}
+@media(max-width:768px){
+ .qrpass-admin-page .qrpass-manage-logs-shortcut-v3 {position:static!important;width:126px!important;margin-left:auto!important;}
+ .qrpass-admin-page:has(input[placeholder^="Search name, user ID"]) > div > div.flex.flex-col.md\:flex-row {padding-right:0!important;}
+}

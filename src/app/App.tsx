@@ -1,8 +1,16 @@
+import "./qrpass-page-specific-manage-v1.css";
+import "./qrpass-manage-logs-clean-layout-v4.css";
+import "./qrpass-sysadmin-toolbar-v3.css";
+import "./sysadmin-search-outside.css";
+import { qrpassManageLogsRequest } from "./logManagement";
+﻿import "./qrpass-sysadmin-no-subheadings.css";
+import "./styles/qrpass-sysadmin-uniform.css";
 // =========================================================
 // REACT
 // =========================================================
 
 import React, { useEffect, useRef, useState } from "react";
+import "./qrpass-dark-contrast.css";
 
 
 // =========================================================
@@ -70,6 +78,7 @@ import {
 // QRPass API SERVICES
 // =========================================================
 
+import "./styles/qrpass-role-tabs-selected.css";
 import {
   login,
   register,
@@ -144,7 +153,7 @@ import {
   deleteAnnouncement,
 } from "../services/api";
 
-// ── QRpass Logo ───────────────────────────────────────────────────────────────
+// â”€â”€ QRpass Logo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function QRpassLogo({
   size = 96,
   showText = false,
@@ -170,7 +179,7 @@ function QRpassLogo({
   );
 }
 
-// ── Fake QR code visual ───────────────────────────────────────────────────────
+// â”€â”€ Fake QR code visual â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function QRCodeDisplay({
   value,
   size = 80,
@@ -202,7 +211,7 @@ function QRCodeDisplay({
   );
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type Role = "student" | "security" | "pco" | "sysadmin";
 
@@ -215,7 +224,7 @@ const ROLES: { id: Role; label: string; color: string; textColor: string }[] = [
   { id: "sysadmin", label: "System Administrator", color: "#eef2fc", textColor: "#111827" },
 ];
 
-// ── Shared UI ─────────────────────────────────────────────────────────────────
+// â”€â”€ Shared UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function StatCard({
   label,
   value,
@@ -445,17 +454,17 @@ function PageHeader({
   );
 }
 
-// ── Sample item data ──────────────────────────────────────────────────────────
+// â”€â”€ Sample item data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const sampleItems = [
   { id: "ITEM-001", name: "Laptop Dell XPS 15", serial: "SN-92841", type: "Laptop", owner: "Adrian N. Badon", ownerID: "22-1234", status: "Registered", date: "Jun 10, 2026", expires: "Dec 10, 2026", qr: "QRPASS-001-SN92841" },
-  { id: "ITEM-002", name: "iPad Pro 12.9 (2024)", serial: "SN-77210", type: "Tablet", owner: "Adrian N. Badon", ownerID: "22-1234", status: "Pending", date: "Jun 14, 2026", expires: "—", qr: "QRPASS-002-SN77210" },
-  { id: "ITEM-003", name: "DJI Mini 4 Pro Drone", serial: "SN-30412", type: "Equipment", owner: "Adrian N. Badon", ownerID: "22-1234", status: "Pending", date: "Jun 8, 2026", expires: "—", qr: "" },
+  { id: "ITEM-002", name: "iPad Pro 12.9 (2024)", serial: "SN-77210", type: "Tablet", owner: "Adrian N. Badon", ownerID: "22-1234", status: "Pending", date: "Jun 14, 2026", expires: "â€”", qr: "QRPASS-002-SN77210" },
+  { id: "ITEM-003", name: "DJI Mini 4 Pro Drone", serial: "SN-30412", type: "Equipment", owner: "Adrian N. Badon", ownerID: "22-1234", status: "Pending", date: "Jun 8, 2026", expires: "â€”", qr: "" },
   { id: "ITEM-004", name: "Samsung Galaxy S24 Ultra", serial: "SN-54321", type: "Mobile Phone", owner: "Adrian N. Badon", ownerID: "22-1234", status: "Registered", date: "May 20, 2026", expires: "Nov 20, 2026", qr: "QRPASS-004-SN54321" },
 ];
 
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // STUDENT PAGES
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 function RegistrationField({
   label,
@@ -611,7 +620,7 @@ function RegistrationQuantityField({
             aria-label="Increase quantity"
             title="Increase quantity"
           >
-            <span className="text-[12px] font-bold leading-none">▲</span>
+            <span className="text-[12px] font-bold leading-none">â–²</span>
           </button>
           <button
             type="button"
@@ -621,7 +630,7 @@ function RegistrationQuantityField({
             aria-label="Decrease quantity"
             title="Decrease quantity"
           >
-            <span className="text-[12px] font-bold leading-none">▼</span>
+            <span className="text-[12px] font-bold leading-none">â–¼</span>
           </button>
         </div>
       </div>
@@ -643,8 +652,8 @@ const COMMON_ITEM_COLORS = [
 ];
 
 // QRPASS_INLINE_OTHER_V80: one field for choosing or typing Others (Specify).
-// QRPASS_INLINE_OTHER_V80 — same field for Others, preserved from v80/v81.
-// QRPASS_INLINE_OTHER_ONE_CLICK_V82 — open existing choices on first arrow click.
+// QRPASS_INLINE_OTHER_V80 â€” same field for Others, preserved from v80/v81.
+// QRPASS_INLINE_OTHER_ONE_CLICK_V82 â€” open existing choices on first arrow click.
 function QRPassInlineOtherSelect({
   label, value, options, onChange, placeholder, specifyPlaceholder,
   required = false, maxLength = 255,
@@ -1329,7 +1338,7 @@ function StudentRegisterItem() {
       alert(
         `Please complete all required fields before submitting:\n\n${missing
           .map(
-            (field) => `• ${field}`
+            (field) => `â€¢ ${field}`
           )
           .join("\n")}`
       );
@@ -2624,7 +2633,7 @@ function StudentMyQRCodes() {
                         </span>
 
                         <span className="break-all font-mono text-foreground">
-                          {item.serial_number || "—"}
+                          {item.serial_number || "â€”"}
                         </span>
                       </div>
 
@@ -2782,7 +2791,7 @@ function StudentMyQRCodes() {
                 <p className="text-xs text-muted-foreground mt-3">
                   {qrModalItem.item_type}
                   {qrModalItem.serial_number
-                    ? ` • Serial: ${qrModalItem.serial_number}`
+                    ? ` â€¢ Serial: ${qrModalItem.serial_number}`
                     : ""}
                 </p>
 
@@ -3064,7 +3073,7 @@ function StudentPermitStatus() {
     value: string | null | undefined
   ) {
     if (!value) {
-      return "—";
+      return "â€”";
     }
 
     const date =
@@ -3075,7 +3084,7 @@ function StudentPermitStatus() {
         date.getTime()
       )
     ) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleDateString(
@@ -3092,7 +3101,7 @@ function StudentPermitStatus() {
     value: string | null | undefined
   ) {
     if (!value) {
-      return "—";
+      return "â€”";
     }
 
     const date =
@@ -3103,7 +3112,7 @@ function StudentPermitStatus() {
         date.getTime()
       )
     ) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleString(
@@ -3202,13 +3211,13 @@ function StudentPermitStatus() {
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
         </select>
-        <button type="button" onClick={loadItems} disabled={loading}
+        <button type="button" onClick={() => { void loadItems(); }} disabled={loading}
           className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"> <RefreshCw size={13} className="shrink-0" />
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
-      {/* FILTERS — four equal-width buttons on mobile; natural width on desktop */}
+      {/* FILTERS â€” four equal-width buttons on mobile; natural width on desktop */}
       <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
         {(
           [
@@ -3295,7 +3304,7 @@ function StudentPermitStatus() {
                   <dl className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3 text-xs">
                     <div className="min-w-0">
                       <dt className="text-muted-foreground">Category</dt>
-                      <dd className="mt-1 break-words font-medium text-foreground">{item.item_type || "—"}</dd>
+                      <dd className="mt-1 break-words font-medium text-foreground">{item.item_type || "â€”"}</dd>
                     </div>
                     <div className="min-w-0">
                       <dt className="text-muted-foreground">Submitted</dt>
@@ -3303,11 +3312,11 @@ function StudentPermitStatus() {
                     </div>
                     <div className="min-w-0">
                       <dt className="text-muted-foreground">QR ID</dt>
-                      <dd className="mt-1 break-all font-mono font-medium text-primary">{!pending && item.qr_code ? item.qr_code : "—"}</dd>
+                      <dd className="mt-1 break-all font-mono font-medium text-primary">{!pending && item.qr_code ? item.qr_code : "â€”"}</dd>
                     </div>
                     <div className="min-w-0">
                       <dt className="text-muted-foreground">Permit expiration</dt>
-                      <dd className="mt-1 break-words font-medium text-foreground">{!pending ? formatDateTime(item.qr_expires_at) : "—"}</dd>
+                      <dd className="mt-1 break-words font-medium text-foreground">{!pending ? formatDateTime(item.qr_expires_at) : "â€”"}</dd>
                     </div>
                   </dl>
                   <div className="flex flex-wrap gap-2 border-t border-border pt-3">
@@ -3444,7 +3453,7 @@ function StudentPermitStatus() {
 
                         <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
                           {item.item_type ||
-                            "—"}
+                            "â€”"}
                         </td>
 
                         <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
@@ -3471,7 +3480,7 @@ function StudentPermitStatus() {
                             </span>
                           ) : (
                             <span className="text-muted-foreground">
-                              —
+                              â€”
                             </span>
                           )}
                         </td>
@@ -3481,7 +3490,7 @@ function StudentPermitStatus() {
                             ? formatDateTime(
                                 item.qr_expires_at
                               )
-                            : "—"}
+                            : "â€”"}
                         </td>
 
                         <td className="py-3 px-3">
@@ -3631,7 +3640,7 @@ function StudentPermitStatus() {
 
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {selectedItem.item_type ||
-                      "—"}
+                      "â€”"}
                   </p>
                 </div>
 
@@ -3647,17 +3656,17 @@ function StudentPermitStatus() {
                   [
                     "Brand / Model",
                     selectedItem.brand_model ||
-                      "—",
+                      "â€”",
                   ],
                   [
                     "Serial Number",
                     selectedItem.serial_number ||
-                      "—",
+                      "â€”",
                   ],
                   [
                     "Purpose / Reason",
                     selectedItem.purpose ||
-                      "—",
+                      "â€”",
                   ],
                   [
                     "Date Submitted",
@@ -3670,7 +3679,7 @@ function StudentPermitStatus() {
                     selectedItem.status ===
                       "approved"
                       ? selectedItem.qr_code ||
-                        "—"
+                        "â€”"
                       : "Not issued yet",
                   ],
                   [
@@ -3751,7 +3760,7 @@ function StudentPermitStatus() {
 }
 
 
-// ── Shared Lost & Found store (module-level for demo) ─────────────────────
+// â”€â”€ Shared Lost & Found store (module-level for demo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type LFItem = {
   id: string;
   type: "lost" | "found";
@@ -3769,7 +3778,7 @@ let _lfItems: LFItem[] = [
   { id: "LF-001", type: "found", item: "Laptop Bag (Black, Jansport)", description: "Found near the library entrance, has stickers on it.", location: "Library", date: "Jun 15, 2026", postedBy: "Guard Ramos", postedByRole: "security", status: "Open", inquiries: [] },
   { id: "LF-002", type: "lost", item: "Samsung Earbuds (White)", description: "Lost after lunch, last seen at the canteen table.", location: "Canteen", date: "Jun 14, 2026", postedBy: "John Dela Cruz", postedByRole: "student", status: "Open", inquiries: [] },
   { id: "LF-003", type: "found", item: "Laptop Charger (Dell, 65W)", description: "Left in Room 201 after class. Adapter included.", location: "Room 201", date: "Jun 12, 2026", postedBy: "Guard Santos", postedByRole: "security", status: "Open", inquiries: [] },
-  { id: "LF-004", type: "found", item: "iPad with Blue Case", description: "Found at Gate 2 guardhouse. Screen has a small crack.", location: "Gate 2", date: "Jun 10, 2026", postedBy: "Guard Ramos", postedByRole: "security", status: "Claimed", inquiries: [{ name: "Maria Santos", message: "This is mine! I can show my receipt.", time: "Jun 11, 2026 – 9:00 AM" }] },
+  { id: "LF-004", type: "found", item: "iPad with Blue Case", description: "Found at Gate 2 guardhouse. Screen has a small crack.", location: "Gate 2", date: "Jun 10, 2026", postedBy: "Guard Ramos", postedByRole: "security", status: "Claimed", inquiries: [{ name: "Maria Santos", message: "This is mine! I can show my receipt.", time: "Jun 11, 2026 â€“ 9:00 AM" }] },
 ];
 let _lfListeners: (() => void)[] = [];
 function getLFItems() { return [..._lfItems]; }
@@ -3785,7 +3794,7 @@ function useLFItems() {
   return items;
 }
 
-// ── Shared notifications store ────────────────────────────────────────────────
+// â”€â”€ Shared notifications store â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type AppNotif = { id: string; role: "student" | "security"; type: "success" | "warning" | "info"; message: string; time: string };
 let _notifs: AppNotif[] = [];
 let _notifListeners: (() => void)[] = [];
@@ -3888,7 +3897,7 @@ function StudentLostAndFound() {
     value?: string | null
   ) {
     if (!value) {
-      return "—";
+      return "â€”";
     }
 
     const date = new Date(value);
@@ -4262,7 +4271,7 @@ function StudentLostAndFound() {
 
         <button
           type="button"
-          onClick={loadItems}
+          onClick={() => { void loadItems(); }}
           disabled={loading}
           className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
         > <RefreshCw size={13} className="shrink-0" />
@@ -4381,7 +4390,7 @@ function StudentLostAndFound() {
                   item.category,
                 ]
                   .filter(Boolean)
-                  .join(" · ");
+                  .join(" Â· ");
 
                 return (
                   <div
@@ -4432,7 +4441,7 @@ function StudentLostAndFound() {
                         {getLocation(
                           item
                         )}{" "}
-                        ·{" "}
+                        Â·{" "}
                         {formatDate(
                           getEventDate(
                             item
@@ -4571,7 +4580,7 @@ function StudentLostAndFound() {
                 </p>
                 <p className="mt-1 font-medium text-foreground">
                   {selectedItem.category ||
-                    "—"}
+                    "â€”"}
                 </p>
               </div>
 
@@ -4581,7 +4590,7 @@ function StudentLostAndFound() {
                 </p>
                 <p className="mt-1 font-medium text-foreground">
                   {selectedItem.brand_model ||
-                    "—"}
+                    "â€”"}
                 </p>
               </div>
 
@@ -4591,7 +4600,7 @@ function StudentLostAndFound() {
                 </p>
                 <p className="mt-1 font-medium text-foreground">
                   {selectedItem.color ||
-                    "—"}
+                    "â€”"}
                 </p>
               </div>
 
@@ -4625,7 +4634,7 @@ function StudentLostAndFound() {
                 </p>
                 <p className="mt-1 font-medium text-foreground">
                   {selectedItem.processor?.name ||
-                    "—"}
+                    "â€”"}
                 </p>
               </div>
 
@@ -4820,12 +4829,12 @@ function StudentNotifications() {
   }
 
   function formatDate(dateString: string) {
-    if (!dateString) return "—";
+    if (!dateString) return "â€”";
 
     const date = new Date(dateString);
 
     if (Number.isNaN(date.getTime())) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleDateString();
@@ -5041,9 +5050,9 @@ function StudentNotifications() {
     </div>
   );
 }
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // SECURITY (CSU) PAGES
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function SecurityScanVerify() {
   const [scanResult, setScanResult] = useState<any | null>(null);
   const [input, setInput] = useState("");
@@ -5196,7 +5205,7 @@ function SecurityScanVerify() {
     if (missingFields.length > 0) {
       alert(
         `Please complete all required flagged-item details:\n\n${missingFields
-          .map((field) => `• ${field}`)
+          .map((field) => `â€¢ ${field}`)
           .join("\n")}`
       );
       return;
@@ -5752,7 +5761,7 @@ function SecurityScanVerify() {
 
                 <div>
                   <p className="text-sm font-bold text-red-700">
-                    SECURITY ALERT — FLAGGED
+                    SECURITY ALERT â€” FLAGGED
                   </p>
 
                   <p className="text-xs text-red-700 mt-1">
@@ -5788,7 +5797,7 @@ function SecurityScanVerify() {
                 />
 
                 <span className="font-bold text-base text-green-600">
-                  ITEM VERIFIED ✓
+                  ITEM VERIFIED âœ“
                 </span>
               </div>
 
@@ -5821,7 +5830,7 @@ function SecurityScanVerify() {
 
                   <span className="font-medium">
                     {scanResult.brand_model ||
-                      "—"}
+                      "â€”"}
                   </span>
                 </div>
 
@@ -5831,7 +5840,7 @@ function SecurityScanVerify() {
                   </span>
 
                   <span className="font-medium">
-                    {scanResult.color || "—"}
+                    {scanResult.color || "â€”"}
                   </span>
                 </div>
 
@@ -5873,7 +5882,7 @@ function SecurityScanVerify() {
 
                   <span className="font-mono font-medium">
                     {scanResult.user?.username ??
-                      "—"}
+                      "â€”"}
                   </span>
                 </div>
 
@@ -6423,7 +6432,7 @@ function SecurityEntryExitLog() {
     dateString?: string | null
   ) {
     if (!dateString) {
-      return "—";
+      return "â€”";
     }
 
     const date = new Date(dateString);
@@ -6446,13 +6455,13 @@ function SecurityEntryExitLog() {
     dateString?: string | null
   ) {
     if (!dateString) {
-      return "—";
+      return "â€”";
     }
 
     const date = new Date(dateString);
 
     if (Number.isNaN(date.getTime())) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleTimeString(
@@ -6705,7 +6714,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
         const ownerId =
           incident.owner_id_number ??
           incident.item?.user?.username ??
-          "—";
+          "â€”";
 
         const carrierName =
           incident.carrier_name ??
@@ -6713,7 +6722,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
         const carrierId =
           incident.carrier_id_number ??
-          "—";
+          "â€”";
 
         const itemName =
           incident.item?.item_name ??
@@ -6723,7 +6732,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
         const serialNumber =
           incident.item?.serial_number ??
           incident.serial_number ??
-          "—";
+          "â€”";
 
         return (
           <tr
@@ -6753,7 +6762,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
             <td className="px-3 py-3">
               <div className="font-mono text-xs text-slate-700 dark:text-slate-200">
                 {incident.scanned_code ??
-                  "—"}
+                  "â€”"}
               </div>
 
               <div
@@ -6815,14 +6824,14 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                 </span>
               ) : (
                 <span className="text-slate-400 dark:text-slate-500">
-                  —
+                  â€”
                 </span>
               )}
             </td>
 
             {/* GATE */}
             <td className="px-3 py-3 text-sm text-slate-700 dark:text-slate-200 whitespace-nowrap">
-              {incident.gate ?? "—"}
+              {incident.gate ?? "â€”"}
             </td>
 
             {/* REPORTED BY */}
@@ -6916,27 +6925,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
         </div>
       </div>
 
-      {/* Apply the selected period to scan cards, tabs, and exports. */}
-      <div className="rounded-xl border border-border bg-card p-3 shadow-sm sm:p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <label htmlFor="csu-scan-period" className="text-sm font-semibold text-foreground">Reporting Period</label>
-          <select id="csu-scan-period" value={scanPeriod}
-            onChange={e => setScanPeriod(e.target.value as CSUDatePeriod)}
-            className="h-10 min-w-[160px] rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20">
-            {CSU_PERIOD_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
-          {scanPeriod === "custom" && (
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="text-xs text-muted-foreground">From <input type="date" value={scanStartDate} max={scanEndDate || undefined}
-                onChange={e => setScanStartDate(e.target.value)} className="ml-1 h-10 rounded-xl border border-border bg-card px-2 text-sm" /></label>
-              <label className="text-xs text-muted-foreground">To <input type="date" value={scanEndDate} min={scanStartDate || undefined}
-                onChange={e => setScanEndDate(e.target.value)} className="ml-1 h-10 rounded-xl border border-border bg-card px-2 text-sm" /></label>
-            </div>
-          )}
-          <span className="text-xs text-muted-foreground">Statistics and records reflect this period.</span>
-        </div>
-      </div>
-
+      {/* Standalone Reporting Period removed; default all-time records remain. */}
       {/* SUMMARY */}
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4 xl:gap-4">
         <div className="min-w-0 rounded-xl border border-border bg-card p-3 shadow-sm sm:p-5">
@@ -7110,12 +7099,12 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
                     <td className="py-3 px-3 text-sm font-mono text-gray-700">
                       {log.qr_code ??
-                        "—"}
+                        "â€”"}
                     </td>
 
                     <td className="py-3 px-3 text-sm text-gray-700">
                       {log.gate ??
-                        "—"}
+                        "â€”"}
                     </td>
 
                     <td className="py-3 px-3">
@@ -7128,7 +7117,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                         }`}
                       >
                         {log.direction ??
-                          "—"}
+                          "â€”"}
                       </span>
                     </td>
 
@@ -7141,7 +7130,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
                     <td className="py-3 px-3 text-sm text-gray-700">
                       {log.scanner?.name ??
-                        "—"}
+                        "â€”"}
                     </td>
                   </tr>
                 ))
@@ -7396,7 +7385,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                       <p className="mt-1 text-sm font-mono font-semibold text-slate-900 dark:text-slate-100">
                         {selectedIncident.item?.serial_number ??
                           selectedIncident.serial_number ??
-                          "—"}
+                          "â€”"}
                       </p>
                     </div>
 
@@ -7407,7 +7396,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
                       <p className="mt-1 text-sm font-mono font-semibold text-blue-700 dark:text-blue-200">
                         {selectedIncident.scanned_code ??
-                          "—"}
+                          "â€”"}
                       </p>
                     </div>
                   </div>
@@ -7441,7 +7430,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                       <p className="mt-1 text-sm font-mono font-semibold text-slate-900 dark:text-slate-100">
                         {selectedIncident.owner_id_number ??
                           selectedIncident.item?.user?.username ??
-                          "—"}
+                          "â€”"}
                       </p>
                     </div>
                   </div>
@@ -7473,7 +7462,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
                       <p className="mt-1 text-sm font-mono font-semibold text-slate-900 dark:text-slate-100">
                         {selectedIncident.carrier_id_number ??
-                          "—"}
+                          "â€”"}
                       </p>
                     </div>
                   </div>
@@ -7494,7 +7483,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
                       <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
                         {selectedIncident.direction ??
-                          "—"}
+                          "â€”"}
                       </p>
                     </div>
 
@@ -7505,7 +7494,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
                       <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
                         {selectedIncident.gate ??
-                          "—"}
+                          "â€”"}
                       </p>
                     </div>
 
@@ -7758,7 +7747,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
                   <p className="mt-1 font-mono text-sm font-semibold">
                     {resolvingIncident.scanned_code ??
-                      "—"}
+                      "â€”"}
                   </p>
                 </div>
 
@@ -8084,7 +8073,7 @@ function SecurityReports() {
     const date = parseDate(dateString);
 
     if (!date) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleDateString(
@@ -8098,7 +8087,7 @@ function SecurityReports() {
     const date = parseDate(dateString);
 
     if (!date) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleTimeString(
@@ -8223,10 +8212,10 @@ function SecurityReports() {
         head: [["Date", "Time", "Owner", "Owner ID", "Item", "Serial No.", "QR ID", "Gate", "Direction", "Result", "Scanned By"]],
         body: periodScanLogs.map(log => [
           formatDate(log.scanned_at), formatTime(log.scanned_at),
-          log.item?.user?.name ?? "Unknown", log.item?.user?.username ?? "—",
-          log.item?.item_name ?? "Unknown Item", log.item?.serial_number ?? "—",
-          log.qr_code ?? "—", log.gate ?? "—", log.direction ?? "—",
-          log.result ?? "—", log.scanner?.name ?? "—",
+          log.item?.user?.name ?? "Unknown", log.item?.user?.username ?? "â€”",
+          log.item?.item_name ?? "Unknown Item", log.item?.serial_number ?? "â€”",
+          log.qr_code ?? "â€”", log.gate ?? "â€”", log.direction ?? "â€”",
+          log.result ?? "â€”", log.scanner?.name ?? "â€”",
         ]),
         styles: { fontSize: 7, cellPadding: 2 },
         headStyles: { fillColor: [26, 58, 123], textColor: [255, 255, 255] },
@@ -8291,9 +8280,9 @@ function SecurityReports() {
         head: [["Date", "Owner", "Owner ID", "Item", "Type", "Brand / Model", "Serial No.", "Color", "Purpose", "QR ID", "Status"]],
         body: filteredItems.map((item: any) => [
           formatDate(item.created_at), item.user?.name ?? "Unknown",
-          item.user?.username ?? "—", item.item_name ?? "—", item.item_type ?? "—",
-          item.brand_model ?? "—", item.serial_number ?? "—", item.color ?? "—",
-          item.purpose ?? "—", item.qr_code ?? "Not issued", item.status ?? "—",
+          item.user?.username ?? "â€”", item.item_name ?? "â€”", item.item_type ?? "â€”",
+          item.brand_model ?? "â€”", item.serial_number ?? "â€”", item.color ?? "â€”",
+          item.purpose ?? "â€”", item.qr_code ?? "Not issued", item.status ?? "â€”",
         ]),
         styles: { fontSize: 6.5, cellPadding: 2 },
         headStyles: { fillColor: [26, 58, 123], textColor: [255, 255, 255] },
@@ -8462,7 +8451,7 @@ function SecurityReports() {
             <option value="all">All Time</option>
             <option value="custom">Custom Range</option>
           </select>
-          <span className="text-xs text-muted-foreground">{periodScanLogs.length} scan records match · {periodLabel}</span>
+          <span className="text-xs text-muted-foreground">{periodScanLogs.length} scan records match Â· {periodLabel}</span>
         </div>
         {reportPeriod === "custom" && (
           <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/30 p-3">
@@ -9893,7 +9882,7 @@ function SecurityLostFound() {
 
   function formatDate(value?: string | null) {
     if (!value) {
-      return "—";
+      return "â€”";
     }
 
     const date = new Date(value);
@@ -9952,53 +9941,7 @@ function SecurityLostFound() {
         </div>
       )}
 
-      <CSUStatsPeriodFilter
-        value={lostFoundPeriod} onChange={setLostFoundPeriod}
-        start={lostFoundStart} onStartChange={setLostFoundStart}
-        end={lostFoundEnd} onEndChange={setLostFoundEnd}
-        description="Summary cards and report records reflect the report creation date."
-      />
-
-      <StatisticalCardsSection>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <StatCard
-          label="Total Reports"
-          value={String(periodItems.length)}
-          icon={<BookOpen size={20} />}
-          color="#1a3a7b"
-        />
-
-        <StatCard
-          label="Found"
-          value={String(foundCount)}
-          icon={<Package size={20} />}
-          color="#557bdc"
-        />
-
-        <StatCard
-          label="Lost"
-          value={String(lostCount)}
-          icon={<AlertTriangle size={20} />}
-          color="#e74c3c"
-        />
-
-        <StatCard
-          label="Pending Claims"
-          value={String(pendingClaimsCount)}
-          icon={<Clock size={20} />}
-          color="#2f5fd6"
-        />
-
-        <div className="col-span-2 md:col-span-1">
-        <StatCard
-          label="Recovered"
-          value={String(recoveredCount)}
-          icon={<CheckCircle size={20} />}
-          color="#2ecc71"
-        />
-        </div>
-      </div>
-      </StatisticalCardsSection>
+      {/* Standalone Reporting Period selector removed from staff page. */}
 
       <div className="grid grid-cols-2 gap-2 border-b border-border pb-3 sm:flex sm:flex-wrap">
         <button
@@ -10134,13 +10077,13 @@ function SecurityLostFound() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search report, item, owner/finder, claimant, location..."
-                className="h-11 w-full rounded-xl border border-border bg-card py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className="h-12 w-full min-w-0 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] pl-10 pr-4 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20"
               />
             </div>
 
             <button
               type="button"
-              onClick={loadItems}
+              onClick={() => { void loadItems(); }}
               disabled={loading}
               className="h-11 w-full rounded-xl border border-border bg-card px-4 text-sm font-semibold hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
             > <RefreshCw size={13} className="shrink-0" />
@@ -10234,7 +10177,7 @@ function SecurityLostFound() {
                               Category
                             </p>
                             <p className="font-medium text-foreground">
-                              {item.category || "—"}
+                              {item.category || "â€”"}
                             </p>
                           </div>
 
@@ -10243,7 +10186,7 @@ function SecurityLostFound() {
                               Brand / Model
                             </p>
                             <p className="font-medium text-foreground">
-                              {item.brand_model || "—"}
+                              {item.brand_model || "â€”"}
                             </p>
                           </div>
 
@@ -10252,7 +10195,7 @@ function SecurityLostFound() {
                               Color
                             </p>
                             <p className="font-medium text-foreground">
-                              {item.color || "—"}
+                              {item.color || "â€”"}
                             </p>
                           </div>
 
@@ -10265,7 +10208,7 @@ function SecurityLostFound() {
                             <p className="font-medium text-foreground">
                               {(isLostReport
                                 ? item.location_lost
-                                : item.location_found) || "—"}
+                                : item.location_found) || "â€”"}
                             </p>
                           </div>
 
@@ -10364,7 +10307,7 @@ function SecurityLostFound() {
                                   </p>
                                 )}
                                 <p className="mt-2 text-xs text-green-700 dark:text-emerald-300">
-                                  Turnover location: {item.location_found || "—"}
+                                  Turnover location: {item.location_found || "â€”"}
                                 </p>
                                 <p className="text-xs text-green-700 dark:text-emerald-300">
                                   Turned over: {formatDate(item.date_found)}
@@ -10381,7 +10324,7 @@ function SecurityLostFound() {
                           <p className="mt-0.5 text-sm font-medium text-foreground">
                             {item.processor?.name ||
                               item.reporter?.name ||
-                              "—"}
+                              "â€”"}
                           </p>
                         </div>
 
@@ -10514,7 +10457,7 @@ function SecurityLostFound() {
 
                         {isClaimed && (
                           <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
-                            CSU verified ownership — Item Claimed
+                            CSU verified ownership â€” Item Claimed
                           </div>
                         )}
 
@@ -10981,7 +10924,7 @@ function SecurityLostFound() {
                   ).toLowerCase() === "lost"
                     ? "Lost Report"
                     : "Found Report"}
-                  {` • Report #${editingItem.id}`}
+                  {` â€¢ Report #${editingItem.id}`}
                 </p>
               </div>
 
@@ -11316,9 +11259,9 @@ function SecurityLostFound() {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PCO PAGES
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PCO pages reuse the Student search/sort/refresh layout on desktop and mobile.
 
 function PCOResponsiveToolbar({
@@ -11330,6 +11273,7 @@ function PCOResponsiveToolbar({
   loading,
   placeholder,
   sortLabels = ["Newest first", "Oldest first"],
+  qrpassFilterSlot,
 }: {
   search: string;
   onSearchChange: (value: string) => void;
@@ -11339,6 +11283,7 @@ function PCOResponsiveToolbar({
   loading: boolean;
   placeholder: string;
   sortLabels?: [string, string];
+  qrpassFilterSlot?: React.ReactNode;
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-3 lg:flex-row">
@@ -11353,6 +11298,7 @@ function PCOResponsiveToolbar({
           className="w-full min-w-0 rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
         />
       </div>
+      {qrpassFilterSlot}
       <select
         aria-label="Sort results"
         value={sort}
@@ -11525,16 +11471,16 @@ function PCOPermitRequests() {
               </div>
               <dl className="grid min-w-0 grid-cols-2 gap-3 text-xs">
                 <div className="min-w-0"><dt className="text-muted-foreground">Student</dt><dd className="mt-1 break-words font-medium">{item.user?.name || "Unknown"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Student ID</dt><dd className="mt-1 break-words font-medium">{item.user?.username || "—"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Category</dt><dd className="mt-1 break-words font-medium">{item.item_type || "—"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Quantity</dt><dd className="mt-1 font-medium">{item.quantity ?? "—"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Serial number</dt><dd className="mt-1 break-all font-mono">{item.serial_number || "—"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Date filed</dt><dd className="mt-1 font-medium">{item.created_at ? new Date(item.created_at).toLocaleDateString("en-PH", {month:"short",day:"numeric",year:"numeric"}) : "—"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Student ID</dt><dd className="mt-1 break-words font-medium">{item.user?.username || "â€”"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Category</dt><dd className="mt-1 break-words font-medium">{item.item_type || "â€”"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Quantity</dt><dd className="mt-1 font-medium">{item.quantity ?? "â€”"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Serial number</dt><dd className="mt-1 break-all font-mono">{item.serial_number || "â€”"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Date filed</dt><dd className="mt-1 font-medium">{item.created_at ? new Date(item.created_at).toLocaleDateString("en-PH", {month:"short",day:"numeric",year:"numeric"}) : "â€”"}</dd></div>
               </dl>
               {item.complete_description && String(item.complete_description).trim().toLowerCase() !== String(item.item_name || "").trim().toLowerCase() && (
                 <p className="break-words text-xs text-muted-foreground">{item.complete_description}</p>
               )}
-              <p className="break-words text-xs text-muted-foreground"><span className="font-semibold text-foreground">Purpose:</span> {item.purpose || "—"}</p>
+              <p className="break-words text-xs text-muted-foreground"><span className="font-semibold text-foreground">Purpose:</span> {item.purpose || "â€”"}</p>
               <button type="button" onClick={() => handleApprove(item)} disabled={approvingId === item.id}
                 className="inline-flex w-full items-center justify-center gap-1 rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50">
                 <CheckCircle size={14} />
@@ -11603,7 +11549,7 @@ function PCOPermitRequests() {
                     </td>
 
                     <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
-                      {item.user?.username ?? "—"}
+                      {item.user?.username ?? "â€”"}
                     </td>
 
                     <td className="py-2.5 px-3 text-sm text-foreground min-w-[190px]">
@@ -11626,15 +11572,15 @@ function PCOPermitRequests() {
                     </td>
 
                     <td className="py-2.5 px-3 text-xs text-foreground text-center">
-                      {item.quantity ?? "—"}
+                      {item.quantity ?? "â€”"}
                     </td>
 
                     <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground whitespace-nowrap">
-                      {item.serial_number || "—"}
+                      {item.serial_number || "â€”"}
                     </td>
 
                     <td className="py-2.5 px-3 text-xs text-muted-foreground min-w-[180px]">
-                      {item.purpose || "—"}
+                      {item.purpose || "â€”"}
                     </td>
 
 
@@ -11672,7 +11618,7 @@ function PCOPermitRequests() {
   );
 }
 
-function PCOItemRegistry() {
+function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -11735,20 +11681,7 @@ function PCOItemRegistry() {
       <PageHeader
         title="Registered Items"
         subtitle="View and monitor the centralized records of registered items."
-        action={
-          <button
-            onClick={loadItems}
-            disabled={loading}
-            className="text-xs flex items-center gap-1 text-primary font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          >
-            <RefreshCw size={12} />
-
-            {loading
-              ? "Refreshing..."
-              : "Refresh"}
-          </button>
-        }
-      />
+        />
 
       {/* SUMMARY CARDS */}
       <StatisticalCardsSection>
@@ -11787,7 +11720,18 @@ function PCOItemRegistry() {
         onRefresh={loadItems}
         loading={loading}
         placeholder="Search item, owner, serial number, QR ID..."
+        qrpassFilterSlot={adminView ? (
+          <select data-qrpass-admin-items-filter="true" aria-label="Filter registered items"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "expired")}
+            className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] lg:w-[185px] dark:border-[#5075b7] dark:bg-[#1e3765] dark:text-white">
+            <option value="all">All ({registeredItems.length})</option>
+            <option value="active">Active ({registeredItems.filter((item) => registryStatus(item) === "Active").length})</option>
+            <option value="expired">Expired ({expiredCount})</option>
+          </select>
+        ) : undefined}
       />
+      {!adminView && (
       <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-2">
         {([ ["all", "All"], ["active", "Active"], ["expired", "Expired"] ] as const)
           .map(([value, label]) => (
@@ -11797,6 +11741,7 @@ function PCOItemRegistry() {
               }`}>{label}</button>
           ))}
       </div>
+      )}
 
       <Card title="Registered Items"
       >
@@ -11825,10 +11770,10 @@ function PCOItemRegistry() {
               </div>
               <dl className="grid min-w-0 grid-cols-2 gap-3 text-xs">
                 <div className="min-w-0"><dt className="text-muted-foreground">Owner</dt><dd className="mt-1 break-words font-medium">{item.user?.name || "Unknown"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Owner ID</dt><dd className="mt-1 break-all font-mono">{item.user?.username || "—"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Category</dt><dd className="mt-1 break-words">{item.item_type || "—"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Registered</dt><dd className="mt-1">{item.created_at ? new Date(item.created_at).toLocaleDateString("en-PH", {month:"short",day:"numeric",year:"numeric"}) : "—"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Serial number</dt><dd className="mt-1 break-all font-mono">{item.serial_number || "—"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Owner ID</dt><dd className="mt-1 break-all font-mono">{item.user?.username || "â€”"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Category</dt><dd className="mt-1 break-words">{item.item_type || "â€”"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Registered</dt><dd className="mt-1">{item.created_at ? new Date(item.created_at).toLocaleDateString("en-PH", {month:"short",day:"numeric",year:"numeric"}) : "â€”"}</dd></div>
+                <div className="min-w-0"><dt className="text-muted-foreground">Serial number</dt><dd className="mt-1 break-all font-mono">{item.serial_number || "â€”"}</dd></div>
                 <div className="min-w-0"><dt className="text-muted-foreground">QR ID</dt><dd className="mt-1 break-all font-mono text-primary">{item.qr_code || "Not issued"}</dd></div>
               </dl>
               <button type="button" onClick={() => setSelectedItem(item)}
@@ -11899,7 +11844,7 @@ function PCOItemRegistry() {
 
                     {/* OWNER ID */}
                     <td className="py-3 px-3 text-xs font-mono text-muted-foreground whitespace-nowrap">
-                      {item.user?.username ?? "—"}
+                      {item.user?.username ?? "â€”"}
                     </td>
 
                     {/* ITEM */}
@@ -11914,7 +11859,7 @@ function PCOItemRegistry() {
 
                     {/* BRAND / MODEL */}
                     <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                      {item.brand_model || "—"}
+                      {item.brand_model || "â€”"}
                     </td>
 
                     {/* SERIAL NUMBER */}
@@ -12020,7 +11965,7 @@ function PCOItemRegistry() {
                                           Owner ID
                                         </p>
                                         <p className="mt-1 font-mono text-sm text-foreground">
-                                          {selectedItem.user?.username ?? "—"}
+                                          {selectedItem.user?.username ?? "â€”"}
                                         </p>
                                       </div>
 
@@ -12029,7 +11974,7 @@ function PCOItemRegistry() {
                                           Item Name
                                         </p>
                                         <p className="mt-1 text-sm font-semibold text-foreground">
-                                          {selectedItem.item_name || "—"}
+                                          {selectedItem.item_name || "â€”"}
                                         </p>
                                       </div>
 
@@ -12038,7 +11983,7 @@ function PCOItemRegistry() {
                                           Item Type
                                         </p>
                                         <p className="mt-1 text-sm text-foreground">
-                                          {selectedItem.item_type || "—"}
+                                          {selectedItem.item_type || "â€”"}
                                         </p>
                                       </div>
 
@@ -12148,7 +12093,7 @@ function PCOItemRegistry() {
                                           Purpose / Reason for Bringing
                                         </p>
                                         <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
-                                          {selectedItem.purpose || "—"}
+                                          {selectedItem.purpose || "â€”"}
                                         </p>
                                       </div>
 
@@ -12272,7 +12217,7 @@ function PCOItemRegistry() {
                                                 hour: "numeric",
                                                 minute: "2-digit",
                                               })
-                                            : "—"}
+                                            : "â€”"}
                                         </p>
                                       </div>
 
@@ -12382,7 +12327,7 @@ function PCOItemRegistry() {
                           value: string | null | undefined
                         ) {
                           if (!value) {
-                            return "—";
+                            return "â€”";
                           }
                       
                           return new Date(value).toLocaleString(
@@ -12401,7 +12346,7 @@ function PCOItemRegistry() {
                           value: string | null | undefined
                         ) {
                           if (!value) {
-                            return "—";
+                            return "â€”";
                           }
                       
                           return new Date(value).toLocaleDateString(
@@ -12498,19 +12443,19 @@ function PCOItemRegistry() {
                                 "Unknown",
                       
                               item.user?.username ??
-                                "—",
+                                "â€”",
                       
                               item.item_name ??
-                                "—",
+                                "â€”",
                       
                               item.item_type ??
-                                "—",
+                                "â€”",
                       
                               item.brand_model ??
-                                "—",
+                                "â€”",
                       
                               item.serial_number ??
-                                "—",
+                                "â€”",
                       
                               item.status === "approved"
                                 ? "Approved"
@@ -12591,27 +12536,27 @@ function PCOItemRegistry() {
                       
                               "Owner ID":
                                 item.user?.username ??
-                                "—",
+                                "â€”",
                       
                               Item:
                                 item.item_name ??
-                                "—",
+                                "â€”",
                       
                               Type:
                                 item.item_type ??
-                                "—",
+                                "â€”",
                       
                               "Brand / Model":
                                 item.brand_model ??
-                                "—",
+                                "â€”",
                       
                               "Serial Number":
                                 item.serial_number ??
-                                "—",
+                                "â€”",
                       
                               "QR ID":
                                 item.qr_code ??
-                                "—",
+                                "â€”",
                       
                               "Approved / Issued At":
                                 formatDateTime(
@@ -12724,19 +12669,19 @@ function PCOItemRegistry() {
                                 "Unknown",
                       
                               item.user?.username ??
-                                "—",
+                                "â€”",
                       
                               item.item_name ??
-                                "—",
+                                "â€”",
                       
                               item.item_type ??
-                                "—",
+                                "â€”",
                       
                               item.serial_number ??
-                                "—",
+                                "â€”",
                       
                               item.qr_code ??
-                                "—",
+                                "â€”",
                       
                               formatDateTime(
                                 item.created_at
@@ -12797,31 +12742,31 @@ function PCOItemRegistry() {
                       
                               "Owner ID":
                                 item.user?.username ??
-                                "—",
+                                "â€”",
                       
                               "Item Name":
                                 item.item_name ??
-                                "—",
+                                "â€”",
                       
                               "Item Type":
                                 item.item_type ??
-                                "—",
+                                "â€”",
                       
                               "Brand / Model":
                                 item.brand_model ??
-                                "—",
+                                "â€”",
                       
                               "Serial Number":
                                 item.serial_number ??
-                                "—",
+                                "â€”",
                       
                               Color:
                                 item.color ??
-                                "—",
+                                "â€”",
                       
                               Purpose:
                                 item.purpose ??
-                                "—",
+                                "â€”",
                       
                               "QR ID":
                                 item.qr_code ??
@@ -13310,13 +13255,13 @@ function PCONotifications() {
     dateString: string
   ) {
     if (!dateString) {
-      return "—";
+      return "â€”";
     }
 
     const date = new Date(dateString);
 
     if (Number.isNaN(date.getTime())) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleString([], {
@@ -13608,107 +13553,18 @@ function PCONotifications() {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ADMIN PAGES
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
 function AdminDashboard({ onNavigate }: { onNavigate?: (index: number) => void }) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
-  const [refreshNotice, setRefreshNotice] = useState("");
-  const [showDutyGuide, setShowDutyGuide] = useState(true);
-
-  async function refreshOverview() {
-    setLoading(true);
-    setError("");
-    setRefreshNotice("");
-    try {
-      await getDashboard();
-      const refreshedAt = new Date();
-      setLastRefreshed(refreshedAt);
-      setRefreshNotice(`Dashboard refreshed successfully at ${refreshedAt.toLocaleTimeString("en-PH")}.`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not refresh the dashboard.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => { void refreshOverview(); }, []);
-
-  const actions = [
-    { index: 1, title: "Registered Items", description: "Review registrations and item ownership details.", icon: <Package size={22} />, accent: "#1a3a7b" },
-    { index: 2, title: "Lost & Found", description: "Review lost, found, and recovered property.", icon: <BookOpen size={22} />, accent: "#7c3aed" },
-    { index: 3, title: "Reports & Analytics", description: "Choose a role and download the appropriate reports.", icon: <BarChart2 size={22} />, accent: "#2f5fd6" },
-    { index: 4, title: "User Accounts", description: "Manage and review system users.", icon: <Users size={22} />, accent: "#0f766e" },
-    { index: 5, title: "System Logs", description: "Inspect login, audit, and transaction records.", icon: <ClipboardList size={22} />, accent: "#c47c19" },
-    { index: 6, title: "Active Sessions", description: "Review authenticated sessions and access.", icon: <Eye size={22} />, accent: "#557bdc" },
-    { index: 7, title: "Announcement Management", description: "Publish and manage campus announcements.", icon: <Bell size={22} />, accent: "#7c3aed" },
-    { index: 8, title: "System Settings", description: "Update institutional and system preferences.", icon: <Settings size={22} />, accent: "#475569" },
-  ];
-  const reminders = [
-    { title: "Review system records", detail: "Use System Logs to review significant activities, errors, and security incidents.", icon: <ClipboardList size={20} /> },
-    { title: "Manage users securely", detail: "Check account details and permissions before enabling, disabling, or updating users.", icon: <Shield size={20} /> },
-    { title: "Keep reports current", detail: "Select the correct role and date range before exporting operational reports.", icon: <FileText size={20} /> },
-  ];
-
   return (
-    <div className="w-full min-w-0 space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageHeader title="Overview Dashboard" subtitle="Quick access to the system administrator workspace." />
-        <button type="button" onClick={refreshOverview} disabled={loading}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-[#17336d] hover:bg-[#edf2ff] disabled:opacity-50">
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          {loading ? "Refreshing..." : "Refresh"}
-        </button>
-      </div>
-      {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-      {refreshNotice && !error && <p role="status" className="text-right text-xs text-[#456181]">{refreshNotice}</p>}
-      <section className="rounded-2xl border border-[#dce3ee] bg-card px-4 py-6 shadow-sm sm:px-7 sm:py-8">
-        <div className="mx-auto mb-6 max-w-2xl text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef2fc] text-[#1a3a7b]"><Shield size={25} /></div>
-          <h3 className="text-lg font-bold text-foreground">System Administrator Quick Actions</h3>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">Select a module below to open its page directly. Detailed records remain in their own modules.</p>
-        </div>
-        <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-3 sm:gap-4">
-          {actions.map(action => (
-            <button key={action.index} type="button" onClick={() => onNavigate?.(action.index)}
-              className="group flex min-h-[116px] w-full items-start gap-4 rounded-2xl border border-[#dce3ee] bg-[#fafbfe] p-5 text-left transition-all hover:border-[#a6bce1] hover:bg-[#eef2fc] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)]">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm" style={{ color: action.accent }}>{action.icon}</span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center justify-between gap-2"><span className="text-sm font-bold text-foreground">{action.title}</span><ChevronRight size={16} className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" /></span>
-                <span className="mt-2 block text-xs leading-5 text-muted-foreground">{action.description}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
-      <section className="rounded-2xl border border-[#dce3ee] bg-card p-5 shadow-sm sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="text-base font-bold text-foreground">Administrator Duty Guide</h3>
-            <p className="mt-1 text-xs text-muted-foreground">Useful reminders for daily QRPass administration.</p>
-          </div>
-          <button type="button" aria-expanded={showDutyGuide}
-            onClick={() => setShowDutyGuide(value => !value)}
-            className="rounded-xl border border-[#dce3ee] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] hover:bg-[#f2f5fc]">
-            {showDutyGuide ? "Hide Guide" : "Show Guide"}
-          </button>
-        </div>
-        {showDutyGuide && <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {reminders.map(item => (
-            <div key={item.title} className="rounded-xl border border-border bg-muted/20 p-4">
-              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef2fc] text-[#1a3a7b]">{item.icon}</div>
-              <h4 className="text-sm font-semibold text-foreground">{item.title}</h4>
-              <p className="mt-2 text-xs leading-6 text-muted-foreground">{item.detail}</p>
-            </div>
-          ))}
-        </div>}
-      </section>
-      {lastRefreshed && <p className="text-right text-xs text-muted-foreground">Last synced: {lastRefreshed.toLocaleString("en-PH")}</p>}
+    <div className="w-full min-w-0">
+      <PageHeader title="Overview Dashboard" />
     </div>
   );
 }
+
 
 function AdminRecords({ embedded = false, selectedType = "All", sharedPeriod = "all", sharedStart = "", sharedEnd = "" }: { embedded?: boolean; selectedType?: string; sharedPeriod?: CSUDatePeriod; sharedStart?: string; sharedEnd?: string } = {}) {
   const [records, setRecords] = useState<any[]>([]);
@@ -13762,24 +13618,24 @@ function AdminRecords({ embedded = false, selectedType = "All", sharedPeriod = "
   }, []);
 
   function formatDate(dateString: string) {
-    if (!dateString) return "—";
+    if (!dateString) return "â€”";
 
     const date = new Date(dateString);
 
     if (Number.isNaN(date.getTime())) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleDateString();
   }
 
   function formatTime(dateString: string) {
-    if (!dateString) return "—";
+    if (!dateString) return "â€”";
 
     const date = new Date(dateString);
 
     if (Number.isNaN(date.getTime())) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleTimeString([], {
@@ -13973,13 +13829,6 @@ function AdminRecords({ embedded = false, selectedType = "All", sharedPeriod = "
               ? "Refreshing..."
               : "Refresh"}
           </button>
-
-          <button
-            onClick={exportCSV}
-            className="px-3 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90"
-          >
-            Export CSV
-          </button>
         </div>
       </div>
 
@@ -13991,42 +13840,8 @@ function AdminRecords({ embedded = false, selectedType = "All", sharedPeriod = "
       )}
 
       {/* SUMMARY */}
-      <StatisticalCardsSection>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <StatCard
-          label="Total Records"
-          value={String(
-            summary.total_records
-          )}
-          icon={<Layers size={20} />}
-          color="#1a3a7b"
-        />
 
-        <StatCard
-          label="This Month"
-          value={String(
-            summary.this_month
-          )}
-          icon={<FileText size={20} />}
-          color="#2f5fd6"
-        />
-
-        <StatCard
-          label="Flagged"
-          value={String(
-            summary.flagged
-          )}
-          icon={
-            <AlertTriangle
-              size={20}
-            />
-          }
-          color="#e8543a"
-        />
-      </div>
-      </StatisticalCardsSection>
-
-      {/* System transaction types — same compact filter tabs as audit activity. */}
+      {/* System transaction types â€” same compact filter tabs as audit activity. */}
       <div className="rounded-xl border border-[#cfd8e6] bg-white px-4 py-3 flex flex-wrap items-center gap-2">
         {recordTypes.map(type => (
           <button
@@ -14050,7 +13865,6 @@ function AdminRecords({ embedded = false, selectedType = "All", sharedPeriod = "
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={loadRecords} disabled={loading} className="rounded-lg border border-[#cfd8e6] px-3 py-2 text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"> <RefreshCw size={13} className="shrink-0" />{loading ? "Refreshing..." : "Refresh"}</button>
-          <button type="button" onClick={exportCSV} className="rounded-lg bg-[#17336d] px-3 py-2 text-xs font-semibold text-white hover:opacity-90">Export CSV</button>
         </div>
       </div>}
       {error && embedded && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
@@ -14066,7 +13880,7 @@ function AdminRecords({ embedded = false, selectedType = "All", sharedPeriod = "
               )
             }
             placeholder="Search records, users, items, status..."
-            className="w-full px-3 py-2.5 border border-[#cfd8e6] rounded-md text-sm bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+            className="h-12 w-full min-w-0 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] pl-10 pr-4 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20"
           />
 
           <select
@@ -14188,7 +14002,7 @@ function AdminRecords({ embedded = false, selectedType = "All", sharedPeriod = "
                       <td className="py-3 px-3">
                         <p className="text-xs font-semibold text-foreground">
                           {record.title ??
-                            "—"}
+                            "â€”"}
                         </p>
 
                         {record.user_id && (
@@ -14203,13 +14017,13 @@ function AdminRecords({ embedded = false, selectedType = "All", sharedPeriod = "
                       <td className="py-3 px-3">
                         <p className="text-xs text-foreground max-w-[330px]">
                           {record.description ??
-                            "—"}
+                            "â€”"}
                         </p>
                       </td>
 
                       <td className="py-3 px-3 text-xs text-foreground">
                         {record.user_name ??
-                          "—"}
+                          "â€”"}
                       </td>
 
                       <td className="py-3 px-3">
@@ -14319,7 +14133,7 @@ async function downloadQrScanActivityExcel() {
             ).toLocaleDateString(
               "en-PH"
             )
-          : "—",
+          : "â€”",
 
         Time: log.scanned_at
           ? new Date(
@@ -14331,10 +14145,10 @@ async function downloadQrScanActivityExcel() {
                 minute: "2-digit",
               }
             )
-          : "—",
+          : "â€”",
 
         "QR ID":
-          log.qr_code ?? "—",
+          log.qr_code ?? "â€”",
 
         Item:
           log.item?.item_name ??
@@ -14342,11 +14156,11 @@ async function downloadQrScanActivityExcel() {
 
         Type:
           log.item?.item_type ??
-          "—",
+          "â€”",
 
         "Serial Number":
           log.item?.serial_number ??
-          "—",
+          "â€”",
 
         Owner:
           log.item?.user?.name ??
@@ -14354,24 +14168,24 @@ async function downloadQrScanActivityExcel() {
 
         "Owner ID":
           log.item?.user?.username ??
-          "—",
+          "â€”",
 
         Gate:
-          log.gate ?? "—",
+          log.gate ?? "â€”",
 
         Direction:
-          log.direction ?? "—",
+          log.direction ?? "â€”",
 
         Result:
-          log.result ?? "—",
+          log.result ?? "â€”",
 
         "Scanned By":
           log.scanner?.name ??
-          "—",
+          "â€”",
 
         "Scanner ID":
           log.scanner?.username ??
-          "—",
+          "â€”",
       })
     );
 
@@ -14451,6 +14265,7 @@ async function downloadQrScanActivityExcel() {
 // Administrator oversight is read-only. CSU verifies and releases items.
 // =========================================================
 function SysAdminLostFound() {
+  const [qrpassSortOrder, setQrpassSortOrder] = useState<"newest" | "oldest">("newest");
   const [items, setItems] = useState<any[]>([]);
   const [tab, setTab] = useState<"all" | "lost" | "found" | "recovered">("all");
   const [status, setStatus] = useState("all");
@@ -14463,10 +14278,9 @@ function SysAdminLostFound() {
   const [lfFrom, setLfFrom] = useState("");
   const [lfTo, setLfTo] = useState("");
 
-  async function loadItems() {
+  async function loadItems(silent = false) {
     try {
-      setLoading(true);
-      setError("");
+      if (!silent) { setLoading(true); setError(""); }
       const data = await getSystemRecords();
       if (Array.isArray(data?.lost_found_items)) {
         setItems(data.lost_found_items);
@@ -14491,18 +14305,29 @@ function SysAdminLostFound() {
         setLimitedDetails(true);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load Lost & Found records.");
+      if (!silent) setError(e instanceof Error ? e.message : "Failed to load Lost & Found records.");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
   useEffect(() => { loadItems(); }, []);
 
+  /* QRPass sysadmin Lost & Found live count v1 */
+  useEffect(() => {
+    let inFlight = false;
+    const intervalId = window.setInterval(async () => {
+      if (document.visibilityState !== "visible" || inFlight) return;
+      inFlight = true;
+      try { await loadItems(true); } finally { inFlight = false; }
+    }, 10000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   function formattedDate(value: string | null | undefined) {
-    if (!value) return "—";
+    if (!value) return "â€”";
     const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("en-PH", {dateStyle:"medium", timeStyle:"short"});
+    return Number.isNaN(date.getTime()) ? "â€”" : date.toLocaleString("en-PH", {dateStyle:"medium", timeStyle:"short"});
   }
   function csvCell(value: unknown) {
     return `"${String(value ?? "").replace(/"/g, '""')}"`;
@@ -14528,6 +14353,7 @@ function SysAdminLostFound() {
       item.location_found, item.location_lost, item.status].join(" ").toLowerCase();
     return searchText.includes(query.toLowerCase().trim());
   });
+  filtered.sort((a: any, b: any) => (qrpassSortOrder === "newest" ? 1 : -1) * ((new Date(b.reported_at ?? b.created_at ?? 0).getTime() || 0) - (new Date(a.reported_at ?? a.created_at ?? 0).getTime() || 0)));
   function exportCSV() {
     if (!filtered.length) { alert("No matching Lost & Found records to export."); return; }
     const rows = [
@@ -14556,39 +14382,27 @@ function SysAdminLostFound() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PageHeader title="Lost & Found Management" subtitle="Monitor lost, found and recovered items across campus." />
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={loadItems} disabled={loading} className="px-4 py-2 rounded-lg border border-[#cfd8e6] bg-white text-sm font-medium disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"><RefreshCw size={14} className="inline mr-2" />Refresh</button>
-          <button type="button" onClick={exportCSV} className="px-4 py-2 rounded-lg bg-[#17336d] text-white text-sm font-semibold"><Download size={14} className="inline mr-2" />Export CSV</button>
+          
         </div>
       </div>
       {error && <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm">{error}</div>}
       {limitedDetails && <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 text-xs">Detailed claim fields require the accompanying SystemRecordController.php update. Basic system records are displayed meanwhile.</div>}
-      <CSUStatsPeriodFilter value={lfPeriod} onChange={setLfPeriod} start={lfFrom} onStartChange={setLfFrom} end={lfTo} onEndChange={setLfTo} description="Lost and Found summary, record list and CSV use the report date." />
-      <StatisticalCardsSection>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Total Reports" value={String(counts.reports)} icon={<BookOpen size={20}/>} color="#1a3a7b" />
-        <StatCard label="Lost" value={String(counts.lost)} icon={<Clock size={20}/>} color="#cf8c1e" />
-        <StatCard label="Found" value={String(counts.found)} icon={<CheckCircle size={20}/>} color="#269a5b" />
-        <StatCard label="Recovered" value={String(counts.recovered)} icon={<Package size={20}/>} color="#2f5fd6" />
-      </div>
-      </StatisticalCardsSection>
+      {/* Standalone Reporting Period selector removed from staff page. */}
       <div className="bg-white rounded-xl border border-[#cfd8e6] overflow-hidden">
-        <div className="p-4 border-b border-[#cfd8e6] flex flex-wrap items-center gap-2">
-          {([{id:"all",name:"All Reports"},{id:"lost",name:"Lost"},{id:"found",name:"Found"},{id:"recovered",name:"Recovered"}] as const).map(opt => (
-            <button key={opt.id} type="button" onClick={() => {setTab(opt.id);setStatus("all");setSelectedItem(null);}}
-              className={`rounded-full px-4 py-2 text-xs font-semibold ${tab===opt.id?"bg-[#17336d] text-white":"bg-[#f4f6fa] text-slate-600 hover:bg-[#e9eef9]"}`}>
-              {opt.name}
-            </button>
-          ))}
-          <span className="ml-auto text-xs text-slate-500">{filtered.length} matching records</span>
-        </div>
         <div className="p-4 flex flex-col md:flex-row gap-3 border-b border-[#cfd8e6]">
           <div className="relative flex-1"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search item, reporter, claimant or location..." className="w-full rounded-lg border border-[#cfd8e6] py-2.5 pl-9 pr-3 text-sm" />
+            <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search item, reporter, claimant or location..." className="h-12 w-full min-w-0 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] pl-10 pr-4 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20" />
           </div>
-          <select value={status} onChange={e=>setStatus(e.target.value)} className="rounded-lg border border-[#cfd8e6] px-3 py-2.5 text-sm bg-white" aria-label="Filter claim or report status">
-            <option value="all">All Statuses</option>
-            {["lost","found","pending","claimed","recovered"].map(v => <option key={v} value={v}>{v[0].toUpperCase()+v.slice(1)}</option>)}
+          <select data-qrpass-filter="reports" aria-label="Filter lost and found reports" value={tab} onChange={e => {setTab(e.target.value as typeof tab);setStatus("all");setSelectedItem(null);}} className="h-12 min-w-[165px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
+            <option value="all">All Reports ({counts.reports})</option><option value="lost">Lost ({counts.lost})</option><option value="found">Found ({counts.found})</option><option value="recovered">Recovered / Claimed ({counts.recovered})</option>
           </select>
+          <select aria-label="Sort records" value={qrpassSortOrder} onChange={e => setQrpassSortOrder(e.target.value as "newest" | "oldest")} className="h-12 min-w-[150px] rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7]"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+          <button type="button" data-qrpass-refresh-toolbar="v1" onClick={() => { void loadItems(); }} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff]" aria-label="Refresh records"><RefreshCw size={15} />Refresh</button>
+          
+        </div>
+        <div className="p-4 border-b border-[#cfd8e6] flex flex-wrap items-center gap-2">
+          
+          <span className="ml-auto text-xs text-slate-500">{filtered.length} matching records</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[780px] text-sm">
@@ -14596,22 +14410,21 @@ function SysAdminLostFound() {
               {(["Item / Category","Report Type","Reported By","Location","Status",tab==="recovered"?"Claimant":"Date","Details"]).map(h=><th key={h} className="text-left px-4 py-3 font-semibold">{h}</th>)}
             </tr></thead>
             <tbody className="divide-y divide-slate-100">
-              {loading ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">Loading records...</td></tr> : filtered.length===0 ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">No {tab === "all" ? "reports" : tab + " reports"} match the selected filters.</td></tr> : filtered.map(item => (
+              {loading ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">Loading records...</td></tr> : filtered.length===0 ? <tr><td colSpan={7} className="py-12 text-center text-slate-500"><div className="qrpass-empty-state-v3"><Search size={26} aria-hidden="true" /><strong>No {tab === "all" ? "reports" : tab + " reports"} match the selected filters.</strong></div></td></tr> : filtered.map(item => (
                 <tr key={item.id} className="hover:bg-blue-50/40">
                   <td className="px-4 py-3"><p className="font-semibold text-slate-800">{item.item_name ?? "Unnamed Item"}</p><p className="text-xs text-slate-500">{item.category ?? "Other"}</p></td>
-                  <td className="px-4 py-3 capitalize">{item.report_type ?? "—"}</td>
-                  <td className="px-4 py-3">{item.reporter?.name ?? "—"}</td>
-                  <td className="px-4 py-3">{item.location_found ?? item.location_lost ?? "—"}</td>
+                  <td className="px-4 py-3 capitalize">{item.report_type ?? "â€”"}</td>
+                  <td className="px-4 py-3">{item.reporter?.name ?? "â€”"}</td>
+                  <td className="px-4 py-3">{item.location_found ?? item.location_lost ?? "â€”"}</td>
                   <td className="px-4 py-3"><span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusClass(String(item.status ?? ""))}`}>{item.status ?? "Unknown"}</span></td>
-                  <td className="px-4 py-3">{tab === "recovered" ? (item.claimant?.name ?? "—") : formattedDate(item.created_at ?? item.reported_at)}</td>
+                  <td className="px-4 py-3">{tab === "recovered" ? (item.claimant?.name ?? "â€”") : formattedDate(item.created_at ?? item.reported_at)}</td>
                   <td className="px-4 py-3"><button type="button" onClick={()=>setSelectedItem(item)} className="text-blue-800 font-semibold hover:underline">View</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="p-3 bg-slate-50 text-xs text-slate-500">Admin monitoring is read-only. Claim approval and item release are handled by CSU after ownership verification.</div>
-      </div>
+        </div>
       {selectedItem && <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4" onClick={()=>setSelectedItem(null)}>
         <div role="dialog" aria-modal="true" aria-label="Lost and Found report details" className="bg-white rounded-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-xl p-5 space-y-4" onClick={e=>e.stopPropagation()}>
           <div className="flex justify-between items-center"><h2 className="font-bold text-lg text-[#17336d]">Lost & Found Report Details</h2><button type="button" aria-label="Close details" onClick={()=>setSelectedItem(null)}><X size={20}/></button></div>
@@ -14624,7 +14437,7 @@ function SysAdminLostFound() {
               ["Found at",selectedItem.location_found],["Last seen at",selectedItem.location_lost],
               ["Reported at",formattedDate(selectedItem.created_at ?? selectedItem.reported_at)],
               ["Claimed at",formattedDate(selectedItem.claimed_at)],
-            ] as [string, any][]).map(([label,value]) => <div key={label}><p className="text-xs text-slate-500">{label}</p><p className="font-medium break-words">{value ?? "—"}</p></div>)}
+            ] as [string, any][]).map(([label,value]) => <div key={label}><p className="text-xs text-slate-500">{label}</p><p className="font-medium break-words">{value ?? "â€”"}</p></div>)}
           </div>
           {selectedItem.description && <div><p className="text-xs font-semibold text-slate-600">Description</p><p className="whitespace-pre-wrap text-sm mt-1">{selectedItem.description}</p></div>}
           {selectedItem.photo_url && <img src={selectedItem.photo_url} alt="Reported item" className="max-h-52 rounded-lg border object-contain" />}
@@ -14640,9 +14453,12 @@ function AdminAnalytics() {
   const [showSummaryValues, setShowSummaryValues] = useState(true);
   const [showDownloadableReports, setShowDownloadableReports] = useState(true);
   const [registrationStatusFilter, setRegistrationStatusFilter] = useState("all");
+  // QRPASS_REPORT_SEARCH_SORT_20261120
+  const [reportSearch, setReportSearch] = useState("");
+  const [reportSort, setReportSort] = useState<"newest" | "oldest">("newest");
   const [recentCategory, setRecentCategory] = useState<"registration" | "scan" | "entryexit" | "incidents" | "lostfound">("registration");
   const [analyticsTab, setAnalyticsTab] = useState<"charts" | "registrations" | "incidents">("charts");
-  const [exportPeriod, setExportPeriod] = useState<"day" | "week" | "month" | "all" | "custom">("month");
+  const [exportPeriod, setExportPeriod] = useState<"day" | "week" | "month" | "all" | "custom">("all");
   const [exportFrom, setExportFrom] = useState("");
   const [exportTo, setExportTo] = useState("");
   const [exportingReport, setExportingReport] = useState(false);
@@ -14772,24 +14588,24 @@ function AdminAnalytics() {
     reportData?.recent_incidents ?? [];
 
   function formatDate(dateString: string) {
-    if (!dateString) return "—";
+    if (!dateString) return "â€”";
 
     const date = new Date(dateString);
 
     if (Number.isNaN(date.getTime())) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleDateString();
   }
 
   function formatTime(dateString: string) {
-    if (!dateString) return "—";
+    if (!dateString) return "â€”";
 
     const date = new Date(dateString);
 
     if (Number.isNaN(date.getTime())) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleTimeString([], {
@@ -14964,23 +14780,23 @@ function AdminAnalytics() {
               "Unknown",
 
             log.item?.user?.username ??
-              "—",
+              "â€”",
 
             log.item?.item_name ??
               "Unknown Item",
 
             log.item?.serial_number ??
-              "—",
+              "â€”",
 
-            log.qr_code ?? "—",
+            log.qr_code ?? "â€”",
 
-            log.gate ?? "—",
+            log.gate ?? "â€”",
 
-            log.direction ?? "—",
+            log.direction ?? "â€”",
 
-            log.result ?? "—",
+            log.result ?? "â€”",
 
-            log.scanner?.name ?? "—",
+            log.scanner?.name ?? "â€”",
           ];
         });
 
@@ -15165,28 +14981,28 @@ function AdminAnalytics() {
                 "Unknown",
 
               item.user?.username ??
-                "—",
+                "â€”",
 
               item.item_name ??
-                "—",
+                "â€”",
 
               item.item_type ??
-                "—",
+                "â€”",
 
               item.brand_model ??
-                "—",
+                "â€”",
 
               item.serial_number ??
-                "—",
+                "â€”",
 
               item.color ??
-                "—",
+                "â€”",
 
               item.qr_code ??
                 "Not issued",
 
               item.status ??
-                "—",
+                "â€”",
             ];
           }
         );
@@ -15562,7 +15378,7 @@ async function downloadGateEntryExitPDF() {
             ? scanDate.toLocaleDateString(
                 "en-PH"
               )
-            : "—",
+            : "â€”",
 
           scanDate &&
           !Number.isNaN(
@@ -15575,31 +15391,31 @@ async function downloadGateEntryExitPDF() {
                   minute: "2-digit",
                 }
               )
-            : "—",
+            : "â€”",
 
-          log.qr_code ?? "—",
+          log.qr_code ?? "â€”",
 
           log.item?.item_name ??
             "Unknown Item",
 
-          log.item?.item_type ?? "—",
+          log.item?.item_type ?? "â€”",
 
           log.item?.serial_number ??
-            "—",
+            "â€”",
 
           log.item?.user?.name ??
             "Unknown",
 
           log.item?.user?.username ??
-            "—",
+            "â€”",
 
-          log.gate ?? "—",
+          log.gate ?? "â€”",
 
-          log.direction ?? "—",
+          log.direction ?? "â€”",
 
-          log.result ?? "—",
+          log.result ?? "â€”",
 
-          log.scanner?.name ?? "—",
+          log.scanner?.name ?? "â€”",
         ];
       }
     );
@@ -15686,18 +15502,18 @@ async function downloadGateEntryExitPDF() {
       doc.setFontSize(17);
       doc.text(`QRPass ${period.toUpperCase()} ${source === "scan" ? "QR Scan Report" : "Item Registration Report"}`, 14, 18);
       doc.setFontSize(10);
-      doc.text("University of Cebu — Main Campus",14,25);
+      doc.text("University of Cebu â€” Main Campus",14,25);
       doc.text(`Period: ${from.toLocaleDateString("en-PH")} to ${new Date(to.getTime()-1).toLocaleDateString("en-PH")} | Records: ${rows.length}`,14,32);
       const head = source === "scan" ?
         ["Date/Time","Item","Owner","QR Code","Gate","Direction","Result","Scanned By"] :
         ["Date Registered","Item","Owner","Type","Brand / Model","Serial No.","Status"];
       const body = rows.map((r:any) => source === "scan" ? [
-        new Date(r.scanned_at).toLocaleString("en-PH"), r.item?.item_name ?? "—",
-        r.item?.user?.name ?? "—", r.qr_code ?? "—", r.gate ?? "—",
-        r.direction ?? "—", r.result ?? "—", r.scanner?.name ?? "—",
+        new Date(r.scanned_at).toLocaleString("en-PH"), r.item?.item_name ?? "â€”",
+        r.item?.user?.name ?? "â€”", r.qr_code ?? "â€”", r.gate ?? "â€”",
+        r.direction ?? "â€”", r.result ?? "â€”", r.scanner?.name ?? "â€”",
       ] : [
-        new Date(r.created_at).toLocaleString("en-PH"),r.item_name ?? "—",
-        r.user?.name ?? "—",r.item_type ?? "—",r.brand_model ?? "—",r.serial_number ?? "—",r.status ?? "—",
+        new Date(r.created_at).toLocaleString("en-PH"),r.item_name ?? "â€”",
+        r.user?.name ?? "â€”",r.item_type ?? "â€”",r.brand_model ?? "â€”",r.serial_number ?? "â€”",r.status ?? "â€”",
       ]);
       autoTable(doc,{startY:40,head:[head],body,styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:[26,58,123]},alternateRowStyles:{fillColor:[245,247,250]}});
       const name=`QRPass-${source}-${period}-${from.toISOString().slice(0,10)}.pdf`;
@@ -15780,8 +15596,8 @@ async function downloadGateEntryExitPDF() {
         alert(`No matching records for ${range.label}.`);
         return;
       }
-      const str = (v: any) => v === null || v === undefined || v === "" ? "—" : String(v);
-      const dt = (v: any) => v ? new Date(v).toLocaleString("en-PH") : "—";
+      const str = (v: any) => v === null || v === undefined || v === "" ? "â€”" : String(v);
+      const dt = (v: any) => v ? new Date(v).toLocaleString("en-PH") : "â€”";
       let headers: string[] = [];
       let rows: string[][] = [];
       if (kind === "registration") {
@@ -15836,76 +15652,57 @@ async function downloadGateEntryExitPDF() {
   const isRecentDate = (value: string | null | undefined) =>
     (exportPeriod !== "custom" || (!!exportFrom && !!exportTo && exportFrom <= exportTo)) &&
     csuMatchesPeriod(value, recentPeriodName, exportFrom, exportTo);
-  const periodRecentSecurityScans = recentSecurityScans.filter((log: any) => isRecentDate(log.scanned_at ?? log.created_at));
-  const periodRecentSecurityIncidents = recentSecurityIncidents.filter((incident: any) => isRecentDate(incident.reported_at ?? incident.created_at));
-  const periodRecentLostFound = recentLostFound.filter((item: any) => isRecentDate(item.created_at ?? item.reported_at));
-  const periodRecentRegistrations = recentRegistrations.filter((item: any) => isRecentDate(item.created_at ?? item.registered_at));
-  const periodRoleRecentRegistrations = roleRecentRegistrations.filter((item: any) => isRecentDate(item.created_at ?? item.registered_at));
-  const periodFilteredRecentRegistrations = filteredRecentRegistrations.filter((item: any) => isRecentDate(item.created_at ?? item.registered_at));
+  const filterAndSortReport = (rows: any[], dateFn: (row: any) => string | null | undefined) => rows
+    .filter((row: any) => isRecentDate(dateFn(row)) && (!reportSearch.trim() || JSON.stringify(row).toLowerCase().includes(reportSearch.trim().toLowerCase())))
+    .sort((a: any, b: any) => {
+      const delta = (new Date(dateFn(b) ?? 0).getTime() || 0) - (new Date(dateFn(a) ?? 0).getTime() || 0);
+      return reportSort === "newest" ? delta : -delta;
+    });
+  const periodRecentSecurityScans = filterAndSortReport(recentSecurityScans, (log: any) => log.scanned_at ?? log.created_at);
+  const periodRecentSecurityIncidents = filterAndSortReport(recentSecurityIncidents, (incident: any) => incident.reported_at ?? incident.created_at);
+  const periodRecentLostFound = filterAndSortReport(recentLostFound, (item: any) => item.created_at ?? item.reported_at);
+  const periodRecentRegistrations = filterAndSortReport(recentRegistrations, (item: any) => item.created_at ?? item.registered_at);
+  const periodRoleRecentRegistrations = filterAndSortReport(roleRecentRegistrations, (item: any) => item.created_at ?? item.registered_at);
+  const periodFilteredRecentRegistrations = filterAndSortReport(filteredRecentRegistrations, (item: any) => item.created_at ?? item.registered_at);
 
   const renderRecentToolbar = () => (
     <div className="border-b border-[#dce3ee] px-4 py-4">
+      <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+  <div className="relative min-w-0 flex-1">
+    <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
+    <input type="search" aria-label="Search reports" value={reportSearch} onChange={e => setReportSearch(e.target.value)} placeholder="Search report records..." className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] pl-11 pr-4 text-sm text-[#17336d] outline-none placeholder:text-[#7890b6] focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15" />
+  </div>
+            {/* QRPASS_ANALYTICS_DROPDOWN_V1: Category or status before Newest first */}
+          {(reportRole === "security" || reportRole === "sysadmin") ? (
+            <select aria-label="Filter analytics category" value={recentCategory} onChange={e=>setRecentCategory(e.target.value as typeof recentCategory)} className="h-12 min-w-[170px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#6485c2] dark:bg-[#19345f] dark:text-white">
+              {downloadOptions.map(option => <option key={option.kind} value={option.kind}>{option.label.replace(/ Report$/, "")}</option>)}
+            </select>
+          ) : (
+            <select aria-label="Filter analytics record status" value={registrationStatusFilter} onChange={e=>setRegistrationStatusFilter(e.target.value)} className="h-12 min-w-[170px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#6485c2] dark:bg-[#19345f] dark:text-white">
+              <option value="all">All Records</option>
+              {registrationStatuses.map(status => <option key={status} value={status}>{status.charAt(0).toUpperCase()+status.slice(1)}</option>)}
+            </select>
+          )}
+<select aria-label="Sort reports" value={reportSort} onChange={e => setReportSort(e.target.value as 'newest' | 'oldest')} className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-4 text-sm font-medium text-[#17336d] outline-none sm:w-[150px] focus:border-[#2f5fd6]">
+    <option value="newest">Newest first</option>
+    <option value="oldest">Oldest first</option>
+  </select>
+          {/* QRPASS_REPORT_REFRESH_BESIDE_SORT_V3 */}
+          <button
+          onClick={loadReports}
+          disabled={loading} className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+        > <RefreshCw size={13} className="shrink-0" />
+          {loading
+            ? "Refreshing..."
+            : "Refresh Reports"}
+        </button>
+
+</div>
+
       {downloadOptions.length > 1 && (
         <div>
-          <p className="mb-3 text-xs font-bold text-[#17336d]">Category</p>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Filter recent activity by category">
-            {downloadOptions.map(option => (
-              <button
-                key={option.kind}
-                type="button"
-                aria-pressed={recentCategory === option.kind}
-                onClick={() => setRecentCategory(option.kind)}
-                className={`rounded-xl px-3 py-2 text-xs font-semibold ${recentCategory === option.kind ? "bg-[#17336d] text-white" : "bg-[#f3f5fa] text-[#536782] hover:bg-[#e8eef9]"}`}
-              >
-                {option.label.replace(/ Report$/, "")}
-              </button>
-            ))}
           </div>
-        </div>
       )}
-      <div className={downloadOptions.length > 1 ? "mt-4" : ""}>
-        <p className="mb-3 text-xs font-bold text-[#17336d]">Reporting Period</p>
-        <div className="flex flex-wrap items-center gap-2">
-          {([ ["day","Daily"], ["week","Weekly"], ["month","Monthly"], ["all","All Time"], ["custom","Custom Range"] ] as const).map(([id,label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setExportPeriod(id)}
-              aria-pressed={exportPeriod === id}
-              className={`rounded-xl border px-4 py-2 text-xs font-semibold transition-colors ${exportPeriod === id ? "border-[#17336d] bg-[#17336d] text-white" : "border-[#dce3ee] bg-white text-[#17336d] hover:bg-[#edf2ff]"}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        {exportPeriod === "custom" && (
-          <div className="mt-3 flex flex-wrap gap-3">
-            <label className="text-xs font-semibold text-[#17336d]">From
-              <input
-                type="date"
-                aria-label="Recent records from date"
-                value={exportFrom}
-                max={exportTo || undefined}
-                onChange={e => setExportFrom(e.target.value)}
-                className="mt-1 block rounded-lg border border-[#cfd8e6] bg-white px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="text-xs font-semibold text-[#17336d]">To
-              <input
-                type="date"
-                aria-label="Recent records to date"
-                value={exportTo}
-                min={exportFrom || undefined}
-                onChange={e => setExportTo(e.target.value)}
-                className="mt-1 block rounded-lg border border-[#cfd8e6] bg-white px-3 py-2 text-sm"
-              />
-            </label>
-          </div>
-        )}
-        {exportPeriod === "custom" && (!exportFrom || !exportTo) && (
-          <p className="mt-2 text-xs text-muted-foreground">Choose both dates to display records in the custom range.</p>
-        )}
-      </div>
     </div>
   );
 
@@ -15918,47 +15715,69 @@ return (
           subtitle="Real-time QRpass statistics and downloadable system reports."
         />
 
-        {reportRole && <button
-          onClick={loadReports}
-          disabled={loading}
-          className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-        > <RefreshCw size={13} className="shrink-0" />
-          {loading
-            ? "Refreshing..."
-            : "Refresh Reports"}
-        </button>}
+        
       </div>
 
-      {/* Role-based report navigation — same selection-card pattern as Student Item Registration. */}
-      <div className="rounded-2xl border border-[#dce3ee] bg-white p-4 shadow-sm sm:p-5">
-        <div className="mb-4">
-          <h3 className="text-sm font-bold text-[#17336d]">Reports by Role</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Choose a role to open its reports and analytics. Only the selected role’s report options will appear.</p>
+      {/* Role selection: full-width rows; hidden when a role is opened. */}
+      {!reportRole && (
+        <section className="overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-sm" aria-label="Select report role">
+          <div className="border-b border-[#dce3ee] px-4 py-4 sm:px-5">
+            <h3 className="text-sm font-bold text-[#17336d]">Reports by Role</h3>
+            <p className="mt-1 text-xs text-[#64748b]">Select a role to view its relevant QRPass records.</p>
+          </div>
+          <div className="divide-y divide-[#e2e8f0]">
+            {([
+              {id:"student",label:"Students",icon:<User size={20}/>},
+              {id:"security",label:"Security Personnel (CSU)",icon:<Shield size={20}/>},
+              {id:"pco",label:"Property Custodian (PCO)",icon:<Package size={20}/>},
+              {id:"sysadmin",label:"System Administrator",icon:<BarChart2 size={20}/>},
+            ] as const).map(role => (
+              <button
+                key={role.id}
+                type="button"
+                onClick={() => {
+                  setReportRole(role.id);
+                  setRecentCategory(role.id === "security" ? "scan" : "registration");
+                  setRegistrationStatusFilter("all");
+                  setAnalyticsTab(role.id === "security" ? "incidents" : role.id === "sysadmin" ? "charts" : "registrations");
+                }}
+                className="flex w-full min-h-[68px] items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-[#f5f8ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2f5fd6] sm:px-5"
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#dce3ee] bg-[#eef2fc] text-[#17336d]">{role.icon}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-[#17336d]">{role.label}</span>
+                </span>
+                <ChevronRight size={19} className="shrink-0 text-[#64748b]" />
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {reportRole && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#dce3ee] bg-white px-4 py-3">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-[#17336d]">
+              {reportRole === "student" ? "Students" :
+               reportRole === "security" ? "Security Personnel (CSU)" :
+               reportRole === "pco" ? "Property Custodian (PCO)" : "System Administrator"}
+            </h3>
+          </div>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+          {/* QRPASS_REFRESH_SELECTED_ROLE_V2 */}
+          
+          <button type="button" onClick={() => {
+              setReportRole(null);
+              setRecentCategory("registration");
+              setRegistrationStatusFilter("all");
+            }}
+            className="inline-flex items-center gap-2 rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-sm font-semibold text-[#17336d] hover:bg-[#f2f5fc]"
+          >
+            <ChevronRight size={15} className="rotate-180"/> Back
+          </button>
+          </div>
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {([
-            {id:"student",label:"Students",description:"Item registrations and student-related item records",icon:<User size={23}/>},
-            {id:"security",label:"Security Personnel (CSU)",description:"Gate scans, entry/exit activity and security incidents",icon:<Shield size={23}/>},
-            {id:"pco",label:"Property Custodian (PCO)",description:"Registration and property item reports",icon:<Package size={23}/>},
-            {id:"sysadmin",label:"System Administrator",description:"All QRPass system reports and analytics",icon:<BarChart2 size={23}/>},
-          ] as const).map(role => (
-            <button
-              key={role.id}
-              type="button"
-              onClick={() => { setReportRole(role.id); setRecentCategory(role.id === "security" ? "scan" : "registration"); setRegistrationStatusFilter("all"); setAnalyticsTab(role.id === "security" ? "incidents" : role.id === "sysadmin" ? "charts" : "registrations"); }}
-              aria-pressed={reportRole === role.id}
-              className={`flex min-h-[112px] w-full items-start gap-3 rounded-xl border border-[#dce3ee] px-3 py-4 text-left shadow-sm transition-colors sm:px-4 ${reportRole === role.id ? "border-[#17336d] bg-[#edf2ff] ring-1 ring-[#17336d]" : "bg-white hover:bg-[#f5f8ff]"}`}
-            >
-              <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${reportRole === role.id ? "bg-[#17336d] text-white" : "bg-[#eef2fc] text-[#17336d]"}`}>{role.icon}</span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold text-[#17336d]">{role.label}</span>
-                <span className="mt-1 block text-xs leading-relaxed text-[#64748b]">{role.description}</span>
-              </span>
-              <ChevronRight className="ml-auto mt-2 shrink-0 text-[#64748b]" size={16} />
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {reportRole && <>
 
@@ -15970,7 +15789,7 @@ return (
       )}
 
       {/* Campus-wide summary is shown only when System Administrator is selected. */}
-      {reportRole && <div className="rounded-2xl border border-[#dce3ee] bg-white p-4 shadow-sm sm:p-5">
+      {reportRole && <div data-qrpass-statistical-summary="true" className="rounded-2xl border border-[#dce3ee] bg-white p-4 shadow-sm sm:p-5">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
           <div>
             <h3 className="text-sm font-bold text-[#17336d]">System Summary</h3>
@@ -16008,54 +15827,6 @@ return (
         </div>}
       </div>}
 
-      {/* Reports are displayed as clear, role-specific rows rather than duplicate category tabs. */}
-      <div className="overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#dce3ee] px-4 py-4 sm:px-5">
-          <div>
-            <h3 className="text-sm font-semibold text-[#17336d]">
-              {reportRole === "security" ? "Downloadable Reports — CSU" :
-                reportRole === "student" ? "Downloadable Reports — Students" :
-                reportRole === "pco" ? "Downloadable Reports — Property Custodian (PCO)" :
-                "Downloadable Reports — System Administrator"}
-            </h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Download the selected role's relevant reports in PDF or CSV format.
-            </p>
-          </div>
-          <button
-            type="button"
-            aria-expanded={showDownloadableReports}
-            aria-label={showDownloadableReports ? "Hide downloadable reports" : "Show downloadable reports"}
-            onClick={() => setShowDownloadableReports(value => !value)}
-            className="rounded-xl border border-[#dce3ee] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] hover:bg-[#f3f6fc]"
-          >
-            {showDownloadableReports ? "Hide Reports" : "Show Reports"}
-          </button>
-        </div>
-
-        {showDownloadableReports && <>
-        <div className="divide-y divide-[#dce3ee]">
-          {downloadOptions.map(option => (
-            <div key={option.kind} className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
-              <div>
-                <p className="text-sm font-semibold text-[#17336d]">{option.label}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{option.hint}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button type="button" disabled={exportingReport} onClick={() => exportRoleReport(option.kind,"pdf")}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#17336d] px-4 py-2 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"><Download size={14}/> PDF</button>
-                <button type="button" disabled={exportingReport} onClick={() => exportRoleReport(option.kind,"csv")}
-                  className="inline-flex items-center gap-2 rounded-xl border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#17336d] hover:bg-muted disabled:opacity-50"><Download size={14}/> CSV</button>
-              </div>
-            </div>
-          ))}
-        </div>
-        <p className="border-t border-[#dce3ee] px-4 py-3 text-[11px] text-muted-foreground sm:px-5">
-          Report types are grouped by role. Downloads follow the Reporting Period selected in Recent Activity below. The available backend records are campus-wide and are not restricted to accounts of that role.
-        </p>
-        </>}
-      </div>
-
       {/* Role-specific recent records. CSU scans are not item registrations. */}
       {(reportRole === "security" || reportRole === "sysadmin") && (recentCategory === "scan" || recentCategory === "entryexit") && (
         <div className="overflow-hidden rounded-xl border border-[#dce3ee] bg-white shadow-sm">
@@ -16080,13 +15851,13 @@ return (
                   <tr><td colSpan={7} className="py-10 text-center text-sm text-muted-foreground">No scan records available.</td></tr>
                 ) : periodRecentSecurityScans.filter((log: any) => recentCategory !== "entryexit" || ["in", "out", "entry", "exit"].includes(String(log.direction ?? "").toLowerCase())).map((log: any, index: number) => (
                   <tr key={log.id ?? `scan-${index}`} className="hover:bg-[#f8fafc]">
-                    <td className="px-3 py-3 text-xs">{log.scanned_at ? new Date(log.scanned_at).toLocaleString('en-PH') : '—'}</td>
-                    <td className="px-3 py-3 text-xs font-semibold">{log.item?.item_name ?? log.item_name ?? '—'}</td>
-                    <td className="px-3 py-3 text-xs">{log.item?.user?.name ?? log.owner?.name ?? '—'}</td>
-                    <td className="px-3 py-3 text-xs">{log.gate ?? '—'}</td>
-                    <td className="px-3 py-3 text-xs">{log.direction ?? '—'}</td>
-                    <td className="px-3 py-3 text-xs">{log.result ?? '—'}</td>
-                    <td className="px-3 py-3 text-xs">{log.scanner?.name ?? '—'}</td>
+                    <td className="px-3 py-3 text-xs">{log.scanned_at ? new Date(log.scanned_at).toLocaleString('en-PH') : 'â€”'}</td>
+                    <td className="px-3 py-3 text-xs font-semibold">{log.item?.item_name ?? log.item_name ?? 'â€”'}</td>
+                    <td className="px-3 py-3 text-xs">{log.item?.user?.name ?? log.owner?.name ?? 'â€”'}</td>
+                    <td className="px-3 py-3 text-xs">{log.gate ?? 'â€”'}</td>
+                    <td className="px-3 py-3 text-xs">{log.direction ?? 'â€”'}</td>
+                    <td className="px-3 py-3 text-xs">{log.result ?? 'â€”'}</td>
+                    <td className="px-3 py-3 text-xs">{log.scanner?.name ?? 'â€”'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -16104,17 +15875,7 @@ return (
             </p>
           </div>
           {renderRecentToolbar()}
-          <div className="flex flex-wrap gap-2 border-b border-[#dce3ee] px-4 py-3" role="group" aria-label="Filter inventory by status">
-            {["all", ...registrationStatuses].map(status => {
-              const count = status === "all" ? periodRecentRegistrations.length : periodRecentRegistrations.filter((item: any) =>
-                String(item.status ?? "unknown").toLowerCase() === status).length;
-              return <button type="button" key={status} aria-pressed={registrationStatusFilter === status}
-                onClick={() => setRegistrationStatusFilter(status)}
-                className={`rounded-xl px-3 py-2 text-xs font-semibold ${registrationStatusFilter === status ? "bg-[#17336d] text-white" : "bg-[#f3f5fa] text-[#536782] hover:bg-[#e8eef9]"}`}>
-                {status === "all" ? "All Inventory" : status.charAt(0).toUpperCase() + status.slice(1)} ({count})
-              </button>;
-            })}
-          </div>
+          
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px]">
               <thead className="bg-[#fafbfc]"><tr>
@@ -16126,10 +15887,10 @@ return (
                   periodFilteredRecentRegistrations.length === 0 ? <tr><td colSpan={6} className="py-10 text-center text-sm text-muted-foreground">No inventory records match this filter.</td></tr> :
                   [...periodFilteredRecentRegistrations].sort((a: any, b: any) => String(a.item_type ?? "").localeCompare(String(b.item_type ?? ""))).map((item: any) =>
                     <tr key={item.id} className="hover:bg-[#f8fafc]">
-                      <td className="px-3 py-3 text-xs">{item.item_type ?? "—"}</td>
-                      <td className="px-3 py-3 text-xs font-semibold">{item.item_name ?? "—"}</td>
-                      <td className="px-3 py-3 text-xs">{item.brand_model || "—"}</td>
-                      <td className="px-3 py-3 text-xs">{item.serial_number || "—"}</td>
+                      <td className="px-3 py-3 text-xs">{item.item_type ?? "â€”"}</td>
+                      <td className="px-3 py-3 text-xs font-semibold">{item.item_name ?? "â€”"}</td>
+                      <td className="px-3 py-3 text-xs">{item.brand_model || "â€”"}</td>
+                      <td className="px-3 py-3 text-xs">{item.serial_number || "â€”"}</td>
                       <td className="px-3 py-3 text-xs">{item.user?.name ?? "Unknown"}</td>
                       <td className="px-3 py-3 text-xs capitalize">{item.status ?? "Unknown"}</td>
                     </tr>)}
@@ -16150,10 +15911,10 @@ return (
               periodRecentSecurityIncidents.length === 0 ? <tr><td colSpan={5} className="px-3 py-8 text-center text-sm">No incidents found.</td></tr> :
               periodRecentSecurityIncidents.slice(0,30).map((incident: any, i: number) => <tr key={incident.id ?? i}>
                 <td className="px-3 py-3 text-xs">{formatDate(incident.reported_at ?? incident.created_at)}</td>
-                <td className="px-3 py-3 text-xs font-semibold">{incident.item?.item_name ?? incident.item_name ?? incident.incident_type ?? "—"}</td>
-                <td className="px-3 py-3 text-xs">{incident.gate ?? incident.location ?? "—"}</td>
-                <td className="px-3 py-3 text-xs capitalize">{incident.status ?? "—"}</td>
-                <td className="px-3 py-3 text-xs">{incident.description ?? incident.reason ?? "—"}</td>
+                <td className="px-3 py-3 text-xs font-semibold">{incident.item?.item_name ?? incident.item_name ?? incident.incident_type ?? "â€”"}</td>
+                <td className="px-3 py-3 text-xs">{incident.gate ?? incident.location ?? "â€”"}</td>
+                <td className="px-3 py-3 text-xs capitalize">{incident.status ?? "â€”"}</td>
+                <td className="px-3 py-3 text-xs">{incident.description ?? incident.reason ?? "â€”"}</td>
               </tr>)}
             </tbody>
           </table></div>
@@ -16171,10 +15932,10 @@ return (
               periodRecentLostFound.length === 0 ? <tr><td colSpan={5} className="px-3 py-8 text-center text-sm">No Lost & Found records found.</td></tr> :
               periodRecentLostFound.slice(0,30).map((item: any, i: number) => <tr key={item.id ?? i}>
                 <td className="px-3 py-3 text-xs">{formatDate(item.reported_at ?? item.created_at)}</td>
-                <td className="px-3 py-3 text-xs font-semibold">{item.item_name ?? item.name ?? "—"}</td>
-                <td className="px-3 py-3 text-xs capitalize">{item.report_type ?? item.type ?? "—"}</td>
-                <td className="px-3 py-3 text-xs">{item.location_found ?? item.location_lost ?? "—"}</td>
-                <td className="px-3 py-3 text-xs capitalize">{item.status ?? "—"}</td>
+                <td className="px-3 py-3 text-xs font-semibold">{item.item_name ?? item.name ?? "â€”"}</td>
+                <td className="px-3 py-3 text-xs capitalize">{item.report_type ?? item.type ?? "â€”"}</td>
+                <td className="px-3 py-3 text-xs">{item.location_found ?? item.location_lost ?? "â€”"}</td>
+                <td className="px-3 py-3 text-xs capitalize">{item.status ?? "â€”"}</td>
               </tr>)}
             </tbody>
           </table></div>
@@ -16187,19 +15948,7 @@ return (
             <p className="mt-1 text-xs text-muted-foreground">{reportRole === "student" ? "Student-owned registrations where the API identifies owner role; owner role missing from records is not assumed to be non-student." : "All recent item registration records across campus."}</p>
           </div>
           {renderRecentToolbar()}
-          <div className="flex flex-wrap items-center gap-2 border-b border-[#dce3ee] px-4 py-3" role="group" aria-label="Filter registrations by status">
-            {["all", ...registrationStatuses].map(status => {
-              const count = status === "all" ? periodRoleRecentRegistrations.length : periodRoleRecentRegistrations.filter((item: any) =>
-                String(item.status ?? "Unknown").trim().toLowerCase() === status
-              ).length;
-              const label = status === "all" ? "All Records" : status.charAt(0).toUpperCase() + status.slice(1);
-              return <button key={status} type="button" onClick={() => setRegistrationStatusFilter(status)}
-                aria-pressed={registrationStatusFilter === status}
-                className={`rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${registrationStatusFilter === status ? "bg-[#17336d] text-white" : "bg-[#f3f5fa] text-[#536782] hover:bg-[#e8eef9]"}`}>
-                {label} ({count})
-              </button>;
-            })}
-          </div>
+          
           <div className="overflow-x-auto">
             <table className="w-full min-w-[850px]">
               <thead className="bg-[#fafbfc]">
@@ -16219,9 +15968,9 @@ return (
                       <p className="font-semibold">{item.user?.name ?? "Unknown"}</p>
                       <p className="text-muted-foreground">{item.user?.username ?? ""}</p>
                     </td>
-                    <td className="px-3 py-3 text-xs font-semibold">{item.item_name ?? "—"}</td>
-                    <td className="px-3 py-3 text-xs">{item.item_type ?? "—"}</td>
-                    <td className="px-3 py-3 text-xs">{item.serial_number || "—"}</td>
+                    <td className="px-3 py-3 text-xs font-semibold">{item.item_name ?? "â€”"}</td>
+                    <td className="px-3 py-3 text-xs">{item.item_type ?? "â€”"}</td>
+                    <td className="px-3 py-3 text-xs">{item.serial_number || "â€”"}</td>
                     <td className="px-3 py-3">
                       <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${String(item.status ?? "").toLowerCase() === "approved" ? "bg-green-100 text-green-700" : String(item.status ?? "").toLowerCase() === "pending" ? "bg-yellow-100 text-yellow-700" : "bg-slate-100 text-slate-700"}`}>
                         {item.status ?? "Unknown"}
@@ -16247,20 +15996,20 @@ function AdminNotifications() {
       <PageHeader title="Notifications" subtitle="Administrative alerts and system updates." />
       <Card title="All Notifications">
         <div className="p-3 space-y-2">
-          <NotifItem type="warning" message="4 flagged QR scan incidents require administrative review." time="Jun 16, 2026 – 8:00 AM" />
-          <NotifItem type="info" message="Monthly system report due by June 30, 2026." time="Jun 14, 2026 – 9:00 AM" />
-          <NotifItem type="success" message="Campus-wide QR inspection for June 18 has been scheduled." time="Jun 13, 2026 – 3:00 PM" />
+          <NotifItem type="warning" message="4 flagged QR scan incidents require administrative review." time="Jun 16, 2026 â€“ 8:00 AM" />
+          <NotifItem type="info" message="Monthly system report due by June 30, 2026." time="Jun 14, 2026 â€“ 9:00 AM" />
+          <NotifItem type="success" message="Campus-wide QR inspection for June 18 has been scheduled." time="Jun 13, 2026 â€“ 3:00 PM" />
         </div>
       </Card>
     </div>
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // SYSADMIN PAGES
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function SysAdminUserAccounts() {
-  const [showRoleBreakdown, setShowRoleBreakdown] = useState(false);
+  const [qrpassSortOrder, setQrpassSortOrder] = useState<"newest" | "oldest">("newest");
   const [users, setUsers] = useState<any[]>([]);
 
   const [summary, setSummary] = useState<any>({
@@ -16491,14 +16240,14 @@ function SysAdminUserAccounts() {
 
   function formatDate(dateString: string) {
     if (!dateString) {
-      return "—";
+      return "â€”";
     }
 
     const date =
       new Date(dateString);
 
     if (Number.isNaN(date.getTime())) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleDateString(
@@ -16775,6 +16524,8 @@ function SysAdminUserAccounts() {
       );
     });
 
+  filteredUsers.sort((a: any, b: any) => (qrpassSortOrder === "newest" ? 1 : -1) * ((new Date(b.created_at ?? 0).getTime() || 0) - (new Date(a.created_at ?? 0).getTime() || 0)));
+
   const totalPersonnel =
     Number(summary.security ?? 0) +
     Number(summary.pco ?? 0) +
@@ -16790,15 +16541,7 @@ function SysAdminUserAccounts() {
         />
 
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={loadUsers}
-            disabled={loading}
-            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          > <RefreshCw size={13} className="shrink-0" />
-            {loading
-              ? "Refreshing..."
-              : "Refresh Users"}
-          </button>
+          
 
           <button
             onClick={() => {
@@ -17168,153 +16911,43 @@ function SysAdminUserAccounts() {
         </Card>
       )}
 
-      <CSUStatsPeriodFilter value={accountsPeriod} onChange={setAccountsPeriod} start={accountsFrom} onStartChange={setAccountsFrom} end={accountsTo} onEndChange={setAccountsTo} description="Account summary shows users created during the selected period. Current account search remains independent." />
-            {/* Consistent account overview, grouped to avoid scattered boxes. */}
-      <div className="rounded-2xl border border-[#dce3ee] bg-white p-4 shadow-sm sm:p-5">
-        <div className="mb-4">
-          <h3 className="text-sm font-bold text-[#17336d]">Account Overview</h3>
-          <p className="mt-1 text-xs text-muted-foreground">A quick summary of account roles and availability.</p>
-        </div>
-        <StatisticalCardsSection>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <StatCard
-          label="Total Users"
-          value={String(
-            accountPeriodStats.total
-          )}
-          icon={<Users size={20} />}
-          color="#1a3a7b"
-        />
+      {/* Standalone Reporting Period selector removed from staff page. */}
 
-        <StatCard
-          label="Students"
-          value={String(
-            accountPeriodStats.students
-          )}
-          icon={<Users size={20} />}
-          color="#557bdc"
-        />
-
-        <StatCard
-          label="Staff / Personnel"
-          value={String(
-            accountPeriodStats.personnel
-          )}
-          icon={<Users size={20} />}
-          color="#6b8ee6"
-        />
-
-        <StatCard
-          label="Active Accounts"
-          value={String(
-            accountPeriodStats.active
-          )}
-          icon={
-            <CheckCircle size={20} />
-          }
-          color="#2ecc71"
-        />
-
-        <StatCard
-          label="Disabled"
-          value={String(
-            accountPeriodStats.disabled
-          )}
-          icon={<X size={20} />}
-          color="#e8543a"
-        />
-
-        <StatCard
-          label="System Admins"
-          value={String(
-            accountPeriodStats.admins
-          )}
-          icon={<Shield size={20} />}
-          color="#2f5fd6"
-        />
-        </div>
-      </StatisticalCardsSection>
-      </div>
-
-      <button type="button" onClick={() => setShowRoleBreakdown(value => !value)}
-        className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-semibold hover:bg-muted">
-        <Users size={15}/> {showRoleBreakdown ? "Hide Role Breakdown" : "Show Role Breakdown"}
-      </button>
-      {/* ROLE BREAKDOWN */}
-      {showRoleBreakdown && <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
-          <p className="text-xs text-muted-foreground">
-            Students
-          </p>
-
-          <p className="text-xl font-bold mt-1">
-            {summary.students ?? 0}
-          </p>
-        </div>
-
-        <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
-          <p className="text-xs text-muted-foreground">
-            Security Personnel
-          </p>
-
-          <p className="text-xl font-bold mt-1">
-            {summary.security ?? 0}
-          </p>
-        </div>
-
-        <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
-          <p className="text-xs text-muted-foreground">
-            PCO Staff
-          </p>
-
-          <p className="text-xl font-bold mt-1">
-            {summary.pco ?? 0}
-          </p>
-        </div>
-
-        <div className="bg-white border border-[#cfd8e6] rounded-lg p-4">
-          <p className="text-xs text-muted-foreground">
-            System Administrators
-          </p>
-
-          <p className="text-xl font-bold mt-1">
-            {summary.system_admins ??
-              0}
-          </p>
-        </div>
-      </div>}
 
       {/* USER LIST */}
       <Card
         title="User List"
-        action={
-          <div className="relative">
-            <Search
-              size={13}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-
-            <input
-              value={search}
-              onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
-              }
-              placeholder="Search users..."
-              className="pl-7 pr-3 py-1.5 text-xs border border-[#cfd8e6] rounded-md bg-[#fafbfc] w-48 md:w-64 focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-            />
-          </div>
-        }
+        
       >
-        <div className="px-4 py-3 border-b border-[#cfd8e6] flex flex-wrap gap-2 items-center">
-          <span className="text-xs font-semibold text-slate-500">Filter users:</span>
-          {([{"key":"all","label":"All Roles"},{"key":"student","label":"Students"},{"key":"security","label":"CSU"},{"key":"pco","label":"PCO"},{"key":"sysadmin","label":"Admins"}] as const).map(option => (
-            <button key={option.key} type="button" onClick={()=>setUserRoleFilter(option.key)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${userRoleFilter===option.key?"bg-[#17336d] text-white":"bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{option.label}</button>
-          ))}
-          <select value={userStatusFilter} onChange={e=>setUserStatusFilter(e.target.value)} aria-label="User account status" className="rounded-lg border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs ml-auto">
-            <option value="all">All Statuses</option><option value="active">Active</option><option value="inactive">Disabled</option>
+        
+        {/* QRPASS_ACCOUNTS_SEARCH_REPAIRED_V5 */}
+        <div className="flex flex-col gap-3 border-b border-[#cfd8e6] px-4 py-3 sm:flex-row sm:items-center">
+          <div className="relative min-w-0 flex-1">
+            <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
+            <input type="search" aria-label="Search user accounts" value={search}
+              onChange={(e) => setSearch(e.target.value)} placeholder="Search name, user ID, email, role..."
+              className="h-12 w-full min-w-0 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] pl-11 pr-4 text-sm text-[#17336d] outline-none focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20" />
+          </div>
+          <select data-qrpass-filter="roles" aria-label="Filter user roles" value={userRoleFilter} onChange={e => setUserRoleFilter(e.target.value as typeof userRoleFilter)} className="h-12 min-w-[165px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
+            <option value="all">All Roles</option><option value="student">Students</option><option value="security">CSU</option><option value="pco">PCO</option><option value="sysadmin">Admins</option>
           </select>
+          <select aria-label="Sort user accounts" value={qrpassSortOrder}
+            onChange={(e) => setQrpassSortOrder(e.target.value as "newest" | "oldest")}
+            className="h-12 w-full shrink-0 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] sm:w-[150px]">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+          <button type="button" onClick={loadUsers} disabled={loading}
+            className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff] disabled:opacity-50">
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""}/> Refresh
+          </button>
+        </div>
+<div className="px-4 py-3 border-b border-[#cfd8e6] flex flex-wrap gap-2 items-center">
+          
+          
+          
+          
+          {/* QRPASS_REFRESH_POSITION_V3: User Accounts */}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px]">
@@ -17391,13 +17024,13 @@ function SysAdminUserAccounts() {
 
                         {/* USER ID */}
                         <td className="py-3 px-3 text-xs font-mono text-muted-foreground">
-                          {user.id ?? "—"}
+                          {user.id ?? "â€”"}
                         </td>
 
                         {/* EMAIL */}
                         <td className="py-3 px-3 text-xs text-muted-foreground">
                           {user.email ??
-                            "—"}
+                            "â€”"}
                         </td>
 
                         {/* ROLE */}
@@ -17465,20 +17098,62 @@ function SysAdminUserAccounts() {
                 accounts
               </p>
 
-              <p className="text-[11px] text-muted-foreground">
-                Data loaded from QRpass
-                MySQL database
-              </p>
+             
             </div>
           )}
       </Card>
     </div>
   );
 }
+// QRPASS_QTY_STYLE_SECURITY_V2
+function QRPassNumberStepper({label,value,min,max,onChange}:{
+  label:string; value:number; min:number; max:number; onChange:(value:number)=>void;
+}) {
+  const safeValue = Number.isFinite(Number(value)) ? Number(value) : 0;
+  const setClamped = (v:number) => onChange(Math.min(max, Math.max(min,v)));
+  return (
+    <div className="flex h-[44px] w-full min-w-0 items-center overflow-hidden rounded-xl border border-[#c7d2fe] bg-[#eef2ff] focus-within:border-[#2f5fd6] focus-within:ring-2 focus-within:ring-[#2f5fd6]/15">
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        autoComplete="off"
+        aria-label={label}
+        value={safeValue === 0 ? "" : String(safeValue)}
+        onChange={(e) => {
+          const digits = e.target.value.replace(/\D/g, "");
+          onChange(digits ? Math.min(max, Number(digits)) : 0);
+        }}
+        onBlur={() => { if (safeValue < min || safeValue > max) setClamped(safeValue); }}
+        className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm text-[#17336d] outline-none"
+      />
+      <div className="mr-1.5 flex h-[36px] w-9 shrink-0 flex-col overflow-hidden rounded-md border border-[#c7d2fe] bg-white shadow-sm">
+        <button
+          type="button"
+          title={'Increase ' + label}
+          aria-label={'Increase ' + label}
+          disabled={safeValue >= max}
+          onClick={() => setClamped(safeValue + 1)}
+          className="flex h-1/2 items-center justify-center border-b border-[#c7d2fe] text-[#17336d] transition-colors hover:bg-[#e5edff] disabled:cursor-not-allowed disabled:opacity-35"
+        ><span className="text-[12px] font-bold leading-none">▲</span></button>
+        <button
+          type="button"
+          title={'Decrease ' + label}
+          aria-label={'Decrease ' + label}
+          disabled={safeValue <= min}
+          onClick={() => setClamped(safeValue - 1)}
+          className="flex h-1/2 items-center justify-center text-[#17336d] transition-colors hover:bg-[#e5edff] disabled:cursor-not-allowed disabled:opacity-35"
+        ><span className="text-[12px] font-bold leading-none">▼</span></button>
+      </div>
+    </div>
+  );
+}
+
 function SysAdminSettings() {
+  // QRPASS_INPUT_ONLY_V2
   const [settings, setSettings] = useState({
     system_name: "QRpass",
-    institution: "University of Cebu - Main Campus",
+    institution: "University of Cebu Main Campus",
     academic_year: "2026-2027",
     semester: "1st Semester",
     session_timeout: 30,
@@ -17486,6 +17161,42 @@ function SysAdminSettings() {
     qr_code_validity_months: 6,
     two_factor_enabled: false,
   });
+
+  // QRPASS_SETTINGS_STRICT_V1
+  const onlyLettersAndSpaces = (value: string) => value.replace(/[^A-Za-z ]/g, "").replace(/ {2,}/g, " ");
+  const validName = (value: string, max: number) => value.trim().length > 0 && value.trim().length <= max && /^[A-Za-z ]+$/.test(value.trim());
+  const validAcademicYear = (value: string) => {
+    const match = /^(\d{4})-(\d{4})$/.exec(value);
+    return !!match && Number(match[2]) === Number(match[1]) + 1;
+  };
+  const validInteger = (value: number, low: number, high: number) => Number.isInteger(value) && value >= low && value <= high;
+  const validateGeneral = () => {
+    if (!validName(settings.system_name, 100)) return "System Name: letters and spaces only (maximum 100).";
+    if (!validName(settings.institution, 150)) return "Institution: letters and spaces only (maximum 150).";
+    if (!validAcademicYear(settings.academic_year)) return "Academic Year must be consecutive years (example: 2026-2027).";
+    if (!["1st Semester", "2nd Semester", "Summer"].includes(settings.semester)) return "Select a valid semester.";
+    return "";
+  };
+  const validatePolicy = () => {
+    if (!validInteger(settings.session_timeout, 5, 1440)) return "Session Timeout must be a whole number from 5 to 1440.";
+    if (!validInteger(settings.max_login_attempts, 1, 20)) return "Max Login Attempts must be a whole number from 1 to 20.";
+    if (!validInteger(settings.qr_code_validity_months, 1, 60)) return "QR Code Validity must be a whole number from 1 to 60.";
+    return "";
+  };
+
+  // QRPASS_SETTINGS_LEGACY_INSTITUTION_FIX_V1
+  // Older database values can contain a hyphen (e.g. University of Cebu - Main Campus).
+  // Keep existing values editable while allowing current letters/spaces-only validation.
+  useEffect(() => {
+    setSettings((current) => {
+      const cleanName = String(current.system_name ?? "")
+        .replace(/[^A-Za-z\s]/g, "").replace(/\s+/g, " " ).trimStart();
+      const cleanInstitution = String(current.institution ?? "")
+        .replace(/[^A-Za-z\s]/g, "").replace(/\s+/g, " " ).trimStart();
+      if (cleanName === current.system_name && cleanInstitution === current.institution) return current;
+      return { ...current, system_name: cleanName, institution: cleanInstitution };
+    });
+  }, [settings.system_name, settings.institution]);
 
   const [loading, setLoading] = useState(true);
   const [savingGeneral, setSavingGeneral] = useState(false);
@@ -17549,6 +17260,8 @@ function SysAdminSettings() {
   }
 
   async function saveGeneralSettings() {
+    const validationError = validateGeneral() || validatePolicy();
+    if (validationError) { setError(validationError); setSuccess(""); return; }
     try {
       setSavingGeneral(true);
       setError("");
@@ -17582,9 +17295,10 @@ function SysAdminSettings() {
         institution: String(data?.settings?.institution || settings.institution),
         system_name: String(data?.settings?.system_name || settings.system_name),
       }));
+      document.title = String(data?.settings?.system_name || settings.system_name).trim() || "QRpass";
       window.dispatchEvent(new Event("qrpass-settings-updated"));
       setSuccess(
-        "General settings saved successfully. Footer branding has been updated."
+        "General settings saved. System name, page title and footer branding updated."
       );
     } catch (err) {
       console.error(
@@ -17603,6 +17317,8 @@ function SysAdminSettings() {
   }
 
   async function saveSecurityPolicy() {
+    const validationError = validateGeneral() || validatePolicy();
+    if (validationError) { setError(validationError); setSuccess(""); return; }
     try {
       setSavingPolicy(true);
       setError("");
@@ -17675,7 +17391,7 @@ function SysAdminSettings() {
         subtitle="Configure QRpass portal settings and security policies."
       />
 
-      {error && (
+      {error && !/^Institution: letters and spaces only/i.test(error.trim()) && (
         <div className="p-3 border border-red-200 bg-red-50 rounded-md text-sm text-red-700">
           {error}
         </div>
@@ -17697,11 +17413,13 @@ function SysAdminSettings() {
 
               <input
                 type="text"
+                title="Letters and spaces only"
                 value={settings.system_name}
+                maxLength={100}
                 onChange={(e) =>
                   setSettings((prev) => ({
                     ...prev,
-                    system_name: e.target.value,
+                    system_name: onlyLettersAndSpaces(e.target.value),
                   }))
                 }
                 className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
@@ -17715,11 +17433,13 @@ function SysAdminSettings() {
 
               <input
                 type="text"
+                title="Letters and spaces only"
                 value={settings.institution}
+                maxLength={150}
                 onChange={(e) =>
                   setSettings((prev) => ({
                     ...prev,
-                    institution: e.target.value,
+                    institution: onlyLettersAndSpaces(e.target.value),
                   }))
                 }
                 className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
@@ -17731,18 +17451,23 @@ function SysAdminSettings() {
                 Academic Year
               </label>
 
-              <input
-                type="text"
+              <select
+                aria-label="Academic Year"
                 value={settings.academic_year}
-                onChange={(e) =>
-                  setSettings((prev) => ({
-                    ...prev,
-                    academic_year: e.target.value,
-                  }))
-                }
-                placeholder="2026-2027"
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
+                onChange={(e) => setSettings((prev) => ({...prev, academic_year: e.target.value}))}
+                className="h-[44px] w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm text-[#17336d] outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+              >
+                {(() => {
+                  const base = 2024;
+                  const count = Math.max(10, new Date().getFullYear() - base + 6);
+                  const years = Array.from({length: count}, (_, i) => {
+                    const y = base + i;
+                    return String(y) + '-' + String(y + 1);
+                  });
+                  if (settings.academic_year && !years.includes(settings.academic_year)) years.unshift(settings.academic_year);
+                  return years.map(year => <option key={year} value={year}>{year}</option>);
+                })()}
+              </select>
             </div>
 
             <div>
@@ -17794,20 +17519,7 @@ function SysAdminSettings() {
                 Session Timeout (minutes)
               </label>
 
-              <input
-                type="number"
-                min={5}
-                max={1440}
-                value={settings.session_timeout}
-                onChange={(e) =>
-                  setSettings((prev) => ({
-                    ...prev,
-                    session_timeout:
-                      Number(e.target.value) || 0,
-                  }))
-                }
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
+              <QRPassNumberStepper label="Session Timeout (minutes)" value={settings.session_timeout} min={5} max={1440} onChange={(value) => setSettings((prev) => ({ ...prev, session_timeout: value }))} />
             </div>
 
             <div>
@@ -17815,20 +17527,7 @@ function SysAdminSettings() {
                 Max Login Attempts
               </label>
 
-              <input
-                type="number"
-                min={1}
-                max={20}
-                value={settings.max_login_attempts}
-                onChange={(e) =>
-                  setSettings((prev) => ({
-                    ...prev,
-                    max_login_attempts:
-                      Number(e.target.value) || 0,
-                  }))
-                }
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
+              <QRPassNumberStepper label="Max Login Attempts" value={settings.max_login_attempts} min={1} max={20} onChange={(value) => setSettings((prev) => ({ ...prev, max_login_attempts: value }))} />
             </div>
 
             <div>
@@ -17836,20 +17535,7 @@ function SysAdminSettings() {
                 QR Code Validity (months)
               </label>
 
-              <input
-                type="number"
-                min={1}
-                max={60}
-                value={settings.qr_code_validity_months}
-                onChange={(e) =>
-                  setSettings((prev) => ({
-                    ...prev,
-                    qr_code_validity_months:
-                      Number(e.target.value) || 0,
-                  }))
-                }
-                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
+              <QRPassNumberStepper label="QR Code Validity (months)" value={settings.qr_code_validity_months} min={1} max={60} onChange={(value) => setSettings((prev) => ({ ...prev, qr_code_validity_months: value }))} />
             </div>
 
             <div className="flex items-center justify-between p-3 border border-[#cfd8e6] rounded-md">
@@ -17858,9 +17544,7 @@ function SysAdminSettings() {
                   Enable Two-Factor Auth
                 </span>
 
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Stores the system-wide 2FA policy.
-                </p>
+                
               </div>
 
               <button
@@ -17917,6 +17601,8 @@ function SysAdminAuditLogs() {
   });
 
   const [search, setSearch] = useState("");
+  // QRPASS_SYSTEMLOGS_SEARCH_SORT_V1
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
@@ -17926,19 +17612,126 @@ function SysAdminAuditLogs() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  /* QRPass Manage Logs functional v1 */
+  const [manageMessage, setManageMessage] = useState("");
+  const [manageBusy, setManageBusy] = useState(false);
+  const [manageCount, setManageCount] = useState<number | null>(null);
+  const [manageArchiveId, setManageArchiveId] = useState("");
+  const [manageArchiveDownloaded, setManageArchiveDownloaded] = useState(false);
+  const [manageConfirmDelete, setManageConfirmDelete] = useState(false);
+  const [manageShowArchives, setManageShowArchives] = useState(false);
+  const [manageArchives, setManageArchives] = useState<Array<{archive_id:string;count:number;created_at:string;moved:boolean;restored_at:string|null}>>([]);
+  const manageListArchives = async () => {
+    try {const r=await qrpassManageLogsRequest("archives","GET");const j=await r.json();setManageArchives(Array.isArray(j.archives)?j.archives:[]);}
+    catch(e){setManageMessage(e instanceof Error?e.message:"Could not load archives");}
+  };
+  const manageUnarchive = async (archiveId:string) => {
+    if(manageBusy)return;
+    if(!window.confirm("Restore this archive to active System Logs?"))return;
+    setManageBusy(true);setManageMessage("");
+    try {const r=await qrpassManageLogsRequest("unarchive","POST",{archive_id:archiveId});const j=await r.json();setManageMessage(String(j.restored_count)+" logs restored.");await loadAuditLogs();await manageListArchives();}
+    catch(e){setManageMessage(e instanceof Error?e.message:"Unarchive failed");}
+    finally{setManageBusy(false);}
+  };
+  // QRPass Archive Deletion v5: independently delete an archive from storage, not from active audit logs.
+  const manageDeleteArchive = async (archiveId:string, count:number) => {
+    if(manageBusy)return;
+    if(!window.confirm('Permanently delete this archive of '+count+' logs? Archived copy cannot be restored after deletion. Active logs are unaffected.'))return;
+    setManageBusy(true);setManageMessage('');
+    try {
+      const response=await qrpassManageLogsRequest('delete-archive','POST',{archive_id:archiveId,confirmation:'DELETE ARCHIVE'});
+      const data=await response.json();
+      setManageMessage(data.message || 'Archive permanently deleted.');
+      if(manageArchiveId===archiveId){setManageArchiveId('');setManageArchiveDownloaded(false);}
+      await manageListArchives();
+    }catch(error){setManageMessage(error instanceof Error?error.message:'Could not delete archive');}
+    finally{setManageBusy(false);}
+  };
+  // QRPass Restore & Export v6: allow choosing verified Excel or PDF, not the raw JSON archive.
+  const manageDownloadById = async (archiveId:string, format:'xlsx'|'pdf') => {
+    if(manageBusy)return;
+    setManageBusy(true);setManageMessage('');
+    try {
+      const r=await qrpassManageLogsRequest('archive/'+archiveId+'/export/'+format,'GET');
+      const blob=await r.blob();const url=URL.createObjectURL(blob);
+      const link=document.createElement('a');link.href=url;
+      link.download='QRPass-audit-archive-'+archiveId+'.'+format;
+      document.body.appendChild(link);link.click();link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      setManageArchiveDownloaded(true);
+    }catch(error){setManageMessage(error instanceof Error?error.message:'Export failed');}
+    finally{setManageBusy(false);}
+  };
+  const [manageStart, setManageStart] = useState("");
+  const [manageEnd, setManageEnd] = useState("");
+  const manageArgs = () => ({period: (["all","today","yesterday","7","30","custom"].includes(cleanupAge) ? cleanupAge : "today"), ...(cleanupAge === "custom" ? {start:manageStart,end:manageEnd} : {})});
+  const managePreview = async () => {
+    setManageBusy(true); setManageMessage("");
+    try {const r=await qrpassManageLogsRequest("preview","GET",manageArgs()); const j=await r.json();setManageCount(Number(j.count));}
+    catch(e){setManageMessage(e instanceof Error?e.message:"Preview failed");}finally{setManageBusy(false);}
+  };
+  // QRPass Manage Logs archive-unarchive v4: move selected active records into a recoverable archive.
+  const manageArchive = async () => {
+    if(manageBusy)return;
+    setManageBusy(true);setManageMessage("");
+    try {
+      const r=await qrpassManageLogsRequest("archive-move","POST",manageArgs());
+      const j=await r.json();
+      setManageArchiveId(j.archive_id);
+      setManageMessage(String(j.count)+" logs archived. Use View Archives to download or unarchive.");
+      setManageCount(null);
+      await loadAuditLogs();
+      await manageListArchives();
+    }catch(e){setManageMessage(e instanceof Error?e.message:"Archive failed");}
+    finally{setManageBusy(false);}
+  };  const manageDownload = async (format:'xlsx'|'pdf') => {
+    if(manageArchiveId)await manageDownloadById(manageArchiveId,format);
+  };
+  // QRPass Manage Logs independent delete v3: direct, date-scoped deletion does NOT require an archive.
+  const manageDelete = async () => {
+    if (manageBusy) return;
+    setManageBusy(true);
+    setManageMessage("");
+    try {
+      const r = await qrpassManageLogsRequest("delete-selection", "POST", { ...manageArgs(), confirmation: "DELETE LOGS" });
+      const j = await r.json();
+      setManageMessage(String(j.deleted_count ?? 0) + " logs permanently deleted for the selected date range.");
+      setManageCount(null);
+      setManageConfirmDelete(false);
+      await loadAuditLogs();
+    } catch (e) {
+      setManageMessage(e instanceof Error ? e.message : "Delete failed");
+    } finally { setManageBusy(false); }
+  };  
+  const [manageLogsOpen, setManageLogsOpen] = useState(false);
+  const [cleanupAge, setCleanupAge] = useState("today");
+  const [archiveBeforeCleanup, setArchiveBeforeCleanup] = useState(true);
 
   useEffect(() => {
     loadAuditLogs();
   }, []);
 
+  /* QRPass Sysadmin audit auto-refresh v1 */
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        loadAuditLogs(search, statusFilter, dateFilter, true);
+      }
+    }, 10000);
+    return () => window.clearInterval(id);
+  }, [search, statusFilter, dateFilter]);
+
   async function loadAuditLogs(
     customSearch = search,
     customStatus = statusFilter,
-    customDate = dateFilter
+    customDate = dateFilter,
+    silent = false
   ) {
     try {
-      setLoading(true);
-      setError("");
+      if (!silent) {
+        setLoading(true);
+        setError("");
+      }
 
       const data = await getAuditLogs({
         search: customSearch || undefined,
@@ -17972,13 +17765,15 @@ function SysAdminAuditLogs() {
         err
       );
 
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load audit logs."
-      );
+      if (!silent) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load audit logs."
+        );
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
@@ -18003,13 +17798,13 @@ function SysAdminAuditLogs() {
     value: string | null | undefined
   ) {
     if (!value) {
-      return "—";
+      return "â€”";
     }
 
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleDateString(
@@ -18026,13 +17821,13 @@ function SysAdminAuditLogs() {
     value: string | null | undefined
   ) {
     if (!value) {
-      return "—";
+      return "â€”";
     }
 
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleTimeString(
@@ -18127,13 +17922,19 @@ function SysAdminAuditLogs() {
     const action = String(log.action ?? "").toLowerCase();
     const text = `${event} ${action}`;
     const status = String(log.status ?? "").toLowerCase();
-    if (actionFilter === "all") return true;
-    if (actionFilter === "login") return text.includes("login") || text.includes("log in") || text.includes("sign in");
-    if (actionFilter === "logout") return text.includes("logout") || text.includes("log out") || text.includes("sign out");
-    if (actionFilter === "changes") return ["create","update","delete","approval","status_change"].some(x=>text.includes(x));
-    if (actionFilter === "qr_scan") return text.includes("qr_scan") || text.includes("qr scan") || text.includes("scan") || String(log.module ?? "").toLowerCase().includes("qr verification");
-    if (actionFilter === "errors") return ["error","failed","warning"].includes(status);
-    return true;
+    if (actionFilter === "login" && !(text.includes("login") || text.includes("log in") || text.includes("sign in"))) return false;
+    if (actionFilter === "logout" && !(text.includes("logout") || text.includes("log out") || text.includes("sign out"))) return false;
+    if (actionFilter === "changes" && !["create","update","delete","approval","status_change"].some(x => text.includes(x))) return false;
+    if (actionFilter === "qr_scan" && !(text.includes("qr_scan") || text.includes("qr scan") || text.includes("scan") || String(log.module ?? "").toLowerCase().includes("qr verification"))) return false;
+    if (actionFilter === "errors" && !["error","failed","warning"].includes(status)) return false;
+    const query = search.trim().toLowerCase();
+    if (!query) return true;
+    return [log.actor_name, log.actor_username, log.user?.name, log.user?.username, log.event_type, log.action, log.module, log.description, log.status, log.ip_address]
+      .some(value => String(value ?? "").toLowerCase().includes(query));
+  }).sort((a:any,b:any) => {
+    const aTime = new Date(a.created_at ?? a.date ?? 0).getTime() || 0;
+    const bTime = new Date(b.created_at ?? b.date ?? 0).getTime() || 0;
+    return sortOrder === "newest" ? bTime - aTime : aTime - bTime;
   });
 
   function exportAuditLogsExcel() {
@@ -18225,174 +18026,113 @@ function SysAdminAuditLogs() {
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title="System Logs"
-        subtitle="Audit events and system transactions, grouped by activity type."
-      />
-      <CSUStatsPeriodFilter
-        value={logsPeriod} onChange={setLogsPeriod}
-        start={logsStart} onStartChange={setLogsStart}
-        end={logsEnd} onEndChange={setLogsEnd}
-        description="Filters audit statistics, activity records, system transactions and exports by date."
-      />
-      <div className="rounded-xl border border-[#cfd8e6] bg-white px-4 py-3 flex flex-wrap items-center gap-2">
-        {actionTabs.map(tab => (
-          <button type="button" key={tab.id} aria-pressed={actionFilter === tab.id}
-            onClick={() => setActionFilter(tab.id)}
-            className={`rounded-full px-3 py-2 text-xs font-semibold ${actionFilter === tab.id ? "bg-[#17336d] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
-            {tab.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap justify-between items-center gap-3">
+        <PageHeader title="System Logs" />
+        <button type="button" onClick={() => setManageLogsOpen(true)} className="inline-flex items-center gap-2 rounded-lg border border-[#cfd8e6] px-4 py-2 text-sm font-semibold text-[#17336d] dark:text-white dark:bg-[#1f4ea7] dark:border-[#5e87dd] hover:bg-[#eef2ff]">
+          <Settings size={15} /> Manage Logs
+        </button>
       </div>
-      {["item-registration", "transaction-scan", "security-incident", "lost-found"].includes(actionFilter)
-        ? <AdminRecords embedded selectedType={actionFilter === "item-registration" ? "Item Registration" : actionFilter === "transaction-scan" ? "QR Scan" : actionFilter === "security-incident" ? "Security Incident" : "Lost & Found"} sharedPeriod={logsPeriod} sharedStart={logsStart} sharedEnd={logsEnd} />
-        : <>
-
+      {/* QRPass Manage Logs modal v2 */}
+      {manageLogsOpen && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/65 p-4" onMouseDown={e => { if (e.target === e.currentTarget && !manageBusy) setManageLogsOpen(false); }}>
+          <div role="dialog" aria-modal="true" aria-label="Manage System Logs" className="w-full max-w-xl rounded-2xl border border-[#cfd8e6] bg-white p-6 shadow-2xl dark:border-[#4b72b3] dark:bg-[#101c31] dark:text-white sm:max-w-2xl sm:p-8">
+            <div className="relative mb-6 flex min-h-10 items-center justify-end">
+              <h3 className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-center text-xl font-bold">Manage Logs</h3>
+              <button type="button" disabled={manageBusy} onClick={() => setManageLogsOpen(false)} className="rounded-lg border px-3 py-2 text-sm">Close</button>
+            </div>
+            <label htmlFor="qrpass-manage-period" className="mb-2 block text-sm font-semibold">Select logs</label>
+            <select id="qrpass-manage-period" value={cleanupAge} disabled={manageBusy} onChange={e=>{setCleanupAge(e.target.value);setManageConfirmDelete(false);setManageCount(null);setManageArchiveId("");setManageArchiveDownloaded(false);setManageMessage("");}} className="mb-4 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-4 py-3 text-sm text-[#17336d] dark:bg-[#1b3363] dark:text-white">
+              <option value="all">All Logs</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="7">Last 7 Days</option>
+              <option value="30">Last 30 Days</option>
+              <option value="custom">Custom Date Range</option>
+            </select>
+            {cleanupAge === "custom" && <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <input type="date" aria-label="Start date" value={manageStart} onChange={e=>{setManageStart(e.target.value);setManageCount(null);setManageArchiveId("");setManageArchiveDownloaded(false);}} className="rounded-xl border p-3" />
+              <input type="date" aria-label="End date" value={manageEnd} onChange={e=>{setManageEnd(e.target.value);setManageCount(null);setManageArchiveId("");setManageArchiveDownloaded(false);}} className="rounded-xl border p-3" />
+            </div>}
+            {manageCount !== null && <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm font-semibold text-[#17336d] dark:border-[#4266a8] dark:bg-[#192f58] dark:text-white">{manageCount} matching audit logs</div>}
+            {manageMessage && <div role="status" className="mb-4 rounded-lg border border-[#cfd8e6] p-3 text-sm break-words">{manageMessage}</div>}
+            <div className="mb-3">
+              <button type="button" disabled={manageBusy} onClick={() => {setManageShowArchives(!manageShowArchives);if(!manageShowArchives)void manageListArchives();}} className="min-h-11 w-full rounded-xl border border-[#b9c9e6] bg-[#eef2ff] px-4 py-2 text-sm font-semibold text-[#17336d] dark:bg-[#23457f] dark:text-white">{manageShowArchives ? "Hide Archives" : "View Archives"}</button>
+              {manageShowArchives && <div className="mt-2 max-h-60 space-y-2 overflow-y-auto rounded-xl border p-2">
+                {manageArchives.length===0 && <p className="p-2 text-sm">No saved archives.</p>}
+                {manageArchives.map(a => <div key={a.archive_id} className="rounded-lg border p-3 text-sm dark:border-[#4b72b3]">
+                  <div className="mb-2 font-semibold">{a.count} logs · {a.created_at ? new Date(a.created_at).toLocaleString() : "Saved archive"}</div>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" disabled={manageBusy} onClick={() => void manageDownloadById(a.archive_id,"xlsx")} className="rounded-lg border px-3 py-2">Download</button>
+                    <button type="button" disabled={manageBusy} onClick={() => void manageUnarchive(a.archive_id)} className="rounded-lg border px-3 py-2">Restore</button>
+                    <button type="button" disabled={manageBusy} onClick={() => void manageDeleteArchive(a.archive_id,a.count)} className="rounded-lg border border-red-400 bg-red-50 px-3 py-2 text-red-700 dark:bg-[#752d37] dark:text-white">Delete</button>
+                  </div>
+                </div>)}
+              </div>}
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              <button type="button" disabled={manageBusy || (cleanupAge === "custom" && (!manageStart || !manageEnd))} onClick={managePreview} className="min-h-11 w-full rounded-xl border border-[#b9c9e6] bg-[#edf2ff] px-4 py-3 text-sm font-semibold text-[#17336d] disabled:opacity-50 dark:bg-[#23457f] dark:text-white">{manageBusy ? "Processing..." : "Preview"}</button>
+              <button type="button" disabled={manageBusy || (cleanupAge === "custom" && (!manageStart || !manageEnd))} onClick={manageArchive} className="min-h-11 w-full rounded-xl border border-[#b9c9e6] bg-[#edf2ff] px-4 py-3 text-sm font-semibold text-[#17336d] disabled:opacity-50 dark:bg-[#23457f] dark:text-white">Archive Logs</button>
+              <button type="button" disabled={manageBusy || !manageArchiveId} onClick={() => void manageDownload("xlsx")} className="min-h-11 w-full rounded-xl border border-[#b9c9e6] bg-[#edf2ff] px-4 py-3 text-sm font-semibold text-[#17336d] disabled:opacity-50 dark:bg-[#23457f] dark:text-white">Download</button>
+              <button type="button" disabled={manageBusy || (cleanupAge === "custom" && (!manageStart || !manageEnd))} onClick={() => { setManageConfirmDelete(true); setManageMessage(""); }} className="min-h-11 w-full rounded-xl border border-red-400 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 disabled:opacity-50 dark:bg-[#7f202b] dark:text-white">Delete Logs</button>
+              {manageConfirmDelete && (
+                <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-900 dark:border-red-500 dark:bg-[#491d29] dark:text-white" role="alertdialog" aria-label="Confirm permanent log deletion">
+                  <p className="mb-3 font-semibold">Permanently delete logs for the selected period? This cannot be undone. An archive is optional, not required.</p>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <button type="button" disabled={manageBusy} onClick={() => setManageConfirmDelete(false)} className="rounded-lg border bg-white px-3 py-2 text-[#17336d] dark:bg-[#1b3363] dark:text-white">Cancel</button>
+                    <button type="button" disabled={manageBusy} onClick={() => { void manageDelete(); }} className="rounded-lg border border-red-700 bg-red-700 px-3 py-2 font-semibold text-white">Confirm Delete</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
       {error && (
         <div className="p-3 border border-red-200 bg-red-50 rounded-md text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <StatisticalCardsSection>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard
-          label="Logs in Period (Loaded)"
-          value={periodAuditStats.total.toLocaleString()}
-          icon={
-            <FileText size={20} />
-          }
-          color="#1a3a7b"
-        />
-
-        <StatCard
-          label="QR Scan Events"
-          value={periodAuditStats.scans.toLocaleString()}
-          icon={
-            <ScanLine size={20} />
-          }
-          color="#557bdc"
-        />
-
-        <StatCard
-          label="Data Changes"
-          value={periodAuditStats.changes.toLocaleString()}
-          icon={
-            <RefreshCw size={20} />
-          }
-          color="#2f5fd6"
-        />
-
-        <StatCard
-          label="Errors"
-          value={periodAuditStats.errors.toLocaleString()}
-          icon={
-            <AlertTriangle size={20} />
-          }
-          color="#e8543a"
-        />
+      {/* Search toolbar should appear above the activity buttons */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <form onSubmit={handleSearch} className="relative min-w-0 flex-1">
+          <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
+          <input
+            type="search"
+            aria-label="Search system logs"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search user, action, module, description..."
+            className="h-[48px] w-full min-w-0 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] pl-11 pr-4 text-sm text-[#17336d] outline-none transition-colors placeholder:text-[#8195bb] focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20"
+          />
+        </form>
+        <select data-qrpass-filter="activities" aria-label="Filter system log activity" value={actionFilter} onChange={e => setActionFilter(e.target.value)} className="h-12 min-w-[165px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
+            {actionTabs.map(tab => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
+          </select>
+          <select
+          aria-label="Sort system logs"
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+          className="h-[48px] w-full sm:w-[148px] shrink-0 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
+        >
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+          <button type="button" data-qrpass-refresh-toolbar="v1" onClick={() => loadAuditLogs()} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff]" aria-label="Refresh records"><RefreshCw size={15} />Refresh</button>
       </div>
-      </StatisticalCardsSection>
+
+      <div className="flex flex-wrap items-center gap-3">
+        
+      </div>
+      {["item-registration", "transaction-scan", "security-incident", "lost-found"].includes(actionFilter)
+        ? <AdminRecords embedded selectedType={actionFilter === "item-registration" ? "Item Registration" : actionFilter === "transaction-scan" ? "QR Scan" : actionFilter === "security-incident" ? "Security Incident" : "Lost & Found"} sharedPeriod={logsPeriod} sharedStart={logsStart} sharedEnd={logsEnd} />
+        : <>
 
       <p className="text-xs text-muted-foreground">{visibleAuditLogs.length} matching audit events</p>
-      <Card title="Audit Activity Records">
-        <div className="p-4 border-b border-[#cfd8e6]">
-          <form
-            onSubmit={handleSearch}
-            className="flex flex-col xl:flex-row gap-3"
-          >
-            <div className="relative flex-1">
-              <Search
-                size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-
-              <input
-                type="text"
-                value={search}
-                onChange={(e) =>
-                  setSearch(
-                    e.target.value
-                  )
-                }
-                placeholder="Search user, action, module, description..."
-                className="w-full pl-9 pr-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6]"
-              />
-            </div>
-
-            <select
-              value={statusFilter}
-              onChange={(e) =>
-                setStatusFilter(
-                  e.target.value
-                )
-              }
-              className="px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none"
-            >
-              <option value="">
-                All Statuses
-              </option>
-
-              <option value="success">
-                Success
-              </option>
-
-              <option value="warning">
-                Warning
-              </option>
-
-              <option value="failed">
-                Failed
-              </option>
-
-              <option value="error">
-                Error
-              </option>
-            </select>
-
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) =>
-                setDateFilter(
-                  e.target.value
-                )
-              }
-              className="px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none"
-            />
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              <Filter size={14} />
-
-              {loading
-                ? "Loading..."
-                : "Apply"}
-            </button>
-
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted"
-            >
-              Clear
-            </button>
-
-            <button
-              type="button"
-              onClick={
-                exportAuditLogsExcel
-              }
-              className="px-4 py-2 border border-[#cfd8e6] text-primary rounded-md text-xs font-semibold hover:bg-primary/5 flex items-center justify-center gap-2"
-            >
-              <Download size={14} />
-              Export Excel
-            </button>
-          </form>
-        </div>
+      <Card
+        title="Audit Activity Records"
+      >
 
         {loading ? (
           <div className="p-8 text-center text-sm text-muted-foreground">
@@ -18530,6 +18270,10 @@ function SysAdminActiveSessions() {
   const [sessionTimeout, setSessionTimeout] = useState(30);
 
   const [loading, setLoading] = useState(true);
+  const [sessionSearch, setSessionSearch] = useState('');
+  const [sessionSort, setSessionSort] = useState<'newest' | 'oldest'>('newest');
+
+  const [disablingId, setDisablingId] = useState<number | null>(null);
   const [revokingId, setRevokingId] =
     useState<number | null>(null);
 
@@ -18695,6 +18439,35 @@ function SysAdminActiveSessions() {
   |--------------------------------------------------------------------------
   */
 
+  // Disable the entire account, rather than only one token.
+  async function handleDisable(session: any) {
+    const account = linkedAccount(session);
+    const userId = account?.id ?? session.user_id ?? session.user?.id;
+    if (session.is_current) {
+      setError('You cannot disable your current administrator account.');
+      return;
+    }
+    if (!userId || !account) {
+      setError('Cannot safely identify this user account. Open User Accounts to disable it.');
+      return;
+    }
+    const accountStatus = String(account.status ?? account.account_status ?? '').toLowerCase();
+    if (accountStatus === 'inactive' || accountStatus === 'disabled') {
+      setError('This user account is already disabled.');
+      return;
+    }
+    if (!window.confirm(`Disable the account of ${sessionDisplayName(session)}? This affects account access, not just this session.`)) return;
+    try {
+      setDisablingId(Number(userId));
+      setError(''); setSuccess('');
+      const result = await updateUserStatus(Number(userId), 'inactive');
+      setSuccess(result?.message || 'User account disabled successfully.');
+      await loadSessions();
+    } catch(err) {
+      setError(err instanceof Error ? err.message : 'Failed to disable account.');
+    } finally { setDisablingId(null); }
+  }
+
   function formatDateTime(
     value?: string | null
   ) {
@@ -18710,7 +18483,7 @@ function SysAdminActiveSessions() {
         date.getTime()
       )
     ) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleString(
@@ -18794,6 +18567,21 @@ function SysAdminActiveSessions() {
   |--------------------------------------------------------------------------
   */
 
+  // QRPASS_SESSIONS_TABLE_V1 â€” match User Accounts toolbar and layout.
+  const visibleSessions = sessions.filter((session: any) => {
+    const account = linkedAccount(session);
+    const term = sessionSearch.trim().toLowerCase();
+    const haystack = [sessionDisplayName(session), account?.id, session.user_id,
+      account?.email, session.email, session.user?.email,
+      account?.username, session.username, roleLabel(account?.role || session.role),
+      session.id, session.token_name].join(' ').toLowerCase();
+    return !term || haystack.includes(term);
+  }).sort((a: any, b: any) => {
+    const aTime = new Date(a.last_activity || a.created_at || 0).getTime() || 0;
+    const bTime = new Date(b.last_activity || b.created_at || 0).getTime() || 0;
+    return sessionSort === 'newest' ? bTime - aTime : aTime - bTime;
+  });
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -18835,258 +18623,82 @@ function SysAdminActiveSessions() {
 
       {/* STAT CARDS */}
 
-      <StatisticalCardsSection>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <StatCard
-          label="Unique Active Users"
-          value={String(activeUsersCount)}
-          icon={
-            <Eye size={20} />
-          }
-          color="#1a3a7b"
-        />
-
-        <StatCard
-          label="Active Tokens / Stored"
-          value={`${activeCount} / ${totalSessions}`}
-          icon={
-            <Users size={20} />
-          }
-          color="#2f5fd6"
-        />
-
-        <StatCard
-          label="Session Timeout"
-          value={`${sessionTimeout} min`}
-          icon={
-            <Clock size={20} />
-          }
-          color="#d49b17"
-        />
-      </div>
-      </StatisticalCardsSection>
-
 
       {/* SESSION TABLE */}
-
-      <Card title="Authenticated Sessions">
-        <div className="p-4 border-b border-[#dce3ee] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold text-foreground">
-              Session Management
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">Name shows the matched User Accounts profile name, not a name inferred from the user's role. Update the account profile if it only says "System Administrator".</p>
-
-            <p className="text-xs text-muted-foreground mt-1">
-              Unique Active Users counts distinct accounts with recently used tokens; Active Tokens / Stored counts login tokens.
-              Closing a browser tab does not immediately revoke its token. Data refreshes every 20 seconds;
-              tokens are considered active within the configured {sessionTimeout}-minute timeout period.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={loadSessions}
-            disabled={loading}
-            className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-[#cfd8e6] bg-white text-sm font-medium text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          >
-            <RefreshCw
-              size={15}
-              className={
-                loading
-                  ? "animate-spin"
-                  : ""
-              }
-            />
-
-            Refresh
-          </button>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative min-w-0 flex-1">
+          <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
+          <input type="search" aria-label="Search active sessions" value={sessionSearch}
+            onChange={(e) => setSessionSearch(e.target.value)}
+            placeholder="Search name, user ID, email, role, session..."
+            className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] pl-11 pr-4 text-sm text-[#17336d] outline-none placeholder:text-[#8196b9] focus:border-[#2f5fd6] focus:bg-white focus:ring-2 focus:ring-[#2f5fd6]/15" />
         </div>
-
-
+        <select aria-label="Sort active sessions" value={sessionSort}
+          onChange={(e) => setSessionSort(e.target.value as 'newest' | 'oldest')}
+          className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#2f5fd6] sm:w-[150px]">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+        <button type="button" onClick={loadSessions} disabled={loading}
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">
+          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> Refresh
+        </button>
+      </div>
+      <Card title="Authenticated Sessions">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[950px] text-sm">
             <thead>
-              <tr className="bg-[#fafbfc] border-b border-[#dce3ee]">
-                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
-                  Name
-                </th>
-
-                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
-                  User ID
-                </th>
-
-                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
-                  Email
-                </th>
-
-                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
-                  Role
-                </th>
-
-                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
-                  Session
-                </th>
-
-                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
-                  Created
-                </th>
-
-                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
-                  Last Activity
-                </th>
-
-                <th className="text-left py-3 px-4 text-xs text-muted-foreground font-medium">
-                  Status
-                </th>
-
-                <th className="text-right py-3 px-4 text-xs text-muted-foreground font-medium">
-                  Action
-                </th>
+              <tr className="border-b border-[#dce3ee] bg-[#fafbfc] text-left text-xs text-[#64748b]">
+                {['Name', 'User ID', 'Email', 'Role', 'Session', 'Last Activity', 'Status', 'Actions'].map((heading) => (
+                  <th key={heading} className="px-4 py-3 font-medium">{heading}</th>
+                ))}
               </tr>
             </thead>
-
             <tbody>
-              {loading &&
-              sessions.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={9}
-                    className="py-12 text-center text-sm text-muted-foreground"
-                  >
-                    Loading active sessions...
-                  </td>
-                </tr>
-              ) : sessions.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={9}
-                    className="py-12 text-center"
-                  >
-                    <Users
-                      size={28}
-                      className="mx-auto mb-2 text-muted-foreground"
-                    />
-
-                    <p className="text-sm font-semibold">
-                      No sessions found
-                    </p>
-
-                    <p className="text-xs text-muted-foreground mt-1">
-                      There are currently no stored authentication sessions.
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                sessions.map(
-                  (session: any) => (
-                    <tr
-                      key={session.id}
-                      className="border-b border-[#edf0f5] hover:bg-[#fafbfc]"
-                    >
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-foreground">
-                            {sessionDisplayName(session)}
-                          </p>
-                          {session.is_current && (
-                            <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">Current</span>
-                          )}
-                        </div>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{linkedAccount(session)?.username || session.username || session.user?.username || ""}</p>
-                      </td>
-
-                      <td className="py-3 px-4 text-xs text-foreground">
-                        {linkedAccount(session)?.id ?? session.user_id ?? session.user?.id ?? "—"}
-                      </td>
-
-                      <td className="py-3 px-4 text-xs text-muted-foreground">
-                        {linkedAccount(session)?.email || session.email || session.user?.email || "—"}
-                      </td>
-
-                      <td className="py-3 px-4 text-sm">
-                        {roleLabel(linkedAccount(session)?.role || session.role)}
-                      </td>
-
-                      <td className="py-3 px-4">
-                        <p className="text-xs font-mono text-foreground">
-                          #{session.id}
-                        </p>
-
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {session.token_name ||
-                            "qrpass-token"}
-                        </p>
-                      </td>
-
-                      <td className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDateTime(
-                          session.created_at
-                        )}
-                      </td>
-
-                      <td className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDateTime(
-                          session.last_activity
-                        )}
-                      </td>
-
-                      <td className="py-3 px-4">
-                        {session.is_active ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-xs font-semibold text-green-700">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-
-                            Active
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-600">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-
-                            Inactive
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="py-3 px-4 text-right">
-                        {session.is_current ? (
-                          <span className="text-xs text-muted-foreground">
-                            Current Session
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleRevoke(
-                                session
-                              )
-                            }
-                            disabled={
-                              revokingId ===
-                              Number(
-                                session.id
-                              )
-                            }
-                            className="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
-                          >
-                            <XCircle
-                              size={14}
-                            />
-
-                            {revokingId ===
-                            Number(
-                              session.id
-                            )
-                              ? "Revoking..."
-                              : "Revoke"}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                )
-              )}
+              {loading && sessions.length === 0 ? (
+                <tr><td colSpan={8} className="px-4 py-10 text-center text-[#64748b]">Loading active sessions...</td></tr>
+              ) : visibleSessions.length === 0 ? (
+                <tr><td colSpan={8} className="px-4 py-10 text-center text-[#64748b]">No matching sessions found.</td></tr>
+              ) : visibleSessions.map((session: any) => {
+                const account = linkedAccount(session);
+                const accountStatus = String(account?.status ?? account?.account_status ?? '').toLowerCase();
+                const accountDisabled = accountStatus === 'inactive' || accountStatus === 'disabled';
+                const userId = account?.id ?? session.user_id ?? session.user?.id;
+                return (
+                  <tr key={session.id} className="border-b border-[#e8edf5] hover:bg-[#f5f7fc]">
+                    <td className="px-4 py-3 font-semibold text-[#172b50]">
+                      {sessionDisplayName(session)}
+                      {session.is_current && <span className="ml-2 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700">Current</span>}
+                    </td>
+                    <td className="px-4 py-3 text-xs">{userId ?? 'â€”'}</td>
+                    <td className="px-4 py-3 text-xs text-[#64748b]">{account?.email || session.email || session.user?.email || 'â€”'}</td>
+                    <td className="px-4 py-3"><span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">{roleLabel(account?.role || session.role)}</span></td>
+                    <td className="px-4 py-3 text-xs text-[#64748b]">#{session.id}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-xs text-[#64748b]">{formatDateTime(session.last_activity)}</td>
+                    <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${session.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{session.is_active ? 'Active' : 'Inactive'}</span></td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => handleRevoke(session)}
+                          disabled={session.is_current || revokingId === Number(session.id)}
+                          className="rounded-lg border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] hover:bg-[#eef2ff] disabled:cursor-not-allowed disabled:opacity-40">
+                          {revokingId === Number(session.id) ? 'Revoking...' : 'Revoke'}
+                        </button>
+                        <button type="button" onClick={() => handleDisable(session)}
+                          disabled={session.is_current || accountDisabled || !account || disablingId === Number(userId)}
+                          title={session.is_current ? 'Cannot disable your current account' : accountDisabled ? 'Already disabled' : !account ? 'Account not found in User Accounts' : 'Disable user account'}
+                          className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40">
+                          {disablingId === Number(userId) ? 'Disabling...' : accountDisabled ? 'Disabled' : 'Disable'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+        </div>
+        <div className="flex justify-between gap-2 border-t border-[#dce3ee] px-4 py-3 text-xs text-[#64748b]">
+          <span>Showing {visibleSessions.length} of {sessions.length} stored sessions</span>
         </div>
       </Card>
     </div>
@@ -19215,7 +18827,7 @@ function SysAdminPerformance() {
       seconds === null ||
       seconds === undefined
     ) {
-      return "—";
+      return "â€”";
     }
 
     const totalSeconds =
@@ -19224,7 +18836,7 @@ function SysAdminPerformance() {
     if (
       Number.isNaN(totalSeconds)
     ) {
-      return "—";
+      return "â€”";
     }
 
     const days =
@@ -19268,7 +18880,7 @@ function SysAdminPerformance() {
       value === null ||
       value === undefined
     ) {
-      return "—";
+      return "â€”";
     }
 
     const numberValue =
@@ -19277,7 +18889,7 @@ function SysAdminPerformance() {
     if (
       Number.isNaN(numberValue)
     ) {
-      return "—";
+      return "â€”";
     }
 
     return `${numberValue.toFixed(
@@ -19295,7 +18907,7 @@ function SysAdminPerformance() {
     value?: string | null
   ) {
     if (!value) {
-      return "—";
+      return "â€”";
     }
 
     const date =
@@ -19386,74 +18998,6 @@ function SysAdminPerformance() {
           {error}
         </div>
       )}
-
-      <StatisticalCardsSection>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard
-          label="Server Uptime"
-          value={
-            loading
-              ? "..."
-              : formatUptime(
-                  metrics.server_uptime_seconds
-                )
-          }
-          icon={
-            <CheckCircle
-              size={20}
-            />
-          }
-          color="#2ecc71"
-        />
-
-        <StatCard
-          label="Active Sessions"
-          value={
-            loading
-              ? "..."
-              : String(
-                  metrics.active_sessions
-                )
-          }
-          icon={
-            <Eye size={20} />
-          }
-          color="#1a3a7b"
-        />
-
-        <StatCard
-          label="QR Response"
-          value={
-            loading
-              ? "..."
-              : formatResponseTime(
-                  metrics.qr_response_ms
-                )
-          }
-          icon={
-            <Clock size={20} />
-          }
-          color="#2f5fd6"
-        />
-
-        <StatCard
-          label="Errors Today"
-          value={
-            loading
-              ? "..."
-              : String(
-                  metrics.errors_today
-                )
-          }
-          icon={
-            <AlertTriangle
-              size={20}
-            />
-          }
-          color="#e8543a"
-        />
-      </div>
-      </StatisticalCardsSection>
 
       <Card title="System Status">
         {loading ? (
@@ -20072,11 +19616,11 @@ function SysAdminSecurityConfig() {
   );
 }
 
-// ── Page registry ─────────────────────────────────────────────────────────────
+// â”€â”€ Page registry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // SYSTEM ADMINISTRATOR - ANNOUNCEMENT MANAGEMENT
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 type ManagedAnnouncement = {
   id: number;
@@ -20175,6 +19719,9 @@ function SysAdminAnnouncementManagement() {
     useState("");
   const [announcementTab, setAnnouncementTab] = useState<"list" | "form">("list");
   const [announcementPriority, setAnnouncementPriority] = useState<"all" | "info" | "important" | "urgent">("all");
+  // QRPASS_ANNOUNCEMENTS_SEARCH_SORT_20261120
+  const [announcementSearch, setAnnouncementSearch] = useState("");
+  const [announcementSort, setAnnouncementSort] = useState<"newest" | "oldest">("newest");
   const [annPeriod, setAnnPeriod] = useState<CSUDatePeriod>("all");
   const [annFrom, setAnnFrom] = useState("");
   const [annTo, setAnnTo] = useState("");
@@ -20231,7 +19778,7 @@ function SysAdminAnnouncementManagement() {
     value?: string | null
   ) {
     if (!value) {
-      return "—";
+      return "â€”";
     }
 
     const date = new Date(value);
@@ -20241,7 +19788,7 @@ function SysAdminAnnouncementManagement() {
         date.getTime()
       )
     ) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleString(
@@ -20661,9 +20208,16 @@ function SysAdminAnnouncementManagement() {
   }
 
   // Date filters target when the announcement record was created.
-  const periodAnnouncements = announcements.filter(item =>
-    csuMatchesPeriod(item.created_at, annPeriod, annFrom, annTo)
-  );
+  const periodAnnouncements = announcements.filter(item => {
+    const matchesPeriod = csuMatchesPeriod(item.created_at, annPeriod, annFrom, annTo);
+    const query = announcementSearch.trim().toLowerCase();
+    const matchesSearch = !query || [item.title, item.message, item.audience, item.priority, item.display_status].some(value => String(value ?? "").toLowerCase().includes(query));
+    return matchesPeriod && matchesSearch;
+  }).sort((a, b) => {
+    const aTime = new Date(a.created_at ?? 0).getTime() || 0;
+    const bTime = new Date(b.created_at ?? 0).getTime() || 0;
+    return announcementSort === "newest" ? bTime - aTime : aTime - bTime;
+  });
 
   const activeCount =
     periodAnnouncements.filter(
@@ -20698,26 +20252,7 @@ function SysAdminAnnouncementManagement() {
       <PageHeader
         title="Announcement Management"
         subtitle="Create, schedule, publish, and manage QRPass announcements for specific user roles."
-        action={
-          <button
-            type="button"
-            onClick={
-              loadAnnouncements
-            }
-            disabled={loading}
-            className="inline-flex items-center gap-2 rounded-lg border border-[#cfd8e6] bg-white px-3 py-2 text-xs font-semibold text-[#1a3a7b] hover:bg-[#eef2fc] disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          >
-            <RefreshCw
-              size={14}
-              className={
-                loading
-                  ? "animate-spin"
-                  : ""
-              }
-            />
-            Refresh
-          </button>
-        }
+        
       />
 
       {error && (
@@ -20749,56 +20284,7 @@ function SysAdminAnnouncementManagement() {
         <button type="button" onClick={() => { setAnnouncementTab("form"); if (editingId) resetForm(); }} className={`rounded-xl px-4 py-2 text-xs font-semibold ${announcementTab === "form" ? "bg-[#17336d] text-white" : "bg-[#f3f6fb] text-[#17336d]"}`}>+ Create Announcement</button>
       </div>
       {announcementTab === "list" && <>
-      <CSUStatsPeriodFilter value={annPeriod} onChange={setAnnPeriod} start={annFrom} onStartChange={setAnnFrom} end={annTo} onEndChange={setAnnTo} description="Announcement statistics use the announcement creation date." />
-      <StatisticalCardsSection>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard
-          label="Active"
-          value={String(
-            activeCount
-          )}
-          icon={
-            <Bell size={20} />
-          }
-          color="#15803d"
-        />
-
-        <StatCard
-          label="Scheduled"
-          value={String(
-            scheduledCount
-          )}
-          icon={
-            <Clock size={20} />
-          }
-          color="#2f5fd6"
-        />
-
-        <StatCard
-          label="Drafts"
-          value={String(
-            draftCount
-          )}
-          icon={
-            <EyeOff size={20} />
-          }
-          color="#b7791f"
-        />
-
-        <StatCard
-          label="Expired"
-          value={String(
-            expiredCount
-          )}
-          icon={
-            <AlertCircle
-              size={20}
-            />
-          }
-          color="#64748b"
-        />
-      </div>
-      </StatisticalCardsSection>
+      {/* Standalone Reporting Period selector removed from staff page. */}
 
       </>}
       {announcementTab === "form" && <>
@@ -21089,11 +20575,26 @@ function SysAdminAnnouncementManagement() {
 
       </>}
       {announcementTab === "list" && <>
+      <div className="mb-3">
+        <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+  <div className="relative min-w-0 flex-1">
+    <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
+    <input type="search" aria-label="Search announcements" value={announcementSearch} onChange={e => setAnnouncementSearch(e.target.value)} placeholder="Search announcements..." className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] pl-11 pr-4 text-sm text-[#17336d] outline-none placeholder:text-[#7890b6] focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15" />
+  </div>
+  <select data-qrpass-filter="announcements" aria-label="Filter announcements" value={announcementPriority} onChange={e => setAnnouncementPriority(e.target.value as typeof announcementPriority)} className="h-12 min-w-[165px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
+            <option value="all">All Announcements</option><option value="info">Information</option><option value="important">Important</option><option value="urgent">Urgent</option>
+          </select>
+          <select aria-label="Sort announcements" value={announcementSort} onChange={e => setAnnouncementSort(e.target.value as 'newest' | 'oldest')} className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-4 text-sm font-medium text-[#17336d] outline-none sm:w-[150px] focus:border-[#2f5fd6]">
+    <option value="newest">Newest first</option>
+    <option value="oldest">Oldest first</option>
+  </select>
+          {/* QRPASS_REFRESH_POSITION_V3: Announcement Management */}
+          <button type="button" onClick={loadAnnouncements} disabled={loading} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff] disabled:opacity-50"><RefreshCw size={14} className={loading ? "animate-spin" : ""}/> Refresh</button>
+</div>
+      </div>
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#dce3ee] bg-white p-3">
         <span className="mr-1 text-xs font-semibold text-[#17336d]">Priority:</span>
-        {([ ["all","All Announcements"], ["info","Information"], ["important","Important"], ["urgent","Urgent"] ] as const).map(([id,label]) => (
-          <button key={id} type="button" aria-pressed={announcementPriority === id} onClick={() => setAnnouncementPriority(id)} className={`rounded-xl px-3 py-2 text-xs font-semibold ${announcementPriority === id ? "bg-[#17336d] text-white" : "bg-[#f3f6fb] text-[#17336d]"}`}>{label}</button>
-        ))}
+        
       </div>
       <Card
         title="All Announcements"
@@ -21122,9 +20623,7 @@ function SysAdminAnnouncementManagement() {
               No announcements yet.
             </p>
 
-            <p className="mt-1 text-xs text-[#94a3b8]">
-              Create the first QRPass announcement using the form above.
-            </p>
+            
           </div>
         ) : (
           <div className="divide-y divide-[#e5eaf2]">
@@ -21313,84 +20812,22 @@ function SysAdminAnnouncementManagement() {
 // =========================================================
 // CSU OVERVIEW - read-only operational statistics
 // =========================================================
+
 function SecurityOverview({ onNavigate }: { onNavigate?: (index: number) => void }) {
-  const [showCSUGuide, setShowCSUGuide] = useState(true);
-  const actions = [
-    { index: 1, title: "Scan & Verify", description: "Scan a QR code or manually verify an item.", icon: <ScanLine size={23} />, accent: "#1a3a7b" },
-    { index: 2, title: "Entry / Exit Log", description: "Review past scans and security incidents.", icon: <Map size={23} />, accent: "#2f5fd6" },
-    { index: 3, title: "Registered Items", description: "Find approved items and confirm ownership.", icon: <Layers size={23} />, accent: "#0f766e" },
-    { index: 4, title: "Lost & Found", description: "Record missing or surrendered property.", icon: <BookOpen size={23} />, accent: "#7c3aed" },
-    { index: 5, title: "Reports", description: "Export security reports for your selected dates.", icon: <FileText size={23} />, accent: "#c47c19" },
-  ];
-
-  const duties = [
-    { title: "Before allowing entry or exit", detail: "Check the QR verification result and match the registered owner with the person carrying the item.", icon: <Shield size={19} /> },
-    { title: "When an item is not verified", detail: "Follow CSU inspection procedures and record an incident if the item is unregistered or unapproved.", icon: <AlertTriangle size={19} /> },
-    { title: "When property is turned over", detail: "Record the item description and location, then verify the claimant before completing a claim.", icon: <Package size={19} /> },
-  ];
-
   return (
-    <div className="w-full min-w-0 space-y-5">
-      <PageHeader title="CSU Overview" subtitle="Your daily campus security workspace at University of Cebu - Main Campus." />
-
-      <section className="rounded-2xl border border-[#dce3ee] bg-card px-4 py-6 shadow-sm sm:px-7 sm:py-8">
-        <div className="mx-auto mb-6 max-w-2xl text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef2fc] text-[#1a3a7b]"><Shield size={25} /></div>
-          <h3 className="text-lg font-bold text-foreground">CSU Quick Actions</h3>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">Open the module you need. Detailed scan statistics and records stay in Entry / Exit Log.</p>
-        </div>
-        <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-3 sm:gap-4">
-          {actions.map(action => (
-            <button
-              key={action.index}
-              type="button"
-              onClick={() => onNavigate?.(action.index)}
-              className="group flex min-h-[118px] w-full items-start gap-4 rounded-2xl border border-[#dce3ee] bg-[#fafbfe] p-5 text-left transition-all hover:border-[#a6bce1] hover:bg-[#eef2fc] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)]"
-            >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm" style={{ color: action.accent }}>{action.icon}</span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center justify-between gap-2"><span className="text-sm font-bold text-foreground">{action.title}</span><ChevronRight size={16} className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" /></span>
-                <span className="mt-2 block text-xs leading-5 text-muted-foreground">{action.description}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-[#dce3ee] bg-card p-5 shadow-sm sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="text-base font-bold text-foreground">CSU Duty Guide</h3>
-            <p className="mt-1 text-xs text-muted-foreground">Quick reminders for routine gate verification and property handling.</p>
-          </div>
-          <button type="button" aria-expanded={showCSUGuide} onClick={() => setShowCSUGuide(value => !value)}
-            className="rounded-xl border border-[#dce3ee] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] hover:bg-[#f2f5fc]">
-            {showCSUGuide ? "Hide Guide" : "Show Guide"}
-          </button>
-        </div>
-        {showCSUGuide && <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {duties.map(duty => (
-            <div key={duty.title} className="rounded-xl border border-border bg-muted/20 p-4">
-              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef2fc] text-[#1a3a7b]">{duty.icon}</div>
-              <h4 className="text-sm font-semibold text-foreground">{duty.title}</h4>
-              <p className="mt-2 text-xs leading-6 text-muted-foreground">{duty.detail}</p>
-            </div>
-          ))}
-        </div>}
-      </section>
-
-      <div className="rounded-xl border border-[#dce3ee] bg-[#f8fafc] px-5 py-4 text-xs leading-relaxed text-muted-foreground">
-        <strong className="text-foreground">Security reminder:</strong> Never approve a scan based on the QR image alone. Verify the displayed item and owner details before recording an IN or OUT transaction.
-      </div>
+    <div className="w-full min-w-0">
+      <PageHeader title="CSU Overview" />
     </div>
   );
 }
+
 
 // =========================================================
 // CSU READ-ONLY ITEM REGISTRY - approved items only
 // Data is returned by the role-restricted /security-reports endpoint.
 // =========================================================
 function SecurityItemRegistry() {
+  const [qrpassSortOrder, setQrpassSortOrder] = useState<"newest" | "oldest">("newest");
   const [items, setItems] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -21434,6 +20871,7 @@ function SecurityItemRegistry() {
     const haystack = [item.item_name, item.item_type, item.serial_number, item.qr_code, item.brand_model, item.user?.name, item.user?.username].map(value => String(value ?? "").toLowerCase()).join(" ");
     return haystack.includes(search.trim().toLowerCase());
   });
+  visible.sort((a: any, b: any) => (qrpassSortOrder === "newest" ? 1 : -1) * ((new Date(b.created_at ?? b.registered_at ?? 0).getTime() || 0) - (new Date(a.created_at ?? a.registered_at ?? 0).getTime() || 0)));
   function downloadCsv() {
     if (visible.length === 0) { alert("There are no registered items to export."); return; }
     const escape = (value: unknown) => {
@@ -21457,33 +20895,204 @@ function SecurityItemRegistry() {
   return (
     <div className="w-full min-w-0 space-y-5">
       <PageHeader title="Registered Items" subtitle="Read-only approved item registry for gate personnel. Pending and rejected applications remain restricted to PCO and System Admin."/>
-      <CSUStatsPeriodFilter
-        value={registeredPeriod} onChange={setRegisteredPeriod}
-        start={registeredStart} onStartChange={setRegisteredStart}
-        end={registeredEnd} onEndChange={setRegisteredEnd}
-        description="Summary cards, registry records and CSV reflect the registration date."
-      />
-      <StatisticalCardsSection>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <StatCard label="Approved Items" value={loading ? "..." : String(periodItems.length)} icon={<Package size={20}/>} color="#1a3a7b"/>
-        <StatCard label="Active QR" value={loading ? "..." : String(periodItems.filter(item => itemStatus(item) === "Active").length)} icon={<QrCode size={20}/>} color="#15803d"/>
-        <div className="col-span-2 lg:col-span-1"><StatCard label="Expired QR" value={loading ? "..." : String(periodItems.filter(item => itemStatus(item) === "Expired").length)} icon={<Clock size={20}/>} color="#d97706"/></div>
-      </div>
-      </StatisticalCardsSection>
+      {/* Standalone Reporting Period selector removed from staff page. */}
       <Card title="Approved Item Registry">
         <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center">
-          <label className="relative min-w-0 flex-1"><Search size={15} className="pointer-events-none absolute left-3 top-3 text-muted-foreground"/><input aria-label="Search approved items" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search item, owner, QR ID or serial..." className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-primary"/></label>
+          <label className="relative min-w-0 flex-1"><Search size={15} className="pointer-events-none absolute left-3 top-3 text-muted-foreground"/><input aria-label="Search approved items" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search item, owner, QR ID or serial..." className="h-12 w-full min-w-0 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] pl-10 pr-4 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20"/></label>
+          
+          <select aria-label="Sort records" value={qrpassSortOrder} onChange={e => setQrpassSortOrder(e.target.value as "newest" | "oldest")} className="h-12 min-w-[150px] rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7]"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
           <select aria-label="Filter QR status" value={statusFilter} onChange={event => setStatusFilter(event.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm"><option value="all">All QR Statuses</option><option value="active">Active</option><option value="expired">Expired</option><option value="flagged">Flagged</option><option value="no qr">No QR</option></select>
           <button type="button" onClick={refresh} disabled={loading} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-primary disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"><RefreshCw size={14}/>Refresh</button>
           <button type="button" onClick={downloadCsv} disabled={loading || visible.length === 0} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-semibold text-white disabled:opacity-50"><Download size={14}/>Export CSV</button>
         </div>
         {error && <p role="alert" className="m-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}</p>}
         <div className="w-full overflow-x-auto"><table className="w-full min-w-[900px] text-sm"><thead className="bg-muted/40 text-left text-xs text-muted-foreground"><tr>{["Item", "Owner", "Serial No.", "QR ID", "Expiration", "Status"].map(label => <th key={label} className="px-4 py-3">{label}</th>)}</tr></thead><tbody className="divide-y divide-border">
-          {visible.map(item => <tr key={item.id} className="hover:bg-muted/30"><td className="px-4 py-3"><span className="font-semibold">{item.item_name ?? "—"}</span><p className="text-xs text-muted-foreground">{item.item_type ?? "—"}</p></td><td className="px-4 py-3">{item.user?.name ?? "—"}<p className="text-xs text-muted-foreground">{item.user?.username ?? ""}</p></td><td className="px-4 py-3 font-mono text-xs">{item.serial_number ?? "—"}</td><td className="px-4 py-3 font-mono text-xs">{item.qr_code ?? "—"}</td><td className="px-4 py-3 whitespace-nowrap">{item.qr_expires_at ? new Date(item.qr_expires_at).toLocaleDateString("en-PH") : "—"}</td><td className="px-4 py-3"><span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${itemStatus(item) === "Active" ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>{itemStatus(item)}</span></td></tr>)}
+          {visible.map(item => <tr key={item.id} className="hover:bg-muted/30"><td className="px-4 py-3"><span className="font-semibold">{item.item_name ?? "â€”"}</span><p className="text-xs text-muted-foreground">{item.item_type ?? "â€”"}</p></td><td className="px-4 py-3">{item.user?.name ?? "â€”"}<p className="text-xs text-muted-foreground">{item.user?.username ?? ""}</p></td><td className="px-4 py-3 font-mono text-xs">{item.serial_number ?? "â€”"}</td><td className="px-4 py-3 font-mono text-xs">{item.qr_code ?? "â€”"}</td><td className="px-4 py-3 whitespace-nowrap">{item.qr_expires_at ? new Date(item.qr_expires_at).toLocaleDateString("en-PH") : "â€”"}</td><td className="px-4 py-3"><span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${itemStatus(item) === "Active" ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>{itemStatus(item)}</span></td></tr>)}
           {!loading && visible.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">No approved items match your search.</td></tr>}
           {loading && <tr><td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">Loading approved item registry...</td></tr>}
         </tbody></table></div>
       </Card>
+    </div>
+  );
+}
+
+// QRPass centralized Sysadmin-only report generator (page access follows Sysadmin navigation).
+function SysAdminDownloadableReports() {
+  type ReportKey = "items" | "users" | "audit" | "entryexit" | "lostfound" | "incidents" | "sessions";
+  type ReportFormat = "xlsx" | "pdf" | "csv";
+  type Period = "day" | "week" | "month" | "all" | "custom";
+  const definitions: {key: ReportKey; name: string; description: string}[] = [
+    {key:"items", name:"Registered Items Report", description:"Registered inventory, QR codes, owners and approval status"},
+    {key:"users", name:"User Accounts Report", description:"User directory, roles and account statuses"},
+    {key:"audit", name:"System Activity Logs Report", description:"Logins, logouts, changes and audit events"},
+    {key:"entryexit", name:"Entry & Exit Transactions Report", description:"QR verification and IN/OUT gate activity"},
+    {key:"lostfound", name:"Lost & Found Report", description:"Reported, found, recovered and claimed items"},
+    {key:"incidents", name:"Security Incidents Report", description:"Flagged incidents, outcomes and resolution"},
+    {key:"sessions", name:"Active Sessions Report", description:"Authentication sessions and most recent activity"},
+  ];
+  const [report, setReport] = useState<ReportKey>("items");
+  const [period, setPeriod] = useState<Period>("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const getPeriodBounds = () => {
+    if (period === "all") return {start:null as Date | null, end:null as Date | null};
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = new Date(start);
+    if (period === "custom") {
+      if (!fromDate || !toDate || fromDate > toDate) throw new Error("Select a valid start and end date.");
+      // Parse local midnight, not UTC, to avoid a one-day shift in Philippine time.
+      const beginning = new Date(`${fromDate}T00:00:00`);
+      const ending = new Date(`${toDate}T00:00:00`);
+      ending.setDate(ending.getDate() + 1);
+      return {start:beginning, end:ending};
+    }
+    if (period === "week") start.setDate(start.getDate() - (start.getDay() + 6) % 7);
+    if (period === "month") start.setDate(1);
+    if (period === "day") end.setDate(end.getDate() + 1);
+    if (period === "week") { end.setTime(start.getTime()); end.setDate(end.getDate() + 7); }
+    if (period === "month") { end.setTime(start.getTime()); end.setMonth(end.getMonth() + 1); }
+    return {start, end};
+  };
+
+  const value = (input: any) => input === null || input === undefined ? "" : String(input);
+  const displayDate = (input: any) => {
+    if (!input) return "";
+    const parsed = new Date(input);
+    return Number.isNaN(parsed.getTime()) ? value(input) : parsed.toLocaleString("en-PH");
+  };
+
+  async function generate(format: ReportFormat) {
+    if (busy) return;
+    setBusy(true); setMessage("");
+    try {
+      const bounds = getPeriodBounds();
+      let source: any;
+      if (report === "items") source = await getAllItems();
+      else if (report === "users") source = await getUsers();
+      else if (report === "audit") source = await getAuditLogs({limit:500});
+      else if (report === "entryexit") source = await getScanLogs();
+      else if (report === "lostfound") source = await getSystemRecords();
+      else if (report === "incidents") source = await getSecurityIncidents();
+      else source = await getActiveSessions();
+
+      const raw: any[] = report === "items" ? (source?.items ?? []) :
+        report === "users" ? (source?.users ?? []) :
+        report === "audit" ? (source?.logs ?? []) :
+        report === "entryexit" ? (source?.logs ?? []) :
+        report === "lostfound" ? (source?.lost_found_items ?? (source?.records ?? []).filter((r: any) => r.record_type === "Lost & Found")) :
+        report === "incidents" ? (source?.incidents ?? []) : (source?.sessions ?? []);
+      if (!Array.isArray(raw)) throw new Error("Report records were not returned in the expected format.");
+      const timestamp = (r: any) => report === "entryexit" ? (r.scanned_at ?? r.created_at) :
+        report === "lostfound" ? (r.reported_at ?? r.created_at ?? r.date) :
+        report === "incidents" ? (r.reported_at ?? r.created_at) :
+        report === "sessions" ? (r.last_used_at ?? r.created_at) : r.created_at;
+      const records = raw.filter(r => {
+        if (report === "entryexit" && !["IN", "OUT"].includes(value(r.direction).toUpperCase())) return false;
+        if (!bounds.start && !bounds.end) return true;
+        const stamp = timestamp(r);
+        const d = stamp ? new Date(stamp) : null;
+        return !!d && !Number.isNaN(d.getTime()) && (!bounds.start || d >= bounds.start) && (!bounds.end || d < bounds.end);
+      });
+      if (!records.length) { setMessage("No records found for this report and period."); return; }
+      let headers: string[] = [];
+      let rows: string[][] = [];
+      if (report === "items") {
+        headers = ["Date", "Item", "Category", "Owner", "Owner ID", "QR ID", "Serial", "Status"];
+        rows = records.map(r => [displayDate(timestamp(r)),value(r.item_name),value(r.item_type),value(r.user?.name),value(r.user?.username),value(r.qr_code),value(r.serial_number),value(r.status)]);
+      } else if (report === "users") {
+        headers = ["Created", "User ID", "Name", "Role", "Status", "Department"];
+        rows = records.map(r => [displayDate(timestamp(r)),value(r.id),value(r.name),value(r.role),value(r.account_status ?? r.status),value(r.department)]);
+      } else if (report === "audit") {
+        headers = ["Date", "Actor", "Username", "Action", "Module", "Description", "Status"];
+        rows = records.map(r => [displayDate(timestamp(r)),value(r.actor_name ?? r.user?.name),value(r.actor_username ?? r.user?.username),value(r.action),value(r.module),value(r.description),value(r.status)]);
+      } else if (report === "entryexit") {
+        headers = ["Date", "QR ID", "Item", "Owner", "Gate", "Direction", "Result", "Scanner"];
+        rows = records.map(r => [displayDate(timestamp(r)),value(r.qr_code ?? r.scanned_code),value(r.item?.item_name ?? r.item_name),value(r.item?.user?.name ?? r.owner_name),value(r.gate),value(r.direction),value(r.result),value(r.scanner?.name)]);
+      } else if (report === "lostfound") {
+        headers = ["Date", "Item", "Category", "Type", "Location", "Reporter", "Claimant", "Status"];
+        rows = records.map(r => [displayDate(timestamp(r)),value(r.item_name ?? r.title),value(r.category ?? r.details?.category),value(r.report_type ?? r.type),value(r.location_found ?? r.location_lost ?? r.details?.location_found),value(r.reporter?.name ?? r.user_name),value(r.claimant?.name ?? r.details?.claimed_by),value(r.status)]);
+      } else if (report === "incidents") {
+        headers = ["Date", "Incident", "Item", "QR Code", "Gate", "Description", "Status"];
+        rows = records.map(r => [displayDate(timestamp(r)),value(r.incident_type),value(r.item_name),value(r.scanned_code),value(r.gate ?? r.location),value(r.description ?? r.reason),value(r.status)]);
+      } else {
+        headers = ["Last Activity", "User", "Role", "Session ID", "Active", "Current"];
+        rows = records.map(r => [displayDate(timestamp(r)),value(r.name ?? r.user?.name),value(r.role ?? r.user?.role),value(r.id),r.is_active ? "Yes" : "No",r.is_current ? "Yes" : "No"]);
+      }
+
+      const label = definitions.find(item => item.key === report)?.name ?? "QRPass Report";
+      const filename = `QRPass-${report}-${period}-${new Date().toISOString().slice(0,10)}`;
+      if (format === "xlsx") {
+        const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "QRPass Report");
+        XLSX.writeFile(workbook, `${filename}.xlsx`);
+      } else if (format === "csv") {
+        const escape = (cell: string) => `"${cell.replace(/"/g,'""')}"`;
+        const csv = "\uFEFF" + [headers, ...rows].map(row => row.map(escape).join(",")).join("\r\n");
+        const url = URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8"}));
+        const anchor = document.createElement("a");
+        anchor.href = url; anchor.download = `${filename}.csv`;
+        document.body.appendChild(anchor); anchor.click(); anchor.remove();
+        URL.revokeObjectURL(url);
+      } else {
+        const pdf = new jsPDF({orientation:"landscape"});
+        pdf.setFontSize(16); pdf.text(label, 14, 18);
+        pdf.setFontSize(9); pdf.text("University of Cebu - Main Campus", 14, 26);
+        pdf.text(`Period: ${period}   Records: ${records.length}`, 14, 33);
+        autoTable(pdf, {startY:40, head:[headers], body:rows, styles:{fontSize:7,cellPadding:2}, headStyles:{fillColor:[26,58,123]}});
+        pdf.save(`${filename}.pdf`);
+      }
+      setMessage(`${label}: ${records.length} records prepared.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not generate the report.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <PageHeader title="Downloadable Reports" subtitle="Centralized export center for authorized System Administrators." />
+      <div className="overflow-hidden rounded-xl border border-[#dce3ee] bg-white shadow-sm">
+        <div className="border-b border-[#dce3ee] p-4 sm:p-5">
+          <h3 className="text-sm font-semibold text-[#17336d]">Generate a report</h3>
+          <p className="mt-1 text-xs text-[#64748b]">Select a report type, optional date filter and file format. Exported data comes from current QRPass APIs.</p>
+        </div>
+        <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-2">
+          <label className="text-xs font-semibold text-[#17336d]">Report Type
+            <select aria-label="Report type" value={report} onChange={e => {setReport(e.target.value as ReportKey); setMessage("");}} className="mt-2 h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm">
+              {definitions.map(d => <option key={d.key} value={d.key}>{d.name}</option>)}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-[#17336d]">Filter by Date
+            <select aria-label="Filter reports by date" value={period} onChange={e => {setPeriod(e.target.value as Period); setMessage("");}} className="mt-2 h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm">
+              <option value="all">All Time</option>
+              <option value="day">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="custom">Custom Range</option>
+            </select>
+          </label>
+          {period === "custom" && <>
+            <label className="text-xs font-semibold text-[#17336d]">Start Date<input aria-label="Start date" type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} className="mt-2 h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm" /></label>
+            <label className="text-xs font-semibold text-[#17336d]">End Date<input aria-label="End date" type="date" value={toDate} onChange={e=>setToDate(e.target.value)} className="mt-2 h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm" /></label>
+          </>}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 border-t border-[#dce3ee] p-4 sm:p-5">
+          {(["pdf","xlsx","csv"] as const).map(format => <button key={format} type="button" disabled={busy} onClick={() => void generate(format)} className="inline-flex items-center gap-2 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-4 py-2.5 text-xs font-semibold text-[#17336d] hover:bg-[#e5edff] disabled:opacity-50"><Download size={15}/> Download {format === "xlsx" ? "Excel" : format.toUpperCase()}</button>)}
+        </div>
+        {message && <p role="status" className="border-t border-[#dce3ee] px-4 py-3 text-sm text-[#17336d]">{message}</p>}
+      </div>
+      <div className="rounded-xl border border-[#dce3ee] bg-white p-4 sm:p-5">
+        <h3 className="text-sm font-semibold text-[#17336d]">Available report types</h3>
+        <div className="mt-3 divide-y divide-[#e6eaf1]">
+          {definitions.map(d => <div key={d.key} className="py-3"><p className="text-sm font-semibold text-[#17336d]">{d.name}</p></div>)}
+        </div>
+      </div>
     </div>
   );
 }
@@ -21496,6 +21105,115 @@ function SysAdminSystemLogs() {
 // =========================================================
 // CSU NOTIFICATIONS - same authenticated notifications API as header
 // =========================================================
+function SysAdminRegisteredItemsPage() {
+  return <PCOItemRegistry adminView />;
+}
+
+
+function QrpassPageManager({ module, onClose }: { module: 'items' | 'lost-found' | 'users' | 'announcements'; onClose: () => void }) {
+  const [view, setView] = React.useState<'active' | 'archived'>('active');
+  const [rows, setRows] = React.useState<any[]>([]);
+  const [chosen, setChosen] = React.useState<number[]>([]);
+  const [query, setQuery] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  const [message, setMessage] = React.useState('');
+  const [error, setError] = React.useState('');
+  const [confirmAction, setConfirmAction] = React.useState('');
+  const titles: Record<string,string> = {items:'Manage Items','lost-found':'Manage Reports',users:'Manage Users',announcements:'Manage Announcements'};
+  const base = 'http://localhost:8000/api/sysadmin/page-manage/' + module;
+  const request = React.useCallback(async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch(url, { ...options, headers: { Accept: 'application/json', Authorization: `Bearer ${token ?? ''}`, ...(options.body ? {'Content-Type':'application/json'} : {}), ...(options.headers || {}) } });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.message || `HTTP ${res.status}`);
+    return json;
+  }, []);
+  const reload = React.useCallback(async () => {
+    setBusy(true); setError('');
+    try {
+      const data = await request(base + '?view=' + view);
+      setRows(Array.isArray(data.data) ? data.data : []);
+      setChosen([]);
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not load records.'); }
+    finally { setBusy(false); }
+  }, [base, view, request]);
+  React.useEffect(() => { void reload(); }, [reload]);
+  const filtered = rows.filter(r => JSON.stringify(r).toLowerCase().includes(query.toLowerCase()));
+  const label = (r: any) => String(r.item_name || r.name || r.title || r.email || `Record #${r.id}`);
+  async function change(action: string) {
+    if (chosen.length === 0) { setError('Select at least one record.'); return; }
+    if (action === 'delete' && confirmAction !== 'DELETE') { setError('Type DELETE to confirm permanent deletion.'); return; }
+    setBusy(true); setError(''); setMessage('');
+    try {
+      const data = await request(base, { method:'POST', body:JSON.stringify({action, ids:chosen, confirmation:confirmAction}) });
+      setMessage(`${data.affected ?? 0} record(s) updated.`);
+      setConfirmAction('');
+      await reload();
+      window.dispatchEvent(new CustomEvent('qrpass-page-records-changed', {detail:{module}}));
+    } catch(e) { setError(e instanceof Error ? e.message : 'Management action failed.'); }
+    finally { setBusy(false); }
+  }
+  async function download() {
+    setBusy(true); setError('');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(base + '/export?view=' + view, {headers:{Authorization:`Bearer ${token ?? ''}`,Accept:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}});
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || `Download failed: HTTP ${response.status}`);
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=`qrpass-${module}-${view}.xlsx`;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    } catch (e) { setError(e instanceof Error ? e.message : 'Download failed.'); }
+    finally {setBusy(false);}
+  }
+
+  return (
+    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label={titles[module]}>
+      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-[#385785] bg-white p-4 text-slate-900 shadow-2xl dark:bg-[#0d1830] dark:text-white sm:p-6">
+        <div className="flex items-center justify-between gap-3 mb-5">
+          <h2 className="text-xl font-bold">{titles[module]}</h2>
+          <button type="button" onClick={onClose} className="rounded-lg border px-3 py-2">Close</button>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <button type="button" onClick={()=>setView('active')} className="border rounded-lg px-3 py-2">Active Records</button>
+          <button type="button" onClick={()=>setView('archived')} className="border rounded-lg px-3 py-2">View Archives</button>
+          <input className="min-w-[160px] flex-1 border rounded-lg px-3 py-2" placeholder="Search records..." value={query} onChange={e=>setQuery(e.target.value)}/>
+          <button type="button" onClick={()=>void reload()} disabled={busy} className="border rounded-lg px-3 py-2">Refresh</button>
+        </div>
+        {error && <p className="p-3 mb-3 rounded bg-red-100 text-red-800">{error}</p>}
+        {message && <p className="p-3 mb-3 rounded bg-green-100 text-green-800">{message}</p>}
+        <div className="border rounded-xl overflow-auto max-h-[42vh]">
+          {filtered.length===0 ? <p className="p-7 text-center font-semibold">No matching records</p> : (
+            <table className="w-full text-left text-sm"><thead><tr><th className="p-3">Select</th><th className="p-3">Record</th><th className="p-3">Status</th><th className="p-3">Date</th></tr></thead>
+            <tbody>{filtered.map(r=><tr key={r.id} className="border-t"><td className="p-3"><input type="checkbox" checked={chosen.includes(Number(r.id))} onChange={e=>setChosen(ids=>e.target.checked?[...ids,Number(r.id)]:ids.filter(n=>n!==Number(r.id)))} /></td><td className="p-3">{label(r)}</td><td className="p-3">{String(r.status ?? '—')}</td><td className="p-3">{String(r.created_at ?? '—')}</td></tr>)}</tbody></table>
+          )}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2 items-center">
+          <span className="text-sm opacity-75 mr-auto">{chosen.length} selected · {filtered.length} shown (maximum 1000 loaded)</span>
+          <button type="button" onClick={download} className="border rounded-lg px-3 py-2">Download Excel</button>
+          {module==='users' ? <>
+            <button type="button" disabled={busy || !chosen.length} onClick={()=>void change('disable')} className="border rounded-lg px-3 py-2">Disable Accounts</button>
+            <button type="button" disabled={busy || !chosen.length} onClick={()=>void change('enable')} className="border rounded-lg px-3 py-2">Enable Accounts</button>
+          </> : null}
+          {view==='active' ? <button type="button" disabled={busy || !chosen.length} onClick={()=>void change('archive')} className="border rounded-lg px-3 py-2">Archive</button> :
+            <button type="button" disabled={busy || !chosen.length} onClick={()=>void change('restore')} className="border rounded-lg px-3 py-2">Restore</button>}
+          {module!=='users' && <button type="button" disabled={busy || !chosen.length} onClick={()=>setConfirmAction('pending')} className="border border-red-500 text-red-500 rounded-lg px-3 py-2">Delete</button>}
+        </div>
+        {confirmAction && module!=='users' && <div className="mt-4 border border-red-400 rounded-xl p-4">
+          <p className="font-semibold">Permanently delete {chosen.length} selected record(s)? This cannot be undone.</p>
+          <p className="text-xs mt-1 mb-3">Type DELETE to confirm. Existing relationships may prevent deletion.</p>
+          <input className="border rounded-lg px-3 py-2 mr-2" value={confirmAction==='pending'?'':confirmAction} onChange={e=>setConfirmAction(e.target.value)} placeholder="Type DELETE" />
+          <button type="button" disabled={busy || confirmAction!=='DELETE'} onClick={()=>void change('delete')} className="border border-red-500 rounded-lg px-3 py-2">Confirm Delete</button>
+          <button type="button" onClick={()=>setConfirmAction('')} className="border rounded-lg px-3 py-2 ml-2">Cancel</button>
+        </div>}
+      </div>
+    </div>
+  );
+}
+
 const PAGES: Record<Role, React.ComponentType<{ onNavigate?: (index: number) => void }>[]> = {
   student: [
     StudentRegisterItem,
@@ -21504,32 +21222,35 @@ const PAGES: Record<Role, React.ComponentType<{ onNavigate?: (index: number) => 
     StudentLostAndFound,
   ],
 
+
   security: [
-    SecurityOverview,
     SecurityScanVerify,
     SecurityEntryExitLog,
     SecurityItemRegistry,
     SecurityLostFound,
     SecurityReports,
   ],
+  
 
   pco: [
     PCOPermitRequests,
-    PCOItemRegistry,
+    () => <PCOItemRegistry />,
     PCOReports,
   ],
 
-  sysadmin: [
-    AdminDashboard,
-    PCOItemRegistry,
-    SysAdminLostFound,
-    AdminAnalytics,
-    SysAdminUserAccounts,
-    SysAdminSystemLogs,
-    SysAdminActiveSessions,
-    SysAdminAnnouncementManagement,
-    SysAdminSettings,
-  ],
+  
+sysadmin: [
+  SysAdminRegisteredItemsPage,
+  SysAdminLostFound,
+  AdminAnalytics,
+  SysAdminUserAccounts,
+  SysAdminSystemLogs,
+  SysAdminActiveSessions,
+  SysAdminAnnouncementManagement,
+  SysAdminSettings,
+  SysAdminDownloadableReports,
+],
+
 };
 
 const NAV: Record<
@@ -21560,7 +21281,6 @@ const NAV: Record<
   ],
 
   security: [
-    {icon: <BarChart2 size={16}/>, label: "CSU Overview"},
     {icon: <ScanLine size={16}/>, label: "Scan & Verify"},
     {icon: <Map size={16}/>, label: "Entry / Exit Log"},
     {icon: <Layers size={16}/>, label: "Registered Items"},
@@ -21584,10 +21304,7 @@ const NAV: Record<
   ],
 
   sysadmin: [
-    {
-      icon: <BarChart2 size={16} />,
-      label: "Overview Dashboard",
-    },
+  
     {
       icon: <Package size={16} />,
       label: "Registered Items",
@@ -21620,11 +21337,12 @@ const NAV: Record<
       icon: <Settings size={16} />,
       label: "System Settings",
     },
+    { icon: <BarChart2 size={16} />, label: "Reports" },
   ],
 };
 
-// ── Login page ────────────────────────────────────────────────────────────────
-// ── Registration field definitions per role ───────────────────────────────────
+// â”€â”€ Login page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Registration field definitions per role â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const REG_FIELDS: Record<Role, { label: string; type: string; placeholder: string; options?: string[] }[]> = {
   student: [
     { label: "Full Name", type: "text", placeholder: "e.g. Juan Dela Cruz" },
@@ -21674,7 +21392,7 @@ const REG_FIELDS: Record<Role, { label: string; type: string; placeholder: strin
   ],
 };
 
-// ── Role selector shared UI ───────────────────────────────────────────────────
+// â”€â”€ Role selector shared UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function RoleSelector({ selected, onSelect, excludeRoles = [] }: { selected: Role | null; onSelect: (r: Role) => void; excludeRoles?: Role[] }) {
   const visible = ROLES.filter(r => !excludeRoles.includes(r.id));
   const isOdd = visible.length % 2 !== 0;
@@ -21714,7 +21432,7 @@ function RoleSelector({ selected, onSelect, excludeRoles = [] }: { selected: Rol
   );
 }
 
-// ── Login page ────────────────────────────────────────────────────────────────
+// â”€â”€ Login page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type LoginMode =
   | "login"
   | "two-factor"
@@ -21724,7 +21442,7 @@ type LoginMode =
   | "reset"
   | "reset-done";
 
-// QRPass rounded student registration dropdowns — UI only
+// QRPass rounded student registration dropdowns â€” UI only
 function QRPassRegistrationSelect({
   label,
   value,
@@ -22437,6 +22155,46 @@ async function handleTwoFactorSubmit(
   // Visual-only styling shared by Register, Forgot Password, verification and reset screens.
   const AuthThemeStyles = (
     <style>{`
+        /* QRPASS_ADMIN_CSU_UNIFIED_SEARCH_V1: staff-only consistent search toolbar. */
+        .qrpass-unified-staff-search .qrpass-main input[placeholder^="Search"],
+        .qrpass-unified-staff-search .qrpass-main input[aria-label^="Search"] {
+          box-sizing: border-box;
+          width: 100%;
+          min-width: 0;
+          height: 48px !important;
+          border: 1px solid #c7d2fe !important;
+          border-radius: 12px !important;
+          background-color: #eef2ff !important;
+          padding-right: 16px !important;
+          font-size: 14px !important;
+          color: #17336d !important;
+          outline: none;
+        }
+        .qrpass-unified-staff-search .qrpass-main input[placeholder^="Search"]::placeholder,
+        .qrpass-unified-staff-search .qrpass-main input[aria-label^="Search"]::placeholder {color:#8195bb; opacity:1;}
+        .qrpass-unified-staff-search .qrpass-main input[placeholder^="Search"]:focus,
+        .qrpass-unified-staff-search .qrpass-main input[aria-label^="Search"]:focus {
+          border-color:#5278e7 !important;
+          background-color:#ffffff !important;
+          box-shadow:0 0 0 2px rgba(82,120,231,.2) !important;
+        }
+        .qrpass-unified-staff-search .qrpass-main select[aria-label="Sort records"],
+        .qrpass-unified-staff-search .qrpass-main select[aria-label="Sort system logs"] {
+          box-sizing:border-box;
+          height:48px !important;
+          min-width:148px;
+          border:1px solid #c7d2fe !important;
+          border-radius:12px !important;
+          background-color:#eef2ff !important;
+          color:#17336d !important;
+          font-size:14px !important;
+          font-weight:500;
+        }
+        @media(max-width:640px){
+          .qrpass-unified-staff-search .qrpass-main select[aria-label="Sort records"],
+          .qrpass-unified-staff-search .qrpass-main select[aria-label="Sort system logs"] {max-width:100%;}
+        }
+
       /* QRPASS UNIFIED AUTH THEME - register and password recovery */
       /* Student registration dropdown menu may extend beyond its card. */
       .qrpass-auth-register-card { overflow: visible !important; }
@@ -23007,7 +22765,7 @@ async function handleTwoFactorSubmit(
                         }
                         className="text-xs px-4 py-2 border border-[#cfd8e6] rounded-md text-muted-foreground hover:bg-muted transition-colors"
                       >
-                        ← Back to Login
+                        â† Back to Login
                       </button>
 
                       <button
@@ -23059,7 +22817,7 @@ async function handleTwoFactorSubmit(
                   }
                   className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90"
                 >
-                  ← Back to Login
+                  â† Back to Login
                 </button>
               </div>
             )}
@@ -23160,7 +22918,7 @@ async function handleTwoFactorSubmit(
               }
               className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              ← Back to Login
+              â† Back to Login
             </button>
           </form>
         </div>
@@ -23376,7 +23134,7 @@ async function handleTwoFactorSubmit(
                 }
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                ← Change email
+                â† Change email
               </button>
             </div>
           </form>
@@ -23738,7 +23496,7 @@ async function handleTwoFactorSubmit(
           }
           .qrpass-login-form { gap: 13px !important; }
         }
-        /* MOBILE LOGIN REFINEMENT — keeps desktop layout and all auth logic unchanged. */
+        /* MOBILE LOGIN REFINEMENT â€” keeps desktop layout and all auth logic unchanged. */
         @media (max-width: 767px) {
           .qrpass-login-viewport {
             min-height: 100svh;
@@ -23779,7 +23537,7 @@ async function handleTwoFactorSubmit(
             white-space: nowrap;
           }
         }
-        /* Compact phones (320–380 px): preserve readable inputs and tap targets. */
+        /* Compact phones (320â€“380 px): preserve readable inputs and tap targets. */
         @media (max-width: 380px) {
           .qrpass-login-card > .qrpass-login-card-content {
             padding: 18px 17px 17px !important;
@@ -24080,7 +23838,7 @@ async function handleTwoFactorSubmit(
 }
 
 
-// ── Dashboard layout ──────────────────────────────────────────────────────────
+// â”€â”€ Dashboard layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Dashboard({
   role,
   onLogout,
@@ -24110,6 +23868,8 @@ function Dashboard({
             institution: String(response.settings.institution || "University of Cebu"),
             system_name: String(response.settings.system_name || "QRpass"),
           };
+          document.title = brand.system_name;
+          document.title = brand.system_name;
           setFooterBrand(brand);
           localStorage.setItem("qrpass-footer-brand", JSON.stringify(brand));
         }
@@ -24120,6 +23880,7 @@ function Dashboard({
     return () => { mounted = false; window.removeEventListener("qrpass-settings-updated", refreshBrand); };
   }, []);
 
+  const [qrpassPageManageType, setQrpassPageManageType] = useState<'items'|'lost-found'|'users'|'announcements'|'choose'|null>(null);
   const [activeNav, setActiveNav] =
     useState(0);
 
@@ -25543,7 +25304,7 @@ const handleSaveAccountProfile = async () => {
 
   return (
     <div
-      className="qrpass-dashboard-root h-screen overflow-hidden flex flex-col"
+      className={`qrpass-dashboard-root h-screen overflow-hidden flex flex-col ${role === "security" || role === "sysadmin" ? "qrpass-unified-staff-search" : ""}`}
       style={{
         fontFamily: "Inter, sans-serif",
         background: darkMode
@@ -26289,7 +26050,7 @@ const handleSaveAccountProfile = async () => {
       
 
         /* ==========================================================
-           QRPASS LIGHTS OUT — X-inspired black surfaces + QRPass blue
+           QRPASS LIGHTS OUT â€” X-inspired black surfaces + QRPass blue
            Dark mode only; keeps existing light mode and app logic.
            ========================================================== */
         html.dark {
@@ -26486,15 +26247,9 @@ const handleSaveAccountProfile = async () => {
           )}
         </button>
 
-        <div className="flex items-center gap-1.5">
-          <QRpassLogo
-            size={70}
-            showText
-          />
-
+        <div className="flex items-center gap-2 min-w-0">
+          <img src="/qrpass-header-shield.png" alt="QRPass shield" className="h-9 w-9 shrink-0 object-contain" />
           
-
-
         </div>
 
         <div className="flex-1" />
@@ -26872,7 +26627,7 @@ const handleSaveAccountProfile = async () => {
                                         : "Unread"}
 
                                       <span className="mx-1">
-                                        •
+                                        â€¢
                                       </span>
 
                                       <span className="font-semibold text-[#1a3a7b] dark:text-blue-300">
@@ -27062,7 +26817,7 @@ const handleSaveAccountProfile = async () => {
                     </p>
 
                     <p className="text-xs font-medium text-[#111827] mt-0.5 dark:text-slate-100">
-                      {currentUser?.username ?? "—"}
+                      {currentUser?.username ?? "â€”"}
                     </p>
                   </div>
 
@@ -27463,7 +27218,15 @@ const handleSaveAccountProfile = async () => {
             )}
 
           <div className={role === "sysadmin" ? "qrpass-admin-page mx-auto w-full max-w-[1480px]" : "w-full"}>
+            {role === "sysadmin" && [0, 1, 2, 3, 6].includes(activeNav) && (
+  <button type="button" className="qrpass-manage-logs-shortcut-v3 qrpass-page-manage-v1"
+    onClick={() => { setQrpassPageManageType(activeNav===0?'items':activeNav===1?'lost-found':activeNav===3?'users':activeNav===6?'announcements':'choose'); }}>
+    <Settings size={15} /> {({0:'Manage Items',1:'Manage Reports',2:'Manage Reports',3:'Manage Users',6:'Manage Announcements'} as Record<number,string>)[activeNav]}
+  </button>
+)}
             <ActivePage onNavigate={handleNavClick} />
+            {qrpassPageManageType && qrpassPageManageType !== 'choose' && <QrpassPageManager key={qrpassPageManageType} module={qrpassPageManageType} onClose={() => setQrpassPageManageType(null)} />}
+            {qrpassPageManageType === 'choose' && <div className="fixed inset-0 z-[250] bg-black/70 flex items-center justify-center p-4"><div className="bg-white text-slate-900 dark:bg-[#0d1830] dark:text-white rounded-xl p-5 w-full max-w-sm"><h2 className="font-bold text-lg mb-3">Manage Reports by Record Type</h2>{(['items','lost-found','announcements'] as const).map(m=><button key={m} type="button" className="block w-full border rounded-lg p-3 mb-2 text-left" onClick={()=>setQrpassPageManageType(m)}>{m==='items'?'Registered Items':m==='lost-found'?'Lost & Found':'Announcements'}</button>)}<button type="button" className="border rounded-lg p-3 w-full" onClick={()=>setQrpassPageManageType(null)}>Close</button></div></div>}
           </div>
         </main>
       </div>
@@ -27906,7 +27669,9 @@ const handleSaveAccountProfile = async () => {
           FOOTER
       ====================================================== */}
 
-              <footer
+              {/* QRPass hide footer in sysadmin v1 */}
+        {role !== "sysadmin" && (
+<footer
           className="bg-white px-4 py-2 flex items-center justify-between gap-2 flex-wrap"
           style={{
             borderTop: "1px solid #e5eaf2",
@@ -27918,7 +27683,7 @@ const handleSaveAccountProfile = async () => {
             <span className="font-medium text-[#334155]">
               {footerBrand.institution}
             </span>{" "}
-            — {footerBrand.system_name}
+            â€” {footerBrand.system_name}
           </p>
 
           <div className="hidden sm:flex items-center gap-2 text-xs text-[#94a3b8]">
@@ -27935,13 +27700,26 @@ const handleSaveAccountProfile = async () => {
             </span>
           </div>
         </footer>
+        )}
     </div>
   );
 }
 
 
-// ── App root ──────────────────────────────────────────────────────────────────
+// â”€â”€ App root â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function App() {
+  useEffect(() => {
+    const updateTitle = () => {
+      try {
+        const raw = localStorage.getItem("qrpass-footer-brand");
+        const saved = raw ? JSON.parse(raw) : null;
+        document.title = String(saved?.system_name || "QRpass");
+      } catch { document.title = "QRpass"; }
+    };
+    updateTitle();
+    window.addEventListener("qrpass-settings-updated", updateTitle);
+    return () => window.removeEventListener("qrpass-settings-updated", updateTitle);
+  }, []);
   const [view, setView] =
     useState<View>("login");
 

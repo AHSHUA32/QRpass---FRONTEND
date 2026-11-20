@@ -1,0 +1,7 @@
+/* Sysadmin only: statistical cards and Hide Cards control disappear. */
+.qrpass-admin-page section[aria-label="Statistics"],
+.qrpass-admin-page [data-qrpass-statistical-summary="true"] { display:none !important; }
+/* Same dropdown look as the current QRPass search + Newest First toolbar. */
+.qrpass-admin-page select[data-qrpass-uniform-filter] { min-height:48px; color:#17336d; background-color:#eef2ff; border:1px solid #c7d2fe; }
+.dark .qrpass-admin-page select[data-qrpass-uniform-filter],
+.dark-mode .qrpass-admin-page select[data-qrpass-uniform-filter] { background-color:#1e3765; color:#fff; border-color:#5179c4; }
