@@ -1,0 +1,23 @@
+/* User Accounts role choices: only the selected role is highlighted. */
+html.dark .qrpass-dashboard-root button[data-qrpass-role-tab="true"][aria-pressed="true"],
+.dark-mode button[data-qrpass-role-tab="true"][aria-pressed="true"],
+.theme-dark button[data-qrpass-role-tab="true"][aria-pressed="true"],
+body.dark button[data-qrpass-role-tab="true"][aria-pressed="true"],
+button[data-qrpass-role-tab="true"][aria-pressed="true"] {
+  background: #1c438b !important;
+  color: #ffffff !important;
+  border-color: #4977d1 !important;
+}
+html.dark .qrpass-dashboard-root button[data-qrpass-role-tab="true"][aria-pressed="false"],
+.dark-mode button[data-qrpass-role-tab="true"][aria-pressed="false"],
+.theme-dark button[data-qrpass-role-tab="true"][aria-pressed="false"],
+body.dark button[data-qrpass-role-tab="true"][aria-pressed="false"] {
+  background: #1a263c !important;
+  color: #d7e5ff !important;
+  border-color: #3a4f75 !important;
+}
+html:not(.dark) button[data-qrpass-role-tab="true"][aria-pressed="false"] {
+  background: #f1f5f9 !important;
+  color: #425a79 !important;
+  border-color: #e2e8f0 !important;
+}

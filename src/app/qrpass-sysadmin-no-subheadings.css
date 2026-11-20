@@ -1,0 +1,15 @@
+/* QRPass: hide descriptive subheadings only inside Sysadmin page content. */
+/* PageHeader subtitle: immediate paragraph below h2 */
+.qrpass-admin-page h2 + p,
+/* Section descriptive subtitle immediately following an h3/h4 heading */
+.qrpass-admin-page h3 + p,
+.qrpass-admin-page h4 + p,
+/* Section subtitle inside heading groups (same wrapper as its heading) */
+.qrpass-admin-page :is(h2, h3, h4) ~ p.text-xs,
+.qrpass-admin-page :is(h2, h3, h4) ~ p.text-sm.text-muted-foreground {
+  display: none !important;
+}
+/* The Reports & Analytics role rows have a dedicated description renderer. */
+.qrpass-admin-page [aria-label="Select report role"] .qrpass-role-description {
+  display: none !important;
+}

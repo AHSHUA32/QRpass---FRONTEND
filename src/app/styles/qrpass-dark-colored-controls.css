@@ -1,0 +1,186 @@
+/* QRPass dark mode colored controls + white text */
+body.dark-mode,
+body.theme-dark,
+body[data-theme="dark"],
+.dark-mode,
+.theme-dark,
+[data-theme="dark"],
+.dark,
+html.dark body,
+body.dark,
+#root.dark-mode,
+#root.theme-dark,
+#root.dark {
+  --qr-dark-surface-1: #08101f;
+  --qr-dark-surface-2: #0d1830;
+  --qr-dark-surface-3: #142548;
+  --qr-dark-surface-4: #1b3363;
+  --qr-dark-border: #365a9c;
+  --qr-dark-text: #ffffff;
+  --qr-dark-text-soft: #dbe7ff;
+  --qr-dark-accent: #2f61c2;
+}
+
+/* boxes/cards */
+body.dark-mode .bg-card,
+body.theme-dark .bg-card,
+body[data-theme="dark"] .bg-card,
+.dark-mode .bg-card,
+.theme-dark .bg-card,
+[data-theme="dark"] .bg-card,
+.dark .bg-card,
+body.dark .bg-card,
+body.dark-mode .card,
+body.theme-dark .card,
+body[data-theme="dark"] .card,
+.dark-mode .card,
+.theme-dark .card,
+[data-theme="dark"] .card,
+.dark .card,
+body.dark .card {
+  background: linear-gradient(180deg, var(--qr-dark-surface-2), var(--qr-dark-surface-1)) !important;
+  color: var(--qr-dark-text) !important;
+  border-color: var(--qr-dark-border) !important;
+  box-shadow: 0 0 0 1px rgba(54, 90, 156, 0.25) inset;
+}
+
+/* buttons/pills/tabs */
+body.dark-mode button,
+body.theme-dark button,
+body[data-theme="dark"] button,
+.dark-mode button,
+.theme-dark button,
+[data-theme="dark"] button,
+.dark button,
+body.dark button,
+body.dark-mode [role="button"],
+body.theme-dark [role="button"],
+body[data-theme="dark"] [role="button"],
+.dark-mode [role="button"],
+.theme-dark [role="button"],
+[data-theme="dark"] [role="button"],
+.dark [role="button"],
+body.dark [role="button"],
+body.dark-mode .bg-white,
+body.theme-dark .bg-white,
+body[data-theme="dark"] .bg-white,
+.dark-mode .bg-white,
+.theme-dark .bg-white,
+[data-theme="dark"] .bg-white,
+.dark .bg-white,
+body.dark .bg-white,
+body.dark-mode .bg-gray-50,
+body.theme-dark .bg-gray-50,
+body[data-theme="dark"] .bg-gray-50,
+.dark-mode .bg-gray-50,
+.theme-dark .bg-gray-50,
+[data-theme="dark"] .bg-gray-50,
+.dark .bg-gray-50,
+body.dark .bg-gray-50,
+body.dark-mode .bg-slate-50,
+body.theme-dark .bg-slate-50,
+body[data-theme="dark"] .bg-slate-50,
+.dark-mode .bg-slate-50,
+.theme-dark .bg-slate-50,
+[data-theme="dark"] .bg-slate-50,
+.dark .bg-slate-50,
+body.dark .bg-slate-50 {
+  background: linear-gradient(180deg, #2d5ebd, #1f4ea7) !important;
+  color: #ffffff !important;
+  border-color: #5e87dd !important;
+}
+
+body.dark-mode button:hover,
+body.theme-dark button:hover,
+body[data-theme="dark"] button:hover,
+.dark-mode button:hover,
+.theme-dark button:hover,
+[data-theme="dark"] button:hover,
+.dark button:hover,
+body.dark button:hover {
+  filter: brightness(1.08);
+}
+
+/* inputs/selects/textareas */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea,
+body.theme-dark input,
+body.theme-dark select,
+body.theme-dark textarea,
+body[data-theme="dark"] input,
+body[data-theme="dark"] select,
+body[data-theme="dark"] textarea,
+.dark-mode input,
+.dark-mode select,
+.dark-mode textarea,
+.theme-dark input,
+.theme-dark select,
+.theme-dark textarea,
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea,
+.dark input,
+.dark select,
+.dark textarea,
+body.dark input,
+body.dark select,
+body.dark textarea {
+  background: linear-gradient(180deg, #1d3561, #13284d) !important;
+  color: #ffffff !important;
+  border-color: #5071b0 !important;
+}
+body.dark-mode input::placeholder,
+body.theme-dark input::placeholder,
+body[data-theme="dark"] input::placeholder,
+.dark-mode input::placeholder,
+.theme-dark input::placeholder,
+[data-theme="dark"] input::placeholder,
+.dark input::placeholder,
+body.dark input::placeholder,
+body.dark-mode textarea::placeholder,
+body.theme-dark textarea::placeholder,
+body[data-theme="dark"] textarea::placeholder,
+.dark-mode textarea::placeholder,
+.theme-dark textarea::placeholder,
+[data-theme="dark"] textarea::placeholder,
+.dark textarea::placeholder,
+body.dark textarea::placeholder {
+  color: #dbe7ff !important;
+  opacity: .95 !important;
+}
+body.dark-mode option,
+body.theme-dark option,
+body[data-theme="dark"] option,
+.dark-mode option,
+.theme-dark option,
+[data-theme="dark"] option,
+.dark option,
+body.dark option {
+  background: #13284d !important;
+  color: #ffffff !important;
+}
+
+/* text/table */
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4, body.dark-mode h5, body.dark-mode h6,
+body.theme-dark h1, body.theme-dark h2, body.theme-dark h3, body.theme-dark h4, body.theme-dark h5, body.theme-dark h6,
+body[data-theme="dark"] h1, body[data-theme="dark"] h2, body[data-theme="dark"] h3, body[data-theme="dark"] h4, body[data-theme="dark"] h5, body[data-theme="dark"] h6,
+.dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode h4, .dark-mode h5, .dark-mode h6,
+.theme-dark h1, .theme-dark h2, .theme-dark h3, .theme-dark h4, .theme-dark h5, .theme-dark h6,
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+body.dark h1, body.dark h2, body.dark h3, body.dark h4, body.dark h5, body.dark h6,
+body.dark-mode th, body.dark-mode td, body.theme-dark th, body.theme-dark td, body[data-theme="dark"] th, body[data-theme="dark"] td,
+.dark-mode th, .dark-mode td, .theme-dark th, .theme-dark td, [data-theme="dark"] th, [data-theme="dark"] td, .dark th, .dark td, body.dark th, body.dark td {
+  color: #ffffff !important;
+}
+body.dark-mode p, body.dark-mode span, body.dark-mode label, body.dark-mode small,
+body.theme-dark p, body.theme-dark span, body.theme-dark label, body.theme-dark small,
+body[data-theme="dark"] p, body[data-theme="dark"] span, body[data-theme="dark"] label, body[data-theme="dark"] small,
+.dark-mode p, .dark-mode span, .dark-mode label, .dark-mode small,
+.theme-dark p, .theme-dark span, .theme-dark label, .theme-dark small,
+[data-theme="dark"] p, [data-theme="dark"] span, [data-theme="dark"] label, [data-theme="dark"] small,
+.dark p, .dark span, .dark label, .dark small,
+body.dark p, body.dark span, body.dark label, body.dark small {
+  color: #e8efff !important;
+}

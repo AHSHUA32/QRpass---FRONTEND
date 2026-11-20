@@ -1,0 +1,50 @@
+/* Sysadmin only — visually place existing search/filter toolbar outside the records card.
+   Keeps all original React event handlers and filter state intact.
+   Works for Card layouts with a title row followed by a search/filter toolbar row. */
+.qrpass-admin-page > * div.bg-white.border.overflow-hidden:has(> :nth-child(2) input[placeholder^="Search"]),
+.qrpass-admin-page div.bg-white.border.overflow-hidden:has(> :nth-child(2) input[placeholder^="Search"]) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+/* toolbar first; section title and records below */
+.qrpass-admin-page div.bg-white.border.overflow-hidden:has(> :nth-child(2) input[placeholder^="Search"]) > :first-child {
+  order: 2;
+  background: var(--card, #fff) !important;
+  border: 1px solid var(--border, #dce3ee) !important;
+  border-radius: 13px 13px 0 0 !important;
+  margin-bottom: -12px !important;
+}
+.qrpass-admin-page div.bg-white.border.overflow-hidden:has(> :nth-child(2) input[placeholder^="Search"]) > :nth-child(2) {
+  order: 1;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  margin-bottom: 8px !important;
+}
+.qrpass-admin-page div.bg-white.border.overflow-hidden:has(> :nth-child(2) input[placeholder^="Search"]) > :nth-child(n+3) {
+  order: 3;
+  background: var(--card, #fff);
+  border-inline: 1px solid var(--border, #dce3ee);
+}
+.qrpass-admin-page div.bg-white.border.overflow-hidden:has(> :nth-child(2) input[placeholder^="Search"]) > :last-child:not(:first-child):not(:nth-child(2)) {
+  border-bottom: 1px solid var(--border, #dce3ee);
+  border-radius: 0 0 13px 13px;
+}
+/* Keep search and dropdown inputs legible in Lights Out dark mode. */
+.dark .qrpass-admin-page div.bg-white.border.overflow-hidden:has(> :nth-child(2) input[placeholder^="Search"]) > :first-child,
+.dark .qrpass-admin-page div.bg-white.border.overflow-hidden:has(> :nth-child(2) input[placeholder^="Search"]) > :nth-child(n+3) {
+  background: #101c31 !important;
+  border-color: #30445f !important;
+  color: #f8fafc !important;
+}
+@media (max-width: 720px) {
+ .qrpass-admin-page div.bg-white.border.overflow-hidden:has(> :nth-child(2) input[placeholder^="Search"]) > :nth-child(2) {
+   flex-wrap: wrap !important;
+ }
+}
