@@ -1,0 +1,45 @@
+/* QRPass v31 — scoped to Sysadmin System Settings Save buttons and management buttons only. */
+.qrpass-sysadmin-settings-v31 button[data-qrpass-save-v31="true"],
+[data-qrpass-manage-v31="true"] button:not([role="switch"]),
+.qrpass-admin-page button.qrpass-page-manage-v1,
+.qrpass-admin-page button.qrpass-manage-logs-shortcut-v3,
+.qrpass-admin-page button[data-qrpass-manage-launch-v31="true"] {
+  background-color:#ffffff !important;
+  background-image:none !important;
+  color:#17336d !important;
+  border:1px solid #c7d2fe !important;
+  border-radius:12px !important;
+  min-height:40px;
+  box-shadow:none !important;
+  transition:background-color 180ms ease,border-color 180ms ease,box-shadow 180ms ease !important;
+}
+.qrpass-sysadmin-settings-v31 button[data-qrpass-save-v31="true"]:hover:not(:disabled),
+[data-qrpass-manage-v31="true"] button:not([role="switch"]):hover:not(:disabled),
+.qrpass-admin-page button.qrpass-page-manage-v1:hover:not(:disabled),
+.qrpass-admin-page button.qrpass-manage-logs-shortcut-v3:hover:not(:disabled),
+.qrpass-admin-page button[data-qrpass-manage-launch-v31="true"]:hover:not(:disabled) {
+  background-color:#eef2ff !important;
+}
+.qrpass-sysadmin-settings-v31 button[data-qrpass-save-v31="true"]:focus-visible,
+[data-qrpass-manage-v31="true"] button:not([role="switch"]):focus-visible,
+.qrpass-admin-page button.qrpass-page-manage-v1:focus-visible,
+.qrpass-admin-page button.qrpass-manage-logs-shortcut-v3:focus-visible,
+.qrpass-admin-page button[data-qrpass-manage-launch-v31="true"]:focus-visible {
+  background-color:#ffffff !important;
+  border-color:#5278e7 !important;
+  outline:2px solid rgba(82,120,231,.32) !important;
+  outline-offset:1px;
+}
+/* Keep destructive actions visually distinct and clearly labeled. */
+[data-qrpass-manage-v31="true"] button:is([class*="text-red-"],[class*="border-red-"]) {
+  color:#b91c1c !important;
+  border-color:#fca5a5 !important;
+}
+[data-qrpass-manage-v31="true"] button:is([class*="text-red-"],[class*="border-red-"]):hover:not(:disabled) {
+  background-color:#fef2f2 !important;
+}
+[data-qrpass-manage-v31="true"] button:disabled,
+.qrpass-sysadmin-settings-v31 button[data-qrpass-save-v31="true"]:disabled {
+  opacity:.52 !important;
+  cursor:not-allowed;
+}

@@ -1,0 +1,28 @@
+/* QRPass v9: responsive Refresh controls exclusively on Sysadmin pages.
+   Keep the existing React onClick, loading, and API behavior intact. */
+@media (min-width: 768px) {
+  .qrpass-admin-page button:has(svg.lucide-refresh-cw),
+  .qrpass-admin-page button:has(svg.lucide-refresh-ccw) {
+    display: none !important;
+  }
+}
+@media (max-width: 767.98px) {
+  .qrpass-admin-page button:has(svg.lucide-refresh-cw),
+  .qrpass-admin-page button:has(svg.lucide-refresh-ccw) {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-height: 44px;
+    border: 1px solid #cad5ea;
+    border-radius: 0.75rem;
+    background-color: #fff !important;
+    color: #17336d;
+    transition: background-color 160ms ease, border-color 160ms ease;
+  }
+  .qrpass-admin-page button:has(svg.lucide-refresh-cw):hover,
+  .qrpass-admin-page button:has(svg.lucide-refresh-ccw):hover {
+    background-color: #eef4ff !important;
+    border-color: #7699d0;
+  }
+}

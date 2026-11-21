@@ -1,0 +1,77 @@
+/*
+ QRPass Sysadmin Standard Search
+ Restore all search bars.
+ Lost & Found visual design is the standard.
+*/
+
+.qrpass-admin-page :is(
+  input[type="search"],
+  input[placeholder^="Search"],
+  input[placeholder^="search"]
+) {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 48px !important;
+  box-sizing: border-box !important;
+  padding: 0 16px 0 40px !important;
+  border: 1px solid #c7d2fe !important;
+  border-radius: 12px !important;
+  background-color: #ffffff !important;
+  color: #17336d !important;
+  font-size: 14px !important;
+  outline: none !important;
+  transition: background-color 180ms ease,
+              border-color 180ms ease,
+              box-shadow 180ms ease !important;
+}
+
+.qrpass-admin-page :is(
+  input[type="search"],
+  input[placeholder^="Search"],
+  input[placeholder^="search"]
+):hover {
+  background-color: #eef2ff !important;
+}
+
+.qrpass-admin-page :is(
+  input[type="search"],
+  input[placeholder^="Search"],
+  input[placeholder^="search"]
+):focus {
+  background-color: #ffffff !important;
+  border-color: #5278e7 !important;
+  box-shadow: 0 0 0 2px rgba(82,120,231,.20) !important;
+}
+
+.qrpass-admin-page :is(
+  input[type="search"],
+  input[placeholder^="Search"],
+  input[placeholder^="search"]
+)::placeholder {
+  color: #8195bb !important;
+  opacity: 1 !important;
+}
+
+/* Search inside the System Logs popup */
+input[aria-label="Search managed logs"] {
+  display: block !important;
+  width: 100% !important;
+  height: 48px !important;
+  padding: 0 16px 0 40px !important;
+  border: 1px solid #c7d2fe !important;
+  border-radius: 12px !important;
+  background-color: #ffffff !important;
+  color: #17336d !important;
+  outline: none !important;
+  transition: background-color 180ms ease !important;
+}
+
+input[aria-label="Search managed logs"]:hover {
+  background-color: #eef2ff !important;
+}
+
+input[aria-label="Search managed logs"]:focus {
+  background-color: #ffffff !important;
+  border-color: #5278e7 !important;
+}

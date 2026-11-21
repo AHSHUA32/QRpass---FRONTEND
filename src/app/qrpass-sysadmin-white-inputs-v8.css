@@ -1,0 +1,33 @@
+/* QRPass Sysadmin-only white controls v8. This stylesheet is imported by App.tsx itself. */
+.qrpass-admin-page input[type="search"],
+.qrpass-admin-page input[type="text"],
+.qrpass-admin-page input:not([type]):not([type="checkbox"]),
+.qrpass-admin-page select,
+.qrpass-admin-page textarea {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #17336d !important;
+  border-color: #cad5ea !important;
+  transition: background-color 170ms ease, border-color 170ms ease, box-shadow 170ms ease !important;
+}
+.qrpass-admin-page input[type="search"]:hover,
+.qrpass-admin-page input[type="text"]:hover,
+.qrpass-admin-page input:not([type]):not([type="checkbox"]):hover,
+.qrpass-admin-page select:hover,
+.qrpass-admin-page textarea:hover {
+  background: #eef4ff !important;
+  background-color: #eef4ff !important;
+  border-color: #7699d0 !important;
+  box-shadow: 0 2px 9px rgba(23,51,109,.12) !important;
+}
+.qrpass-admin-page input[type="search"]:focus,
+.qrpass-admin-page input[type="text"]:focus,
+.qrpass-admin-page input:not([type]):not([type="checkbox"]):focus,
+.qrpass-admin-page select:focus,
+.qrpass-admin-page textarea:focus {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #5278e7 !important;
+  box-shadow: 0 0 0 2px rgba(82,120,231,.18) !important;
+}
+.qrpass-admin-page input::placeholder { color: #8896ae !important; opacity: 1; }

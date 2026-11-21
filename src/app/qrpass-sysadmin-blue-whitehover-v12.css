@@ -1,0 +1,44 @@
+/* QRPass Sysadmin — light-blue controls, white on hover. Role scoped. */
+/* Repeated selector raises specificity above legacy Tailwind utilities and v8–v11 styles. */
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(input[type="search"], input[type="text"], input[placeholder^="Search"], input[placeholder^="search"], select),
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(input[aria-label^="Search"], input[aria-label^="Filter"], input[aria-label^="Sort"]) {
+  background: #eef2ff !important;
+  background-color: #eef2ff !important;
+  border: 1px solid #c4d2ff !important;
+  border-radius: 12px !important;
+  color: #17336d !important;
+  transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease !important;
+}
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(input[type="search"], input[type="text"], input[placeholder^="Search"], input[placeholder^="search"], select):hover,
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(input[aria-label^="Search"], input[aria-label^="Filter"], input[aria-label^="Sort"]):hover {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #91aada !important;
+  box-shadow: 0 1px 5px rgba(25, 57, 112, .09) !important;
+}
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(input[type="search"], input[type="text"], input[placeholder^="Search"], input[placeholder^="search"], select):focus,
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(input[aria-label^="Search"], input[aria-label^="Filter"], input[aria-label^="Sort"]):focus {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #6b8fcf !important;
+  outline: 2px solid rgba(107,143,207,.2) !important;
+  outline-offset: 0;
+}
+/* All Sysadmin page-specific Manage buttons: blue by default, white on hover. */
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(button.qrpass-page-manage-v1, button.qrpass-manage-logs-shortcut-v3) {
+  background: #eef2ff !important;
+  background-color: #eef2ff !important;
+  color: #17336d !important;
+  border: 1px solid #c4d2ff !important;
+  border-radius: 12px !important;
+  transition: background-color .18s ease, border-color .18s ease !important;
+}
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(button.qrpass-page-manage-v1, button.qrpass-manage-logs-shortcut-v3):hover {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #91aada !important;
+}
+/* Keep dark-mode field contrast usable. */
+.dark .qrpass-admin-page :is(input[type="search"], input[type="text"], select) {
+  color: #17336d !important;
+}

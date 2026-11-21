@@ -1,0 +1,64 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+@import './qrpass-form-design-v36.css';
+@import './qrpass-white-on-focus-v39.css';
+@import './qrpass-student-permit-toolbar-v103.css';
+
+
+/* QRPass non-admin subtitle fix v4 */
+
+/* Shared PageHeader descriptions */
+main[data-qrpass-hide-page-subtitles="true"]
+.flex.min-w-0.flex-wrap.items-start.justify-between.gap-3.mb-5
+> .min-w-0 > h2 + p {
+  display: none !important;
+}
+
+/* Also cover previous PageHeader class patches */
+main[data-qrpass-hide-page-subtitles="true"]
+.qrpass-page-header-subtitle,
+main[data-qrpass-hide-page-subtitles="true"]
+[data-qrpass-heading-subtitle="true"] {
+  display: none !important;
+}
+
+/* qrpass-sysadmin-manage-ui-v4 — Sysadmin management buttons and modal only */
+.qrpass-admin-page .qrpass-manage-logs-shortcut-v3,
+.qrpass-admin-page .qrpass-sysadmin-logs-button-v4,
+.qrpass-admin-page .qrpass-sysadmin-add-user-v4 {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  min-height: 36px !important;
+  min-width: 112px !important;
+  padding: 0 14px !important;
+  border: 1px solid #17336d !important;
+  border-radius: 9px !important;
+  background: #17336d !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  box-shadow: none !important;
+  transition: background-color .17s ease, box-shadow .17s ease, transform .17s ease !important;
+}
+.qrpass-admin-page .qrpass-manage-logs-shortcut-v3:hover,
+.qrpass-admin-page .qrpass-sysadmin-logs-button-v4:hover,
+.qrpass-admin-page .qrpass-sysadmin-add-user-v4:hover {
+  background: #294e96 !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(23,51,109,.23) !important;
+  transform: translateY(-1px);
+}
+.qrpass-admin-page .qrpass-manage-logs-shortcut-v3:focus-visible,
+.qrpass-admin-page .qrpass-sysadmin-logs-button-v4:focus-visible,
+.qrpass-admin-page .qrpass-sysadmin-add-user-v4:focus-visible {
+  outline: 2px solid #f0ba34 !important;
+  outline-offset: 2px;
+}
+.qrpass-page-manager-v4 button { transition: background-color .17s ease, border-color .17s ease, box-shadow .17s ease; }
+.qrpass-page-manager-v4 button:not(:disabled):hover { background-color: #e9effc; border-color: #6f93cf; color: #17336d; box-shadow: 0 2px 8px rgba(23,51,109,.12); }
+.dark .qrpass-page-manager-v4 button:not(:disabled):hover { background-color: #274a7d; border-color: #7ca8f2; color: #fff; }
+.qrpass-page-manager-v4 tr[role="checkbox"] { user-select: none; }

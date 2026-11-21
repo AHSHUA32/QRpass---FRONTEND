@@ -1,0 +1,48 @@
+/* QRPass Sysadmin-only: consistent search/filter/sort controls. */
+/* This selector is intentionally scoped to the existing Sysadmin role wrapper. */
+html body .qrpass-admin-page input[type="search"],
+html body .qrpass-admin-page input[type="text"],
+html body .qrpass-admin-page input:not([type]),
+html body .qrpass-admin-page select {
+  box-sizing: border-box !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #17336d !important;
+  box-shadow: none !important;
+  transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease !important;
+}
+html body .qrpass-admin-page input[type="search"]:hover,
+html body .qrpass-admin-page input[type="text"]:hover,
+html body .qrpass-admin-page input:not([type]):hover,
+html body .qrpass-admin-page select:hover {
+  background: #f3f7ff !important;
+  background-color: #f3f7ff !important;
+  border-color: #7a9acf !important;
+  box-shadow: 0 2px 7px rgba(23,51,109,.07) !important;
+}
+html body .qrpass-admin-page input[type="search"]:focus,
+html body .qrpass-admin-page input[type="text"]:focus,
+html body .qrpass-admin-page input:not([type]):focus,
+html body .qrpass-admin-page select:focus,
+html body .qrpass-admin-page input[type="search"]:focus-visible,
+html body .qrpass-admin-page input[type="text"]:focus-visible,
+html body .qrpass-admin-page input:not([type]):focus-visible,
+html body .qrpass-admin-page select:focus-visible {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #557dc3 !important;
+  box-shadow: 0 0 0 3px rgba(82,120,231,.12) !important;
+  outline: none !important;
+}
+html body .qrpass-admin-page input[type="search"]::placeholder,
+html body .qrpass-admin-page input[type="text"]::placeholder,
+html body .qrpass-admin-page input:not([type])::placeholder {
+  color: #8392a9 !important;
+  opacity: 1 !important;
+}
+/* Honor the selected theme for option popup contrast where browsers support it. */
+html body .qrpass-admin-page select option { color: #17336d; background-color: #fff; }

@@ -1,0 +1,19 @@
+/* QRPASS_SYSADMIN_HIDE_SEARCH_V24
+   Hide Sysadmin search UI while preserving Lost & Found and all other roles.
+   Only visual search fields disappear; existing page data/filter logic is not modified. */
+
+/* Standard Sysadmin page, excluding the Lost & Found nav page. */
+.qrpass-admin-page.qrpass-sysadmin-hide-search-v24 :is(input,textarea):is([type="search"],[placeholder^="Search"],[placeholder^="search"],[aria-label^="Search"],[aria-label^="search"]) {
+  display: none !important;
+}
+
+/* Remove the empty search icon + input container without removing adjacent filters. */
+.qrpass-admin-page.qrpass-sysadmin-hide-search-v24 :is(div,label,form):has(> input:is([type="search"],[placeholder^="Search"],[placeholder^="search"],[aria-label^="Search"])):not(:has(> button)):not(:has(> select)) {
+  display: none !important;
+}
+
+/* System Logs Manage Logs is a React portal outside .qrpass-admin-page. */
+[role="dialog"][aria-label="Manage System Logs"] :is(input,textarea)[aria-label="Search managed logs"],
+[role="dialog"][aria-label="Manage System Logs"] div:has(> input[aria-label="Search managed logs"]) {
+  display: none !important;
+}

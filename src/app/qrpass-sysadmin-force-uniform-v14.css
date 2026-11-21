@@ -1,0 +1,72 @@
+/* QRPass v14 – Sysadmin only. Video reference: #eef2ff normal, white on hover/focus.
+   Targets every search/filter/sort dropdown in Sysadmin, not CSU/PCO/Student.
+   Deliberately outranks v8–v13 utility and stylesheet rules. */
+:root {
+  --qrpass-admin-control-bg: #eef2ff;
+  --qrpass-admin-control-hover: #fff;
+  --qrpass-admin-control-border: #c7d2fe;
+  --qrpass-admin-control-hover-border: #9eb5ea;
+}
+/* Only pages enclosed in the role === "sysadmin" wrapper. */
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(
+  input[type="search"],
+  input[placeholder*="search" i],
+  input[aria-label*="search" i],
+  select,
+  button[role="combobox"],
+  button[aria-haspopup="listbox"]
+),
+/* The manager is a position:fixed overlay which can be rendered outside that wrapper. */
+html body:has(.qrpass-admin-page) .qrpass-page-manager-v4.qrpass-page-manager-v4 :is(
+  input[type="search"], input[placeholder*="search" i], select,
+  button[role="combobox"], button[aria-haspopup="listbox"]
+) {
+  background: var(--qrpass-admin-control-bg) !important;
+  background-color: var(--qrpass-admin-control-bg) !important;
+  border: 1px solid var(--qrpass-admin-control-border) !important;
+  border-radius: 12px !important;
+  color: #17336d !important;
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease !important;
+}
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(
+  input[type="search"], input[placeholder*="search" i], input[aria-label*="search" i],
+  select, button[role="combobox"], button[aria-haspopup="listbox"]
+):hover,
+html body:has(.qrpass-admin-page) .qrpass-page-manager-v4.qrpass-page-manager-v4 :is(
+  input[type="search"], input[placeholder*="search" i], select,
+  button[role="combobox"], button[aria-haspopup="listbox"]
+):hover {
+  background: #fff !important;
+  background-color: #fff !important;
+  border-color: var(--qrpass-admin-control-hover-border) !important;
+  box-shadow: 0 1px 5px rgba(32, 66, 130, .10) !important;
+}
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(
+  input[type="search"], input[placeholder*="search" i], input[aria-label*="search" i],
+  select, button[role="combobox"], button[aria-haspopup="listbox"]
+):focus,
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(
+  input[type="search"], input[placeholder*="search" i], input[aria-label*="search" i],
+  select, button[role="combobox"], button[aria-haspopup="listbox"]
+):focus-visible,
+html body:has(.qrpass-admin-page) .qrpass-page-manager-v4.qrpass-page-manager-v4 :is(
+  input[type="search"], input[placeholder*="search" i], select,
+  button[role="combobox"], button[aria-haspopup="listbox"]
+):focus,
+html body:has(.qrpass-admin-page) .qrpass-page-manager-v4.qrpass-page-manager-v4 :is(
+  input[type="search"], input[placeholder*="search" i], select,
+  button[role="combobox"], button[aria-haspopup="listbox"]
+):focus-visible {
+  background: #fff !important;
+  background-color: #fff !important;
+  border-color: #658dd6 !important;
+  box-shadow: 0 0 0 2px rgba(101, 141, 214, .17) !important;
+  outline: none !important;
+}
+/* Keep placeholder readable on both backgrounds. */
+html body .qrpass-admin-page input[type="search"]::placeholder,
+html body .qrpass-admin-page input[placeholder*="search" i]::placeholder,
+html body:has(.qrpass-admin-page) .qrpass-page-manager-v4 input[placeholder*="search" i]::placeholder {
+  color: #7487a9 !important;
+  opacity: 1 !important;
+}

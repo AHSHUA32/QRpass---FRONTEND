@@ -1,0 +1,32 @@
+/* QRPass Sysadmin: standard white search inputs, same look as Lost & Found.
+   Repeated class increases specificity over legacy !bg-[#eef2ff] and prior overrides.
+   Only targets search controls within the Sysadmin page; leaves other roles alone. */
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page input[type="search"],
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page input[placeholder^="Search"],
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page input[placeholder^="search"],
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page input[aria-label^="Search"] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease !important;
+}
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page input[type="search"]:hover,
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page input[placeholder^="Search"]:hover,
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page input[placeholder^="search"]:hover,
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page input[aria-label^="Search"]:hover {
+  background: #f4f8ff !important;
+  background-color: #f4f8ff !important;
+  border-color: #8ea9d4 !important;
+  box-shadow: 0 1px 5px rgba(30,64,128,.09) !important;
+}
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page input[type="search"]:focus,
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page input[placeholder^="Search"]:focus,
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page input[placeholder^="search"]:focus,
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page input[aria-label^="Search"]:focus {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #7299ce !important;
+  box-shadow: 0 0 0 2px rgba(85,125,195,.15) !important;
+}

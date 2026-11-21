@@ -1,0 +1,33 @@
+/* QRPass v32: high-specificity Sysadmin management buttons, including every report-role manager. */
+/* Scoped to modal dialog itself; does not style page data, search inputs, or non-admin user pages. */
+#root [data-qrpass-manage-v32="true"] button:not([role="switch"]):not([class*="text-red-"]):not([class*="border-red-"]):not([aria-label*="Delete"]),
+body [data-qrpass-manage-v32="true"] button:not([role="switch"]):not([class*="text-red-"]):not([class*="border-red-"]):not([aria-label*="Delete"]) {
+  background:#fff !important;
+  background-image:none !important;
+  color:#17336d !important;
+  border:1px solid #c7d2fe !important;
+  border-radius:12px !important;
+  box-shadow:none !important;
+  transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease !important;
+}
+#root [data-qrpass-manage-v32="true"] button:not([role="switch"]):not([class*="text-red-"]):not([class*="border-red-"]):not([aria-label*="Delete"]):hover:not(:disabled),
+body [data-qrpass-manage-v32="true"] button:not([role="switch"]):not([class*="text-red-"]):not([class*="border-red-"]):not([aria-label*="Delete"]):hover:not(:disabled) {background:#eef2ff !important;}
+#root [data-qrpass-manage-v32="true"] button:not([role="switch"]):not([class*="text-red-"]):not([class*="border-red-"]):not([aria-label*="Delete"]):focus-visible,
+body [data-qrpass-manage-v32="true"] button:not([role="switch"]):not([class*="text-red-"]):not([class*="border-red-"]):not([aria-label*="Delete"]):focus-visible {background:#fff !important;border-color:#5278e7 !important;outline:2px solid rgba(82,120,231,.25) !important;outline-offset:1px;}
+/* Manage dialog launchers in admin pages (including each Students/CSU/PCO/System Admin report tab). */
+#root .qrpass-admin-page button.qrpass-page-manage-v1,
+#root .qrpass-admin-page button.qrpass-manage-logs-shortcut-v3,
+#root .qrpass-admin-page button[data-qrpass-manage-launch-v31="true"] {
+  background:#fff !important;background-image:none !important;color:#17336d !important;border:1px solid #c7d2fe !important;border-radius:12px !important;box-shadow:none !important;transition:background-color .18s ease,border-color .18s ease !important;
+}
+#root .qrpass-admin-page button.qrpass-page-manage-v1:hover:not(:disabled),
+#root .qrpass-admin-page button.qrpass-manage-logs-shortcut-v3:hover:not(:disabled),
+#root .qrpass-admin-page button[data-qrpass-manage-launch-v31="true"]:hover:not(:disabled) {background:#eef2ff !important;}
+#root .qrpass-admin-page button.qrpass-page-manage-v1:focus-visible,
+#root .qrpass-admin-page button.qrpass-manage-logs-shortcut-v3:focus-visible,
+#root .qrpass-admin-page button[data-qrpass-manage-launch-v31="true"]:focus-visible {background:#fff !important;border-color:#5278e7 !important;outline:2px solid rgba(82,120,231,.25) !important;}
+/* Destructive buttons retain warning red and never masquerade as safe actions. */
+#root [data-qrpass-manage-v32="true"] button:is([class*="text-red-"],[class*="border-red-"]),
+body [data-qrpass-manage-v32="true"] button:is([class*="text-red-"],[class*="border-red-"]) {background:#fff !important;color:#b91c1c !important;border-color:#fca5a5 !important;}
+#root [data-qrpass-manage-v32="true"] button:is([class*="text-red-"],[class*="border-red-"]):hover:not(:disabled),
+body [data-qrpass-manage-v32="true"] button:is([class*="text-red-"],[class*="border-red-"]):hover:not(:disabled) {background:#fef2f2 !important;}

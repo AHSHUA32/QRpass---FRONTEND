@@ -1,0 +1,15 @@
+/* Sysadmin-only search styling v29, matched to Lost & Found. */
+.qrpass-admin-page #qrpass-sysadmin-items-search-v29,
+.qrpass-admin-page #qrpass-sysadmin-announcement-search-v29 {
+  display:block!important;width:100%!important;min-width:0!important;height:48px!important;
+  box-sizing:border-box!important;padding:0 16px 0 44px!important;
+  border:1px solid #c7d2fe!important;border-radius:12px!important;
+  background-color:#fff!important;color:#17336d!important;font-size:14px!important;
+  outline:none!important;transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+}
+.qrpass-admin-page #qrpass-sysadmin-items-search-v29:hover:not(:focus),
+.qrpass-admin-page #qrpass-sysadmin-announcement-search-v29:hover:not(:focus){background-color:#eef2ff!important}
+.qrpass-admin-page #qrpass-sysadmin-items-search-v29:focus,
+.qrpass-admin-page #qrpass-sysadmin-announcement-search-v29:focus{background-color:white!important;border-color:#5278e7!important;box-shadow:0 0 0 2px rgba(82,120,231,.20)!important}
+.qrpass-admin-page #qrpass-sysadmin-items-search-v29::placeholder,
+.qrpass-admin-page #qrpass-sysadmin-announcement-search-v29::placeholder{color:#8195bb!important;opacity:1!important}

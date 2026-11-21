@@ -1,0 +1,62 @@
+/* v13: Sysadmin search and filter/sort dropdowns ONLY.  Default blue, white on hover/focus. */
+/* Deliberately stronger than legacy utility classes and previous v8-v12 styles. */
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(
+  input[type="search"],
+  input[placeholder*="search" i],
+  input[aria-label*="search" i],
+  select,
+  button[aria-haspopup="listbox"],
+  button[role="combobox"]
+) {
+  background: #eef2ff !important;
+  background-color: #eef2ff !important;
+  border: 1px solid #c7d2fe !important;
+  border-radius: 12px !important;
+  color: #17336d !important;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease !important;
+}
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(
+  input[type="search"],
+  input[placeholder*="search" i],
+  input[aria-label*="search" i],
+  select,
+  button[aria-haspopup="listbox"],
+  button[role="combobox"]
+):hover {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #95addd !important;
+  box-shadow: 0 1px 5px rgba(33, 65, 125, .09) !important;
+}
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(
+  input[type="search"],
+  input[placeholder*="search" i],
+  input[aria-label*="search" i],
+  select,
+  button[aria-haspopup="listbox"],
+  button[role="combobox"]
+):focus-visible,
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page :is(
+  input[type="search"],
+  input[placeholder*="search" i],
+  input[aria-label*="search" i],
+  select,
+  button[aria-haspopup="listbox"],
+  button[role="combobox"]
+):focus {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #6488d3 !important;
+  outline: 2px solid rgba(100,136,211,.18) !important;
+  outline-offset: 0;
+}
+/* Page management dialogs are rendered inside the Sysadmin wrapper. */
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-page-manager-v4 input[placeholder*="search" i] {
+  background: #eef2ff !important;
+  background-color: #eef2ff !important;
+}
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-page-manager-v4 input[placeholder*="search" i]:hover,
+html body .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-page-manager-v4 input[placeholder*="search" i]:focus {
+  background: #fff !important;
+  background-color: #fff !important;
+}

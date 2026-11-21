@@ -3865,3 +3865,34 @@ export async function deleteAnnouncement(
   return data;
 
 }
+// QRPASS_PERMANENT_REVOKE_V34
+export async function deleteUserPermanently(id: number): Promise<{message: string}> {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/users/${id}/permanent`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message || 'Unable to delete account.');
+  return body;
+}
+// A revoked token is rejected by the server immediately; the UI detects it on its next poll.
+if (typeof window !== 'undefined') {
+  const verifySession = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const response = await window.fetch(`${API_URL}/account`, {
+        headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+      });
+      if (response.status !== 401 || localStorage.getItem('token') !== token) return;
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('role');
+      window.alert('Your account was revoked or your session expired. Please sign in again.');
+      window.location.reload();
+    } catch { /* Network outages do not log out the user. */ }
+  };
+  window.setInterval(() => { void verifySession(); }, 5000);
+  window.addEventListener('focus', () => { void verifySession(); });
+}

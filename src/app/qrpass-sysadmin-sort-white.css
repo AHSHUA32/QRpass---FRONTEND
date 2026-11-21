@@ -1,0 +1,22 @@
+/* Sysadmin sorting dropdowns: white normal, light blue hover */
+
+/* Only selects whose labels indicate sorting */
+.qrpass-admin-page select[aria-label^="Sort"],
+.qrpass-admin-page select[aria-label*="sort"] {
+    background-color: #ffffff !important;
+    color: #17336d !important;
+    border: 1px solid #c7d2fe !important;
+    transition: background-color .18s ease, border-color .18s ease;
+}
+
+.qrpass-admin-page select[aria-label^="Sort"]:hover,
+.qrpass-admin-page select[aria-label*="sort"]:hover {
+    background-color: #eef2ff !important;
+}
+
+.qrpass-admin-page select[aria-label^="Sort"]:focus,
+.qrpass-admin-page select[aria-label*="sort"]:focus {
+    background-color: #ffffff !important;
+    border-color: #5278e7 !important;
+    box-shadow: 0 0 0 2px rgba(82,120,231,.20) !important;
+}
