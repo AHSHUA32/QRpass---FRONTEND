@@ -1,0 +1,20 @@
+/* QRPASS USER LIST HEADER ALIGN V61
+ * Matches System Settings > General Settings reference exactly:
+ * 14px / 20px, semibold 600, navy #17336d, letter spacing -.01em.
+ * Only the User List card is tagged by React. The Name table heading has
+ * padding-left:12px, while the shared Card header uses 16px by default.
+ * Correct the 4px difference without moving the table or other cards.
+ */
+html body #root [data-qrpass-user-list-header-v61="true"] {
+  padding-left: 12px !important;
+}
+html body #root [data-qrpass-user-list-header-v61="true"][data-qrpass-user-list-header-v61="true"] h3 {
+  color: #17336d !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 20px !important;
+  letter-spacing: -0.01em !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  transform: none !important;
+}

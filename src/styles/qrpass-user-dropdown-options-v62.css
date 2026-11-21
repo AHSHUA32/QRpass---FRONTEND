@@ -1,0 +1,28 @@
+/* QRPASS USER ACCOUNTS DROPDOWN OPTIONS V62
+ * Match the Audit Logs second reference video. Applied to popup choices only.
+ * Do NOT change main dropdown dimensions or System Settings / Audit Logs.
+ */
+.qrp-v51-popup[data-qrpass-user-options-v62="true"],
+.qrp-v50-popup[data-qrpass-user-options-v62="true"],
+.qrp-v52-popup[data-qrpass-user-options-v62="true"] {
+  animation-duration: 130ms !important;
+  border-color: #d1def8 !important;
+  background-color: #fff !important;
+}
+.qrp-v51-popup[data-qrpass-user-options-v62="true"] > [role="option"],
+.qrp-v50-popup[data-qrpass-user-options-v62="true"] > [role="option"],
+.qrp-v52-popup[data-qrpass-user-options-v62="true"] > [role="option"] {
+  transition: background-color 85ms ease-out !important;
+}
+@media(prefers-reduced-motion:reduce) {
+  .qrp-v51-popup[data-qrpass-user-options-v62="true"],
+  .qrp-v50-popup[data-qrpass-user-options-v62="true"],
+  .qrp-v52-popup[data-qrpass-user-options-v62="true"] {
+    animation: none !important;
+  }
+  .qrp-v51-popup[data-qrpass-user-options-v62="true"] > [role="option"],
+  .qrp-v50-popup[data-qrpass-user-options-v62="true"] > [role="option"],
+  .qrp-v52-popup[data-qrpass-user-options-v62="true"] > [role="option"] {
+    transition: none !important;
+  }
+}

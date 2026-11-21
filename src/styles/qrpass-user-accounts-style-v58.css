@@ -1,0 +1,81 @@
+/* QRPASS USER ACCOUNTS SYSTEM-SETTINGS STYLE V58 */
+
+/* Toolbar controls */
+[data-qrpass-user-accounts-search-v58="true"],
+[data-qrpass-user-accounts-select-v58="true"] {
+  background: #ffffff !important;
+  border: 1px solid #c8d5e8 !important;
+  color: #17336d !important;
+  font-size: 15px !important;
+}
+
+[data-qrpass-user-accounts-search-v58="true"]::placeholder {
+  color: #7b8daa !important;
+  font-size: 15px !important;
+}
+
+[data-qrpass-user-accounts-search-v58="true"]:hover,
+[data-qrpass-user-accounts-select-v58="true"]:hover {
+  background: #eef4ff !important;
+  border-color: #aac0e8 !important;
+}
+
+[data-qrpass-user-accounts-search-v58="true"]:focus,
+[data-qrpass-user-accounts-search-v58="true"]:focus-visible,
+[data-qrpass-user-accounts-select-v58="true"]:focus,
+[data-qrpass-user-accounts-select-v58="true"]:focus-visible {
+  background: #ffffff !important;
+  border-color: #9db6df !important;
+  box-shadow: 0 0 0 3px rgba(102, 132, 199, 0.12) !important;
+  outline: none !important;
+}
+
+/* User list card */
+[data-qrpass-user-list-card-v58="true"] {
+  border-color: #dce3ee !important;
+  box-shadow: 0 8px 24px rgba(16, 26, 51, 0.10) !important;
+}
+
+[data-qrpass-user-list-title-v58="true"] {
+  color: #17336d !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+[data-qrpass-user-list-card-v58="true"] th {
+  color: #64748b !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-color: #dce3ee !important;
+}
+
+[data-qrpass-user-list-card-v58="true"] td {
+  border-color: #e8eef7 !important;
+}
+
+/* Match general text color/size to System Settings, but do NOT recolor badges/buttons */
+[data-qrpass-user-list-card-v58="true"] td:not(:has(.inline-flex)) :is(div,span,p),
+[data-qrpass-user-list-card-v58="true"] td:not(:has(button)):not(:has(.inline-flex)) {
+  color: #17336d !important;
+  font-size: 14px !important;
+}
+
+[data-qrpass-user-list-card-v58="true"] td .font-mono,
+[data-qrpass-user-list-card-v58="true"] td .text-muted-foreground {
+  color: #60738f !important;
+  font-size: 14px !important;
+}
+
+[data-qrpass-user-list-footer-v58="true"] {
+  color: #60738f !important;
+  font-size: 14px !important;
+  border-top-color: #dce3ee !important;
+}
+
+/* Explicitly preserve special colors from the role/status/action chips */
+[data-qrpass-user-list-card-v58="true"] .bg-blue-50,
+[data-qrpass-user-list-card-v58="true"] .bg-green-100,
+[data-qrpass-user-list-card-v58="true"] .bg-red-100,
+[data-qrpass-user-list-card-v58="true"] button {
+  color: revert !important;
+}

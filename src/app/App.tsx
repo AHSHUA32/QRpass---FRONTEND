@@ -420,8 +420,8 @@ function Card({
         boxShadow: "0 8px 24px rgba(16, 26, 51, 0.10)",
       }}
     >
-      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-[#dce3ee] bg-white px-4 py-3">
-        <h3 data-qrpass-audit-records-heading-v32={title === "Audit Activity Records" ? "true" : undefined} className="min-w-0 break-words font-semibold text-sm text-[#111827]">
+      <div data-qrpass-user-list-header-v61={title === "User List" ? "true" : undefined} className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-[#dce3ee] bg-white px-4 py-3">
+        <h3 data-qrpass-user-list-heading-v60={title === "User List" ? "true" : undefined} data-qrpass-audit-records-heading-v32={title === "Audit Activity Records" ? "true" : undefined} className="min-w-0 break-words font-semibold text-sm text-[#111827]">
           {title}
         </h3>
 

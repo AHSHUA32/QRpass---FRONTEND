@@ -1,0 +1,9 @@
+/* QRPASS USER LIST HEADING V60 — match General Settings. */
+/* Stronger than the previous v58 title selector; User List only. */
+html body #root h3[data-qrpass-user-list-heading-v60="true"] {
+  color: #17336d !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  line-height: 24px !important;
+  letter-spacing: normal !important;
+}

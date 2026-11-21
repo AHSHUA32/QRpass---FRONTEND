@@ -162,7 +162,24 @@
       // Inline important colors override existing dark selected-button CSS from older themes.
       const paint = (hovered = false) => {
         const selected = opt.selected;
-        row.style.setProperty('background-color', selected ? (hovered ? '#d6e3ff' : '#dfe8ff') : hovered ? '#eef3ff' : '#f7f9ff', 'important');
+        /* QRPASS_USERS_HOVER_MATCH_AUDIT_V66 */
+        // User Accounts only: same instant, clearly visible response as the
+        // Audit Logs reference. The selected row remains blue even off-hover.
+        // The existing v51 pointerenter/pointerleave events still do the work.
+        const isUserAccountsMenu = el.getAttribute('aria-label') === 'Filter user roles' ||
+          el.getAttribute('aria-label') === 'Sort user accounts';
+        const bg = selected
+          ? (hovered ? '#d6e3ff' : '#dfe8ff')
+          : (hovered ? (isUserAccountsMenu ? '#e5edff' : '#eef3ff') : '#f7f9ff');
+        if (isUserAccountsMenu) {
+          // Inline shorthand beats older CSS and old option background colors.
+          row.style.setProperty('background', bg, 'important');
+          row.style.setProperty('background-color', bg, 'important');
+          row.style.setProperty('background-image', 'none', 'important');
+          row.style.setProperty('transition', 'none', 'important');
+        } else {
+          row.style.setProperty('background-color', bg, 'important');
+        }
         row.style.setProperty('color', '#17336d', 'important');
         row.style.setProperty('font-weight', selected ? '600' : '500', 'important');
         row.style.setProperty('border-radius', '10px', 'important');

@@ -35,4 +35,8 @@ import "./styles/qrpass-users-dropdown-hover-click-v53.css";
 import "./styles/qrpass-account-role-dropdown-effects-v54.css";
 import "./styles/qrpass-add-user-white-fields-v55.css";
 import "./qrpass-user-list-footer-gap-v57.js";
+import "./qrpass-user-accounts-style-v58.js";
+import "./styles/qrpass-user-accounts-style-v58.css";
+import "./styles/qrpass-user-list-heading-v60.css";
+import "./styles/qrpass-user-list-heading-align-v61.css";
 createRoot(document.getElementById("root")!).render(<App />);
