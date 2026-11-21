@@ -1,0 +1,73 @@
+/* QRPass v10: System Settings click/focus must be WHITE even while hovered.
+   This file is imported after v9 and uses extra ID specificity to beat
+   old sysadmin hover rules (!important). Does not change any field dimensions,
+   number stepper logic, native dropdown arrows or data handling. */
+
+/* Normal / not interacting: white. */
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] :is(input[data-qrpass-keep-style]:not([inputmode]), select[data-qrpass-keep-style]) {
+  background-color: #ffffff !important;
+  color: #17336d !important;
+}
+
+/* Hover only: soft blue. Hover must NOT override an active focus. */
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] :is(input[data-qrpass-keep-style]:not([inputmode]), select[data-qrpass-keep-style]):hover:not(:focus):not(:focus-visible) {
+  background-color: #eef4ff !important;
+}
+
+/* Mouse click and keyboard focus: white; keep a subtle focus border. */
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] :is(input[data-qrpass-keep-style]:not([inputmode]), select[data-qrpass-keep-style]):focus,
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] :is(input[data-qrpass-keep-style]:not([inputmode]), select[data-qrpass-keep-style]):focus-visible {
+  background-color: #ffffff !important;
+  border-color: #6b90c7 !important;
+  box-shadow: 0 0 0 2px rgba(82,120,231,.13) !important;
+  outline: none !important;
+}
+
+/* Number field is one control containing a text input + segmented buttons. */
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] [data-qrpass-segmented-stepper="v9"] {
+  background-color: #ffffff !important;
+  transition: background-color 150ms ease, border-color 150ms ease !important;
+}
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] [data-qrpass-segmented-stepper="v9"]:hover:not(:focus-within) {
+  background-color: #eef4ff !important;
+}
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] [data-qrpass-segmented-stepper="v9"]:focus-within {
+  background-color: #ffffff !important;
+  border-color: #6b90c7 !important;
+  box-shadow: 0 0 0 2px rgba(82,120,231,.13) !important;
+}
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] [data-qrpass-segmented-stepper="v9"] > input[inputmode="numeric"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* The segmented rail keeps its small size and thin line from Option 6. */
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] [data-qrpass-segmented-stepper="v9"] > div:last-child {
+  background-color: #f8fafc !important;
+}
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] [data-qrpass-segmented-stepper="v9"]:focus-within > div:last-child {
+  background-color: #ffffff !important;
+}
+
+/* Hover still works until a button is focused/clicked. */
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] [data-qrpass-segmented-stepper="v9"] > div:last-child > button {
+  background-color: transparent !important;
+}
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] [data-qrpass-segmented-stepper="v9"] > div:last-child > button:hover:not(:focus):not(:focus-visible):not(:active) {
+  background-color: #e8f0ff !important;
+}
+
+/* Critical fix: :focus (mouse click), not only :focus-visible (keyboard).
+   Put this AFTER hover, with stronger scoped specificity. */
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] [data-qrpass-segmented-stepper="v9"] > div:last-child > button:focus,
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] [data-qrpass-segmented-stepper="v9"] > div:last-child > button:focus-visible,
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] [data-qrpass-segmented-stepper="v9"] > div:last-child > button:active {
+  background-color: #ffffff !important;
+}
+
+/* Keep arrow visibility and keyboard access intact. */
+html body #root#root#root#root#root#root [data-qrpass-settings-report-skin="v7"] [data-qrpass-segmented-stepper="v9"] > div:last-child > button:focus-visible {
+  outline: 2px solid #6488c7 !important;
+  outline-offset: -2px !important;
+}

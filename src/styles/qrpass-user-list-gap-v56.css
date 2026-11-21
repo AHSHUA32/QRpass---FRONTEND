@@ -1,0 +1,20 @@
+/* QRPASS USER LIST GAP V56 */
+
+[data-qrpass-user-list-gap-v56="true"] {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+[data-qrpass-user-list-table-wrap-v56="true"] {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+[data-qrpass-user-list-footer-v56="true"] {
+  margin-top: 0 !important;
+  padding-top: 10px !important;
+}

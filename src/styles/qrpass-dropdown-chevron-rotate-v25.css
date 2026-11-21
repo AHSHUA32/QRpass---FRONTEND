@@ -1,0 +1,70 @@
+/* QRPass v25 - rotate dropdown arrows ONLY when the menu is actually open.
+   Uses the existing aria-expanded/classes from QRPass floating menus.
+   Visual change only: option click behavior, field backgrounds, sizes unchanged. */
+
+/* The settings label + native select, and the Report Type / Date native selects.
+   The parent owns a decorative arrow. No DOM wrapping and no layout change. */
+#root .qrpass-sysadmin-settings-v31 :is(div, label):has(> select[aria-label="Academic Year"]),
+#root .qrpass-sysadmin-settings-v31 :is(div, label):has(> select[aria-label="Semester"]),
+#root #qrpass-sysadmin-reports-v4 :is(div, label):has(> select[aria-label="Report type"]),
+#root #qrpass-sysadmin-reports-v4 :is(div, label):has(> select[aria-label="Filter reports by date"]) {
+  position: relative;
+}
+
+/* Hide only the static select SVG arrow, NOT the dropdown or its options.
+   The animated arrow below occupies the exact same right-side location. */
+#root .qrpass-sysadmin-settings-v31 select:is([aria-label="Academic Year"], [aria-label="Semester"]),
+#root #qrpass-sysadmin-reports-v4 select:is([aria-label="Report type"], [aria-label="Filter reports by date"]) {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background-image: none !important;
+  padding-right: 48px !important;
+}
+
+/* Closed: down-chevron.  Open: 180-degree rotation, pointing up.
+   The pseudo-element is pointer-events:none so all clicks reach <select>. */
+#root .qrpass-sysadmin-settings-v31 :is(div, label):has(> select:is([aria-label="Academic Year"], [aria-label="Semester"]))::after,
+#root #qrpass-sysadmin-reports-v4 :is(div, label):has(> select:is([aria-label="Report type"], [aria-label="Filter reports by date"]))::after {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  right: 21px;
+  bottom: 21px;
+  z-index: 2;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #31539b;
+  border-bottom: 2px solid #31539b;
+  border-radius: 0 0 1px 0;
+  transform: translateY(-2px) rotate(45deg);
+  transform-origin: center;
+  transition: transform 190ms cubic-bezier(.2,.7,.2,1);
+  pointer-events: none;
+}
+
+#root .qrpass-sysadmin-settings-v31 :is(div, label):has(> select:is([aria-label="Academic Year"], [aria-label="Semester"]):is([aria-expanded="true"], .qrp-v51-open, .qrp-v40-open, .qrp-v50-open))::after,
+#root #qrpass-sysadmin-reports-v4 :is(div, label):has(> select:is([aria-label="Report type"], [aria-label="Filter reports by date"]):is([aria-expanded="true"], .qrp-v51-open, .qrp-v40-open, .qrp-v50-open))::after {
+  transform: translateY(2px) rotate(225deg);
+}
+
+/* Existing custom React/Radix dropdown arrows: rotate their trailing SVG.
+   Do not create an extra icon or alter the combobox button. */
+#root button:is([role="combobox"], [data-slot="select-trigger"], [data-radix-select-trigger]) > svg:last-child {
+  transform-origin: center !important;
+  transition: transform 190ms cubic-bezier(.2,.7,.2,1) !important;
+}
+#root button:is([role="combobox"], [data-slot="select-trigger"], [data-radix-select-trigger]):is([aria-expanded="true"], [data-state="open"]) > svg:last-child {
+  transform: rotate(180deg) !important;
+}
+
+html.dark #root .qrpass-sysadmin-settings-v31 :is(div, label):has(> select:is([aria-label="Academic Year"], [aria-label="Semester"]))::after,
+html.dark #root #qrpass-sysadmin-reports-v4 :is(div, label):has(> select:is([aria-label="Report type"], [aria-label="Filter reports by date"]))::after {
+  border-color: #b7c9fb;
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .qrpass-sysadmin-settings-v31 :is(div, label)::after,
+  #root #qrpass-sysadmin-reports-v4 :is(div, label)::after,
+  #root button:is([role="combobox"], [data-slot="select-trigger"], [data-radix-select-trigger]) > svg:last-child {
+    transition: none !important;
+  }
+}

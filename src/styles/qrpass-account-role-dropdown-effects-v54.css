@@ -1,0 +1,94 @@
+/* QRPASS ACCOUNT ROLE DROPDOWN V54
+ * SysAdmin Add New User Account and Edit User Account Role selectors only.
+ * Matches User Accounts v53: white default, pale blue hover, white focused.
+ * No changes to option values, event handlers or backend.
+ */
+html body #root .qrpass-admin-page .qrpass-account-role-wrap-v54 {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-account-role-wrap-v54 > select {
+  display: block !important;
+  width: 100% !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  box-sizing: border-box !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  padding: 0 48px 0 16px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  background-repeat: no-repeat !important;
+  color: #17336d !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  line-height: 22px !important;
+  outline: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  cursor: pointer !important;
+  transition: background-color 160ms ease,border-color 160ms ease,box-shadow 160ms ease !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-account-role-wrap-v54 > select:hover:not(:focus):not([aria-expanded="true"]):not(.qrp-v51-open) {
+  background: #eef2ff !important;
+  background-color: #eef2ff !important;
+  background-image: none !important;
+  border-color: #a8bde4 !important;
+  box-shadow: none !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-account-role-wrap-v54 > select:is(:focus,:focus-visible,[aria-expanded="true"],.qrp-v51-open) {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-color: #5278e7 !important;
+  box-shadow: 0 0 0 3px rgba(82,120,231,.16) !important;
+  outline: none !important;
+}
+html body #root .qrpass-admin-page .qrpass-account-role-wrap-v54 > .qrpass-account-role-chevron-v54 {
+  position: absolute !important;
+  top: calc(50% - 8px) !important;
+  right: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  pointer-events: none !important;
+  color: #31539b !important;
+  transform-origin: center !important;
+  transform: rotate(0deg) !important;
+  transition: transform 180ms cubic-bezier(.2,.7,.2,1) !important;
+}
+html body #root .qrpass-admin-page .qrpass-account-role-wrap-v54:has(> select:is([aria-expanded="true"],.qrp-v51-open)) > .qrpass-account-role-chevron-v54 {
+  transform: rotate(180deg) !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-account-role-wrap-v54 > select {
+  background: #19345f !important;
+  background-color: #19345f !important;
+  color: #f0f5ff !important;
+  border-color: #42618b !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-account-role-wrap-v54 > select:hover:not(:focus):not([aria-expanded="true"]):not(.qrp-v51-open) {
+  background: #25456e !important;
+  background-color: #25456e !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-account-role-wrap-v54 > select:is(:focus,:focus-visible,[aria-expanded="true"],.qrp-v51-open) {
+  background: #19345f !important;
+  border-color: #83a6ed !important;
+}
+html.dark body #root .qrpass-admin-page .qrpass-account-role-wrap-v54 > .qrpass-account-role-chevron-v54 {
+  color: #b7c9fb !important;
+}
+@media (max-width: 640px) {
+  html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-account-role-wrap-v54 > select { height: 52px !important; min-height: 52px !important; font-size: 14px !important; }
+}
+@media(prefers-reduced-motion:reduce) {
+  html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-account-role-wrap-v54 > select,
+  html body #root .qrpass-admin-page .qrpass-account-role-wrap-v54 > .qrpass-account-role-chevron-v54 { transition: none !important; }
+}

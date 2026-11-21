@@ -1,0 +1,241 @@
+/* QRPass Reports v4: scoped dropdown colors.
+ * Admin v14 stylesheet repeats .qrpass-admin-page six times with !important.
+ * The two IDs below intentionally outrank that global rule.
+ * Only affects Report Type and Filter by Date on Downloadable Reports. */
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #17336d !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: none !important;
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease !important;
+}
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"]:hover:not(:focus):not(.qrp-v40-open) {
+  background: #eef4ff !important;
+  background-color: #eef4ff !important;
+  border-color: #91addb !important;
+}
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"]:focus,
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"]:focus:hover,
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"]:focus-visible,
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"]:active,
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"].qrp-v40-open {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #6d93cf !important;
+  box-shadow: 0 0 0 2px rgba(82,120,231,.12) !important;
+}
+
+/* QRPass Reports v5: persistent navy dropdown chevrons */
+/* Scope: exactly the two dropdowns on SysAdmin > Downloadable Reports.
+   No JSX changes; original options, click, and keyboard behavior are retained. */
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317336d' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 18px center / 18px 18px !important;
+  background-color: #ffffff !important;
+  padding-right: 52px !important;
+}
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"]:hover:not(:focus):not(.qrp-v40-open) {
+  background: #eef4ff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317336d' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 18px center / 18px 18px !important;
+  background-color: #eef4ff !important;
+}
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"]:focus,
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"]:focus:hover,
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"]:focus-visible,
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"]:active,
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"].qrp-v40-open {
+  background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317336d' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 18px center / 18px 18px !important;
+  background-color: #ffffff !important;
+}
+/* End QRPass Reports v5 chevrons */
+
+/* QRPass Reports v6: System Settings typography */
+/* Exact System Settings reference: Card title text-sm, labels text-xs,
+   controls text-sm, save button text-xs, 16px card padding.
+   IMPORTANT: no background, icon, appearance or select padding-right edits. */
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :first-child {
+  padding: 12px 16px !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden h3 {
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(2) {
+  padding: 16px !important;
+  column-gap: 24px !important;
+  row-gap: 16px !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden label,
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden label > span {
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 600 !important;
+  margin-bottom: 4px !important;
+}
+#root #qrpass-sysadmin-reports-v4 select[data-qrpass-report-select="true"] {
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 400 !important;
+  text-align: left !important;
+  height: 48px !important;
+  min-height: 48px !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(3) {
+  padding: 12px 16px !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden button {
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 600 !important;
+  min-height: 40px !important;
+  min-width: 0 !important;
+  padding: 8px 16px !important;
+}
+@media (max-width: 640px) {
+  #root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(2) {
+    padding: 16px !important;
+  }
+}
+/* End QRPass Reports v6 typography */
+
+/* QRPASS_REPORT_DOWNLOAD_LOGIN_GRADIENT_V15_START */
+/* Only the two download buttons inside the Reports card footer.
+ * Do NOT set width, height, margin, padding, radius or display.
+ * Existing PDF/Excel click handlers and icons remain intact. */
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(3) button {
+  background: linear-gradient(180deg, #294c90 0%, #1c335b 100%) !important;
+  background-color: #294c90 !important;
+  background-image: linear-gradient(180deg, #294c90 0%, #1c335b 100%) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  text-shadow: none !important;
+  transition: filter 160ms ease, box-shadow 160ms ease !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(3) button svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(3) button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #294c90 0%, #1c335b 100%) !important;
+  background-color: #294c90 !important;
+  background-image: linear-gradient(180deg, #294c90 0%, #1c335b 100%) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  filter: brightness(1.055) !important;
+  box-shadow: 0 5px 12px rgba(26,54,111,.16) !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(3) button:active:not(:disabled) {
+  filter: brightness(.97) !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(3) button:focus-visible {
+  background: linear-gradient(180deg, #294c90 0%, #1c335b 100%) !important;
+  background-image: linear-gradient(180deg, #294c90 0%, #1c335b 100%) !important;
+  color: #ffffff !important;
+  outline: 2px solid #5e82df !important;
+  outline-offset: 2px !important;
+}
+/* QRPASS_REPORT_DOWNLOAD_LOGIN_GRADIENT_V15_END */
+
+/* QRPASS_REPORT_BUTTON_SHAPE_MATCH_SAVE_V19_START */
+/* Match the Save Settings / Save Policy button shape.
+ * Shape only: radius, height, padding, font sizing, and shadow.
+ * Existing gradient, white text/icons, and click handlers remain unchanged.
+ */
+#root #qrpass-sysadmin-reports-v4 > :is(div,section).overflow-hidden > :nth-child(3) button {
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 0 22px !important;
+  border-radius: 16px !important;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  box-shadow: none !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div,section).overflow-hidden > :nth-child(3) button:hover:not(:disabled) {
+  box-shadow: 0 5px 12px rgba(26,54,111,.16) !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div,section).overflow-hidden > :nth-child(3) button svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0 !important;
+}
+/* QRPASS_REPORT_BUTTON_SHAPE_MATCH_SAVE_V19_END */
+
+/* QRPASS_REPORTS_FOOTER_CLEANUP_V20_START */
+/* Remove the separator line and make the footer match System Settings more closely. */
+#root #qrpass-sysadmin-reports-v4 > :is(div,section).overflow-hidden > :nth-child(3) {
+  border-top: 0 !important;
+  padding-top: 16px !important;
+  padding-bottom: 16px !important;
+}
+
+/* Keep the button group clean and aligned to the right. */
+#root #qrpass-sysadmin-reports-v4 > :is(div,section).overflow-hidden > :nth-child(3) > div {
+  align-items: center !important;
+}
+
+/* Match Save Settings / Save Policy proportions more closely, while keeping room for the icon. */
+#root #qrpass-sysadmin-reports-v4 > :is(div,section).overflow-hidden > :nth-child(3) button {
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 0 18px !important;
+  border-radius: 16px !important;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 600 !important;
+  gap: 8px !important;
+  box-shadow: none !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div,section).overflow-hidden > :nth-child(3) button:hover:not(:disabled) {
+  box-shadow: 0 5px 12px rgba(26,54,111,.16) !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div,section).overflow-hidden > :nth-child(3) button svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0 !important;
+}
+/* QRPASS_REPORTS_FOOTER_CLEANUP_V20_END */
+
+/* QRPASS_REPORTS_FOOTER_GAP_SAME_AS_SAVE_V23_START */
+/* Match the actual System Settings footer reference:
+   ~16px from dropdown bottom to buttons, 16px below buttons.
+   Keep the previously removed horizontal divider removed. */
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(3) {
+  border-top: 0 !important;
+  border-top-width: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 16px !important;
+}
+/* Compact Save Settings dimensions, NOT the taller v19/v20 Reports version.
+   Longer labels remain naturally wider, but their padding and height match. */
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(3) button {
+  box-sizing: border-box !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  min-width: 0 !important;
+  width: auto !important;
+  padding: 8px 16px !important;
+  border-radius: 14px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 16px !important;
+  gap: 8px !important;
+  box-shadow: none !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(3) button svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0 !important;
+}
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(3) button:hover:not(:disabled) {
+  box-shadow: 0 5px 12px rgba(26,54,111,.16) !important;
+}
+/* No color changes: keep existing navy gradient + white icons/text. */
+/* QRPASS_REPORTS_FOOTER_GAP_SAME_AS_SAVE_V23_END */

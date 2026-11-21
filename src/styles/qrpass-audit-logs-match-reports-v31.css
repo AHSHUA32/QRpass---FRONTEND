@@ -1,0 +1,123 @@
+/* QRPASS AUDIT LOGS MATCH REPORTS v31 */
+/* Match the existing Reports card: navy #17336d text, compact 14px fields,
+   48px height, and subtle 1px #cbd5e1 outlines. This is deliberately
+   scoped to the Audit Logs page by its unique search control. */
+
+#root .qrpass-admin-page:has(input[aria-label="Search system logs"]) :is(
+  input[aria-label="Search system logs"],
+  select[aria-label="Filter system log activity"],
+  select[aria-label="Sort system logs"]
+) {
+  box-sizing: border-box !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #cbd5e1 !important;
+  border-radius: 12px !important;
+  color: #17336d !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 20px !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease !important;
+}
+
+/* Keep the search icon aligned and search field white at rest. */
+#root .qrpass-admin-page:has(input[aria-label="Search system logs"]) input[aria-label="Search system logs"] {
+  background-color: #fff !important;
+  padding-left: 48px !important;
+}
+#root .qrpass-admin-page:has(input[aria-label="Search system logs"]) input[aria-label="Search system logs"]::placeholder {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #8192ad !important;
+  opacity: 1 !important;
+}
+
+/* Keep the existing search-field interaction as well. */
+#root .qrpass-admin-page:has(input[aria-label="Search system logs"])
+  input[aria-label="Search system logs"]:hover:not(:focus) {
+  background-color: #eef4ff !important;
+}
+#root .qrpass-admin-page:has(input[aria-label="Search system logs"])
+  input[aria-label="Search system logs"]:focus {
+  background-color: #ffffff !important;
+}
+
+/* Preserve white → light-blue → white interactions from v28/v29.
+   v29 may set background-color inline with !important; we do not replace it.
+   Do not set background-image or appearance: keep existing rotating arrows. */
+#root .qrpass-admin-page:has(input[aria-label="Search system logs"]) :is(
+  input[aria-label="Search system logs"],
+  select[aria-label="Filter system log activity"],
+  select[aria-label="Sort system logs"]
+):hover:not(:focus):not([aria-expanded="true"]) {
+  border-color: #91addb !important;
+}
+#root .qrpass-admin-page:has(input[aria-label="Search system logs"]) :is(
+  input[aria-label="Search system logs"],
+  select[aria-label="Filter system log activity"],
+  select[aria-label="Sort system logs"]
+):is(:focus, :focus-visible, [aria-expanded="true"]) {
+  border-color: #6d93cf !important;
+  box-shadow: 0 0 0 2px rgba(82,120,231,.12) !important;
+  outline: none !important;
+}
+
+/* Keep the input/search and dropdown text aligned. The existing wrapper,
+   dropdown widths and mobile behavior remain completely untouched. */
+#root .qrpass-admin-page:has(input[aria-label="Search system logs"]) select[aria-label="Filter system log activity"],
+#root .qrpass-admin-page:has(input[aria-label="Search system logs"]) select[aria-label="Sort system logs"] {
+  padding-left: 16px !important;
+  text-align: left !important;
+}
+
+/* The heading after the 'matching audit events' count is specifically
+   the 'Audit Activity Records' Card header in the current QRPass markup.
+   Match 'Generate a report': 14px semibold navy, clean border. */
+#root .qrpass-admin-page:has(input[aria-label="Search system logs"])
+  p.text-xs.text-muted-foreground + div.bg-white.border > div:first-child > h3 {
+  color: #17336d !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 20px !important;
+  letter-spacing: -.01em !important;
+}
+#root .qrpass-admin-page:has(input[aria-label="Search system logs"])
+  p.text-xs.text-muted-foreground + div.bg-white.border > div:first-child {
+  border-color: #dce3ee !important;
+}
+
+/* Existing Lights Out theme should remain readable. This affects Audit
+   Logs only; no changes to the light-mode reference colors. */
+html.dark #root .qrpass-admin-page:has(input[aria-label="Search system logs"]) :is(
+  input[aria-label="Search system logs"],
+  select[aria-label="Filter system log activity"],
+  select[aria-label="Sort system logs"]
+) {
+  color: #e7efff !important;
+  border-color: #526c92 !important;
+}
+html.dark #root .qrpass-admin-page:has(input[aria-label="Search system logs"])
+  input[aria-label="Search system logs"] {
+  background-color: #19345f !important;
+}
+html.dark #root .qrpass-admin-page:has(input[aria-label="Search system logs"])
+  input[aria-label="Search system logs"]:hover:not(:focus) {
+  background-color: #25456e !important;
+}
+html.dark #root .qrpass-admin-page:has(input[aria-label="Search system logs"])
+  input[aria-label="Search system logs"]::placeholder {
+  color: #9fb5d3 !important;
+}
+
+/* Never restyle or alter the System Settings dropdowns. */
+@media (prefers-reduced-motion: reduce) {
+  #root .qrpass-admin-page:has(input[aria-label="Search system logs"]) :is(
+    input[aria-label="Search system logs"],
+    select[aria-label="Filter system log activity"],
+    select[aria-label="Sort system logs"]
+  ) { transition: none !important; }
+}

@@ -1,0 +1,97 @@
+/* QRPASS USER ACCOUNTS TOOLBAR V49
+ * User Accounts only. Move Add User after Newest first and present Manage
+ * Users as the same icon-only button as the Audit Logs Manage Logs button.
+ */
+/* Original parent Manage Users action remains mounted and functional,
+ * but the duplicate header shortcut is visually hidden on User Accounts. */
+html body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) > button.qrpass-manage-logs-shortcut-v3.qrpass-page-manage-v1 {
+  display: none !important;
+}
+/* Remove obsolete header reservation once both actions are in the toolbar. */
+html body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) div[class*="md:flex-row"] {
+  padding-right: 0 !important;
+}
+html body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) [data-qrpass-users-toolbar-v49="true"] {
+  display: inline-flex !important;
+  gap: 12px !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+html body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) .qrpass-users-add-v49,
+html body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) .qrpass-users-manage-v49 {
+  box-sizing: border-box !important;
+  position: static !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #17336d !important;
+  box-shadow: none !important;
+  filter: none !important;
+  cursor: pointer !important;
+  transition: background-color 160ms ease,border-color 160ms ease,box-shadow 160ms ease !important;
+}
+html body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) .qrpass-users-add-v49 {
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: 126px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+}
+html body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) .qrpass-users-manage-v49 {
+  display: inline-flex !important;
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  padding: 0 !important;
+  flex: 0 0 48px !important;
+  color: #31539b !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+html body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) .qrpass-users-manage-v49 svg {
+  width: 18px !important;
+  height: 18px !important;
+  flex: none !important;
+  color: inherit !important;
+}
+html body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) :is(.qrpass-users-add-v49,.qrpass-users-manage-v49):hover:not(:disabled) {
+  background: #eef4ff !important;
+  background-color: #eef4ff !important;
+  border-color: #a8bde4 !important;
+}
+html body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) :is(.qrpass-users-add-v49,.qrpass-users-manage-v49):focus-visible {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #5278e7 !important;
+  box-shadow: 0 0 0 3px rgba(82,120,231,.16) !important;
+  outline: none !important;
+}
+/* Let the button group move to its own row naturally when space is short. */
+@media(max-width:900px) {
+  html body #root .qrpass-admin-page [data-qrpass-users-toolbar-v49="true"] {
+    max-width: 100%;
+  }
+}
+/* Dark mode: follow the established QRPass Lights Out palette. */
+html.dark body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) :is(.qrpass-users-add-v49,.qrpass-users-manage-v49) {
+  background: #19345f !important;
+  background-color: #19345f !important;
+  color: #dce8ff !important;
+  border-color: #42618b !important;
+}
+html.dark body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) :is(.qrpass-users-add-v49,.qrpass-users-manage-v49):hover {
+  background: #25456e !important;
+  background-color: #25456e !important;
+}
+@media(prefers-reduced-motion:reduce) {
+  html body #root .qrpass-admin-page:has([data-qrpass-users-toolbar-v49="true"]) :is(.qrpass-users-add-v49,.qrpass-users-manage-v49) {transition:none!important;}
+}

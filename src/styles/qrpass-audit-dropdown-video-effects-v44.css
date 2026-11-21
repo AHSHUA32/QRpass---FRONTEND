@@ -1,0 +1,67 @@
+/* QRPASS AUDIT DROPDOWN VIDEO EFFECTS V44
+ * Reference video: white default -> pale blue hover -> white/blue ring open.
+ * Scope: SysAdmin Audit Logs All Activity and Newest first only.
+ * Preserve field sizes, padding, layout and all functional handlers.
+ */
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page select:is([aria-label="Filter system log activity"],[aria-label="Sort system logs"]) {
+  background-color: #ffffff !important;
+  color: #17336d !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transition: background-color 160ms ease,
+              border-color 160ms ease,
+              box-shadow 160ms ease !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page select:is([aria-label="Filter system log activity"],[aria-label="Sort system logs"]):hover:not(:focus):not([aria-expanded="true"]):not(.qrp-v51-open) {
+  background-color: #eef2ff !important;
+  color: #17336d !important;
+  border-color: #a8bde4 !important;
+  box-shadow: none !important;
+}
+/* Clicking/opening the popup restores white with a soft blue ring.
+ * The real dropdown state is controlled by QRPass v51's aria-expanded.
+ */
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page select:is([aria-label="Filter system log activity"],[aria-label="Sort system logs"]):is(:focus, :focus-visible, [aria-expanded="true"], .qrp-v51-open, .qrp-v40-open) {
+  background-color: #ffffff !important;
+  color: #17336d !important;
+  border-color: #5278e7 !important;
+  box-shadow: 0 0 0 3px rgba(82,120,231,.17) !important;
+  outline: none !important;
+}
+/* Keep one chevron. If the v28 wrapper supplies the rotating icon,
+ * suppress the older select-background image; otherwise leave the
+ * native QRPass arrow intact.
+ */
+html body #root .qrpass-audit-dropdown-v28 > select:is([aria-label="Filter system log activity"],[aria-label="Sort system logs"]) {
+  background-image: none !important;
+}
+html body #root .qrpass-audit-dropdown-v28::after {
+  transition: transform 190ms cubic-bezier(.2,.7,.2,1) !important;
+}
+html body #root .qrpass-audit-dropdown-v28:has(> select:is([aria-expanded="true"],.qrp-v51-open,.qrp-v40-open))::after {
+  transform: translateY(-35%) rotate(225deg) !important;
+}
+html body #root .qrpass-audit-dropdown-v28:not(:has(> select:is([aria-expanded="true"],.qrp-v51-open,.qrp-v40-open)))::after {
+  transform: translateY(-65%) rotate(45deg) !important;
+}
+/* Respect the existing Lights Out palette while avoiding a white flash. */
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page select:is([aria-label="Filter system log activity"],[aria-label="Sort system logs"]) {
+  background-color: #19345f !important;
+  color: #f0f5ff !important;
+  border-color: #42618b !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page select:is([aria-label="Filter system log activity"],[aria-label="Sort system logs"]):hover:not(:focus):not([aria-expanded="true"]):not(.qrp-v51-open) {
+  background-color: #25456e !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page select:is([aria-label="Filter system log activity"],[aria-label="Sort system logs"]):is(:focus,[aria-expanded="true"],.qrp-v51-open) {
+  background-color: #19345f !important;
+  border-color: #83a6ed !important;
+  box-shadow: 0 0 0 3px rgba(131,166,237,.18) !important;
+}
+@media(prefers-reduced-motion:reduce) {
+  html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page select:is([aria-label="Filter system log activity"],[aria-label="Sort system logs"]),
+  html body #root .qrpass-audit-dropdown-v28::after {
+    transition: none !important;
+  }
+}

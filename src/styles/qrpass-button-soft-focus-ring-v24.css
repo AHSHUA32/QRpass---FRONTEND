@@ -1,0 +1,13 @@
+/* QRPASS_OPTION10_SOFT_FOCUS_RING_V24
+ * QRPass-wide hover effect: Option 10 (Soft Focus Ring).
+ * Keeps every existing button size, shape, background/gradient, shadow, and click handler.
+ * Uses outline (outside the border) to avoid overriding existing box-shadows.
+ * Does not add a ring to disabled, menu-option, micro stepper, or toggle controls.
+ */
+@media (hover: hover) and (pointer: fine) {
+  html body button:not(:disabled):not([aria-disabled="true"]):not([role="option"]):not([role="switch"]):not([aria-label^="Increase "]):not([aria-label^="Decrease "]):not([aria-label="Toggle two-factor authentication"]):hover:not(:focus-visible),
+  html body a[role="button"]:not([aria-disabled="true"]):hover:not(:focus-visible) {
+    outline: 3px solid rgba(80, 124, 209, .23) !important;
+    outline-offset: 2px !important;
+  }
+}

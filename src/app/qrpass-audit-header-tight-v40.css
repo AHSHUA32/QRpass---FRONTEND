@@ -1,0 +1,47 @@
+/* QRPass v40 — corrected compact Audit Logs title-to-toolbar spacing. */
+/* Scoped ONLY to SysAdmin Audit Logs. The v37 title-row style can impose
+ * a 40px min-height even after Manage Logs was moved to the toolbar.
+ * Reset that stale height and PageHeader's generic mb-5 margin. */
+html body #root [data-qrpass-audit-header-tight-v40="true"] {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  row-gap: 0 !important;
+}
+html body #root [data-qrpass-audit-header-tight-v40="true"] > div:first-child {
+  display: flex !important;
+  align-items: center !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+html body #root [data-qrpass-audit-header-tight-v40="true"] > div:first-child > div:first-child {
+  display: flex !important;
+  align-items: center !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+html body #root [data-qrpass-audit-header-tight-v40="true"] h2 {
+  margin: 0 !important;
+}
+/* Compact title -> toolbar gap. Existing form controls and toolbar -> card
+ * spacing remain untouched. Overrides the generic space-y-5 in this one place. */
+html body #root [data-qrpass-audit-toolbar-tight-v40="true"] {
+  margin-top: 14px !important;
+  margin-block-start: 14px !important;
+}
+@media (max-width: 640px) {
+  html body #root [data-qrpass-audit-toolbar-tight-v40="true"] {
+    margin-top: 12px !important;
+    margin-block-start: 12px !important;
+  }
+}

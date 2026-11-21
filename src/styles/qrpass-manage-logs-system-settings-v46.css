@@ -1,0 +1,109 @@
+/* QRPASS MANAGE LOGS SYSTEM SETTINGS V46
+ * Make Manage Logs modal follow System Settings outline color,
+ * text color and field/button size.
+ */
+
+#root [data-qrpass-manage-logs-v46="true"] {
+  color: #17336d !important;
+}
+
+#root [data-qrpass-manage-logs-title-v46="true"] {
+  color: #17336d !important;
+  font-size: 20px !important;
+  line-height: 28px !important;
+  font-weight: 700 !important;
+}
+
+#root [data-qrpass-manage-logs-search-v46="true"] {
+  min-height: 48px !important;
+  height: 48px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  color: #17336d !important;
+  background: #ffffff !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  box-shadow: none !important;
+}
+
+#root [data-qrpass-manage-logs-search-v46="true"]::placeholder {
+  color: #94a3b8 !important;
+}
+
+#root [data-qrpass-manage-logs-close-v46="true"],
+#root [data-qrpass-manage-logs-action-v46="true"] {
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 0 20px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  color: #17336d !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+#root [data-qrpass-manage-logs-close-v46="true"]:hover,
+#root [data-qrpass-manage-logs-action-v46="true"]:hover {
+  background: #eef4ff !important;
+  border-color: #a8bde4 !important;
+}
+
+#root [data-qrpass-manage-logs-close-v46="true"]:focus-visible,
+#root [data-qrpass-manage-logs-action-v46="true"]:focus-visible,
+#root [data-qrpass-manage-logs-search-v46="true"]:focus-visible {
+  outline: none !important;
+  border-color: #5278e7 !important;
+  box-shadow: 0 0 0 3px rgba(82, 120, 231, .16) !important;
+}
+
+#root [data-qrpass-manage-logs-grid-v46="true"] {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+}
+
+#root [data-qrpass-manage-logs-th-v46="true"] {
+  color: #64748b !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 600 !important;
+}
+
+#root [data-qrpass-manage-logs-record-title-v46="true"] {
+  color: #17336d !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 700 !important;
+}
+
+#root [data-qrpass-manage-logs-v46="true"] td,
+#root [data-qrpass-manage-logs-v46="true"] td *:not(button):not(svg):not(path):not(input):not(label) {
+  color: inherit;
+}
+
+#root [data-qrpass-manage-logs-v46="true"] td {
+  color: #17336d !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+}
+
+#root [data-qrpass-manage-logs-status-v46="true"] {
+  color: #17336d !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 500 !important;
+}
+
+#root [data-qrpass-manage-logs-v46="true"] tr,
+#root [data-qrpass-manage-logs-v46="true"] thead,
+#root [data-qrpass-manage-logs-v46="true"] tbody,
+#root [data-qrpass-manage-logs-v46="true"] table {
+  border-color: #cbd5e1 !important;
+}
+
+#root [data-qrpass-manage-logs-v46="true"] input[type="checkbox"] {
+  accent-color: #2563eb;
+}

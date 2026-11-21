@@ -1,0 +1,60 @@
+/* QRPASS ADD USER WHITE FIELDS V55
+ * Only Add New User Account -> Username / ID + Temporary Password.
+ * WHITE default, light-blue hover, WHITE on click/focus.
+ * Keep sizes/spacing exactly as they were. Preserve React handlers.
+ */
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page form[data-qrpass-add-user-white-v55="true"] input[data-qrpass-add-user-field-v55] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-color: #cbd5e1 !important;
+  color: #17336d !important;
+  -webkit-text-fill-color: #17336d !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page form[data-qrpass-add-user-white-v55="true"] input[data-qrpass-add-user-field-v55]:hover:not(:focus):not(:focus-visible) {
+  background: #eef2ff !important;
+  background-color: #eef2ff !important;
+  background-image: none !important;
+  border-color: #a8bde4 !important;
+  box-shadow: none !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page form[data-qrpass-add-user-white-v55="true"] input[data-qrpass-add-user-field-v55]:is(:focus, :focus-visible) {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #17336d !important;
+  -webkit-text-fill-color: #17336d !important;
+  border-color: #5278e7 !important;
+  box-shadow: 0 0 0 3px rgba(82, 120, 231, .16) !important;
+  outline: none !important;
+}
+/* Do not let Chrome autofill reintroduce a blue background. */
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page form[data-qrpass-add-user-white-v55="true"] input[data-qrpass-add-user-field-v55]:-webkit-autofill,
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page form[data-qrpass-add-user-white-v55="true"] input[data-qrpass-add-user-field-v55]:-webkit-autofill:hover,
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page form[data-qrpass-add-user-white-v55="true"] input[data-qrpass-add-user-field-v55]:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #17336d !important;
+}
+/* Existing Lights Out mode remains legible. */
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page form[data-qrpass-add-user-white-v55="true"] input[data-qrpass-add-user-field-v55] {
+  background: #19345f !important;
+  background-color: #19345f !important;
+  border-color: #42618b !important;
+  color: #f0f5ff !important;
+  -webkit-text-fill-color: #f0f5ff !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page form[data-qrpass-add-user-white-v55="true"] input[data-qrpass-add-user-field-v55]:hover:not(:focus) {
+  background: #25456e !important;
+  background-color: #25456e !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page form[data-qrpass-add-user-white-v55="true"] input[data-qrpass-add-user-field-v55]:focus {
+  background: #19345f !important;
+  background-color: #19345f !important;
+  border-color: #83a6ed !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page form[data-qrpass-add-user-white-v55="true"] input[data-qrpass-add-user-field-v55] { transition: none !important; }
+}

@@ -1,0 +1,106 @@
+/* QRPASS USER ACCOUNTS DROPDOWN V53
+ * All Roles and Newest first ONLY.
+ * White default -> pale blue hover -> white blue-ring on click/open.
+ * Open state comes from existing QRPass v51 popup (aria-expanded).
+ */
+html body #root .qrpass-admin-page .qrpass-users-dd-wrap-v53 {
+  display: inline-flex !important;
+  position: relative !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+html body #root .qrpass-admin-page .qrpass-users-dd-roles-v53 { width: 165px !important; }
+html body #root .qrpass-admin-page .qrpass-users-dd-sort-v53 { width: 150px !important; }
+
+/* Existing global QRPass styles repeatedly use .qrpass-admin-page and
+ * important declarations. Scope these higher-priority rules to these TWO
+ * labeled selects without touching the other roles' dropdowns. */
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-users-dd-wrap-v53 > select {
+  display: block !important;
+  width: 100% !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 42px 0 16px !important;
+  box-sizing: border-box !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #17336d !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  filter: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  cursor: pointer !important;
+  transition: background-color 160ms ease,border-color 160ms ease,box-shadow 160ms ease !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-users-dd-wrap-v53 > select:hover:not(:focus):not([aria-expanded="true"]):not(.qrp-v51-open) {
+  background: #eef2ff !important;
+  background-color: #eef2ff !important;
+  background-image: none !important;
+  border-color: #a8bde4 !important;
+  box-shadow: none !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-users-dd-wrap-v53 > select:is(:focus,:focus-visible,[aria-expanded="true"],.qrp-v51-open) {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-color: #5278e7 !important;
+  box-shadow: 0 0 0 3px rgba(82,120,231,.16) !important;
+  outline: none !important;
+}
+html body #root .qrpass-admin-page .qrpass-users-dd-wrap-v53 > .qrpass-users-dd-chevron-v53 {
+  position: absolute !important;
+  width: 16px !important;
+  height: 16px !important;
+  right: 16px !important;
+  top: calc(50% - 8px) !important;
+  pointer-events: none !important;
+  color: #31539b !important;
+  transform-origin: center !important;
+  transform: rotate(0deg) !important;
+  transition: transform 180ms cubic-bezier(.2,.7,.2,1) !important;
+}
+html body #root .qrpass-admin-page .qrpass-users-dd-wrap-v53:has(> select:is([aria-expanded="true"],.qrp-v51-open)) > .qrpass-users-dd-chevron-v53 {
+  transform: rotate(180deg) !important;
+}
+/* Lights Out: retain its dark palette and pale-blue chevron. */
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-users-dd-wrap-v53 > select {
+  background: #19345f !important;
+  background-color: #19345f !important;
+  border-color: #42618b !important;
+  color: #f0f5ff !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-users-dd-wrap-v53 > select:hover:not(:focus):not([aria-expanded="true"]):not(.qrp-v51-open) {
+  background: #25456e !important;
+  background-color: #25456e !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page .qrpass-users-dd-wrap-v53 > select:is(:focus,:focus-visible,[aria-expanded="true"],.qrp-v51-open) {
+  background: #19345f !important;
+  border-color: #83a6ed !important;
+}
+html.dark body #root .qrpass-admin-page .qrpass-users-dd-wrap-v53 > .qrpass-users-dd-chevron-v53 {
+  color: #b7c9fb !important;
+}
+@media(max-width:639px) {
+  html body #root .qrpass-admin-page .qrpass-users-dd-wrap-v53 { width: 100% !important; }
+}
+@media(prefers-reduced-motion:reduce) {
+  html body #root .qrpass-admin-page .qrpass-users-dd-wrap-v53 > .qrpass-users-dd-chevron-v53,
+  html body #root .qrpass-admin-page .qrpass-users-dd-wrap-v53 > select { transition: none !important; }
+}

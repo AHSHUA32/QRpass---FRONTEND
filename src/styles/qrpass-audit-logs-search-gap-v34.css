@@ -1,0 +1,86 @@
+/* QRPASS AUDIT LOGS SEARCH GAP V34
+ * Match Audit Logs toolbar spacing to the cleaner User List spacing.
+ * Page-only scope. No functional changes.
+ */
+
+/* Main Audit Logs toolbar row */
+#root [data-qrpass-page="audit-logs"],
+#root [data-qrpass-audit-logs-toolbar],
+#root .qrpass-audit-logs-toolbar-v34 {
+  --qrpass-audit-toolbar-gap: 16px;
+}
+
+/* Target the row that contains the search bar + 2 dropdowns.
+ * We use a safe page-scope fallback chain so older QRPass versions still match.
+ */
+#root :is(
+  [data-qrpass-page="audit-logs"],
+  [data-qrpass-audit-logs-root],
+  .qrpass-audit-logs-root-v34
+) :is(
+  [data-qrpass-audit-logs-toolbar],
+  .qrpass-audit-toolbar,
+  .qrpass-audit-filters,
+  .qrpass-audit-logs-toolbar-v34
+) {
+  gap: 16px !important;
+  margin-bottom: 16px !important;
+  align-items: center !important;
+}
+
+/* Fallback: if the toolbar row has not been labeled, style the first filter row
+ * that contains the audit search input and both native selects.
+ */
+#root :is(
+  [data-qrpass-page="audit-logs"],
+  [data-qrpass-audit-logs-root],
+  .qrpass-audit-logs-root-v34,
+  body
+) :has(input[placeholder*="Search user, action, module, description" i]) :is(div, section)
+  > :is(div, section):has(> input[placeholder*="Search user, action, module, description" i], select[aria-label="Filter system log activity"], select[aria-label="Sort system logs"]) {
+  gap: 16px !important;
+  margin-bottom: 16px !important;
+  align-items: center !important;
+}
+
+/* Match search width/gap feel from User List */
+#root :is(
+  [data-qrpass-page="audit-logs"],
+  [data-qrpass-audit-logs-root],
+  .qrpass-audit-logs-root-v34,
+  body
+) :has(input[placeholder*="Search user, action, module, description" i])
+  input[placeholder*="Search user, action, module, description" i] {
+  margin-right: 0 !important;
+}
+
+/* Compact, even spacing for the two right-side dropdowns */
+#root select[aria-label="Filter system log activity"],
+#root select[aria-label="Sort system logs"] {
+  margin: 0 !important;
+}
+
+/* Ensure the card header below sits closer, like the User List layout */
+#root :is(
+  [data-qrpass-page="audit-logs"],
+  [data-qrpass-audit-logs-root],
+  .qrpass-audit-logs-root-v34,
+  body
+) :is(h2, h3, div, section):has(> :is(*, .badge):not(script)):has(*:is(*, .badge)) {
+  scroll-margin-top: 8px;
+}
+
+/* Mobile: keep wrapping clean but preserve the same visual spacing logic */
+@media (max-width: 768px) {
+  #root :is(
+    [data-qrpass-page="audit-logs"],
+    [data-qrpass-audit-logs-root],
+    .qrpass-audit-logs-root-v34,
+    body
+  ) :has(input[placeholder*="Search user, action, module, description" i]) :is(div, section)
+    > :is(div, section):has(> input[placeholder*="Search user, action, module, description" i], select[aria-label="Filter system log activity"], select[aria-label="Sort system logs"]) {
+    row-gap: 12px !important;
+    column-gap: 12px !important;
+    margin-bottom: 16px !important;
+  }
+}

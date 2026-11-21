@@ -1,0 +1,130 @@
+/* QRPASS ADD USER FORM FIX V52
+ * Scoped strictly to the System Administrator Add New User Account form.
+ * Does not affect editing, signup, or any other QRPass modules.
+ */
+html body #root form[data-qrpass-add-user-form-v52="true"] {
+  color: #17336d;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] > .grid {
+  column-gap: 20px !important;
+  row-gap: 20px !important;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] label {
+  display: block !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 20px !important;
+  color: #17336d !important;
+  margin-bottom: 8px !important;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] input:is([type="text"], [type="email"], [type="password"]),
+html body #root form[data-qrpass-add-user-form-v52="true"] select {
+  display: block !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 52px !important;
+  height: 52px !important;
+  padding: 0 16px !important;
+  font-size: 16px !important;
+  line-height: 24px !important;
+  font-weight: 400 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  color: #17336d !important;
+  background-color: #ffffff !important;
+  box-shadow: none !important;
+  transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease !important;
+}
+/* Keep the site's existing chevron background-image; only adjust select padding. */
+html body #root form[data-qrpass-add-user-form-v52="true"] select {
+  padding-right: 48px !important;
+  cursor: pointer;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] input::placeholder {
+  color: #8192ad !important;
+  opacity: 1 !important;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] input:is([type="text"], [type="email"], [type="password"]):hover:not(:focus),
+html body #root form[data-qrpass-add-user-form-v52="true"] select:hover:not(:focus):not([aria-expanded="true"]):not(.qrp-v51-open) {
+  background-color: #eef4ff !important;
+  border-color: #a8bde4 !important;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] input:is([type="text"], [type="email"], [type="password"]):focus,
+html body #root form[data-qrpass-add-user-form-v52="true"] select:is(:focus, [aria-expanded="true"], .qrp-v51-open) {
+  background-color: #ffffff !important;
+  border-color: #5278e7 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(82,120,231,.16) !important;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] button:is([type="button"], [type="submit"]) {
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 0 20px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 20px !important;
+  cursor: pointer;
+  transition: background-color .16s ease, box-shadow .16s ease, filter .16s ease !important;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] button[type="button"] {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #17336d !important;
+  box-shadow: none !important;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] button[type="button"]:hover:not(:disabled) {
+  background: #eef4ff !important;
+  border-color: #a8bde4 !important;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] button[type="submit"] {
+  background: linear-gradient(180deg, #31549b 0%, #1c315a 100%) !important;
+  border: 1px solid transparent !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] button[type="submit"]:hover:not(:disabled) {
+  background: linear-gradient(180deg, #3d64ad 0%, #234071 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] button:focus-visible {
+  outline: 2px solid #5278e7 !important;
+  outline-offset: 2px !important;
+}
+html body #root form[data-qrpass-add-user-form-v52="true"] button:disabled {
+  opacity: .65 !important;
+  cursor: not-allowed !important;
+}
+html.dark body #root form[data-qrpass-add-user-form-v52="true"] label {
+  color: #dce7ff !important;
+}
+html.dark body #root form[data-qrpass-add-user-form-v52="true"] :is(input[type="text"], input[type="email"], input[type="password"], select) {
+  background-color: #152b4f !important;
+  border-color: #3d5d8b !important;
+  color: #eef4ff !important;
+}
+html.dark body #root form[data-qrpass-add-user-form-v52="true"] :is(input[type="text"], input[type="email"], input[type="password"], select):hover:not(:focus) {
+  background-color: #24456d !important;
+}
+html.dark body #root form[data-qrpass-add-user-form-v52="true"] :is(input[type="text"], input[type="email"], input[type="password"], select):focus {
+  background-color: #152b4f !important;
+}
+html.dark body #root form[data-qrpass-add-user-form-v52="true"] button[type="button"] {
+  background: #192d4c !important;
+  border-color: #4b658e !important;
+  color: #eef4ff !important;
+}
+@media (max-width: 640px) {
+  html body #root form[data-qrpass-add-user-form-v52="true"] > .grid {
+    row-gap: 16px !important;
+  }
+  html body #root form[data-qrpass-add-user-form-v52="true"] input:is([type="text"], [type="email"], [type="password"]),
+  html body #root form[data-qrpass-add-user-form-v52="true"] select {
+    height: 48px !important;
+    min-height: 48px !important;
+    font-size: 14px !important;
+  }
+}

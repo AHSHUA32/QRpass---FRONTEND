@@ -1,0 +1,117 @@
+/* QRPASS AUDIT MANAGE TOOLBAR V38
+ * Audit Logs only. The icon is the clickable control, with a tooltip.
+ * Existing function opens the same Manage Logs modal.
+ * High specificity safely overrides older SysAdmin global button styles.
+ */
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"] {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+  position: static !important;
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: 0 0 48px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  color: #31539b !important;
+  box-shadow: none !important;
+  filter: none !important;
+  cursor: pointer !important;
+  line-height: 1 !important;
+  transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"] svg {
+  display: block !important;
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0 !important;
+  stroke: currentColor !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"]:hover:not(:disabled) {
+  background: #eef4ff !important;
+  background-color: #eef4ff !important;
+  border-color: #93b0dc !important;
+  box-shadow: 0 0 0 3px rgba(80,124,209,.16) !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"]:focus-visible {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #5278e7 !important;
+  outline: 2px solid #5278e7 !important;
+  outline-offset: 2px !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"] {
+  background: #172b49 !important;
+  background-color: #172b49 !important;
+  border-color: #46618b !important;
+  color: #c1d3ff !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"]:hover:not(:disabled) {
+  background: #28466e !important;
+  background-color: #28466e !important;
+}
+
+/* QRPASS_MANAGE_MATCH_NEWEST_EFFECT_V45_START */
+/* ONLY Audit Logs > icon-only Manage Logs button.
+   Match Newest first dropdown: default white / hover pale blue / clicked white + subtle blue ring.
+   Keep existing 48px size, icon, position and functionality. */
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #31539b !important;
+  outline: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transition: background-color 160ms ease,
+              border-color 160ms ease,
+              box-shadow 160ms ease !important;
+}
+/* Same subtle pale-blue hover as Newest first, without the previous blue halo. */
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"]:hover:not(:disabled):not(:focus):not(:active) {
+  background: #eef2ff !important;
+  background-color: #eef2ff !important;
+  border-color: #a8bde4 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+/* Same clicked/focused white state and soft blue ring as Newest first. */
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"]:is(:focus, :focus-visible, :active):not(:disabled),
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"]:hover:is(:focus, :focus-visible, :active):not(:disabled) {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #5278e7 !important;
+  box-shadow: 0 0 0 3px rgba(82,120,231,.17) !important;
+  outline: none !important;
+}
+/* Lights Out: use the matching dark-mode field palette. */
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"] {
+  background: #19345f !important;
+  background-color: #19345f !important;
+  border-color: #42618b !important;
+  color: #b7c9fb !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"]:hover:not(:disabled):not(:focus):not(:active) {
+  background: #25456e !important;
+  background-color: #25456e !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"]:is(:focus,:focus-visible,:active):not(:disabled) {
+  background: #19345f !important;
+  background-color: #19345f !important;
+  border-color: #83a6ed !important;
+  box-shadow: 0 0 0 3px rgba(131,166,237,.18) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-audit-manage-icon-v38="true"] {transition: none !important;}
+}
+/* QRPASS_MANAGE_MATCH_NEWEST_EFFECT_V45_END */

@@ -1,5 +1,11 @@
+import "./qrpass-sysadmin-report-dropdown-v4.css";
 import "./qrpass-sysadmin-manage-buttons-v32.css";
+import "./qrpass-manage-logs-modal-syssettings-v47.css";
+import "./qrpass-manage-logs-compact-v36.css";
 import "./qrpass-sysadmin-manage-buttons-v31.css";
+import "./qrpass-audit-manage-toolbar-v38.css";
+import "./qrpass-audit-header-tight-v40.css";
+import "./qrpass-audit-title-toolbar-gap-v42.css";
 import "./qrpass-sysadmin-sort-white.css";
 import "./qrpass-sysadmin-hide-search-v24.css";
 import "./qrpass-sysadmin-force-uniform-v14.css";
@@ -16,6 +22,9 @@ import "./styles/qrpass-sysadmin-uniform.css";
 import "./qrpass-sysadmin-white-search-v11.css";
 import "./qrpass-sysadmin-mobile-refresh-v9.css";
 import "./qrpass-sysadmin-white-inputs-v8.css";
+import "./qrpass-system-settings-segmented-stepper-v9.css";
+import "./qrpass-system-settings-click-focus-white-v10.css";
+import "./qrpass-system-settings-match-reports-v7.css";
 // =========================================================
 // REACT
 // =========================================================
@@ -77,6 +86,7 @@ import {
   ScanLine,
   Search,
   Settings,
+  SlidersHorizontal,
   Shield,
   User,
   Users,
@@ -411,7 +421,7 @@ function Card({
       }}
     >
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-[#dce3ee] bg-white px-4 py-3">
-        <h3 className="min-w-0 break-words font-semibold text-sm text-[#111827]">
+        <h3 data-qrpass-audit-records-heading-v32={title === "Audit Activity Records" ? "true" : undefined} className="min-w-0 break-words font-semibold text-sm text-[#111827]">
           {title}
         </h3>
 
@@ -17206,28 +17216,7 @@ function SysAdminUserAccounts() {
           subtitle="Manage QRpass user accounts and role-based access."
         />
 
-        <div className="flex flex-wrap gap-2">
-
-
-          <button
-            onClick={() => {
-              setShowAddUser(
-                !showAddUser
-              );
-
-              setEditUser(null);
-              setError("");
-              setSuccess("");
-            }}
-            className="qrpass-sysadmin-add-user-v4 px-3 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 flex items-center gap-1.5"
-          >
-            <Plus size={14} />
-
-            {showAddUser
-              ? "Close Form"
-              : "Add User"}
-          </button>
-        </div>
+        
       </div>
 
       {/* SUCCESS MESSAGE */}
@@ -17250,15 +17239,24 @@ function SysAdminUserAccounts() {
           <form
             onSubmit={handleAddUser}
             className="p-4 space-y-4"
-          >
+           data-qrpass-add-user-form-v52="true" data-qrpass-add-user-white-v55="true">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold mb-1">
                   Full Name *
                 </label>
-
-               
-               
+                {/* QRPASS_ADD_USER_FULL_NAME_RESTORED_V52 */}
+                <input
+                  type="text"
+                  name="fullName"
+                  autoComplete="name"
+                  aria-label="Full Name"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser((current) => ({ ...current, name: e.target.value }))}
+                  placeholder="Enter full name"
+                  required
+                  className="w-full px-3 py-2 text-sm border border-[#cbd5e1] rounded-xl bg-white text-[#17336d] focus:outline-none"
+                />
               </div>
 
               <div>
@@ -17306,6 +17304,7 @@ function SysAdminUserAccounts() {
                   placeholder="e.g. 26-1234"
                   required
                   className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                 data-qrpass-add-user-field-v55="username"
                 />
               </div>
 
@@ -17314,7 +17313,8 @@ function SysAdminUserAccounts() {
                   Role *
                 </label>
 
-                <select
+                <span data-qrpass-account-role-v54="add" className="qrpass-account-role-wrap-v54">
+<select
                   value={newUser.role}
                   onChange={(e) =>
                     setNewUser(
@@ -17344,6 +17344,8 @@ function SysAdminUserAccounts() {
                     System Administrator
                   </option>
                 </select>
+<svg className="qrpass-account-role-chevron-v54" aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+</span>
               </div>
 
               <div className="md:col-span-2">
@@ -17369,6 +17371,7 @@ function SysAdminUserAccounts() {
                   minLength={6}
                   required
                   className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                 data-qrpass-add-user-field-v55="password"
                 />
 
                 <p className="text-[11px] text-muted-foreground mt-1">
@@ -17500,7 +17503,8 @@ function SysAdminUserAccounts() {
                   Role *
                 </label>
 
-                <select
+                <span data-qrpass-account-role-v54="edit" className="qrpass-account-role-wrap-v54">
+<select
                   value={editUser.role}
                   onChange={(e) =>
                     setEditUser({
@@ -17528,6 +17532,8 @@ function SysAdminUserAccounts() {
                     System Administrator
                   </option>
                 </select>
+<svg className="qrpass-account-role-chevron-v54" aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+</span>
               </div>
             </div>
 
@@ -17579,28 +17585,58 @@ function SysAdminUserAccounts() {
             <input type="search" aria-label="Search user accounts" value={search}
               onChange={(e) => setSearch(e.target.value)} placeholder="Search name, user ID, email, role..."
               className="h-12 w-full min-w-0 rounded-xl border border-[#c7d2fe] pl-10 pr-4 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white !text-[#17336d] !border-[#c7d2fe] focus:!border-[#5278e7] transition-colors" />          </div>
-          <select data-qrpass-filter="roles" aria-label="Filter user roles" value={userRoleFilter} onChange={e => setUserRoleFilter(e.target.value as typeof userRoleFilter)} className="h-12 min-w-[165px] m!bg!bg-white hover:!bg-blue-50 focus:!bg-white transition-colors-white hover:!bg-blue-50 focus:!bg-white transition-colorsax-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
+          <span data-qrpass-users-dropdown-v53="roles" className="qrpass-users-dd-wrap-v53 qrpass-users-dd-roles-v53">
+<select data-qrpass-filter="roles" aria-label="Filter user roles" value={userRoleFilter} onChange={e => setUserRoleFilter(e.target.value as typeof userRoleFilter)} className="h-12 min-w-[165px] m!bg!bg-white hover:!bg-blue-50 focus:!bg-white transition-colors-white hover:!bg-blue-50 focus:!bg-white transition-colorsax-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
             <option value="all">All Roles</option><option value="student">Students</option><option value="security">CSU</option><option value="pco">PCO</option><option value="sysadmin">Admins</option>
           </select>
-          <select aria-label="Sort user accounts" value={qrpassSortOrder}
+<svg className="qrpass-users-dd-chevron-v53" aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+</span>
+          <span data-qrpass-users-dropdown-v53="sort" className="qrpass-users-dd-wrap-v53 qrpass-users-dd-sort-v53">
+<select aria-label="Sort user accounts" value={qrpassSortOrder}
             onChange={(e) => setQrpassSortOrder(e.target.value as "newest" | "oldest")}
             className="h-12 w-f!bgw!bg-white hover:!bg-ble-50 focus:!bg-white transition-colorshite hover:!bg-blue-50 focus:!bg-white transition-colorsull shrink-0 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] sm:w-[150px]">
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
           </select>
+<svg className="qrpass-users-dd-chevron-v53" aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+</span>
+          <div data-qrpass-users-toolbar-v49="true" className="qrpass-users-toolbar-actions-v49 inline-flex shrink-0 items-center gap-3">
+<button type="button"
+            onClick={() => {
+              setShowAddUser(
+                !showAddUser
+              );
+
+              setEditUser(null);
+              setError("");
+              setSuccess("");
+            }}
+            className="qrpass-users-add-v49 inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold"
+          >
+            <Plus size={14} />
+
+            {showAddUser
+              ? "Close Form"
+              : "Add User"}
+          </button>
+<button type="button"
+            data-qrpass-users-manage-icon-v49="true"
+            aria-label="Manage Users"
+            title="Manage Users"
+            className="qrpass-users-manage-v49 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+            onClick={() => {
+              const existing = document.querySelector<HTMLButtonElement>('.qrpass-admin-page > button.qrpass-manage-logs-shortcut-v3.qrpass-page-manage-v1');
+              if (existing && existing.isConnected) existing.click();
+              else setError('Manage Users button was not found. Refresh the page and try again.');
+            }}
+          ><SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" /></button>
+          </div>
           <button type="button" onClick={loadUsers} disabled={loading}
             className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff] disabled:opacity-50">
             <RefreshCw size={15} className={loading ? "animate-spin" : ""}/> Refresh
           </button>
         </div>
-<div className="px-4 py-3 border-b border-[#cfd8e6] flex flex-wrap gap-2 items-center">
-
-
-
-
-          {/* QRPASS_REFRESH_POSITION_V3: User Accounts */}
-        </div>
-        <div className="overflow-x-auto">
+        <div data-qrpass-users-table-v57="true" className="overflow-x-auto">
           <table className="w-full min-w-[1000px]">
             <thead>
               <tr className="bg-[#fafbfc]">
@@ -17748,7 +17784,7 @@ function SysAdminUserAccounts() {
 
         {!loading &&
           users.length > 0 && (
-            <div className="px-4 py-3 border-t border-[#cfd8e6] flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+            <div data-qrpass-users-footer-v57="true" className="px-4 py-3 border-t border-[#cfd8e6] flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
               <p className="text-xs text-muted-foreground">
                 Showing{" "}
                 {filteredUsers.length}{" "}
@@ -17785,8 +17821,47 @@ function QRPassNumberStepper({
   const setClamped = (v: number) =>
     onChange(Math.min(max, Math.max(min, v)));
 
+  // QRPASS_STEPPER_FOCUS_WHITE_V11: white must win on click for BOTH wrapper and child input.
+  // Scoped to this numeric stepper; do not change the System Name input or other controls.
+  const setQrpassV11Surface = (field: HTMLDivElement, engaged: boolean) => {
+    const input = field.querySelector<HTMLInputElement>('input[inputmode="numeric"]');
+    if (engaged) {
+      // Inline important declarations override legacy Admin/QRPass theme rules.
+      field.style.setProperty("background", "#ffffff", "important");
+      field.style.setProperty("background-color", "#ffffff", "important");
+      if (input) {
+        input.style.setProperty("background", "transparent", "important");
+        input.style.setProperty("background-color", "transparent", "important");
+        input.style.setProperty("box-shadow", "none", "important");
+      }
+    } else {
+      // Remove only our temporary overrides: existing light-blue hover still works.
+      field.style.removeProperty("background");
+      field.style.removeProperty("background-color");
+      if (input) {
+        input.style.removeProperty("background");
+        input.style.removeProperty("background-color");
+        input.style.removeProperty("box-shadow");
+      }
+    }
+  };
+
   return (
     <div
+      data-qrpass-segmented-stepper="v9"
+      onPointerDownCapture={event => setQrpassV11Surface(event.currentTarget, true)}
+      onFocusCapture={event => setQrpassV11Surface(event.currentTarget, true)}
+      onBlurCapture={event => {
+        const next = event.relatedTarget;
+        if (!(next instanceof Node) || !event.currentTarget.contains(next)) {
+          setQrpassV11Surface(event.currentTarget, false);
+        }
+      }}
+      onPointerLeave={event => {
+        if (!event.currentTarget.contains(document.activeElement)) {
+          setQrpassV11Surface(event.currentTarget, false);
+        }
+      }}
       className="flex h-12 w-full min-w-0 items-center overflow-hidden rounded-xl border border-[#c7d2fe] !bg-white hover:!bg-[#eef2ff] focus-within:!bg-white focus-within:!border-[#5278e7] focus-within:ring-2 focus-within:ring-[#5278e7]/20 transition-colors"
     >
       <input
@@ -17823,7 +17898,7 @@ function QRPassNumberStepper({
           onClick={() => setClamped(safeValue + 1)}
           className="flex h-1/2 items-center justify-center border-b border-[#c7d2fe] text-[#17336d] transition-colors hover:bg-[#eef2ff] disabled:cursor-not-allowed disabled:opacity-35"
         >
-          <span className="text-xs font-bold leading-none">▲</span>
+          <span aria-hidden="true" className="inline-flex items-center justify-center"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m6 15 6-6 6 6" /></svg></span>
         </button>
 
         <button
@@ -17834,7 +17909,7 @@ function QRPassNumberStepper({
           onClick={() => setClamped(safeValue - 1)}
           className="flex h-1/2 items-center justify-center text-[#17336d] transition-colors hover:bg-[#eef2ff] disabled:cursor-not-allowed disabled:opacity-35"
         >
-          <span className="text-xs font-bold leading-none">▼</span>
+          <span aria-hidden="true" className="inline-flex items-center justify-center"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg></span>
         </button>
       </div>
     </div>
@@ -17892,6 +17967,7 @@ function SysAdminSettings() {
   }, [settings.system_name, settings.institution]);
 
   const [loading, setLoading] = useState(true);
+  const [settingsReady, setSettingsReady] = useState(false);
   const [savingGeneral, setSavingGeneral] = useState(false);
   const [savingPolicy, setSavingPolicy] = useState(false);
   const [error, setError] = useState("");
@@ -17904,11 +17980,13 @@ function SysAdminSettings() {
   async function loadSettings() {
     try {
       setLoading(true);
+      setSettingsReady(false);
       setError("");
 
       const data = await getSystemSettings();
 
       if (data?.settings) {
+        setSettingsReady(true);
         setSettings({
           system_name:
             data.settings.system_name ?? "QRpass",
@@ -18060,22 +18138,7 @@ function SysAdminSettings() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="space-y-5">
-        <PageHeader
-          title="System Settings"
-          subtitle="Configure QRpass portal settings and security policies."
-        />
-
-        <Card title="Loading Settings">
-          <div className="p-6 text-sm text-muted-foreground">
-            Loading system settings...
-          </div>
-        </Card>
-      </div>
-    );
-  }
+  // QRPASS_SETTINGS_INSTANT_RENDER_V17: render forms immediately; fetch saved settings asynchronously.
 
   return (
     <div className="space-y-5 qrpass-sysadmin-settings-v31">
@@ -18096,7 +18159,7 @@ function SysAdminSettings() {
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-5">
+      <div className="grid md:grid-cols-2 gap-5" data-qrpass-settings-report-skin="v7">
         <Card title="General Settings">
           <div className="p-4 space-y-4">
             <div>
@@ -18213,7 +18276,7 @@ function SysAdminSettings() {
             <button
               type="button"
               data-qrpass-save-v31="true" onClick={saveGeneralSettings}
-              disabled={savingGeneral}
+              disabled={loading || !settingsReady || savingGeneral}
               className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
             >
               {savingGeneral
@@ -18249,45 +18312,45 @@ function SysAdminSettings() {
               <QRPassNumberStepper label="QR Code Validity (months)" value={settings.qr_code_validity_months} min={1} max={60} onChange={(value) => setSettings((prev) => ({ ...prev, qr_code_validity_months: value }))} />
             </div>
 
-            <div className="flex items-center justify-between p-3 border border-[#cfd8e6] rounded-md">
-              <div>
-                <span className="text-sm text-foreground">
-                  Enable Two-Factor Auth
+            <div data-qrpass-two-factor-aligned="v12">
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Enable Two-Factor Auth
+              </label>
+              <div className="flex h-12 min-h-12 w-full min-w-0 items-center justify-between rounded-xl border border-[#cbd5e1] bg-white px-4 transition-colors hover:bg-[#eef2ff] focus-within:!bg-white focus-within:border-[#6b90c7] focus-within:ring-2 focus-within:ring-[#5278e7]/15">
+                <span className="text-sm font-normal text-[#17336d]">
+                  {settings.two_factor_enabled ? "Enabled" : "Disabled"}
                 </span>
-
-
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setSettings((prev) => ({
-                    ...prev,
-                    two_factor_enabled:
-                      !prev.two_factor_enabled,
-                  }))
-                }
-                className={`w-10 h-5 rounded-full relative transition-colors ${
-                  settings.two_factor_enabled
-                    ? "bg-primary"
-                    : "bg-gray-300"
-                }`}
-                aria-label="Toggle two-factor authentication"
-              >
-                <div
-                  className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      two_factor_enabled:
+                        !prev.two_factor_enabled,
+                    }))
+                  }
+                  className={`w-10 h-5 rounded-full relative transition-colors ${
                     settings.two_factor_enabled
-                      ? "right-0.5"
-                      : "left-0.5"
+                      ? "bg-primary"
+                      : "bg-gray-300"
                   }`}
-                />
-              </button>
+                  aria-label="Toggle two-factor authentication"
+                >
+                  <div
+                    className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${
+                      settings.two_factor_enabled
+                        ? "right-0.5"
+                        : "left-0.5"
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
 
             <button
               type="button"
               data-qrpass-save-v31="true" onClick={saveSecurityPolicy}
-              disabled={savingPolicy}
+              disabled={loading || !settingsReady || savingPolicy}
               className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
             >
               {savingPolicy
@@ -18658,14 +18721,12 @@ function SysAdminAuditLogs() {
   }
 
   const actionTabs = [
-    {id:"all",label:"All Activity"},{id:"login",label:"Login"},
-    {id:"logout",label:"Logout"},{id:"changes",label:"Data Changes"},
-    {id:"qr_scan",label:"QR Scans"},{id:"errors",label:"Errors"},
-    {id:"item-registration",label:"Item Registrations"},
-    {id:"transaction-scan",label:"Scan Transactions"},
-    {id:"security-incident",label:"Security Incidents"},
-    {id:"lost-found",label:"Lost & Found"},
-  ];
+  {id:"all",label:"All Activity"},
+  {id:"login",label:"Login"},
+  {id:"logout",label:"Logout"},
+  {id:"changes",label:"Data Changes"},
+  {id:"errors",label:"Errors"},
+];
   const periodAuditLogs = logs.filter((log:any) =>
     csuMatchesPeriod(log.created_at ?? log.date, logsPeriod, logsStart, logsEnd)
   );
@@ -18784,11 +18845,9 @@ function SysAdminAuditLogs() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap justify-between items-center gap-3">
-        <PageHeader title="System Logs" />
-        <button type="button" data-qrpass-manage-launch-v31="true" onClick={() => setManageLogsOpen(true)} className="qrpass-sysadmin-logs-button-v4 inline-flex items-center gap-2 rounded-lg border border-[#cfd8e6] px-4 py-2 text-sm font-semibold text-[#17336d] dark:text-white dark:bg-[#1f4ea7] dark:border-[#5e87dd] hover:bg-[#eef2ff]">
-          <Settings size={15} /> Manage Logs
-        </button>
+      <div className="flex flex-wrap justify-between items-center gap-3" data-qrpass-audit-heading-v42="true" data-qrpass-audit-header-tight-v40="true">
+        <PageHeader title="Audit Logs" />
+        
       </div>
       {/* QRPASS_SYSTEMLOGS_WHITE_PORTAL_V23 */}
       {manageLogsOpen && createPortal(
@@ -18875,7 +18934,7 @@ function SysAdminAuditLogs() {
       )}
 
       {/* Search toolbar should appear above the activity buttons */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center" data-qrpass-audit-toolbar-v42="true" data-qrpass-audit-toolbar-tight-v40="true">
         <form onSubmit={handleSearch} className="relative min-w-0 flex-1">
           <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
           <input
@@ -18886,10 +18945,13 @@ function SysAdminAuditLogs() {
             placeholder="Search user, action, module, description..."
             className="h-12 w-full min-w-0 rounded-xl border border-[#c7d2fe] !bg-white hover:!bg-[#eef2ff] focus:!bg-white pl-11 pr-4 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"          />
         </form>
-        <select data-qrpass-filter="activities" aria-label="Filter system log activity" value={actionFilter} onChange={e => setActionFilter(e.target.value)} className="h-12 min-w-[165px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
+        <div data-qrpass-audit-dropdown-v28="activity" className="qrpass-audit-dropdown-v28 relative inline-flex max-w-full shrink-0">
+<select data-qrpass-filter="activities" aria-label="Filter system log activity" value={actionFilter} onChange={e => setActionFilter(e.target.value)} className="h-12 min-w-[165px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
             {actionTabs.map(tab => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
           </select>
-          <select
+</div>
+          <div data-qrpass-audit-dropdown-v28="sort" className="qrpass-audit-dropdown-v28 relative inline-flex w-full min-w-0 shrink-0 sm:w-[148px]">
+<select
           aria-label="Sort system logs"
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
@@ -18898,19 +18960,34 @@ function SysAdminAuditLogs() {
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
         </select>
-          <button type="button" data-qrpass-refresh-toolbar="v1" onClick={() => loadAuditLogs()} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff]" aria-label="Refresh records"><RefreshCw size={15} />Refresh</button>
+</div>
+                    <button
+            type="button"
+            data-qrpass-manage-launch-v31="true"
+            data-qrpass-audit-manage-icon-v38="true"
+            aria-label="Manage Logs"
+            title="Manage Logs"
+            onClick={() => setManageLogsOpen(true)}
+            className="qrpass-audit-manage-icon-v38 inline-flex shrink-0 items-center justify-center"
+          >
+            <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
+          </button>
+<button type="button" data-qrpass-refresh-toolbar="v1" onClick={() => loadAuditLogs()} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff]" aria-label="Refresh records"><RefreshCw size={15} />Refresh</button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-
-      </div>
+      {/* QRPASS_AUDIT_GAP_V35_EMPTY_SPACER_REMOVED: no extra layout element */}
       {["item-registration", "transaction-scan", "security-incident", "lost-found"].includes(actionFilter)
         ? <AdminRecords embedded selectedType={actionFilter === "item-registration" ? "Item Registration" : actionFilter === "transaction-scan" ? "QR Scan" : actionFilter === "security-incident" ? "Security Incident" : "Lost & Found"} sharedPeriod={logsPeriod} sharedStart={logsStart} sharedEnd={logsEnd} />
         : <>
 
-      <p className="text-xs text-muted-foreground">{visibleAuditLogs.length} matching audit events</p>
-      <Card
+
+<Card
         title="Audit Activity Records"
+        action={
+          <span className="rounded-full bg-[#eef2fc] px-2.5 py-1 text-[10px] font-bold text-[#1a3a7b]" data-qrpass-audit-matching="QRPASS_AUDIT_MATCHING_BADGE_V33">
+            {visibleAuditLogs.length} matching
+          </span>
+        }
       >
 
         {loading ? (
@@ -21387,13 +21464,17 @@ function SysAdminAnnouncementManagement() {
 />
 
   </div>
-  <select data-qrpass-filter="announcements" aria-label="Filter announcements" value={announcementPriority} onChange={e => setAnnouncementPriority(e.target.value as typeof announcementPriority)} className="h-12 min-w-[165px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
+  <div data-qrpass-announcement-chevron-v27="priority" className="qrpass-announcement-chevron-v27 relative inline-flex max-w-full shrink-0">
+<select data-qrpass-filter="announcements" aria-label="Filter announcements" value={announcementPriority} onChange={e => setAnnouncementPriority(e.target.value as typeof announcementPriority)} className="h-12 min-w-[165px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
             <option value="all">All Announcements</option><option value="info">Information</option><option value="important">Important</option><option value="urgent">Urgent</option>
           </select>
-          <select aria-label="Sort announcements" value={announcementSort} onChange={e => setAnnouncementSort(e.target.value as 'newest' | 'oldest')} className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-4 text-sm font-medium text-[#17336d] outline-none sm:w-[150px] focus:border-[#2f5fd6]">
+</div>
+          <div data-qrpass-announcement-chevron-v27="sort" className="qrpass-announcement-chevron-v27 relative inline-flex w-full min-w-0 shrink-0 sm:w-[150px]">
+<select aria-label="Sort announcements" value={announcementSort} onChange={e => setAnnouncementSort(e.target.value as 'newest' | 'oldest')} className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-4 text-sm font-medium text-[#17336d] outline-none sm:w-[150px] focus:border-[#2f5fd6]">
     <option value="newest">Newest first</option>
     <option value="oldest">Oldest first</option>
   </select>
+</div>
           {/* QRPASS_REFRESH_POSITION_V3: Announcement Management */}
           <button type="button" onClick={loadAnnouncements} disabled={loading} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff] disabled:opacity-50"><RefreshCw size={14} className={loading ? "animate-spin" : ""}/> Refresh</button>
 </div>
@@ -21788,7 +21869,7 @@ function SysAdminDownloadableReports() {
     {key:"sessions", name:"Active Sessions Report", description:"Authentication sessions and most recent activity"},
   ];
   const [report, setReport] = useState<ReportKey>("items");
-  const [period, setPeriod] = useState<Period>("all");
+  const [period, setPeriod] = useState<Period>("day");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [busy, setBusy] = useState(false);
@@ -21912,43 +21993,62 @@ function SysAdminDownloadableReports() {
   }
 
   return (
-    <div className="space-y-5">
-      <PageHeader title="Downloadable Reports" subtitle="Centralized export center for authorized System Administrators." />
-      <div className="overflow-hidden rounded-xl border border-[#dce3ee] bg-white shadow-sm">
-        <div className="border-b border-[#dce3ee] p-4 sm:p-5">
-          <h3 className="text-sm font-semibold text-[#17336d]">Generate a report</h3>
-          <p className="mt-1 text-xs text-[#64748b]">Select a report type, optional date filter and file format. Exported data comes from current QRPass APIs.</p>
+    <div id="qrpass-sysadmin-reports-v4" className="space-y-4">
+      <PageHeader title="Downloadable Reports" subtitle="Generate and export official QRPass system reports." />
+      <div className="overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-sm">
+        <div className="border-b border-[#e6ebf2] px-5 py-4 sm:px-6">
+          <h3 className="text-lg font-semibold leading-none text-[#17336d]">Generate a report</h3>
         </div>
-        <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-2">
-          <label className="text-xs font-semibold text-[#17336d]">Report Type
-            <select aria-label="Report type" value={report} onChange={e => {setReport(e.target.value as ReportKey); setMessage("");}} className="mt-2 h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm">
+        <div className="grid gap-5 px-5 py-5 sm:px-6 lg:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-semibold leading-6 text-[#17336d]">Report Type</label>
+            <select data-qrpass-report-select="true"
+              aria-label="Report type"
+              value={report}
+              onChange={e => {setReport(e.target.value as ReportKey); setMessage("");}}
+              className="h-14 w-full rounded-xl border px-4 text-base font-medium text-[#17336d] outline-none transition border-[#cbd5e1] bg-white hover:border-[#9fb8e4] hover:bg-[#eef2ff] focus:border-[#80a4df] focus:bg-white focus:hover:bg-white focus:ring-2 focus:ring-[#dbe7ff] active:bg-white duration-150 ease-in-out"
+            >
               {definitions.map(d => <option key={d.key} value={d.key}>{d.name}</option>)}
             </select>
-          </label>
-          <label className="text-xs font-semibold text-[#17336d]">Filter by Date
-            <select aria-label="Filter reports by date" value={period} onChange={e => {setPeriod(e.target.value as Period); setMessage("");}} className="mt-2 h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm">
-              <option value="all">All Time</option>
+          </div>
+          <div>
+            <label className="mb-2 block text-sm font-semibold leading-6 text-[#17336d]">Filter by Date</label>
+            <select data-qrpass-report-select="true"
+              aria-label="Filter reports by date"
+              value={period}
+              onChange={e => {setPeriod(e.target.value as Period); setMessage("");}}
+              className="h-14 w-full rounded-xl border px-4 text-base font-medium text-[#17336d] outline-none transition border-[#cbd5e1] bg-white hover:border-[#9fb8e4] hover:bg-[#eef2ff] focus:border-[#80a4df] focus:bg-white focus:hover:bg-white focus:ring-2 focus:ring-[#dbe7ff] active:bg-white duration-150 ease-in-out"
+            >
               <option value="day">Today</option>
               <option value="week">This Week</option>
               <option value="month">This Month</option>
-              <option value="custom">Custom Range</option>
             </select>
-          </label>
-          {period === "custom" && <>
-            <label className="text-xs font-semibold text-[#17336d]">Start Date<input aria-label="Start date" type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} className="mt-2 h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm" /></label>
-            <label className="text-xs font-semibold text-[#17336d]">End Date<input aria-label="End date" type="date" value={toDate} onChange={e=>setToDate(e.target.value)} className="mt-2 h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm" /></label>
-          </>}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 border-t border-[#dce3ee] p-4 sm:p-5">
-          {(["pdf","xlsx","csv"] as const).map(format => <button key={format} type="button" disabled={busy} onClick={() => void generate(format)} className="inline-flex items-center gap-2 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-4 py-2.5 text-xs font-semibold text-[#17336d] hover:bg-[#e5edff] disabled:opacity-50"><Download size={15}/> Download {format === "xlsx" ? "Excel" : format.toUpperCase()}</button>)}
+        <div className="border-t border-[#e6ebf2] px-5 py-4 sm:px-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+            {([
+              {key:"pdf", label:"Download PDF"},
+              {key:"xlsx", label:"Download Excel"},
+            ] as const).map(({key, label}) => (
+              <button
+                key={key}
+                type="button"
+                disabled={busy}
+                onClick={() => void generate(key)}
+                className="inline-flex min-h-[52px] min-w-[190px] items-center justify-center gap-2 rounded-xl border border-[#c7d2fe] bg-white px-5 py-3 text-sm font-semibold text-[#17336d] transition hover:bg-[#eef2ff] disabled:opacity-50"
+              >
+                <Download size={17} />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-        {message && <p role="status" className="border-t border-[#dce3ee] px-4 py-3 text-sm text-[#17336d]">{message}</p>}
-      </div>
-      <div className="rounded-xl border border-[#dce3ee] bg-white p-4 sm:p-5">
-        <h3 className="text-sm font-semibold text-[#17336d]">Available report types</h3>
-        <div className="mt-3 divide-y divide-[#e6eaf1]">
-          {definitions.map(d => <div key={d.key} className="py-3"><p className="text-sm font-semibold text-[#17336d]">{d.name}</p></div>)}
-        </div>
+        {message && (
+          <div className="border-t border-[#e6ebf2] px-5 py-3 sm:px-6">
+            <p role="status" className="text-sm text-[#17336d]">{message}</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -21978,6 +22078,31 @@ function QrpassPageManager({ module, onClose }: { module: 'items' | 'lost-found'
   const [error, setError] = React.useState('');
   const [confirmAction, setConfirmAction] = React.useState('');
   const titles: Record<string,string> = {items:'Manage Items','lost-found':'Manage Reports',users:'Manage Users',announcements:'Manage Announcements'};
+
+  /* QRPASS_MANAGE_USERS_STATUS_MATCH_USER_LIST_V50 */
+  const renderManageUserStatusV50 = (value: unknown) => {
+    const normalized = String(value ?? "").trim().toLowerCase();
+    const active = normalized === "approved" || normalized === "active";
+    const disabled = ["disabled", "inactive", "revoked", "blocked", "suspended"].includes(normalized);
+    const label = active
+      ? "Active"
+      : disabled
+        ? "Disabled"
+        : normalized
+          ? normalized.charAt(0).toUpperCase() + normalized.slice(1)
+          : "—";
+    const badge = active
+      ? "bg-green-100 text-green-700"
+      : disabled
+        ? "bg-red-100 text-red-700"
+        : "bg-slate-100 text-slate-700";
+    return (
+      <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold ${badge}`}>
+        {label}
+      </span>
+    );
+  };
+
   const base = 'http://localhost:8000/api/sysadmin/page-manage/' + module;
   const request = React.useCallback(async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token');
@@ -22055,7 +22180,7 @@ function QrpassPageManager({ module, onClose }: { module: 'items' | 'lost-found'
                 onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleRow(); } }}
                 className={`border-t cursor-pointer transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${selected ? 'bg-[#eaf0ff] dark:bg-[#1d355e]' : 'hover:bg-[#f2f6ff] dark:hover:bg-[#172b4b]'}`}>
                 <td className="p-3"><input type="checkbox" aria-label={`Select ${label(r)}`} disabled={busy} checked={selected} onClick={e => e.stopPropagation()} onChange={e => {setChosen(ids => e.target.checked ? Array.from(new Set([...ids, id])) : ids.filter(n => n !== id));}} /></td>
-                <td className="p-3">{label(r)}</td><td className="p-3">{String(r.status ?? '—')}</td><td className="p-3">{String(r.created_at ?? '—')}</td>
+                <td className="p-3">{label(r)}</td><td className="p-3">{module === "users" ? renderManageUserStatusV50(r.status) : String(r.status ?? '—')}</td><td className="p-3">{String(r.created_at ?? '—')}</td>
               </tr>;
             })}</tbody></table>
           )}
@@ -22203,7 +22328,7 @@ const NAV: Record<
     },
     {
       icon: <ClipboardList size={16} />,
-      label: "System Logs",
+      label: "Audit Logs",
     },
     {
       icon: <Eye size={16} />,

@@ -1,0 +1,66 @@
+/* QRPass v36 — Only Audit Logs Manage Logs launcher. All other buttons unchanged.
+ * Deliberately outranks older Sysadmin button styles which use !important.
+ * Default: borderless navy action; hover: subtle light-blue; focus: accessible ring.
+ */
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-manage-launch-v31="true"].qrpass-manage-compact-v36 {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 40px !important;
+  height: 40px !important;
+  padding: 0 10px !important;
+  gap: 6px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  color: #31539b !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  line-height: 18px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: background-color .16s ease, color .16s ease, box-shadow .16s ease !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-manage-launch-v31="true"].qrpass-manage-compact-v36:hover:not(:disabled) {
+  background: #eef4ff !important;
+  background-color: #eef4ff !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: #214886 !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-manage-launch-v31="true"].qrpass-manage-compact-v36:focus-visible {
+  background: #ffffff !important;
+  border-color: transparent !important;
+  outline: 2px solid #7c9cf6 !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}
+html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-manage-launch-v31="true"].qrpass-manage-compact-v36:active:not(:disabled) {
+  background: #dfe8ff !important;
+}
+html body #root .qrpass-admin-page button[data-qrpass-manage-launch-v31="true"].qrpass-manage-compact-v36 > svg {
+  display: inline-block !important;
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0 !important;
+  stroke: currentColor !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-manage-launch-v31="true"].qrpass-manage-compact-v36 {
+  color: #b7c9fb !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+html.dark body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page button[data-qrpass-manage-launch-v31="true"].qrpass-manage-compact-v36:hover:not(:disabled) {
+  background: #1e3154 !important;
+  background-color: #1e3154 !important;
+  color: #e6eeff !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html body #root .qrpass-admin-page button[data-qrpass-manage-launch-v31="true"].qrpass-manage-compact-v36 { transition: none !important; }
+}

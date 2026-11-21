@@ -1,3 +1,4 @@
+import "./qrpass-hide-download-csv-v84.js";
 import "./utils/qrpassAuthEnhancer";
 import "./styles/qrpass-auth-center-resend-v103.css";
 import "./qrpass-filter-active-only-v67.js";
@@ -17,5 +18,21 @@ import "./styles/qrpass-dropdown-arrow-position-v83.css";
 import "./styles/qrpass-focus-white-v102.css";
 import "./styles/qrpass-mobile-uniform-v1.css";
 import "./styles/qrpass-csu-scanner-size.css";
-import "./styles/qrpass-responsive-roles-v101.css";
+import "./styles/qrpass-responsive-roles-v101.css";import "./styles/qrpass-button-soft-focus-ring-v24.css";
+
+import "./styles/qrpass-dropdown-chevron-rotate-v25.css";
+import "./qrpass-dropdown-single-arrow-v26.js";
+import "./styles/qrpass-announcement-dropdown-rotate-v27.css";
+import "./styles/qrpass-audit-logs-dropdown-v28.css";
+import "./qrpass-audit-logs-white-default-v29.js";
+import "./styles/qrpass-audit-logs-match-reports-v31.css";
+import "./styles/qrpass-audit-dropdown-video-effects-v44.css";
+import "./qrpass-manage-logs-system-settings-v46.js";
+import "./styles/qrpass-manage-logs-system-settings-v46.css";
+import "./styles/qrpass-users-toolbar-manage-icon-v49.css";
+import "./styles/qrpass-add-user-form-fix-v52.css";
+import "./styles/qrpass-users-dropdown-hover-click-v53.css";
+import "./styles/qrpass-account-role-dropdown-effects-v54.css";
+import "./styles/qrpass-add-user-white-fields-v55.css";
+import "./qrpass-user-list-footer-gap-v57.js";
 createRoot(document.getElementById("root")!).render(<App />);

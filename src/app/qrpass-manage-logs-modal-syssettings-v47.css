@@ -1,0 +1,133 @@
+/* QRPASS MANAGE LOGS MODAL SYSTEM SETTINGS V47
+ * v46 issue: #root selectors cannot reach the createPortal(..., document.body)
+ * modal. Scope to the actual portaled modal element, using BOTH stable
+ * data attributes so no other admin pages or dialogs are affected.
+ * Match System Settings: subdued gray-blue #cbd5e1 borders, navy #17336d
+ * text, 14px controls, compact 18px modal heading.
+ */
+
+/* Portal panel itself — preserve its own layout and dimensions. */
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] {
+  color: #17336d !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Heading corresponds to General Settings / QR & Security Policy card headings. */
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] h3 {
+  color: #17336d !important;
+  font-size: 18px !important;
+  line-height: 26px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Search field: matches System Settings controls without changing width. */
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] input[aria-label="Search managed logs"] {
+  box-sizing: border-box !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  color: #17336d !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 400 !important;
+  box-shadow: none !important;
+  transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease !important;
+}
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] input[aria-label="Search managed logs"]::placeholder {
+  color: #94a3b8 !important;
+}
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] input[aria-label="Search managed logs"]:hover:not(:focus) {
+  background: #eef4ff !important;
+  border-color: #a8bde4 !important;
+}
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] input[aria-label="Search managed logs"]:focus,
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] input[aria-label="Search managed logs"]:focus-visible {
+  background: #ffffff !important;
+  border-color: #5278e7 !important;
+  box-shadow: 0 0 0 2px rgba(82,120,231,.13) !important;
+  outline: none !important;
+}
+
+/* Standard modal buttons: Close, View Archives, Select All, Download,
+ * Archive, Restore. Destructive (red) buttons retain their warning colors.
+ */
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] button:not([role="switch"]):not([class*="text-red-"]):not([class*="border-red-"]):not([aria-label*="Delete"]) {
+  box-sizing: border-box !important;
+  background: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  color: #17336d !important;
+  min-height: 44px !important;
+  height: 44px !important;
+  padding: 0 16px !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+  transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease !important;
+}
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] button:not([role="switch"]):not([class*="text-red-"]):not([class*="border-red-"]):not([aria-label*="Delete"]):hover:not(:disabled) {
+  background: #eef4ff !important;
+  border-color: #a8bde4 !important;
+}
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] button:not([role="switch"]):not([class*="text-red-"]):not([class*="border-red-"]):not([aria-label*="Delete"]):focus-visible {
+  background: #ffffff !important;
+  border-color: #5278e7 !important;
+  box-shadow: 0 0 0 2px rgba(82,120,231,.15) !important;
+  outline: none !important;
+}
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] button:disabled {
+  cursor: not-allowed !important;
+}
+/* Don't enlarge the archive-row's small inline actions. */
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] tbody td button:not([role="switch"]) {
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 0 10px !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+}
+
+/* Table title/body sizing and subtle outline, not an extra or duplicate card. */
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] .overflow-hidden.rounded-xl.border {
+  border-color: #cbd5e1 !important;
+}
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] table {
+  color: #17336d !important;
+  font-size: 14px !important;
+}
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] th {
+  color: #17336d !important;
+  border-bottom-color: #dbe3f0 !important;
+  font-size: 13px !important;
+  line-height: 18px !important;
+  font-weight: 600 !important;
+}
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] td {
+  color: #17336d !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+}
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] td span.font-medium {
+  color: #17336d !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+/* Keep muted descriptions/dates muted; keep selected rows highlighted. */
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] td span.text-xs,
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] p.text-xs {
+  color: #64748b !important;
+  font-size: 12px !important;
+}
+
+@media (max-width: 640px) {
+  html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] button:not([role="switch"]):not([class*="text-red-"]):not([class*="border-red-"]) {
+    min-height: 42px !important;
+    height: 42px !important;
+    padding-inline: 12px !important;
+  }
+}

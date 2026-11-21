@@ -1,0 +1,44 @@
+/* QRPASS AUDIT TITLE TOOLBAR GAP V42 */
+/* Styles only System Administrator > Audit Logs, never System Settings. */
+html body #root .qrpass-admin-page [data-qrpass-audit-heading-v42="true"] {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+/* PageHeader has mb-5 by default: it causes an extra 20px above toolbar. */
+html body #root .qrpass-admin-page [data-qrpass-audit-heading-v42="true"] > div:first-child {
+  min-height: 0 !important;
+  height: auto !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+html body #root .qrpass-admin-page [data-qrpass-audit-heading-v42="true"] h2 {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+/* The 24px desktop gap follows the System Settings screenshot.
+ * It overrides any previously installed 14px v40 rule, without changing
+ * toolbar controls or toolbar-to-records spacing. */
+html body #root .qrpass-admin-page [data-qrpass-audit-toolbar-v42="true"] {
+  /* Visually matches the System Settings title-to-card spacing. */
+  margin-top: 18px !important;
+  margin-block-start: 18px !important;
+  /* Restore the original normal gap before Audit Activity Records. */
+  margin-bottom: 20px !important;
+  margin-block-end: 20px !important;
+}
+@media (max-width: 640px) {
+  html body #root .qrpass-admin-page [data-qrpass-audit-toolbar-v42="true"] {
+    margin-top: 14px !important;
+    margin-block-start: 14px !important;
+    margin-bottom: 16px !important;
+    margin-block-end: 16px !important;
+  }
+}
