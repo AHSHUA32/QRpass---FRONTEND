@@ -39,4 +39,6 @@ import "./qrpass-user-accounts-style-v58.js";
 import "./styles/qrpass-user-accounts-style-v58.css";
 import "./styles/qrpass-user-list-heading-v60.css";
 import "./styles/qrpass-user-list-heading-align-v61.css";
+import './styles/QRPass-Sysadmin-Toolbar-Standard-v110.css';
+import './styles/QRPass-Manage-Beside-Newest-v111.css';
 createRoot(document.getElementById("root")!).render(<App />);

@@ -1,0 +1,121 @@
+/*
+ QRPass Sysadmin toolbar visual standard v110.
+ White default, light-blue hover, pale-blue focus border.
+ Only existing Sysadmin controls. User Accounts EXCLUDED.
+ No mutation observers, DOM reparenting, event changes, or backend changes.
+*/
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) {
+ --qrst-bg:#fff; --qrst-hover:#eef2ff; --qrst-border:#cbd5e1;
+ --qrst-ink:#17336d; --qrst-focus:#5278e7;
+}
+/* Search — 48px tall, takes remaining space in existing layout */
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) :is(
+ input[type="search"],
+ input[placeholder*="search" i],
+ input[aria-label*="search" i],
+ #qrpass-sysadmin-items-search-v29,
+ #qrpass-sysadmin-announcement-search-v29
+) {
+ background:#fff!important; background-color:#fff!important;
+ border:1px solid #c7d2fe!important;border-radius:12px!important;
+ color:#17336d!important;box-shadow:none!important;
+ min-width:0;min-height:48px!important;height:48px!important;
+ box-sizing:border-box!important;
+ transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease!important;
+}
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) :is(
+ input[type="search"],input[placeholder*="search" i],input[aria-label*="search" i],
+ #qrpass-sysadmin-items-search-v29,#qrpass-sysadmin-announcement-search-v29
+):hover:not(:focus) {
+ background:#eef2ff!important;background-color:#eef2ff!important;
+ border-color:#a8bde4!important;box-shadow:none!important;
+}
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) :is(
+ input[type="search"],input[placeholder*="search" i],input[aria-label*="search" i],
+ #qrpass-sysadmin-items-search-v29,#qrpass-sysadmin-announcement-search-v29
+):focus {
+ background:#fff!important;background-color:#fff!important;
+ border-color:#5278e7!important;box-shadow:0 0 0 3px rgba(82,120,231,.16)!important;
+ outline:none!important;
+}
+/* Filter and sorting dropdowns — retain all existing options and onChange */
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) :is(
+ select, button[role="combobox"], button[aria-haspopup="listbox"]
+) {
+ background:#fff!important;background-color:#fff!important;background-image:none;
+ border:1px solid #cbd5e1!important;border-radius:12px!important;
+ color:#17336d!important;box-shadow:none!important;
+ min-height:48px!important;height:48px!important;font-size:14px!important;
+ box-sizing:border-box!important;
+ transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease!important;
+}
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) :is(
+ select,button[role="combobox"],button[aria-haspopup="listbox"]
+):hover:not(:focus):not([aria-expanded="true"]) {
+ background:#eef2ff!important;background-color:#eef2ff!important;
+ border-color:#a8bde4!important;box-shadow:none!important;
+}
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) :is(
+ select,button[role="combobox"],button[aria-haspopup="listbox"]
+):focus {
+ background:#fff!important;background-color:#fff!important;
+ border-color:#5278e7!important;box-shadow:0 0 0 3px rgba(82,120,231,.16)!important;
+ outline:none!important;
+}
+/* Management launchers: matching square 48px sliders icon, preserve actual button callbacks */
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) button:is(
+ [data-qrpass-audit-manage-icon-v38="true"],
+ [data-qrpass-manage-launch-v31="true"],
+ .qrpass-manage-logs-shortcut-v3.qrpass-page-manage-v1
+) {
+ position:relative!important;
+ box-sizing:border-box!important;
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ flex:0 0 48px!important;width:48px!important;min-width:48px!important;max-width:48px!important;
+ height:48px!important;min-height:48px!important;
+ padding:0!important;
+ border:1px solid #cbd5e1!important;border-radius:12px!important;
+ background:#fff!important;background-color:#fff!important;background-image:none!important;
+ color:#31539b!important;box-shadow:none!important;
+ font-size:0!important;line-height:0!important;white-space:nowrap!important;
+ cursor:pointer!important;
+ transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease!important;
+}
+/* Use the same three-slider outline for every manage launcher.
+   No React child nodes are replaced or removed. */
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) button:is(
+ [data-qrpass-audit-manage-icon-v38="true"],
+ [data-qrpass-manage-launch-v31="true"],
+ .qrpass-manage-logs-shortcut-v3.qrpass-page-manage-v1
+) > svg { visibility:hidden!important; }
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) button:is(
+ [data-qrpass-audit-manage-icon-v38="true"],
+ [data-qrpass-manage-launch-v31="true"],
+ .qrpass-manage-logs-shortcut-v3.qrpass-page-manage-v1
+)::after {
+ content:"";position:absolute!important;left:calc(50% - 11px);top:calc(50% - 11px);
+ width:22px;height:22px;background:#31539b;
+ -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6h6m4 0h6M4 12h12m4 0h0M4 18h3m4 0h9M10 3v6M16 9v6M8 15v6'/%3E%3C/svg%3E") center/contain no-repeat;
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6h6m4 0h6M4 12h12m4 0h0M4 18h3m4 0h9M10 3v6M16 9v6M8 15v6'/%3E%3C/svg%3E") center/contain no-repeat;
+ pointer-events:none;
+}
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) button:is(
+ [data-qrpass-audit-manage-icon-v38="true"],[data-qrpass-manage-launch-v31="true"],
+ .qrpass-manage-logs-shortcut-v3.qrpass-page-manage-v1
+):hover:not(:disabled) {
+ background:#eef2ff!important;background-color:#eef2ff!important;border-color:#a8bde4!important;
+ box-shadow:none!important;
+}
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) button:is(
+ [data-qrpass-audit-manage-icon-v38="true"],[data-qrpass-manage-launch-v31="true"],
+ .qrpass-manage-logs-shortcut-v3.qrpass-page-manage-v1
+):focus-visible {
+ background:#fff!important;border-color:#5278e7!important;
+ box-shadow:0 0 0 3px rgba(82,120,231,.16)!important;outline:none!important;
+}
+@media(max-width:768px){
+ html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) select {max-width:100%!important;}
+}
+@media(prefers-reduced-motion:reduce){
+ html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"])) :is(select,input,button){transition:none!important;}
+}

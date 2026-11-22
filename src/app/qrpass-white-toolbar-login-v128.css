@@ -1,0 +1,117 @@
+/* QRPass v128: white-first toolbar and login controls, style-only. */
+:root { --qrpass-control-white: #fff; --qrpass-control-hover: #eef2ff; --qrpass-control-border: #c7d2fe; }
+
+/* All page search fields, including student, CSU, PCO and Sysadmin */
+html body #root main input:is([type="search"],[aria-label^="Search" i],[placeholder^="Search" i]),
+html body #root main input[placeholder^="Filter" i] {
+ background: #fff !important;
+ background-color: #fff !important;
+ border-color: var(--qrpass-control-border) !important;
+ color: #17336d !important;
+ transition: background-color .16s ease,border-color .16s ease,box-shadow .16s ease !important;
+}
+html body #root main input:is([type="search"],[aria-label^="Search" i],[placeholder^="Search" i]):hover:not(:focus),
+html body #root main input[placeholder^="Filter" i]:hover:not(:focus) {
+ background: var(--qrpass-control-hover) !important;
+ background-color: var(--qrpass-control-hover) !important;
+}
+html body #root main input:is([type="search"],[aria-label^="Search" i],[placeholder^="Search" i]):focus,
+html body #root main input[placeholder^="Filter" i]:focus {
+ background: #fff !important;
+ background-color: #fff !important;
+ border-color: #5278e7 !important;
+ box-shadow: 0 0 0 3px rgba(82,120,231,.14) !important;
+}
+
+/* The filter / sort dropdown controls from toolbars across roles.
+   Avoid changing ordinary selects in registration or settings forms. */
+html body #root main select:is(
+ [aria-label*="sort" i],[aria-label*="filter" i],
+ [data-qrpass-filter],[aria-label="All Roles"],
+ [aria-label="Select role"],[aria-label="Select status"]
+) {
+ background: #fff !important;
+ background-color: #fff !important;
+ border-color: var(--qrpass-control-border) !important;
+ color: #17336d !important;
+ transition: background-color .16s ease,border-color .16s ease,box-shadow .16s ease !important;
+}
+html body #root main select:is(
+ [aria-label*="sort" i],[aria-label*="filter" i],
+ [data-qrpass-filter],[aria-label="All Roles"],
+ [aria-label="Select role"],[aria-label="Select status"]
+):hover:not(:focus) {
+ background: var(--qrpass-control-hover) !important;
+ background-color: var(--qrpass-control-hover) !important;
+}
+html body #root main select:is(
+ [aria-label*="sort" i],[aria-label*="filter" i],
+ [data-qrpass-filter],[aria-label="All Roles"],
+ [aria-label="Select role"],[aria-label="Select status"]
+):focus {
+ background: #fff !important;
+ background-color: #fff !important;
+ border-color: #5278e7 !important;
+ box-shadow: 0 0 0 3px rgba(82,120,231,.14) !important;
+}
+
+/* Existing Manage and toolbar action buttons: no new icons, handlers, or buttons. */
+html body #root main button:is(
+ [data-qrpass-manage-launch-v31],
+ [data-qrpass-audit-manage-icon-v38],
+ [data-qrpass-users-manage-icon-v49],
+ [aria-label="Manage Items"],
+ [aria-label="Manage Reports"],
+ [aria-label="Manage Logs"],
+ [aria-label="Manage Users"],
+ [aria-label="Manage Announcements"]
+) {
+ background:#fff !important; background-color:#fff !important;
+ border-color:#cbd5e1 !important;
+ transition:background-color .16s ease,border-color .16s ease !important;
+}
+html body #root main button:is(
+ [data-qrpass-manage-launch-v31],
+ [data-qrpass-audit-manage-icon-v38],
+ [data-qrpass-users-manage-icon-v49],
+ [aria-label="Manage Items"],
+ [aria-label="Manage Reports"],
+ [aria-label="Manage Logs"],
+ [aria-label="Manage Users"],
+ [aria-label="Manage Announcements"]
+):hover:not(:disabled) {
+ background:var(--qrpass-control-hover) !important;
+ background-color:var(--qrpass-control-hover) !important;
+}
+
+/* Login page â€” ID Number and Password, but never the Log In submit button */
+html body #root input:is(
+ [autocomplete="username"][placeholder="Enter your ID number"],
+ [autocomplete="current-password"][placeholder="Enter your password"]
+) {
+ background: #fff !important;
+ background-color: #fff !important;
+ border: 1px solid var(--qrpass-control-border) !important;
+ color:#17336d !important;
+ transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease !important;
+}
+html body #root input:is(
+ [autocomplete="username"][placeholder="Enter your ID number"],
+ [autocomplete="current-password"][placeholder="Enter your password"]
+):hover:not(:focus):not(:disabled) {
+ background:var(--qrpass-control-hover) !important;
+ background-color:var(--qrpass-control-hover) !important;
+}
+html body #root input:is(
+ [autocomplete="username"][placeholder="Enter your ID number"],
+ [autocomplete="current-password"][placeholder="Enter your password"]
+):focus {
+ background:#fff !important;background-color:#fff !important;
+ border-color:#5278e7 !important;
+ box-shadow:0 0 0 3px rgba(82,120,231,.15) !important;
+}
+@media(prefers-reduced-motion:reduce){
+ html body #root main :is(input,select,button),
+ html body #root input[autocomplete="username"],
+ html body #root input[autocomplete="current-password"] { transition:none !important; }
+}

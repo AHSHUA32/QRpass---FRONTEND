@@ -32,6 +32,8 @@ import "./qrpass-system-settings-match-reports-v7.css";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import "./qrpass-dark-contrast.css";
+import "./qrpass-student-csu-pco-white-v129.css";
+import "./qrpass-white-toolbar-login-v128.css";
 
 
 // =========================================================
@@ -434,6 +436,8 @@ function Card({
 }
 
 const QRPassPageSubtitleContext = React.createContext(true);
+/* QRPASS_MANAGE_TOOLBAR_V116 */
+const QRPassSysadminManageContext = React.createContext<(() => void) | null>(null);
 
 function PageHeader({
   title,
@@ -503,7 +507,7 @@ function RegistrationField({
   type?: string;
 }) {
   const fieldClass =
-    "w-full px-3 py-2.5 text-sm border border-[#c7d2fe] rounded-lg bg-[#eef2ff] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15";
+    "w-full px-3 py-2.5 text-sm border border-[#c7d2fe] rounded-lg !bg-white hover:!bg-[#eef2ff] focus:!bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15";
 
   return (
     <div>
@@ -524,11 +528,17 @@ function RegistrationField({
         }
         placeholder={placeholder}
         className={fieldClass}
+        ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
+        onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+        onMouseLeave={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+        onFocus={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+        onBlur={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
       />
     </div>
   );
 }
 
+/* QRPASS_QUANTITY_INPUT_V135 */
 function RegistrationQuantityField({
   value,
   onChange,
@@ -606,7 +616,34 @@ function RegistrationQuantityField({
         Quantity
       </label>
 
-      <div className="flex h-[42px] w-full items-center overflow-hidden rounded-lg border border-[#c7d2fe] bg-[#eef2ff] transition-colors focus-within:border-[#2f5fd6] focus-within:ring-2 focus-within:ring-[#2f5fd6]/15">
+      <div /* QRPASS_STUDENT_QUANTITY_WHITE_V134 */
+      ref={(element) => {
+        if (element) {
+          element.style.setProperty("background", "#ffffff", "important");
+          element.style.setProperty("background-color", "#ffffff", "important");
+        }
+      }}
+      onMouseEnter={(event) => {
+        if (!event.currentTarget.contains(document.activeElement)) {
+          event.currentTarget.style.setProperty("background", "#eef2ff", "important");
+          event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+        }
+      }}
+      onMouseLeave={(event) => {
+        event.currentTarget.style.setProperty("background", "#ffffff", "important");
+        event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+      }}
+      onFocusCapture={(event) => {
+        event.currentTarget.style.setProperty("background", "#ffffff", "important");
+        event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+      }}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          event.currentTarget.style.setProperty("background", "#ffffff", "important");
+          event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+        }
+      }}
+      className="flex h-[42px] w-full items-center overflow-hidden rounded-lg border border-[#c7d2fe] !bg-white hover:!bg-[#eef2ff] focus-within:!bg-white transition-colors focus-within:border-[#2f5fd6] focus-within:ring-2 focus-within:ring-[#2f5fd6]/15">
         <input
           type="text"
           inputMode="numeric"
@@ -627,9 +664,29 @@ function RegistrationQuantityField({
           onBlur={() => {
             if (value === "" || Number(value) < 1) onChange("1");
           }}
-          className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-[#111827] outline-none"
+          className="min-w-0 flex-1 !bg-white hover:!bg-[#eef2ff] focus:!bg-white px-3 py-2.5 text-sm text-[#111827] outline-none transition-colors"
           placeholder="1"
           aria-label="Quantity"
+          ref={(element) => {
+            if (element) {
+              element.style.setProperty("background", "#ffffff", "important");
+              element.style.setProperty("background-color", "#ffffff", "important");
+            }
+          }}
+          onMouseEnter={(event) => {
+            if (document.activeElement !== event.currentTarget) {
+              event.currentTarget.style.setProperty("background", "#eef2ff", "important");
+              event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+            }
+          }}
+          onMouseLeave={(event) => {
+            event.currentTarget.style.setProperty("background", "#ffffff", "important");
+            event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+          }}
+          onFocus={(event) => {
+            event.currentTarget.style.setProperty("background", "#ffffff", "important");
+            event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+          }}
         />
         <div className="mr-1.5 flex h-[34px] w-9 shrink-0 flex-col overflow-hidden rounded-md border border-[#c7d2fe] bg-white shadow-sm">
           <button
@@ -688,6 +745,12 @@ function QRPassInlineOtherSelect({
   maxLength?: number;
   className?: string;
 }) {
+  /* QRPASS_REGISTER_WHITE_V132 - student registration only; no other callers changed */
+  const registrationWhiteV132 = className.includes("qrpass-register-white-v132");
+  const registerBgV132 = (element: HTMLElement | null, hover: boolean) => {
+    if (!element || !registrationWhiteV132) return;
+    element.style.setProperty("background-color", hover ? "#eef2ff" : "#ffffff", "important");
+  };
   const isCustom = value === "__OTHER__" || (value !== "" && !options.includes(value));
   const inputRef = React.useRef<HTMLInputElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
@@ -725,7 +788,7 @@ function QRPassInlineOtherSelect({
     return (
       <div ref={wrapperRef} className="relative w-full min-w-0" style={{ zIndex: choicesOpen ? 90 : undefined }}>
         <input
-          ref={inputRef}
+          ref={(element) => { inputRef.current = element; registerBgV132(element, false); }}
           type="text"
           value={value === "__OTHER__" ? "" : value}
           onChange={e => onChange(e.target.value || "__OTHER__")}
@@ -734,6 +797,10 @@ function QRPassInlineOtherSelect({
           required={required}
           maxLength={maxLength}
           className={`${className} !pr-12 focus:!bg-white`}
+          onMouseEnter={(event) => registerBgV132(event.currentTarget, document.activeElement !== event.currentTarget)}
+          onMouseLeave={(event) => registerBgV132(event.currentTarget, false)}
+          onFocus={(event) => registerBgV132(event.currentTarget, false)}
+          onBlur={(event) => registerBgV132(event.currentTarget, false)}
         />
         <button
           type="button"
@@ -789,6 +856,37 @@ function QRPassInlineOtherSelect({
       aria-label={label}
       required={required}
       className={className}
+      ref={(element) => {
+        if (element && className.includes("qrpass-register-white-v133")) {
+          element.style.setProperty("background", "#ffffff", "important");
+          element.style.setProperty("background-color", "#ffffff", "important");
+          element.style.setProperty("background-image", "none", "important");
+        }
+      }}
+      onPointerEnter={(event) => {
+        if (className.includes("qrpass-register-white-v133") && document.activeElement !== event.currentTarget) {
+          event.currentTarget.style.setProperty("background", "#eef2ff", "important");
+          event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+        }
+      }}
+      onPointerLeave={(event) => {
+        if (className.includes("qrpass-register-white-v133")) {
+          event.currentTarget.style.setProperty("background", "#ffffff", "important");
+          event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+        }
+      }}
+      onFocus={(event) => {
+        if (className.includes("qrpass-register-white-v133")) {
+          event.currentTarget.style.setProperty("background", "#ffffff", "important");
+          event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+        }
+      }}
+      onBlur={(event) => {
+        if (className.includes("qrpass-register-white-v133")) {
+          event.currentTarget.style.setProperty("background", "#ffffff", "important");
+          event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+        }
+      }}
     >
       <option value="" disabled hidden>{placeholder || `Select ${label}`}</option>
       {options.map(option => (
@@ -799,6 +897,7 @@ function QRPassInlineOtherSelect({
   );
 }
 
+/* QRPASS_REGISTER_DROPDOWN_V133 */
 function RegistrationDropdown({
   label, field, value, options, onChange, optional = false,
 }: {
@@ -823,11 +922,13 @@ function RegistrationDropdown({
         options={options}
         onChange={next => onChange(field, next)}
         specifyPlaceholder={`Specify ${label.toLowerCase()}`}
+        className="qrpass-register-white-v132 w-full min-h-[44px] rounded-lg border border-[#c7d2fe] !bg-white hover:!bg-white focus:!bg-white px-3 py-2.5 text-sm text-[#17336d] outline-none transition-colors duration-150 focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20 qrpass-register-white-v133"
       />
     </div>
   );
 }
 
+/* QRPASS_STUDENT_MOBILE_RESPONSIVE_V171 */
 function StudentRegisterItem() {
   type RegistrationGroupId =
     | "computer"
@@ -2149,7 +2250,7 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 min-w-0 w-full max-w-full overflow-x-clip">
       <PageHeader
         title="Register Item"
         subtitle="Register an item for campus entry and exit verification. PCO approval is required before a QR code is issued."
@@ -2335,12 +2436,106 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
 }
 
 
+/* QRPASS_STUDENT_DIRECT_CONTROLS_V131 */
+/* QRPASS_STUDENT_PAGE_MANAGER_V141 */
+function StudentPageManagerV141({
+  title, records, onClose, onView, downloadName,
+}: {
+  title: string;
+  records: any[];
+  onClose: () => void;
+  onView: (record: any) => void;
+  downloadName: string;
+}) {
+  const [query, setQuery] = React.useState("");
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+  const safeRecords = Array.isArray(records) ? records : [];
+  const filtered = safeRecords.filter((record) =>
+    [record.id, record.item_name, record.item_type, record.category,
+      record.brand_model, record.serial_number, record.status, record.qr_code,
+      record.created_at]
+      .filter((v) => v !== null && v !== undefined)
+      .join(" ").toLowerCase().includes(query.trim().toLowerCase())
+  );
+  const keyFor = (item: any, index: number) => String(item.id ?? `local-${index}`);
+  const visibleIds = filtered.map(keyFor);
+  const allSelected = visibleIds.length > 0 && visibleIds.every(id => selectedIds.includes(id));
+  const toggleOne = (id: string) => setSelectedIds(current =>
+    current.includes(id) ? current.filter(x => x !== id) : [...current, id]);
+  const csvCell = (value: unknown) => {
+    let text = String(value ?? "");
+    // Keep spreadsheet applications from interpreting untrusted cells as formulas.
+    if (/^[\s]*[=+\-@]/.test(text)) text = "'" + text;
+    return '"' + text.replace(/"/g,'""') + '"';
+  };
+  const download = () => {
+    const chosen = selectedIds.length
+      ? filtered.filter((item,index) => selectedIds.includes(keyFor(item,index)))
+      : filtered;
+    if (!chosen.length) return;
+    const columns = ['id','item_name','item_type','category','brand_model','serial_number','status','qr_code','created_at'];
+    const csv = [columns.map(csvCell).join(','),
+      ...chosen.map(record => columns.map(key => csvCell(record[key])).join(','))].join('\r\n');
+    const blob = new Blob(['\uFEFF',csv], {type:'text/csv;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${downloadName}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url),1000);
+  };
+  return (
+    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 p-3 sm:p-6" role="presentation" onMouseDown={event => { if(event.target===event.currentTarget) onClose(); }}>
+      <div role="dialog" aria-modal="true" aria-label={title} className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#385785] bg-white p-4 text-[#17336d] shadow-2xl sm:p-5">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-bold">{title}</h2>
+          <button type="button" onClick={onClose} className="rounded-xl border border-[#c7d2fe] bg-white px-4 py-2 text-sm font-medium hover:bg-[#eef2ff]">Close</button>
+        </div>
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <button type="button" disabled title="Student archive API is not available" className="shrink-0 rounded-xl border border-[#c7d2fe] bg-white px-4 py-2.5 text-sm opacity-55">View Archives</button>
+          <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search records..." aria-label={`Search ${title} records`} className="min-w-[180px] flex-1 rounded-xl border border-[#c7d2fe] bg-white px-4 py-2.5 text-sm outline-none hover:bg-[#eef2ff] focus:bg-white"/>
+        </div>
+        <div className="min-h-[68px] flex-1 overflow-y-auto rounded-xl border border-[#d8e1ee]">
+          {filtered.length===0 ? <p className="p-7 text-center text-sm font-semibold">No matching records</p> : (
+            <div className="divide-y divide-[#e5eaf2]">
+              {filtered.map((item,index) => {
+                const id=keyFor(item,index), selected=selectedIds.includes(id);
+                return (
+                  <div key={id} className={`flex items-center gap-3 p-3 ${selected?'bg-[#eef2ff]':'bg-white hover:bg-[#f8faff]'}`}>
+                    <input type="checkbox" checked={selected} onChange={()=>toggleOne(id)} aria-label={`Select ${item.item_name || id}`}/>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">{item.item_name || `Record #${id}`}</p>
+                      <p className="truncate text-xs text-[#64748b]">{String(item.status ?? 'â€”')} Â· {String(item.serial_number ?? 'No serial number')}</p>
+                    </div>
+                    <button type="button" onClick={()=>onView(item)} className="shrink-0 rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium hover:bg-[#eef2ff]">View</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="mr-auto text-xs text-[#64748b]">{selectedIds.length} selected Â· {filtered.length} shown</span>
+          <button type="button" disabled={!visibleIds.length} onClick={()=>setSelectedIds(current=>allSelected?current.filter(id=>!visibleIds.includes(id)):Array.from(new Set([...current,...visibleIds])))} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50">{allSelected?'Deselect All':'Select All'}</button>
+          <button type="button" disabled={!filtered.length} onClick={download} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium hover:bg-[#eef2ff] disabled:opacity-50">Download</button>
+          <button type="button" disabled title="Archive requires an authorized Student API" className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm opacity-50">Archive</button>
+          <button type="button" disabled title="Bulk permanent deletion is not supported for Student records" className="rounded-xl border border-red-200 bg-white px-3 py-2 text-sm text-red-600 opacity-50">Delete</button>
+        </div>
+        <p className="mt-2 text-xs text-[#64748b]">Archive and bulk Delete require Student-authorized backend support. Search, Select, View, and Download work with this pageâ€™s records.</p>
+      </div>
+    </div>
+  );
+}
 function StudentMyQRCodes() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [qrSearch, setQrSearch] = useState("");
   const [qrSortOrder, setQrSortOrder] = useState<"newest" | "oldest">("newest");
   const [qrModalItem, setQrModalItem] = useState<any | null>(null);
+  /* QRPASS_STUDENT_QR_PERMIT_MANAGE_V139 */
+  const [qrManageOpenV139, setQrManageOpenV139] = useState(false);
   const [downloadingQrId, setDownloadingQrId] =
     useState<number | string | null>(null);
 
@@ -2617,7 +2812,7 @@ function StudentMyQRCodes() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 min-w-0 w-full max-w-full overflow-x-clip">
       <PageHeader
         title="QR Codes"
         subtitle="Approved items with their QR codes. Present these to security during inspection or exit."
@@ -2633,24 +2828,81 @@ function StudentMyQRCodes() {
             value={qrSearch}
             onChange={(e) => setQrSearch(e.target.value)}
             placeholder="Search item, category, serial number, QR ID..."
-            className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+            className="w-full rounded-xl border border-border bg-white py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0"
+    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
+    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
           />
         </div>
         <select
           aria-label="Sort QR codes"
           value={qrSortOrder}
           onChange={(e) => setQrSortOrder(e.target.value as "newest" | "oldest")}
-          className="rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary"
-        >
+          className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0 w-full sm:w-auto"
+    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
+    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+          >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
         </select>
+        <button
+          type="button"
+          aria-label="Manage QR Codes"
+          title="Manage QR Codes"
+          onClick={() => setQrManageOpenV139(true)}
+          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
+        >
+          <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
+        </button>
         <button type="button" onClick={loadMyItems} disabled={loading}
-          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"> <RefreshCw size={13} className="shrink-0" />
+          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg md:!hidden"> <RefreshCw size={13} className="shrink-0" />
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
+      {qrManageOpenV139 && (
+        <StudentPageManagerV141
+          title="Manage QR Codes"
+          records={visibleQrItems}
+          onClose={() => setQrManageOpenV139(false)}
+          onView={(item) => { setQrManageOpenV139(false); setQrModalItem(item); }}
+          downloadName="qrpass-my-qr-codes"
+        />
+      )}
+      {false && qrManageOpenV139 && (
+        <div
+          className="fixed inset-0 z-[240] flex items-center justify-center bg-[#0f172a]/50 p-4"
+          onClick={(event) => { if (event.target === event.currentTarget) setQrManageOpenV139(false); }}
+        >
+          <div role="dialog" aria-modal="true" aria-label="Manage QR Codes" className="flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#dce3ee] p-4">
+              <div>
+                <h3 className="font-bold text-[#17336d]">Manage QR Codes</h3>
+                <p className="text-xs text-[#64748b]">Review your registered QR codes</p>
+              </div>
+              <button type="button" aria-label="Close Manage QR Codes" onClick={() => setQrManageOpenV139(false)} className="rounded-lg border border-[#c7d2fe] bg-white p-2 text-[#17336d] hover:bg-[#eef2ff]"><X size={18} /></button>
+            </div>
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
+              {visibleQrItems.length === 0 ? (
+                <p className="py-8 text-center text-sm text-[#64748b]">No QR codes match the current search.</p>
+              ) : visibleQrItems.map((item) => (
+                <div key={String(item.id)} className="flex items-center justify-between gap-3 rounded-xl border border-[#dce3ee] bg-white p-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#17336d]">{item.item_name || "Unnamed Item"}</p>
+                    <p className="text-xs text-[#64748b]">#{item.id} Â· {item.serial_number || "No serial number"}</p>
+                  </div>
+                  <button type="button" onClick={() => { setQrManageOpenV139(false); setQrModalItem(item); }} className="shrink-0 rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff]">View</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {loading ? (
         <div className="text-center py-10 text-sm text-muted-foreground">
           Loading QR codes...
@@ -2749,7 +3001,7 @@ function StudentMyQRCodes() {
                     </span>
                   </p>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() =>
@@ -2912,6 +3164,7 @@ function StudentPermitStatus() {
   const [permitSortOrder, setPermitSortOrder] = useState<"newest" | "oldest">("newest");
   const [selectedItem, setSelectedItem] =
     useState<any | null>(null);
+  const [permitManageOpenV139, setPermitManageOpenV139] = useState(false);
   const [permitFilter, setPermitFilter] =
     useState<PermitFilter>("all");
   const [deletingItemId, setDeletingItemId] =
@@ -3185,7 +3438,7 @@ function StudentPermitStatus() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 min-w-0 w-full max-w-full overflow-x-clip">
       <PageHeader
         title="Permit Status"
         subtitle="Track all of your item registration requests and permit details."
@@ -3256,7 +3509,12 @@ function StudentPermitStatus() {
             value={permitSearch}
             onChange={(e) => setPermitSearch(e.target.value)}
             placeholder="Search item, category, serial number, QR ID..."
-            className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+            className="w-full rounded-xl border border-border bg-white py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0"
+    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
+    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
           />
         </div>
         
@@ -3267,7 +3525,12 @@ function StudentPermitStatus() {
             onChange={(e) =>
               setPermitFilter(e.target.value as PermitFilter)
             }
-            className="h-12 min-w-[165px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff] focus:bg-white focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none"
+            className="h-12 min-w-[165px] flex-1 rounded-xl border border-[#bfceff] bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff]  focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0 w-full sm:w-auto"
+    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
+    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
           >
             <option value="all">
               All Permits ({items.length})
@@ -3287,14 +3550,28 @@ function StudentPermitStatus() {
           aria-label="Sort permit requests"
           value={permitSortOrder}
           onChange={(e) => setPermitSortOrder(e.target.value as "newest" | "oldest")}
-          className="rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary"
-        >
+          className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0 w-full sm:w-auto"
+    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
+    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+          >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
         </select>
+          <button
+            type="button"
+            aria-label="Manage Permits"
+            title="Manage Permits"
+            onClick={() => setPermitManageOpenV139(true)}
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
+          >
+            <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
+          </button>
         </div>
         <button type="button" onClick={loadItems} disabled={loading}
-          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"> <RefreshCw size={13} className="shrink-0" />
+          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg md:!hidden"> <RefreshCw size={13} className="shrink-0" />
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
@@ -3302,6 +3579,44 @@ function StudentPermitStatus() {
       {/* FILTERS — four equal-width buttons on mobile; natural width on desktop */}
       
 
+      {permitManageOpenV139 && (
+        <StudentPageManagerV141
+          title="Manage Permits"
+          records={visibleItems}
+          onClose={() => setPermitManageOpenV139(false)}
+          onView={(item) => { setPermitManageOpenV139(false); setSelectedItem(item); }}
+          downloadName="qrpass-my-permits"
+        />
+      )}
+      {false && permitManageOpenV139 && (
+        <div
+          className="fixed inset-0 z-[240] flex items-center justify-center bg-[#0f172a]/50 p-4"
+          onClick={(event) => { if (event.target === event.currentTarget) setPermitManageOpenV139(false); }}
+        >
+          <div role="dialog" aria-modal="true" aria-label="Manage Permits" className="flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#dce3ee] p-4">
+              <div>
+                <h3 className="font-bold text-[#17336d]">Manage Permits</h3>
+                <p className="text-xs text-[#64748b]">Review your permit requests and their status</p>
+              </div>
+              <button type="button" aria-label="Close Manage Permits" onClick={() => setPermitManageOpenV139(false)} className="rounded-lg border border-[#c7d2fe] bg-white p-2 text-[#17336d] hover:bg-[#eef2ff]"><X size={18} /></button>
+            </div>
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
+              {visibleItems.length === 0 ? (
+                <p className="py-8 text-center text-sm text-[#64748b]">No permits match the selected filters.</p>
+              ) : visibleItems.map((item) => (
+                <div key={String(item.id)} className="flex items-center justify-between gap-3 rounded-xl border border-[#dce3ee] bg-white p-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#17336d]">{item.item_name || "Unnamed Item"}</p>
+                    <p className="text-xs text-[#64748b]">#{item.id} Â· {permitDisplayStatus(item)}</p>
+                  </div>
+                  <button type="button" onClick={() => { setPermitManageOpenV139(false); setSelectedItem(item); }} className="shrink-0 rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff]">View</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       <Card
         title={
           permitFilter ===
@@ -3317,7 +3632,7 @@ function StudentPermitStatus() {
         }
       >
         {/* Phones: readable request cards, not a cropped desktop table. */}
-        <div className="divide-y divide-border lg:hidden">
+        <div className="min-w-0 divide-y divide-border lg:hidden">
           {loading ? (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">Loading permit requests...</p>
           ) : visibleItems.length === 0 ? (
@@ -3357,7 +3672,7 @@ function StudentPermitStatus() {
                       <dd className="mt-1 break-words font-medium text-foreground">{!pending ? formatDateTime(item.qr_expires_at) : "—"}</dd>
                     </div>
                   </dl>
-                  <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+                  <div className="flex min-w-0 flex-wrap gap-2 border-t border-border pt-3">
                     <button type="button" onClick={() => setSelectedItem(item)}
                       className="inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-primary hover:bg-muted">
                       <Eye size={14} /> View Details
@@ -3532,7 +3847,7 @@ function StudentPermitStatus() {
                         </td>
 
                         <td className="py-3 px-3">
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex min-w-0 flex-wrap items-center gap-2">
                             <button
                               type="button"
                               onClick={() =>
@@ -3864,7 +4179,8 @@ function StudentLostAndFound() {
     useState<"newest" | "oldest">("newest");
 
   const [selectedItem, setSelectedItem] =
-    useState<any | null>(null);
+    useState<any | null>(null);  /* QRPASS_STUDENT_LF_MANAGE_V136 */
+  const [studentManageLogsOpenV136, setStudentManageLogsOpenV136] = useState(false);
 
   async function loadItems() {
     try {
@@ -4214,7 +4530,7 @@ function StudentLostAndFound() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 min-w-0 w-full max-w-full overflow-x-clip">
       <PageHeader
         title="Lost & Found"
         subtitle="Browse found items and lost-item reports recorded by the Security office."
@@ -4284,7 +4600,12 @@ function StudentLostAndFound() {
               )
             }
             placeholder="Search item, category, location..."
-            className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+            className="w-full rounded-xl border border-border bg-white py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0"
+    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
+    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
           />
         </div>
 
@@ -4299,7 +4620,12 @@ function StudentLostAndFound() {
                 e.target.value as typeof statusFilter
               )
             }
-            className="h-12 min-w-[175px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff] focus:bg-white focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none"
+            className="h-12 min-w-[175px] flex-1 rounded-xl border border-[#bfceff] bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff]  focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0 w-full sm:w-auto"
+    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
+    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
           >
             <option value="all">
               All Reports ({items.length})
@@ -4326,17 +4652,31 @@ function StudentLostAndFound() {
                 e.target.value as typeof sortOrder
               )
             }
-            className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff] focus:bg-white focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none"
+            className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff] bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff]  focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0 w-full sm:w-auto"
+    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
+    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
           >
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
           </select>
+          <button
+            type="button"
+            title="Manage Logs"
+            aria-label="Manage Logs"
+            onClick={() => setStudentManageLogsOpenV136(true)}
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] !bg-white text-[#17336d] transition-colors hover:!bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
+          >
+            <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
+          </button>
 
           <button
           type="button"
           onClick={() => { void loadItems(); }}
           disabled={loading}
-          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg md:!hidden"
         > <RefreshCw size={13} className="shrink-0" />
           {loading
             ? "Refreshing..."
@@ -4346,6 +4686,54 @@ function StudentLostAndFound() {
 
       </div>
 
+      {studentManageLogsOpenV136 && (
+        <div
+          className="fixed inset-0 z-[240] flex items-center justify-center bg-[#0f172a]/50 p-4"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setStudentManageLogsOpenV136(false);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Manage Logs"
+            className="flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-2xl"
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-[#dce3ee] p-4">
+              <div>
+                <h3 className="font-bold text-[#17336d]">Manage Logs</h3>
+                <p className="text-xs text-[#64748b]">Review your Lost & Found records</p>
+              </div>
+              <button
+                type="button"
+                aria-label="Close Manage Logs"
+                onClick={() => setStudentManageLogsOpenV136(false)}
+                className="rounded-lg border border-[#c7d2fe] bg-white p-2 text-[#17336d] hover:bg-[#eef2ff]"
+              ><X size={18} /></button>
+            </div>
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
+              {visibleItems.length === 0 ? (
+                <p className="py-8 text-center text-sm text-[#64748b]">No records match the selected filters.</p>
+              ) : visibleItems.map((entry) => (
+                <div key={String(entry.id)} className="flex items-center justify-between gap-3 rounded-xl border border-[#dce3ee] bg-white p-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#17336d]">{entry.item_name || "Unnamed Item"}</p>
+                    <p className="text-xs text-[#64748b]">#{entry.id} Â· {getReportType(entry)} Â· {getStatus(entry)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStudentManageLogsOpenV136(false);
+                      setSelectedItem(entry);
+                    }}
+                    className="shrink-0 rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff]"
+                  >View</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {/* FILTERS */}
       
 
@@ -4880,7 +5268,7 @@ function StudentNotifications() {
     notifications.length - unreadCount;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 w-full max-w-full overflow-x-clip">
       {/* HEADER */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -4898,7 +5286,7 @@ function StudentNotifications() {
           <button
             onClick={() => loadNotifications(true)}
             disabled={loading}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg md:!hidden"
           > <RefreshCw size={13} className="shrink-0" />
             {loading ? "Refreshing..." : "Refresh"}
           </button>
@@ -5070,6 +5458,7 @@ function StudentNotifications() {
 // ══════════════════════════════════════════════════════════════════════════════
 // SECURITY (CSU) PAGES
 // ══════════════════════════════════════════════════════════════════════════════
+/* QRPASS_CSU_DIRECT_INPUTS_V143 */
 function SecurityScanVerify() {
   const [scanResult, setScanResult] = useState<any | null>(null);
   const [input, setInput] = useState("");
@@ -5475,7 +5864,7 @@ function SecurityScanVerify() {
               onChange={(e) =>
                 setGate(e.target.value)
               }
-              className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="h-11 w-full rounded-xl border border-border px-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
             >
 
               <option value="Gate 2">
@@ -5523,7 +5912,7 @@ function SecurityScanVerify() {
                   }
                 }}
                 placeholder="QR ID or serial number..."
-                className="h-12 w-full min-w-0 rounded-xl border border-[#bfceff] bg-[#eef2ff] pl-9 pr-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:ring-2 focus:ring-[#6488ff]/15 dark:border-[#35537e] dark:bg-[#1b2b49]"
+                className="h-12 w-full min-w-0 rounded-xl border border-[#bfceff] pl-9 pr-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:ring-2 focus:ring-[#6488ff]/15 dark:border-[#35537e] dark:bg-[#1b2b49] !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
               />
             </div>
 
@@ -5629,7 +6018,7 @@ function SecurityScanVerify() {
                     }
                     placeholder="e.g. Laptop, Camera, Phone"
                     required
-                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   />
                 </div>
 
@@ -5650,7 +6039,7 @@ function SecurityScanVerify() {
                     }
                     placeholder="Full name of item owner"
                     required
-                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   />
                 </div>
 
@@ -5673,7 +6062,7 @@ function SecurityScanVerify() {
                     }
                     placeholder="Student ID"
                     required
-                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   />
                 </div>
 
@@ -5710,7 +6099,7 @@ function SecurityScanVerify() {
                     placeholder="Full name of person carrying item"
                     disabled={sameAsOwner}
                     required
-                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 disabled:bg-gray-100"
+                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 disabled:bg-gray-100 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   />
                 </div>
 
@@ -5734,7 +6123,7 @@ function SecurityScanVerify() {
                     placeholder="Student ID of person carrying item"
                     disabled={sameAsOwner}
                     required
-                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 disabled:bg-gray-100"
+                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 disabled:bg-gray-100 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   />
                 </div>
 
@@ -5753,7 +6142,7 @@ function SecurityScanVerify() {
                       }))
                     }
                     required
-                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                    className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   >
                     <option value="OUT">OUT</option>
                     <option value="IN">IN</option>
@@ -5770,7 +6159,7 @@ function SecurityScanVerify() {
                     type="text"
                     value={gate}
                     readOnly
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md bg-gray-100 text-gray-600"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md bg-gray-100 text-gray-600 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   />
                 </div>
               </div>
@@ -6244,7 +6633,7 @@ function CSUStatsPeriodFilter({
           id={`csu-stat-period-${description.replace(/[^a-z]/gi, "-").toLowerCase()}`}
           value={value}
           onChange={event => onChange(event.target.value as CSUDatePeriod)}
-          className="h-10 min-w-[160px] rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+          className="h-10 min-w-[160px] rounded-xl border border-border px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
         >
           {CSU_PERIOD_OPTIONS.map(option => (
             <option key={option.value} value={option.value}>{option.label}</option>
@@ -6254,11 +6643,11 @@ function CSUStatsPeriodFilter({
           <div className="flex flex-wrap items-center gap-2">
             <label className="text-xs text-muted-foreground">From
               <input type="date" value={start} max={end || undefined} onChange={event => onStartChange(event.target.value)}
-                className="ml-2 h-10 rounded-xl border border-border bg-card px-2 text-sm" />
+                className="ml-2 h-10 rounded-xl border border-border px-2 text-sm !bg-white hover:!bg-[#eef2ff] focus:!bg-white" />
             </label>
             <label className="text-xs text-muted-foreground">To
               <input type="date" value={end} min={start || undefined} onChange={event => onEndChange(event.target.value)}
-                className="ml-2 h-10 rounded-xl border border-border bg-card px-2 text-sm" />
+                className="ml-2 h-10 rounded-xl border border-border px-2 text-sm !bg-white hover:!bg-[#eef2ff] focus:!bg-white" />
             </label>
           </div>
         )}
@@ -6268,6 +6657,124 @@ function CSUStatsPeriodFilter({
   );
 }
 
+
+
+/* QRPASS_CSU_PAGE_MANAGE_V147: CSU-only, page-scoped record manager */
+const QRPassCSUManageContextV147 = React.createContext<(() => void) | null>(null);
+
+function QRPassCSUPageManagerV147({ page, onClose }: { page: number; onClose: () => void }) {
+  const [rows, setRows] = React.useState<any[]>([]);
+  const [query, setQuery] = React.useState("");
+  const [selected, setSelected] = React.useState<string[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState("");
+  const pageNames = ["Manage Scan Records", "Manage Recent Scan Logs", "Manage Entry / Exit Logs", "Manage Registered Items", "Manage Lost & Found"];
+  const title = pageNames[page] ?? "Manage Records";
+  const getKey = (row: any, i: number) => String(row.__qrpassManagerKey ?? row.id ?? `${page}-${i}`);
+  const load = React.useCallback(async () => {
+    setLoading(true); setError("");
+    try {
+      let data: any[] = [];
+      if (page === 0 || page === 1) {
+        const response = await getScanLogs();
+        data = Array.isArray(response?.logs) ? response.logs : [];
+        if (page === 1) data = data.slice(0,5);
+      } else if (page === 2) {
+        const [scans, incidents] = await Promise.all([getScanLogs(), getSecurityIncidents()]);
+        const logRows = Array.isArray(scans?.logs) ? scans.logs : [];
+        const incidentRows = Array.isArray(incidents?.incidents) ? incidents.incidents : [];
+        data = [
+          ...logRows.map((row: any,i: number) => ({...row,__qrpassKind:"Gate Entry / Exit",__qrpassManagerKey:`gate-${row.id ?? i}`})),
+          ...incidentRows.map((row: any,i: number) => ({...row,__qrpassKind:"Incident",__qrpassManagerKey:`incident-${row.id ?? i}`})),
+        ];
+      } else if (page === 3) {
+        const response = await getSecurityReports();
+        if (!Array.isArray(response?.registered_items)) throw new Error("CSU registered-item data unavailable from backend.");
+        data = response.registered_items;
+      } else if (page === 4) {
+        const response = await getLostFoundItems();
+        data = Array.isArray(response) ? response : Array.isArray(response?.items) ? response.items : [];
+      }
+      setRows(data);
+      setSelected([]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to load CSU records.");
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [page]);
+  React.useEffect(() => { void load(); }, [load]);
+  const searchable = (row: any) => [
+    row.id,row.__qrpassKind,row.item_name,row.item?.item_name,row.item?.user?.name,
+    row.item?.user?.username,row.user?.name,row.user?.username,row.qr_code,row.serial_number,
+    row.report_type,row.status,row.result,row.direction,row.gate,row.location_found,
+    row.location_lost,row.incident_type,row.created_at,row.scanned_at,
+  ].filter(v => v!==undefined && v!==null).join(" ").toLowerCase();
+  const filtered = rows.filter(row=>searchable(row).includes(query.trim().toLowerCase()));
+  const ids = filtered.map((row,i)=>getKey(row,i));
+  const allSelected = ids.length>0 && ids.every(id=>selected.includes(id));
+  const esc = (value: unknown) => {
+    let v = String(value ?? "");
+    if (/^[\s]*[=+\-@]/.test(v)) v = "'" + v;
+    return `"${v.replace(/"/g,'""')}"`;
+  };
+  const download = () => {
+    const subset = selected.length ? filtered.filter((r,i)=>selected.includes(getKey(r,i))) : filtered;
+    if (!subset.length) return;
+    const cols = ["id","__qrpassKind","item_name","qr_code","serial_number","report_type","direction","gate","status","result","created_at","scanned_at"];
+    const lines = [cols.map(esc).join(","),...subset.map(r=>cols.map(c=>esc(c==="item_name"?(r.item_name??r.item?.item_name):r[c])).join(","))].join("\r\n");
+    const blob = new Blob(["\uFEFF",lines],{type:"text/csv;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const anchor=document.createElement("a");
+    anchor.href=url;anchor.download=`qrpass-csu-${page}-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(anchor); anchor.click(); anchor.remove();
+    window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+  };
+  const label=(r:any)=>String(r.item_name??r.item?.item_name??r.incident_type??r.qr_code??`Record #${r.id}`);
+  return (
+    <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/65 p-3 sm:p-6"
+      onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div role="dialog" aria-modal="true" aria-label={title} className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#385785] bg-white p-4 text-[#172b54] shadow-2xl sm:p-5">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-bold">{title}</h2>
+          <button type="button" onClick={onClose} className="rounded-xl border border-[#c7d2fe] bg-white px-4 py-2 text-sm hover:bg-[#eef2ff]">Close</button>
+        </div>
+        <div className="mb-3 flex items-center gap-2">
+          <button disabled type="button" title="CSU archive endpoint not available" className="shrink-0 rounded-xl border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm opacity-50">View Archives</button>
+          <input aria-label={`Search ${title}`} type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search records..."
+            className="min-w-0 flex-1 rounded-xl border border-[#c7d2fe] bg-white px-4 py-2.5 text-sm outline-none hover:bg-[#eef2ff] focus:bg-white" />
+        </div>
+        {error&&<div role="alert" className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+        <div className="min-h-[70px] flex-1 overflow-y-auto rounded-xl border border-[#d8e1ee]">
+          {loading?<p className="p-7 text-center text-sm">Loading records...</p>:
+            filtered.length===0?<p className="p-7 text-center text-sm font-semibold">No matching records</p>:
+            <div className="divide-y divide-[#e5eaf2]">
+              {filtered.map((row,i)=>{
+                const id=getKey(row,i),checked=selected.includes(id);
+                return <label key={id} className={`flex cursor-pointer items-center gap-3 p-3 ${checked?"bg-[#eef2ff]":"bg-white hover:bg-[#f8faff]"}`}>
+                  <input type="checkbox" checked={checked} onChange={()=>setSelected(a=>a.includes(id)?a.filter(x=>x!==id):[...a,id])}/>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{label(row)}</p>
+                    <p className="truncate text-xs text-[#64748b]">{String(row.__qrpassKind??row.report_type??row.direction??row.status??row.result??"Record")} Â· {String(row.scanned_at??row.created_at??"â€”")}</p>
+                  </div>
+                </label>;
+              })}
+            </div>
+          }
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="mr-auto text-xs text-[#64748b]">{selected.length} selected Â· {filtered.length} shown</span>
+          <button type="button" disabled={loading||!ids.length} onClick={()=>setSelected(v=>allSelected?v.filter(id=>!ids.includes(id)):Array.from(new Set([...v,...ids])))} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50">{allSelected?"Deselect All":"Select All"}</button>
+          <button type="button" onClick={download} disabled={loading||!filtered.length} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50">Download</button>
+          <button type="button" disabled title="Requires CSU-authorized archive endpoint" className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm opacity-50">Archive</button>
+          <button type="button" disabled title="Bulk deletion is unavailable for CSU audit history" className="rounded-xl border border-red-200 bg-white px-3 py-2 text-sm text-red-600 opacity-50">Delete</button>
+        </div>
+        <p className="mt-2 text-xs text-[#64748b]">Archive/Delete require CSU-authorized backend support. Search, selection and download work on this page's records.</p>
+      </div>
+    </div>
+  );
+}
 
 function CSURecordToolbar({
   search, onSearch, sort, onSort, onRefresh, loading, placeholder, filter
@@ -6281,6 +6788,7 @@ function CSURecordToolbar({
   placeholder: string;
   filter?: React.ReactNode;
 }) {
+  const openManageV147 = React.useContext(QRPassCSUManageContextV147);
   return (
     <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
       <label className="relative min-w-0 flex-1">
@@ -6291,21 +6799,28 @@ function CSURecordToolbar({
           value={search}
           onChange={e => onSearch(e.target.value)}
           placeholder={placeholder}
-          className="h-12 w-full rounded-xl border border-[#bfceff] bg-[#eef2ff] pl-10 pr-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:ring-2 focus:ring-[#6488ff]/15 dark:border-[#35537e] dark:bg-[#1b2b49]"
+          className="h-12 w-full rounded-xl border border-[#bfceff] pl-10 pr-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:ring-2 focus:ring-[#6488ff]/15 dark:border-[#35537e] dark:bg-[#1b2b49] !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
         />
       </label>
       <div className="flex flex-wrap items-center gap-2">
         {filter}
         <select aria-label="Sort records" value={sort}
           onChange={e => onSort(e.target.value as "newest" | "oldest")}
-          className="h-12 min-w-[148px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none">
+          className="h-12 min-w-[148px] flex-1 rounded-xl border border-[#bfceff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white">
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
         </select>
+        {openManageV147 && (
+          <button type="button" title="Manage Logs" aria-label="Manage Logs"
+            onClick={openManageV147}
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] transition-colors hover:bg-[#eef2ff]">
+            <SlidersHorizontal size={18} strokeWidth={1.8}/>
+          </button>
+        )}
         <button type="button"
           onClick={() => { void onRefresh(); }}
           disabled={loading}
-          className="inline-flex h-12 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-primary hover:bg-muted disabled:opacity-50">
+          className="inline-flex h-12 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-primary hover:bg-muted disabled:opacity-50 md:!hidden">
           <RefreshCw size={14}/>
           {loading ? "Refreshing..." : "Refresh"}
         </button>
@@ -7136,7 +7651,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                   "all" | "entry" | "exit" | "flagged" | "resolved"
               )
             }
-            className="h-12 min-w-[180px] max-w-full rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49]"
+            className="h-12 min-w-[180px] max-w-full rounded-xl border border-[#bfceff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
           >
             <option value="all">
               All Records ({periodLogs.length})
@@ -8165,587 +8680,158 @@ function QRpassWriteReport(
 
   XLSX.writeFile(workbook, `${filename}.xlsx`);
 }
+/* QRPass CSU reports v149: page-scoped real PDF and Excel exports */
 function SecurityReports() {
-  const [logs, setLogs] = useState<any[]>([]);
-  const [incidents, setIncidents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [reportPeriod] = useState<CSUDatePeriod>("all");
-  const [reportStart] = useState("");
-  const [reportEnd] = useState("");
-
-  // =========================================================
-  // LOAD REAL SECURITY REPORT DATA
-  // =========================================================
-
-  async function loadSecurityReports() {
-    try {
-      setLoading(true);
-      setError("");
-  
-      const response =
-        await getSecurityReports();
-  
-      setLogs(
-        Array.isArray(response?.logs)
-          ? response.logs
-          : []
-      );
-  
-      setIncidents(
-        Array.isArray(response?.incidents)
-          ? response.incidents
-          : []
-      );
-    } catch (err) {
-      console.error(
-        "Failed to load security report data:",
-        err
-      );
-  
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load security reports."
-      );
-  
-      setLogs([]);
-      setIncidents([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadSecurityReports();
-  }, []);
-
-  // =========================================================
-  // DATE HELPERS
-  // =========================================================
-
-  function parseDate(
-    dateString?: string | null
-  ) {
-    if (!dateString) {
-      return null;
-    }
-
-    const date = new Date(dateString);
-
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
-
-    return date;
-  }
-
-  function isCurrentMonth(
-    dateString?: string | null
-  ) {
-    const date = parseDate(dateString);
-
-    if (!date) {
-      return false;
-    }
-
-    const now = new Date();
-
-    return (
-      date.getFullYear() === now.getFullYear() &&
-      date.getMonth() === now.getMonth()
-    );
-  }
-
-  function isToday(
-    dateString?: string | null
-  ) {
-    const date = parseDate(dateString);
-
-    if (!date) {
-      return false;
-    }
-
-    const today = new Date();
-
-    return (
-      date.getFullYear() === today.getFullYear() &&
-      date.getMonth() === today.getMonth() &&
-      date.getDate() === today.getDate()
-    );
-  }
-
-  function getCurrentWeekRange() {
-    const now = new Date();
-    const day = now.getDay();
-
-    // Monday is the first day of the reporting week.
-    const differenceToMonday =
-      day === 0 ? -6 : 1 - day;
-
-    const start = new Date(now);
-
-    start.setDate(
-      now.getDate() + differenceToMonday
-    );
-
-    start.setHours(0, 0, 0, 0);
-
-    const end = new Date(start);
-
-    end.setDate(start.getDate() + 6);
-    end.setHours(23, 59, 59, 999);
-
-    return {
-      start,
-      end,
-    };
-  }
-
-  function isCurrentWeek(
-    dateString?: string | null
-  ) {
-    const date = parseDate(dateString);
-
-    if (!date) {
-      return false;
-    }
-
-    const { start, end } =
-      getCurrentWeekRange();
-
-    return date >= start && date <= end;
-  }
-
-  function formatDate(
-    dateString?: string | null
-  ) {
-    const date = parseDate(dateString);
-
-    if (!date) {
-      return "—";
-    }
-
-    return date.toLocaleDateString(
-      "en-PH"
-    );
-  }
-
-  function formatTime(
-    dateString?: string | null
-  ) {
-    const date = parseDate(dateString);
-
-    if (!date) {
-      return "—";
-    }
-
-    return date.toLocaleTimeString(
-      "en-PH",
-      {
-        hour: "2-digit",
-        minute: "2-digit",
-      }
-    );
-  }
-
-  const currentMonth =
-    new Date().toLocaleDateString(
-      "en-US",
-      {
-        month: "long",
-        year: "numeric",
-      }
-    );
-
-  const {
-    start: weekStart,
-    end: weekEnd,
-  } = getCurrentWeekRange();
-
-  const currentWeekLabel =
-    `${weekStart.toLocaleDateString(
-      "en-PH",
-      {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }
-    )} - ${weekEnd.toLocaleDateString(
-      "en-PH",
-      {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }
-    )}`;
-
-  // =========================================================
-  // REAL STATISTICS
-  // =========================================================
-
-  const inspectionsDone = logs.filter(
-    (log) =>
-      String(
-        log.result ?? ""
-      ).toLowerCase() === "verified"
-  ).length;
-
-  const qrScansThisMonth =
-    logs.filter((log) =>
-      isCurrentMonth(log.scanned_at)
-    ).length;
-
-  const flaggedItems =
-    incidents.filter(
-      (incident) =>
-        String(
-          incident.status ?? ""
-        ).toLowerCase() === "flagged"
-    ).length;
-
-  const incidentsResolved =
-    incidents.filter(
-      (incident) =>
-        String(
-          incident.status ?? ""
-        ).toLowerCase() === "resolved"
-    ).length;
-
-  // =========================================================
-  // SHARED REPORT PERIOD (ALL PDF/CSV EXPORTS)
-  // =========================================================
-
-  // A custom range is intentionally empty until users select dates.
-  const periodScanLogs = logs.filter(log =>
-    csuMatchesPeriod(log.scanned_at, reportPeriod, reportStart, reportEnd)
-  );
-  const periodLabel = csuPeriodName(reportPeriod, reportStart, reportEnd);
-  const periodValid = reportPeriod !== "custom" || (
-    Boolean(reportStart) && Boolean(reportEnd) && reportStart <= reportEnd
-  );
-  const reportFileSuffix = reportPeriod === "custom"
-    ? `${reportStart || "start"}-to-${reportEnd || "end"}`
-    : `${reportPeriod}-${new Date().toISOString().slice(0, 10)}`;
-
-  function generateScanPDF(reportTitle: string) {
-    try {
-      if (!periodValid) {
-        alert("Please choose both valid From and To dates for the custom range.");
-        return;
-      }
-      if (!periodScanLogs.length) {
-        alert("No QR scan records found for the selected reporting period.");
-        return;
-      }
-      const verifiedCount = periodScanLogs.filter(log =>
-        String(log.result ?? "").toLowerCase() === "verified"
-      ).length;
-      const entryCount = periodScanLogs.filter(log =>
-        String(log.direction ?? "").toUpperCase() === "IN"
-      ).length;
-      const exitCount = periodScanLogs.filter(log =>
-        String(log.direction ?? "").toUpperCase() === "OUT"
-      ).length;
-      const doc = new jsPDF({ orientation: "landscape" });
-      doc.setFontSize(18);
-      doc.text(reportTitle, 14, 18);
-      doc.setFontSize(10);
-      doc.text("University of Cebu - Main Campus", 14, 25);
-      doc.text(`Reporting Period: ${periodLabel}`, 14, 31);
-      doc.text(`Total QR Scans: ${periodScanLogs.length}`, 14, 38);
-      doc.text(`Verified Scans: ${verifiedCount}`, 14, 44);
-      doc.text(`Entry Scans: ${entryCount}`, 75, 38);
-      doc.text(`Exit Scans: ${exitCount}`, 75, 44);
-      autoTable(doc, {
-        startY: 51,
-        head: [["Date", "Time", "Owner", "Owner ID", "Item", "Serial No.", "QR ID", "Gate", "Direction", "Result", "Scanned By"]],
-        body: periodScanLogs.map(log => [
-          formatDate(log.scanned_at), formatTime(log.scanned_at),
-          log.item?.user?.name ?? "Unknown", log.item?.user?.username ?? "—",
-          log.item?.item_name ?? "Unknown Item", log.item?.serial_number ?? "—",
-          log.qr_code ?? "—", log.gate ?? "—", log.direction ?? "—",
-          log.result ?? "—", log.scanner?.name ?? "—",
-        ]),
-        styles: { fontSize: 7, cellPadding: 2 },
-        headStyles: { fillColor: [26, 58, 123], textColor: [255, 255, 255] },
-        alternateRowStyles: { fillColor: [245, 247, 250] },
-      });
-      const prefix = reportTitle.toLowerCase().includes("weekly")
-        ? "Weekly-Inspection" : reportTitle.toLowerCase().includes("daily")
-          ? "Daily-QR-Scan" : "Entry-Exit-Scan";
-      doc.save(`QRPass-${prefix}-${reportFileSuffix}.pdf`);
-    } catch (err) {
-      console.error("Failed to generate CSU scan report:", err);
-      alert(err instanceof Error ? err.message : "Failed to generate scan report.");
-    }
-  }
-
-  function downloadDailyQrScanPDF() {
-    generateScanPDF("QRPass Daily QR Scan Summary");
-  }
-
-  function downloadWeeklyInspectionPDF() {
-    generateScanPDF("QRPass Weekly Inspection Log");
-  }
-
-  async function downloadMonthlyRegistrationPDF() {
-    try {
-      if (!periodValid) {
-        alert("Please choose both valid From and To dates for the custom range.");
-        return;
-      }
-      const response = await getSecurityReports();
-      if (!Array.isArray(response?.registered_items)) {
-        throw new Error("CSU item registration records are unavailable from the backend.");
-      }
-      const filteredItems = response.registered_items.filter((item: any) =>
-        csuMatchesPeriod(item.created_at, reportPeriod, reportStart, reportEnd)
-      );
-      if (filteredItems.length === 0) {
-        alert("No authorized item registration records found for the selected period.");
-        return;
-      }
-      const approvedCount = filteredItems.filter((item: any) =>
-        String(item.status ?? "").toLowerCase() === "approved"
-      ).length;
-      const pendingCount = filteredItems.filter((item: any) =>
-        String(item.status ?? "").toLowerCase() === "pending"
-      ).length;
-      const qrIssuedCount = filteredItems.filter((item: any) => Boolean(item.qr_code)).length;
-      const doc = new jsPDF({ orientation: "landscape" });
-      doc.setFontSize(18);
-      doc.text("QRPass Item Registration Summary", 14, 18);
-      doc.setFontSize(10);
-      doc.text("University of Cebu - Main Campus", 14, 25);
-      doc.text(`Reporting Period: ${periodLabel}`, 14, 31);
-      doc.text(`Authorized Records: ${filteredItems.length}`, 14, 38);
-      doc.text(`Approved: ${approvedCount}`, 14, 44);
-      doc.text(`Pending: ${pendingCount}`, 75, 38);
-      doc.text(`QR Codes Issued: ${qrIssuedCount}`, 75, 44);
-      doc.setFontSize(8);
-      doc.text("Counts cover only registration records visible to CSU under its account permissions.", 14, 49);
-      autoTable(doc, {
-        startY: 54,
-        head: [["Date", "Owner", "Owner ID", "Item", "Type", "Brand / Model", "Serial No.", "Color", "Purpose", "QR ID", "Status"]],
-        body: filteredItems.map((item: any) => [
-          formatDate(item.created_at), item.user?.name ?? "Unknown",
-          item.user?.username ?? "—", item.item_name ?? "—", item.item_type ?? "—",
-          item.brand_model ?? "—", item.serial_number ?? "—", item.color ?? "—",
-          item.purpose ?? "—", item.qr_code ?? "Not issued", item.status ?? "—",
-        ]),
-        styles: { fontSize: 6.5, cellPadding: 2 },
-        headStyles: { fillColor: [26, 58, 123], textColor: [255, 255, 255] },
-        alternateRowStyles: { fillColor: [245, 247, 250] },
-      });
-      doc.save(`QRPass-Item-Registration-${reportFileSuffix}.pdf`);
-    } catch (err) {
-      console.error("Failed to generate CSU registration report:", err);
-      alert(err instanceof Error ? err.message : "Failed to generate registration report.");
-    }
-  }
-
-  // =========================================================
-  // FILTERABLE ENTRY / EXIT REPORTS
-  // =========================================================
-
-  function downloadScanReportPDF() {
-    generateScanPDF("QRPass CSU Entry / Exit Scan Report");
-  }
-
-  function downloadScanReportCSV() {
-    if (!periodValid) {
-      alert("Please choose both valid From and To dates for the custom range.");
-      return;
-    }
-    if (!periodScanLogs.length) {
-      alert("No Entry / Exit scans found for the chosen period.");
-      return;
-    }
-    const header = ["Date", "Time", "Owner", "Owner ID", "Item", "QR Code", "Gate", "Direction", "Result", "Scanned By"];
-    const rows = periodScanLogs.map(log => [
-      formatDate(log.scanned_at), formatTime(log.scanned_at),
-      log.item?.user?.name ?? "", log.item?.user?.username ?? "",
-      log.item?.item_name ?? "", log.qr_code ?? "", log.gate ?? "",
-      log.direction ?? "", log.result ?? "", log.scanner?.name ?? "",
-    ]);
-    const csv = [header, ...rows].map(row => row.map(cell => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
-    const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `QRPass-CSU-Entry-Exit-${reportFileSuffix}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  // =========================================================
-  // REPORT DOWNLOAD HANDLER
-  // =========================================================
-
-  async function downloadCSUExcel(reportName: string) {
-    if (!periodValid) {
-      alert("Please select a valid reporting period.");
-      return;
-    }
-
-    try {
-      let rows: Array<Record<string, unknown>> = [];
-
-      if (reportName === "Monthly Item Registration Summary") {
-        const response = await getSecurityReports();
-
-        if (!Array.isArray(response?.registered_items)) {
-          throw new Error("Registration records are unavailable.");
-        }
-
-        rows = response.registered_items
-          .filter((item: any) =>
-            csuMatchesPeriod(
-              item.created_at,
-              reportPeriod,
-              reportStart,
-              reportEnd
-            )
-          )
-          .map((item: any) => ({
-            "Date Registered": formatDate(item.created_at),
-            Owner: item.user?.name ?? "Unknown",
-            "Owner ID": item.user?.username ?? "—",
-            Item: item.item_name ?? "—",
-            Category: item.item_type ?? "—",
-            "Brand / Model": item.brand_model ?? "—",
-            "Serial Number": item.serial_number ?? "—",
-            "QR ID": item.qr_code ?? "Not issued",
-            Status: item.status ?? "—",
-          }));
-      } else {
-        rows = periodScanLogs.map(log => ({
-          Date: formatDate(log.scanned_at),
-          Time: formatTime(log.scanned_at),
-          Owner: log.item?.user?.name ?? "Unknown",
-          "Owner ID": log.item?.user?.username ?? "—",
-          Item: log.item?.item_name ?? "—",
-          "Serial Number": log.item?.serial_number ?? "—",
-          "QR ID": log.qr_code ?? "—",
-          Gate: log.gate ?? "—",
-          Direction: log.direction ?? "—",
-          Result: log.result ?? "—",
-          "Scanned By": log.scanner?.name ?? "—",
-        }));
-      }
-
-      QRpassWriteReport(
-        reportName,
-        rows,
-        "Excel",
-        periodLabel
-      );
-    } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Unable to export report."
-      );
-    }
-  }
-  function handleReportDownload(
-    reportName: string
-  ) {
-    if (
-      reportName ===
-      "Daily QR Scan Summary"
-    ) {
-      downloadDailyQrScanPDF();
-      return;
-    }
-
-    if (
-      reportName ===
-      "Weekly Inspection Log"
-    ) {
-      downloadWeeklyInspectionPDF();
-      return;
-    }
-
-    if (
-      reportName ===
-      "Monthly Item Registration Summary"
-    ) {
-      void downloadMonthlyRegistrationPDF();
-      return;
-    }
-
-    if (reportName === "Entry / Exit Scan Report") {
-      downloadScanReportPDF();
-      return;
-    }
-  }
-
-  // =========================================================
-  // REPORT LIST
-  // =========================================================
-
-  const reports = [
-    { name: "Daily QR Scan Summary", period: periodLabel, format: "PDF" },
-    { name: "Weekly Inspection Log", period: periodLabel, format: "PDF" },
-    { name: "Monthly Item Registration Summary", period: periodLabel, format: "PDF" },
-    { name: "Entry / Exit Scan Report", period: periodLabel, format: "PDF" },
+  type CSUReportKindV149 = "registration" | "scans" | "entryexit" | "incidents";
+  const reportOptionsV149: { key: CSUReportKindV149; label: string }[] = [
+    {key: "registration", label: "Registered Items Report"},
+    {key: "scans", label: "QR Scan Activity Report"},
+    {key: "entryexit", label: "Entry & Exit Transactions Report"},
+    {key: "incidents", label: "Security Incidents Report"},
   ];
-
-  // =========================================================
-  // UI
-  // =========================================================
-
+  const [reportTypeV149, setReportTypeV149] = useState<CSUReportKindV149>("registration");
+  const [periodV149, setPeriodV149] = useState<CSUDatePeriod>("today");
+  const [busyV149, setBusyV149] = useState(false);
+  const [messageV149, setMessageV149] = useState("");
+  const [errorV149, setErrorV149] = useState(false);
+  const styleButtonV149 = (element: HTMLButtonElement | null, color: string) => {
+    if (element) {
+      element.style.setProperty("background-color", color, "important");
+      element.style.setProperty("background", color, "important");
+    }
+  };
+  async function generateV149(format: "pdf" | "xlsx") {
+    if (busyV149) return;
+    setBusyV149(true); setMessageV149(""); setErrorV149(false);
+    try {
+      const response = await getSecurityReports();
+      let list: any[];
+      let columns: string[];
+      let rows: string[][];
+      let dateOf: (record: any) => string | null | undefined;
+      if (reportTypeV149 === "registration") {
+        if (!Array.isArray(response?.registered_items)) {
+          throw new Error("CSU registered-item records are not available from the backend.");
+        }
+        list = response.registered_items;
+        dateOf = item => item.created_at ?? item.registered_at;
+        columns = ["Date", "Item", "Category", "Owner", "Owner ID", "Brand / Model", "Serial Number", "QR ID", "Status"];
+        rows = list.filter(item => csuMatchesPeriod(dateOf(item), periodV149)).map(item => [
+          String(dateOf(item) ?? ""), String(item.item_name ?? ""), String(item.item_type ?? ""),
+          String(item.user?.name ?? ""), String(item.user?.username ?? ""),
+          String(item.brand_model ?? ""), String(item.serial_number ?? ""),
+          String(item.qr_code ?? ""), String(item.status ?? "")
+        ]);
+      } else if (reportTypeV149 === "scans" || reportTypeV149 === "entryexit") {
+        if (!Array.isArray(response?.logs)) {
+          throw new Error("CSU scan logs are not available from the backend.");
+        }
+        list = response.logs;
+        dateOf = row => row.scanned_at ?? row.created_at;
+        columns = ["Date", "QR ID", "Item", "Owner", "Gate", "Direction", "Result", "Scanned By"];
+        rows = list.filter(row => csuMatchesPeriod(dateOf(row), periodV149) &&
+          (reportTypeV149 !== "entryexit" || ["IN","OUT"].includes(String(row.direction ?? "").toUpperCase()))
+        ).map(row => [
+          String(dateOf(row) ?? ""), String(row.qr_code ?? ""),
+          String(row.item?.item_name ?? row.item_name ?? ""),
+          String(row.item?.user?.name ?? ""), String(row.gate ?? ""),
+          String(row.direction ?? ""), String(row.result ?? ""),
+          String(row.scanner?.name ?? "")
+        ]);
+      } else {
+        if (!Array.isArray(response?.incidents)) {
+          throw new Error("CSU security incidents are not available from the backend.");
+        }
+        list = response.incidents;
+        dateOf = row => row.reported_at ?? row.created_at;
+        columns = ["Date", "Incident", "Item", "QR Code", "Location", "Description", "Status"];
+        rows = list.filter(row => csuMatchesPeriod(dateOf(row), periodV149)).map(row => [
+          String(dateOf(row) ?? ""), String(row.incident_type ?? ""),
+          String(row.item_name ?? ""), String(row.scanned_code ?? ""),
+          String(row.gate ?? row.location ?? ""),
+          String(row.description ?? row.reason ?? ""), String(row.status ?? "")
+        ]);
+      }
+      if (rows.length === 0) {
+        setMessageV149("No records found for the selected report and date.");
+        return;
+      }
+      const reportTitle = reportOptionsV149.find(item => item.key === reportTypeV149)?.label ?? "CSU Report";
+      const filename = `QRPass-CSU-${reportTypeV149}-${periodV149}-${new Date().toISOString().slice(0,10)}`;
+      if (format === "pdf") {
+        const pdf = new jsPDF({orientation: "landscape"});
+        pdf.setFontSize(16);
+        pdf.text(reportTitle, 14, 18);
+        pdf.setFontSize(9);
+        pdf.text("University of Cebu - Main Campus", 14, 26);
+        pdf.text(`Period: ${csuPeriodName(periodV149)}     Records: ${rows.length}`, 14, 32);
+        autoTable(pdf, {
+          startY: 39, head: [columns], body: rows,
+          styles: {fontSize: 7, cellPadding: 2},
+          headStyles: {fillColor: [26,58,123], textColor: [255,255,255]}
+        });
+        pdf.save(`${filename}.pdf`);
+      } else {
+        const safeRows = rows.map(row => row.map(cell => /^[\s]*[=+\-@]/.test(cell) ? "'" + cell : cell));
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.aoa_to_sheet([columns,...safeRows]);
+        worksheet["!cols"] = columns.map(()=>({wch:24}));
+        XLSX.utils.book_append_sheet(workbook,worksheet,"CSU Report");
+        XLSX.writeFile(workbook,`${filename}.xlsx`);
+      }
+      setMessageV149(`${reportTitle}: ${rows.length} record(s) exported.`);
+    } catch (error) {
+      setErrorV149(true);
+      setMessageV149(error instanceof Error ? error.message : "Report generation failed.");
+    } finally {
+      setBusyV149(false);
+    }
+  }
   return (
-    <div className="w-full min-w-0 space-y-5">
-      <PageHeader
-        title="Reports"
-        subtitle="Security inspection and QR verification reports."
-        
-      />
-
-      {error && (
-        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-          {error}
+    <div className="space-y-4">
+      <PageHeader title="Downloadable Reports" subtitle="Generate CSU reports using authorized records."/>
+      <div className="overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-sm">
+        <div className="border-b border-[#e6ebf2] px-5 py-4 sm:px-6">
+          <h3 className="text-lg font-semibold text-[#17336d]">Generate a report</h3>
         </div>
-      )}
-
-      <Card title="Available Reports">
-        <div className="divide-y divide-border">
-          {reports.map(
-            (report) => (
-              <div
-                key={
-                  report.name
-                }
-                className="flex min-w-0 flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="text-sm text-foreground font-medium">
-                    {
-                      report.name
-                    }
-                  </p>
-
-                  <p className="text-xs text-muted-foreground">
-                    {
-                      report.period
-                    }
-                  </p>
-                </div>
-
-                <QRpassReportDownloadButtons
-                  disabled={loading || !periodValid}
-                  onPdf={() => handleReportDownload(report.name)}
-                  onExcel={() => void downloadCSUExcel(report.name)}
-                />
-              </div>
-            )
-          )}
+        <div className="grid gap-5 px-5 py-5 sm:px-6 lg:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-[#17336d]">Report Type</label>
+            <select aria-label="CSU report type" value={reportTypeV149}
+              onChange={event => {setReportTypeV149(event.target.value as CSUReportKindV149);setMessageV149("");}}
+              className="h-12 w-full rounded-xl border border-[#cbd5e1] !bg-white px-4 text-sm text-[#17336d] outline-none transition-colors hover:!bg-[#eef2ff] focus:!bg-white">
+              {reportOptionsV149.map(option => <option key={option.key} value={option.key}>{option.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-[#17336d]">Filter by Date</label>
+            <select aria-label="CSU report date" value={periodV149}
+              onChange={event => {setPeriodV149(event.target.value as CSUDatePeriod);setMessageV149("");}}
+              className="h-12 w-full rounded-xl border border-[#cbd5e1] !bg-white px-4 text-sm text-[#17336d] outline-none transition-colors hover:!bg-[#eef2ff] focus:!bg-white">
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
         </div>
-      </Card>
+        <div className="flex flex-wrap justify-end gap-2 px-5 pb-4 sm:px-6">
+          {([
+            {format: "pdf", name: "Download PDF"},
+            {format: "xlsx", name: "Download Excel"}
+          ] as const).map(({format,name}) => (
+            <button key={format} type="button" disabled={busyV149}
+              onClick={() => void generateV149(format)}
+              ref={element => styleButtonV149(element,"#ffffff")}
+              onMouseEnter={event => styleButtonV149(event.currentTarget,"#eef2ff")}
+              onMouseLeave={event => styleButtonV149(event.currentTarget,"#ffffff")}
+              onFocus={event => styleButtonV149(event.currentTarget,"#ffffff")}
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[#c7d2fe] !bg-white px-4 py-2 text-sm font-semibold text-[#17336d] transition-colors hover:!bg-[#eef2ff] disabled:cursor-not-allowed disabled:opacity-50">
+              <Download size={15} />{busyV149 ? "Generating..." : name}
+            </button>
+          ))}
+        </div>
+        {messageV149 && <div className="border-t border-[#e6ebf2] px-5 py-3 sm:px-6"><p role={errorV149?"alert":"status"} className={`text-sm ${errorV149?"text-red-700":"text-[#17336d]"}`}>{messageV149}</p></div>}
+      </div>
     </div>
   );
 }
@@ -8839,6 +8925,7 @@ function CSULocationPicker({
   );
 }
 
+/* QRPASS_CSU_LOSTFOUND_WHITE_TABS_V154 */
 function SecurityLostFound() {
   const [csuListSort, setCsuListSort] =
     useState<"newest" | "oldest">("newest");
@@ -9031,7 +9118,7 @@ function SecurityLostFound() {
               onChange={e => setItemSpecs(current => ({...current, serial_number: e.target.value}))}
               maxLength={255}
               placeholder="Enter only if available"
-              className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
             />
           </div>
 
@@ -9042,7 +9129,7 @@ function SecurityLostFound() {
               onChange={e => setItemSpecs(current => ({...current, accessories_included: e.target.value}))}
               maxLength={600}
               placeholder="e.g. Sticker on the lid, scratches, carrying case, charger, keychain"
-              className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
             />
           </div>
         </div>
@@ -10228,34 +10315,23 @@ function SecurityLostFound() {
           className="min-h-11 w-full rounded-full border px-4 py-2 text-xs font-semibold transition-colors sm:w-auto sm:px-5 sm:text-sm"
           ref={(button) => {
             if (!button) return;
-
-            const active = tab === "registry";
-
-            button.style.setProperty(
-              "background",
-              active
-                ? "linear-gradient(180deg, #1a3a7b, #0c1c3a)"
-                : "#ffffff",
-              "important"
-            );
-
-            button.style.setProperty(
-              "color",
-              active ? "#ffffff" : "#1a3a7b",
-              "important"
-            );
-
-            button.style.setProperty(
-              "border-color",
-              active ? "transparent" : "#cfd8e6",
-              "important"
-            );
-
-            button.style.setProperty(
-              "box-shadow",
-              "none",
-              "important"
-            );
+            button.style.setProperty("background", "#ffffff", "important");
+            button.style.setProperty("background-color", "#ffffff", "important");
+            button.style.setProperty("color", "#17336d", "important");
+            button.style.setProperty("border-color", "#c7d2fe", "important");
+            button.style.setProperty("box-shadow", "none", "important");
+          }}
+          onMouseEnter={(event) => {
+            event.currentTarget.style.setProperty("background", "#eef2ff", "important");
+            event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+          }}
+          onMouseLeave={(event) => {
+            event.currentTarget.style.setProperty("background", "#ffffff", "important");
+            event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+          }}
+          onFocus={(event) => {
+            event.currentTarget.style.setProperty("background", "#ffffff", "important");
+            event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
           }}
         >
           Lost & Found Reports
@@ -10273,34 +10349,23 @@ function SecurityLostFound() {
           className="min-h-11 w-full rounded-full border px-4 py-2 text-xs font-semibold transition-colors sm:w-auto sm:px-5 sm:text-sm"
           ref={(button) => {
             if (!button) return;
-
-            const active = tab === "report";
-
-            button.style.setProperty(
-              "background",
-              active
-                ? "linear-gradient(180deg, #1a3a7b, #0c1c3a)"
-                : "#ffffff",
-              "important"
-            );
-
-            button.style.setProperty(
-              "color",
-              active ? "#ffffff" : "#1a3a7b",
-              "important"
-            );
-
-            button.style.setProperty(
-              "border-color",
-              active ? "transparent" : "#cfd8e6",
-              "important"
-            );
-
-            button.style.setProperty(
-              "box-shadow",
-              "none",
-              "important"
-            );
+            button.style.setProperty("background", "#ffffff", "important");
+            button.style.setProperty("background-color", "#ffffff", "important");
+            button.style.setProperty("color", "#17336d", "important");
+            button.style.setProperty("border-color", "#c7d2fe", "important");
+            button.style.setProperty("box-shadow", "none", "important");
+          }}
+          onMouseEnter={(event) => {
+            event.currentTarget.style.setProperty("background", "#eef2ff", "important");
+            event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+          }}
+          onMouseLeave={(event) => {
+            event.currentTarget.style.setProperty("background", "#ffffff", "important");
+            event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+          }}
+          onFocus={(event) => {
+            event.currentTarget.style.setProperty("background", "#ffffff", "important");
+            event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
           }}
         >
           + Record Lost / Found Item
@@ -10417,7 +10482,7 @@ function SecurityLostFound() {
                       "all" | "lost" | "found" | "recovered"
                   )
                 }
-                className="h-12 min-w-[170px] max-w-full flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none"
+                className="h-12 min-w-[170px] max-w-full flex-1 rounded-xl border border-[#bfceff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
               >
                 <option value="all">
                   All Reports ({periodItems.length})
@@ -10882,7 +10947,7 @@ function SecurityLostFound() {
                   setError("");
                   setSuccess("");
                 }}
-                className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
               >
                 <option value="found">Found Item</option>
                 <option value="lost">Lost Item</option>
@@ -10915,7 +10980,7 @@ function SecurityLostFound() {
                   onChange={handleFormChange}
                   required
                   placeholder="Example: 26-9999"
-                  className="w-full rounded-lg border border-green-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-200"
+                  className="w-full rounded-lg border border-green-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-200 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                 />
               </div>
             ) : (
@@ -10940,7 +11005,7 @@ function SecurityLostFound() {
                   onChange={handleFormChange}
                   required
                   placeholder="Example: 26-9999"
-                  className="w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-200"
+                  className="w-full rounded-lg border border-red-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-200 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                 />
               </div>
             )}
@@ -10997,7 +11062,7 @@ function SecurityLostFound() {
                   }
                   onChange={handleFormChange}
                   required
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                 />
               </div>
             </div>
@@ -11336,7 +11401,7 @@ function SecurityLostFound() {
                     value={editForm.item_name}
                     onChange={handleEditFormChange}
                     required
-                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   />
                 </div>
 
@@ -11348,7 +11413,7 @@ function SecurityLostFound() {
                     name="category"
                     value={editForm.category}
                     onChange={handleEditFormChange}
-                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   >
                     <option value="">Select category</option>
                     <optgroup label="Campus Item Categories">
@@ -11384,7 +11449,7 @@ function SecurityLostFound() {
                     name="brand_model"
                     value={editForm.brand_model}
                     onChange={handleEditFormChange}
-                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   />
                 </div>
 
@@ -11397,7 +11462,7 @@ function SecurityLostFound() {
                     name="color"
                     value={editForm.color}
                     onChange={handleEditFormChange}
-                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   />
                 </div>
               </div>
@@ -11425,7 +11490,7 @@ function SecurityLostFound() {
                     value={editForm.date_time}
                     onChange={handleEditFormChange}
                     required
-                    className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   />
                 </div>
               </div>
@@ -11558,7 +11623,7 @@ function SecurityLostFound() {
                   }
                   placeholder="Example: 26-9999"
                   required
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                 />
               </div>
 
@@ -11584,7 +11649,7 @@ function SecurityLostFound() {
                     }))
                   }
                   required
-                  className="w-full rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                 />
               </div>
 
@@ -11624,6 +11689,115 @@ function SecurityLostFound() {
 // ══════════════════════════════════════════════════════════════════════════════
 // PCO pages reuse the Student search/sort/refresh layout on desktop and mobile.
 
+/* QRPASS_PCO_DIRECT_CONTROLS_V156 */
+/* QRPASS_PCO_MANAGE_V158: page-specific PCO management window */
+function QRPassPCOManageV158({
+  title, records, onClose, onView,
+}: {
+  title: string;
+  records: any[];
+  onClose: () => void;
+  onView?: (item: any) => void;
+}) {
+  const [searchV157, setSearchV157] = useState("");
+  const [selectedV157, setSelectedV157] = useState<string[]>([]);
+  const [detailV157, setDetailV157] = useState<any | null>(null);
+  const safeV157 = Array.isArray(records) ? records : [];
+  const visibleV157 = safeV157.filter((item) =>
+    [item.id, item.item_name, item.item_type, item.serial_number, item.qr_code,
+     item.status, item.created_at, item.user?.name, item.user?.username,
+     item.title, item.message, item.type]
+      .filter(v => v !== undefined && v !== null)
+      .join(" ").toLowerCase().includes(searchV157.trim().toLowerCase())
+  );
+  const keyV157 = (item: any, i: number) => String(item.id ?? `row-${i}`);
+  const visibleIdsV157 = visibleV157.map(keyV157);
+  const allV157 = visibleIdsV157.length > 0 &&
+    visibleIdsV157.every(id => selectedV157.includes(id));
+  const exportV157 = () => {
+    const chosen = selectedV157.length
+      ? visibleV157.filter((item,i) => selectedV157.includes(keyV157(item,i)))
+      : visibleV157;
+    if (!chosen.length) return;
+    const columns = ["id","item_name","item_type","serial_number","qr_code","status","created_at","title","message"];
+    const quote = (value: unknown) => {
+      let v=String(value ?? "");
+      if (/^[\s]*[=+\-@]/.test(v)) v="'"+v;
+      return `"${v.replace(/"/g,'""')}"`;
+    };
+    const csv=[columns.map(quote).join(","),...chosen.map(item=>columns.map(k=>quote(item[k])).join(","))].join("\r\n");
+    const blob = new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement("a"); link.href=url;
+    link.download=`QRPass-PCO-${title.replace(/[^a-z0-9]+/gi,"-")}.csv`;
+    document.body.appendChild(link); link.click(); link.remove();
+    window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+  };
+  return (
+    <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/65 p-3"
+      onMouseDown={e=>{if(e.target===e.currentTarget) onClose();}}>
+      <div role="dialog" aria-modal="true" aria-label={title}
+        className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#c7d2fe] bg-white p-4 text-[#17336d] shadow-2xl sm:p-5">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-bold">{title}</h2>
+          <button type="button" onClick={onClose}
+            className="rounded-xl border border-[#c7d2fe] bg-white px-4 py-2 text-sm hover:bg-[#eef2ff]">Close</button>
+        </div>
+        <div className="mb-3 flex gap-2">
+          <button type="button" disabled title="No PCO archive endpoint is connected"
+            className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm opacity-50">View Archives</button>
+          <input type="search" aria-label={`Search ${title}`} placeholder="Search records..."
+            value={searchV157} onChange={e=>setSearchV157(e.target.value)}
+            className="min-w-0 flex-1 rounded-xl border border-[#c7d2fe] bg-white px-4 py-2.5 text-sm outline-none hover:bg-[#eef2ff] focus:bg-white"/>
+        </div>
+        <div className="min-h-[70px] flex-1 overflow-y-auto rounded-xl border border-[#d8e1ee]">
+          {!visibleV157.length ? <p className="p-7 text-center text-sm font-semibold">No matching records</p> :
+          <div className="divide-y divide-[#e5eaf2]">{visibleV157.map((item,i)=>{
+            const id=keyV157(item,i);
+            return <div key={id} className="flex items-center gap-3 p-3 hover:bg-[#f8faff]">
+              <input type="checkbox" aria-label={`Select record ${id}`}
+                checked={selectedV157.includes(id)}
+                onChange={()=>setSelectedV157(list=>list.includes(id)?list.filter(x=>x!==id):[...list,id])}/>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{String(item.item_name ?? item.title ?? `Record #${id}`)}</p>
+                <p className="truncate text-xs text-[#64748b]">{String(item.user?.name ?? item.item_type ?? item.type ?? "")} Â· {String(item.status ?? item.created_at ?? "")}</p>
+              </div>
+              <button type="button"
+                onClick={()=>{if(onView){onView(item);onClose();} else setDetailV157(item);}}
+                className="rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff]">View</button>
+            </div>;
+          })}</div>}
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="mr-auto text-xs text-[#64748b]">{selectedV157.length} selected Â· {visibleV157.length} shown</span>
+          <button type="button" disabled={!visibleIdsV157.length}
+            onClick={()=>setSelectedV157(v=>allV157?v.filter(id=>!visibleIdsV157.includes(id)):Array.from(new Set([...v,...visibleIdsV157])))}
+            className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50">{allV157?"Deselect All":"Select All"}</button>
+          <button type="button" disabled={!visibleV157.length} onClick={exportV157}
+            className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50">Download</button>
+          <button type="button" disabled title="PCO archive endpoint not verified"
+            className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm opacity-50">Archive</button>
+          <button type="button" disabled title="Bulk permanent deletion not authorized"
+            className="rounded-xl border border-red-200 bg-white px-3 py-2 text-sm text-red-600 opacity-50">Delete</button>
+        </div>
+        {detailV157 && <div role="dialog" aria-modal="true" aria-label="Record details"
+          className="absolute inset-4 z-[1] flex items-center justify-center bg-black/40 p-2">
+          <div className="max-h-[75vh] w-full max-w-xl overflow-auto rounded-xl bg-white p-5 text-[#17336d] shadow-2xl">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="font-bold">Record Details</h3>
+              <button type="button" onClick={()=>setDetailV157(null)} className="rounded-lg border border-[#c7d2fe] px-3 py-2">Close</button>
+            </div>
+            {Object.entries(detailV157).filter(([k,v])=>typeof v!=="object" && !k.startsWith("__")).slice(0,30).map(([k,v])=>
+              <p key={k} className="border-b border-[#edf2ff] py-1 text-sm"><strong>{k}:</strong> {String(v??"")}</p>)}
+          </div>
+        </div>}
+      </div>
+    </div>
+  );
+}
+
+/* QRPASS_PCO_MOBILE_REFRESH_V162 */
+/* QRPASS_PCO_MOBILE_REFRESH_V165 */
 function PCOResponsiveToolbar({
   search,
   onSearchChange,
@@ -11634,6 +11808,8 @@ function PCOResponsiveToolbar({
   placeholder,
   sortLabels = ["Newest first", "Oldest first"],
   qrpassFilterSlot,
+  manageAction,
+  onManageV158,
 }: {
   search: string;
   onSearchChange: (value: string) => void;
@@ -11644,6 +11820,8 @@ function PCOResponsiveToolbar({
   placeholder: string;
   sortLabels?: [string, string];
   qrpassFilterSlot?: React.ReactNode;
+  manageAction?: React.ReactNode;
+  onManageV158?: () => void;
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-3 lg:flex-row">
@@ -11655,7 +11833,17 @@ function PCOResponsiveToolbar({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full min-w-0 rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+          className="w-full min-w-0 rounded-xl border border-border  py-3 pl-11 pr-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
+          ref={(element) => {
+            if (element) element.style.setProperty("background-color", "#ffffff", "important");
+          }}
+          onMouseEnter={(event) => {
+            if (document.activeElement !== event.currentTarget)
+              event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+          }}
+          onMouseLeave={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+          onFocus={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+          onBlur={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
         />
       </div>
       {qrpassFilterSlot}
@@ -11663,24 +11851,64 @@ function PCOResponsiveToolbar({
         aria-label="Sort results"
         value={sort}
         onChange={(e) => onSortChange(e.target.value)}
-        className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary lg:w-auto"
+        className="w-full rounded-xl border border-border  px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary lg:w-auto !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
+          ref={(element) => {
+            if (element) element.style.setProperty("background-color", "#ffffff", "important");
+          }}
+          onMouseEnter={(event) => {
+            if (document.activeElement !== event.currentTarget)
+              event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+          }}
+          onMouseLeave={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+          onFocus={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+          onBlur={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
       >
         <option value="newest">{sortLabels[0]}</option>
         <option value="oldest">{sortLabels[1]}</option>
       </select>
-      <button
-        type="button"
-        onClick={onRefresh}
-        disabled={loading}
-        className="w-full rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 lg:w-auto inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-      > <RefreshCw size={13} className="shrink-0" />
-        {loading ? "Refreshing..." : "Refresh"}
-      </button>
+      {manageAction}
+      {onManageV158 ? (
+        <>
+          <button
+            type="button"
+            aria-label="Manage Records"
+            title="Manage Records"
+            onClick={onManageV158}
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] hover:bg-[#eef2ff] !hidden md:!inline-flex"
+          >
+            <SlidersHorizontal size={18} strokeWidth={1.8} />
+          </button>
+          <button
+            type="button"
+            data-qrpass-mobile-refresh-v167="true"
+            aria-label="Refresh"
+            title="Refresh"
+            onClick={onRefresh}
+            disabled={loading}
+            className="!inline-flex md:!hidden !w-auto !min-w-[112px] !max-w-none shrink-0 flex-nowrap items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-[#c7d2fe] !bg-white !px-4 !py-3 text-sm font-medium text-[#17336d] hover:!bg-[#eef2ff] disabled:opacity-50"
+          >
+            <RefreshCw size={16} className="shrink-0" />
+            <span className="!inline whitespace-nowrap">{loading ? "Refreshing..." : "Refresh"}</span>
+          </button>
+        </>
+      ) : (
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={loading}
+          className="w-full rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 lg:w-auto inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+        >
+          <RefreshCw size={13} className="shrink-0" />
+          {loading ? "Refreshing..." : "Refresh"}
+        </button>
+      )}
     </div>
   );
 }
 
+/* QRPASS_PCO_RESPONSIVE_V170 */
 function PCOPermitRequests() {
+  const [manageOpenV158,setManageOpenV158]=useState(false);
   const [requestSearch, setRequestSearch] = useState("");
   const [requestSort, setRequestSort] = useState<"newest" | "oldest">("newest");
   const [pending, setPending] = useState<any[]>([]);
@@ -11765,7 +11993,7 @@ function PCOPermitRequests() {
   const pendingResults = sortRequests(pending);
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 space-y-5 overflow-x-hidden">
       <PageHeader
         title="Item Registration Requests"
         subtitle="Review and approve student item registration requests. Approval triggers QR code generation."
@@ -11792,10 +12020,12 @@ function PCOPermitRequests() {
         sort={requestSort}
         onSortChange={(value) => setRequestSort(value as "newest" | "oldest")}
         onRefresh={loadPendingItems}
+        onManageV158={() => setManageOpenV158(true)}
         loading={loading}
         placeholder="Search student, item, category, serial number..."
       />
 
+      {manageOpenV158 && <QRPassPCOManageV158 title="Manage Registration Requests" records={pendingResults} onClose={()=>setManageOpenV158(false)}/>}
       <Card
         title="Pending Requests"
         action={
@@ -11805,7 +12035,7 @@ function PCOPermitRequests() {
         }
       >
         {/* Mobile: show all important request fields, not a clipped ten-column table. */}
-        <div className="divide-y divide-border lg:hidden">
+        <div className="min-w-0 divide-y divide-border lg:hidden">
           {loading ? (
             <p className="p-6 text-center text-sm text-muted-foreground">Loading pending requests...</p>
           ) : pendingResults.length === 0 ? (
@@ -11968,7 +12198,9 @@ function PCOPermitRequests() {
 }
 
 function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
+  const openSysadminManageV116 = React.useContext(QRPassSysadminManageContext);
   const [items, setItems] = useState<any[]>([]);
+  const [manageOpenV158,setManageOpenV158]=useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
@@ -12026,7 +12258,7 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
   ).length;
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 space-y-5 overflow-x-hidden">
       <PageHeader
         title="Registered Items"
         subtitle="View and monitor the centralized records of registered items."
@@ -12068,13 +12300,35 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
         sort={sortOrder}
         onSortChange={(value) => setSortOrder(value as "newest" | "oldest")}
         onRefresh={loadItems}
+        onManageV158={!adminView ? () => setManageOpenV158(true) : undefined}
         loading={loading}
         placeholder="Search item, owner, serial number, QR ID..."
+        manageAction={adminView && openSysadminManageV116 ? (
+          <button
+            type="button"
+            aria-label="Manage Items"
+            title="Manage Items"
+            onClick={openSysadminManageV116}
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#cbd5e1] bg-white text-[#31539b] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
+          >
+            <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
+          </button>
+        ) : undefined}
         qrpassFilterSlot={adminView ? (
           <select data-qrpass-admin-items-filter="true" aria-label="Filter registered items"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "expired")}
-            className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] lg:w-[185px] dark:border-[#5075b7] dark:bg-[#1e3765] dark:text-white">
+            className="h-12 w-full rounded-xl border border-[#c7d2fe]  px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] lg:w-[185px] dark:border-[#5075b7] dark:bg-[#1e3765] dark:text-white !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
+          ref={(element) => {
+            if (element) element.style.setProperty("background-color", "#ffffff", "important");
+          }}
+          onMouseEnter={(event) => {
+            if (document.activeElement !== event.currentTarget)
+              event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+          }}
+          onMouseLeave={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+          onFocus={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+          onBlur={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}>
             <option value="all">All ({registeredItems.length})</option>
             <option value="active">Active ({registeredItems.filter((item) => registryStatus(item) === "Active").length})</option>
             <option value="expired">Expired ({expiredCount})</option>
@@ -12083,7 +12337,7 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
       />
       ) : (
       
-      <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center">
+      <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
 
         <label className="relative block min-w-0 flex-1">
           <Search
@@ -12124,7 +12378,7 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
 
         </label>
 
-        <div className="flex flex-wrap items-center gap-2 lg:shrink-0">
+        <div className="grid w-full min-w-0 grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap lg:w-auto lg:shrink-0">
 
           <select
             aria-label="Filter PCO registered items"
@@ -12134,7 +12388,17 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
                 e.target.value as "all" | "active" | "expired"
               )
             }
-            className="h-12 min-w-[160px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:bg-white dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none"
+            className="h-12 min-w-[160px] flex-1 rounded-xl border border-[#bfceff]  px-3 text-sm text-foreground outline-none focus:border-[#6488ff]  dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white !min-w-0 !w-full sm:!w-auto"
+          ref={(element) => {
+            if (element) element.style.setProperty("background-color", "#ffffff", "important");
+          }}
+          onMouseEnter={(event) => {
+            if (document.activeElement !== event.currentTarget)
+              event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+          }}
+          onMouseLeave={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+          onFocus={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+          onBlur={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
           >
             <option value="all">
               All Items ({registeredItems.length})
@@ -12155,27 +12419,49 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
                 e.target.value as "newest" | "oldest"
               )
             }
-            className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:bg-white dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none"
+            className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff]  px-3 text-sm text-foreground outline-none focus:border-[#6488ff]  dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white !min-w-0 !w-full sm:!w-auto"
+          ref={(element) => {
+            if (element) element.style.setProperty("background-color", "#ffffff", "important");
+          }}
+          onMouseEnter={(event) => {
+            if (document.activeElement !== event.currentTarget)
+              event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+          }}
+          onMouseLeave={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+          onFocus={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+          onBlur={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
           >
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
           </select>
 
-          <button
-            type="button"
-            onClick={loadItems}
-            disabled={loading}
-            className="inline-flex h-12 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-medium text-[#17336d] transition hover:bg-[#edf2ff] disabled:opacity-50"
-          >
-            <RefreshCw size={14} />
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
+          <button type="button" title="Manage Items" aria-label="Manage Items"
+              onClick={()=>setManageOpenV158(true)}
+              className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] hover:bg-[#eef2ff] !hidden md:!inline-flex">
+              <SlidersHorizontal size={18} strokeWidth={1.8}/>
+            </button>
+  
+<button
+  type="button"
+  title="Refresh"
+  aria-label="Refresh"
+  onClick={loadItems}
+  disabled={loading}
+  className="!inline-flex md:!hidden !w-auto !min-w-[115px] h-11 shrink-0 flex-nowrap items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-[#c7d2fe] !bg-white px-4 py-2 text-sm font-semibold text-[#17336d] hover:!bg-[#eef2ff] disabled:opacity-50"
+>
+  <RefreshCw size={16} className="shrink-0" />
+  <span className="!inline whitespace-nowrap">
+    {loading ? "Refreshing..." : "Refresh"}
+  </span>
+</button>
+
 
         </div>
       </div>
       )}
 
 
+      {manageOpenV158 && <QRPassPCOManageV158 title="Manage Registered Items" records={filteredItems} onClose={()=>setManageOpenV158(false)} onView={(item)=>setSelectedItem(item)}/>}
       <Card title="Registered Items"
       >
         {/* RESULT COUNT */}
@@ -12697,879 +12983,186 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
                         );
                       }
 
-                      function PCOReports() {
-                        const [items, setItems] = useState<any[]>([]);
-                        const [loading, setLoading] = useState(true);
-                        const [error, setError] = useState("");
-                      
-                        async function loadReportData() {
-                          try {
-                            setLoading(true);
-                            setError("");
-                      
-                            const data = await getAllItems();
-                      
-                            setItems(data.items ?? []);
-                          } catch (err) {
-                            console.error(
-                              "Failed to load PCO report data:",
-                              err
-                            );
-                      
-                            setError("Failed to load report data.");
-                          } finally {
-                            setLoading(false);
-                          }
-                        }
-                      
-                        useEffect(() => {
-                          loadReportData();
-                        }, []);
-                      
-                        // =========================================================
-                        // STATISTICS
-                        // =========================================================
-                      
-                        const totalRegistered = items.length;
-                      
-                        const approvedCount = items.filter(
-                          (item) => item.status === "approved"
-                        ).length;
-                      
-                        const qrIssuedCount = items.filter(
-                          (item) =>
-                            item.status === "approved" &&
-                            item.qr_code
-                        ).length;
-                      
-                        const pendingCount = items.filter(
-                          (item) => item.status === "pending"
-                        ).length;
-                      
-                        const currentPeriod =
-                          new Date().toLocaleDateString("en-PH", {
-                            month: "short",
-                            year: "numeric",
-                          });
-                      
-                        // =========================================================
-                        // HELPER
-                        // =========================================================
-                      
-                        function formatDateTime(
-                          value: string | null | undefined
-                        ) {
-                          if (!value) {
-                            return "—";
-                          }
-                      
-                          return new Date(value).toLocaleString(
-                            "en-PH",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                              hour: "numeric",
-                              minute: "2-digit",
-                            }
-                          );
-                        }
-                      
-                        function formatDate(
-                          value: string | null | undefined
-                        ) {
-                          if (!value) {
-                            return "—";
-                          }
-                      
-                          return new Date(value).toLocaleDateString(
-                            "en-PH",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          );
-                        }
-                      
-                        // =========================================================
-                        // 1. MONTHLY ITEM REGISTRATION SUMMARY - PDF
-                        // =========================================================
-                      
-                        function handleMonthlyRegistrationPDF() {
-                          const now = new Date();
-                      
-                          const monthlyItems = items.filter(
-                            (item) => {
-                              if (!item.created_at) {
-                                return false;
-                              }
-                      
-                              const created = new Date(
-                                item.created_at
-                              );
-                      
-                              return (
-                                created.getMonth() ===
-                                  now.getMonth() &&
-                                created.getFullYear() ===
-                                  now.getFullYear()
-                              );
-                            }
-                          );
-                      
-                          const monthlyApproved =
-                            monthlyItems.filter(
-                              (item) =>
-                                item.status === "approved"
-                            ).length;
-                      
-                          const monthlyPending =
-                            monthlyItems.filter(
-                              (item) =>
-                                item.status === "pending"
-                            ).length;
-                      
-                          const doc = new jsPDF({
-                            orientation: "landscape",
-                          });
-                      
-                          doc.setFontSize(16);
-                      
-                          doc.text(
-                            "QRPass - Monthly Item Registration Summary",
-                            14,
-                            18
-                          );
-                      
-                          doc.setFontSize(10);
-                      
-                          doc.text(
-                            `Period: ${currentPeriod}`,
-                            14,
-                            27
-                          );
-                      
-                          doc.text(
-                            `Total Registrations: ${monthlyItems.length}`,
-                            14,
-                            34
-                          );
-                      
-                          doc.text(
-                            `Approved: ${monthlyApproved}`,
-                            14,
-                            41
-                          );
-                      
-                          doc.text(
-                            `Pending: ${monthlyPending}`,
-                            14,
-                            48
-                          );
-                      
-                          const rows = monthlyItems.map(
-                            (item) => [
-                              formatDate(item.created_at),
-                      
-                              item.user?.name ??
-                                "Unknown",
-                      
-                              item.user?.username ??
-                                "—",
-                      
-                              item.item_name ??
-                                "—",
-                      
-                              item.item_type ??
-                                "—",
-                      
-                              item.brand_model ??
-                                "—",
-                      
-                              item.serial_number ??
-                                "—",
-                      
-                              item.status === "approved"
-                                ? "Approved"
-                                : "Pending",
-                            ]
-                          );
-                      
-                          autoTable(doc, {
-                            startY: 56,
-                      
-                            head: [
-                              [
-                                "Date",
-                                "Owner",
-                                "Owner ID",
-                                "Item",
-                                "Type",
-                                "Brand / Model",
-                                "Serial Number",
-                                "Status",
-                              ],
-                            ],
-                      
-                            body: rows,
-                          });
-                      
-                          const fileDate = now
-                            .toISOString()
-                            .slice(0, 10);
-                      
-                          doc.save(
-                            `QRPass-Monthly-Item-Registration-${fileDate}.pdf`
-                          );
-                        }
-                      
-                        // =========================================================
-                        // 2. QR CODE ISSUANCE LOG - EXCEL
-                        // =========================================================
-                      
-                        function handleQrIssuanceExcel() {
-                          const now = new Date();
-                      
-                          const issuedItems = items.filter(
-                            (item) => {
-                              if (
-                                item.status !== "approved" ||
-                                !item.qr_code
-                              ) {
-                                return false;
-                              }
-                      
-                              const dateSource =
-                                item.approved_at ||
-                                item.updated_at ||
-                                item.created_at;
-                      
-                              if (!dateSource) {
-                                return false;
-                              }
-                      
-                              const issuedDate =
-                                new Date(dateSource);
-                      
-                              return (
-                                issuedDate.getMonth() ===
-                                  now.getMonth() &&
-                                issuedDate.getFullYear() ===
-                                  now.getFullYear()
-                              );
-                            }
-                          );
-                      
-                          const rows = issuedItems.map(
-                            (item) => ({
-                              Owner:
-                                item.user?.name ??
-                                "Unknown",
-                      
-                              "Owner ID":
-                                item.user?.username ??
-                                "—",
-                      
-                              Item:
-                                item.item_name ??
-                                "—",
-                      
-                              Type:
-                                item.item_type ??
-                                "—",
-                      
-                              "Brand / Model":
-                                item.brand_model ??
-                                "—",
-                      
-                              "Serial Number":
-                                item.serial_number ??
-                                "—",
-                      
-                              "QR ID":
-                                item.qr_code ??
-                                "—",
-                      
-                              "Approved / Issued At":
-                                formatDateTime(
-                                  item.approved_at ||
-                                    item.updated_at
-                                ),
-                      
-                              "QR Expiration":
-                                item.qr_expires_at
-                                  ? formatDateTime(
-                                      item.qr_expires_at
-                                    )
-                                  : "No expiration",
-                            })
-                          );
-                      
-                          const workbook =
-                            XLSX.utils.book_new();
-                      
-                          const worksheet =
-                            XLSX.utils.json_to_sheet(
-                              rows
-                            );
-                      
-                          worksheet["!cols"] = [
-                            { wch: 24 },
-                            { wch: 16 },
-                            { wch: 24 },
-                            { wch: 18 },
-                            { wch: 24 },
-                            { wch: 22 },
-                            { wch: 20 },
-                            { wch: 26 },
-                            { wch: 26 },
-                          ];
-                      
-                          XLSX.utils.book_append_sheet(
-                            workbook,
-                            worksheet,
-                            "QR Issuance Log"
-                          );
-                      
-                          const fileDate = now
-                            .toISOString()
-                            .slice(0, 10);
-                      
-                          XLSX.writeFile(
-                            workbook,
-                            `QRPass-QR-Code-Issuance-${fileDate}.xlsx`
-                          );
-                        }
-                      
-                        // =========================================================
-                        // 3. APPROVAL HISTORY WITH TIMESTAMPS - PDF
-                        // =========================================================
-                      
-                        function handleApprovalHistoryPDF() {
-                          const approvedItems = items
-                            .filter(
-                              (item) =>
-                                item.status === "approved"
-                            )
-                            .sort((a, b) => {
-                              const dateA = new Date(
-                                a.approved_at ||
-                                  a.updated_at ||
-                                  a.created_at
-                              ).getTime();
-                      
-                              const dateB = new Date(
-                                b.approved_at ||
-                                  b.updated_at ||
-                                  b.created_at
-                              ).getTime();
-                      
-                              return dateB - dateA;
-                            });
-                      
-                          const doc = new jsPDF({
-                            orientation: "landscape",
-                          });
-                      
-                          doc.setFontSize(16);
-                      
-                          doc.text(
-                            "QRPass - Approval History with Timestamps",
-                            14,
-                            18
-                          );
-                      
-                          doc.setFontSize(10);
-                      
-                          doc.text(
-                            `Generated: ${new Date().toLocaleString(
-                              "en-PH"
-                            )}`,
-                            14,
-                            27
-                          );
-                      
-                          doc.text(
-                            `Total Approved Items: ${approvedItems.length}`,
-                            14,
-                            34
-                          );
-                      
-                          const rows = approvedItems.map(
-                            (item) => [
-                              item.user?.name ??
-                                "Unknown",
-                      
-                              item.user?.username ??
-                                "—",
-                      
-                              item.item_name ??
-                                "—",
-                      
-                              item.item_type ??
-                                "—",
-                      
-                              item.serial_number ??
-                                "—",
-                      
-                              item.qr_code ??
-                                "—",
-                      
-                              formatDateTime(
-                                item.created_at
-                              ),
-                      
-                              formatDateTime(
-                                item.approved_at ||
-                                  item.updated_at
-                              ),
-                      
-                              "Approved",
-                            ]
-                          );
-                      
-                          autoTable(doc, {
-                            startY: 42,
-                      
-                            head: [
-                              [
-                                "Owner",
-                                "Owner ID",
-                                "Item",
-                                "Type",
-                                "Serial Number",
-                                "QR ID",
-                                "Registered At",
-                                "Approved At",
-                                "Status",
-                              ],
-                            ],
-                      
-                            body: rows,
-                      
-                            styles: {
-                              fontSize: 8,
-                            },
-                          });
-                      
-                          const fileDate = new Date()
-                            .toISOString()
-                            .slice(0, 10);
-                      
-                          doc.save(
-                            `QRPass-Approval-History-${fileDate}.pdf`
-                          );
-                        }
-                      
-                        // =========================================================
-                        // 4. ITEM REGISTRY EXPORT - EXCEL
-                        // =========================================================
-                      
-                        function handleItemRegistryExcel() {
-                          const rows = items.map(
-                            (item) => ({
-                              Owner:
-                                item.user?.name ??
-                                "Unknown",
-                      
-                              "Owner ID":
-                                item.user?.username ??
-                                "—",
-                      
-                              "Item Name":
-                                item.item_name ??
-                                "—",
-                      
-                              "Item Type":
-                                item.item_type ??
-                                "—",
-                      
-                              "Brand / Model":
-                                item.brand_model ??
-                                "—",
-                      
-                              "Serial Number":
-                                item.serial_number ??
-                                "—",
-                      
-                              Color:
-                                item.color ??
-                                "—",
-                      
-                              Purpose:
-                                item.purpose ??
-                                "—",
-                      
-                              "QR ID":
-                                item.qr_code ??
-                                "Not issued",
-                      
-                              "Date Registered":
-                                formatDateTime(
-                                  item.created_at
-                                ),
-                      
-                              "Approved At":
-                                item.status ===
-                                "approved"
-                                  ? formatDateTime(
-                                      item.approved_at ||
-                                        item.updated_at
-                                    )
-                                  : "Not approved",
-                      
-                              "QR Expiration":
-                                item.qr_expires_at
-                                  ? formatDateTime(
-                                      item.qr_expires_at
-                                    )
-                                  : "No expiration",
-                      
-                              "Registration Status":
-                                item.status ===
-                                "approved"
-                                  ? "Approved"
-                                  : item.status ===
-                                    "pending"
-                                  ? "Pending"
-                                  : item.status ??
-                                    "Unknown",
-                      
-                              "Registry Status":
-                                item.registry_status ??
-                                (item.is_flagged
-                                  ? "Flagged"
-                                  : item.is_expired
-                                  ? "Expired"
-                                  : item.is_active_qr
-                                  ? "Active"
-                                  : item.status ===
-                                    "pending"
-                                  ? "Pending"
-                                  : "Unknown"),
-                            })
-                          );
-                      
-                          const summaryRows = [
-                            {
-                              Statistic:
-                                "Total Registered",
-                              Value:
-                                totalRegistered,
-                            },
-                      
-                            {
-                              Statistic:
-                                "Approved Items",
-                              Value:
-                                approvedCount,
-                            },
-                      
-                            {
-                              Statistic:
-                                "QR Codes Issued",
-                              Value:
-                                qrIssuedCount,
-                            },
-                      
-                            {
-                              Statistic:
-                                "Pending Items",
-                              Value:
-                                pendingCount,
-                            },
-                      
-                            {
-                              Statistic:
-                                "Generated At",
-                              Value:
-                                new Date().toLocaleString(
-                                  "en-PH"
-                                ),
-                            },
-                          ];
-                      
-                          const workbook =
-                            XLSX.utils.book_new();
-                      
-                          const registrySheet =
-                            XLSX.utils.json_to_sheet(
-                              rows
-                            );
-                      
-                          const summarySheet =
-                            XLSX.utils.json_to_sheet(
-                              summaryRows
-                            );
-                      
-                          registrySheet["!cols"] = [
-                            { wch: 24 },
-                            { wch: 16 },
-                            { wch: 24 },
-                            { wch: 18 },
-                            { wch: 24 },
-                            { wch: 22 },
-                            { wch: 16 },
-                            { wch: 25 },
-                            { wch: 20 },
-                            { wch: 26 },
-                            { wch: 26 },
-                            { wch: 26 },
-                            { wch: 20 },
-                            { wch: 20 },
-                          ];
-                      
-                          summarySheet["!cols"] = [
-                            { wch: 25 },
-                            { wch: 30 },
-                          ];
-                      
-                          XLSX.utils.book_append_sheet(
-                            workbook,
-                            summarySheet,
-                            "Summary"
-                          );
-                      
-                          XLSX.utils.book_append_sheet(
-                            workbook,
-                            registrySheet,
-                            "Registered Items"
-                          );
-                      
-                          const fileDate = new Date()
-                            .toISOString()
-                            .slice(0, 10);
-                      
-                          XLSX.writeFile(
-                            workbook,
-                            `QRPass-Registered-Items-${fileDate}.xlsx`
-                          );
-                        }
-                      
-                        // =========================================================
-                        // REPORT DOWNLOAD HANDLER
-                        // =========================================================
-                      
-                          function handlePCOReportFormat(
-    reportName: string,
-    format: "PDF" | "Excel"
-  ) {
-    if (format === "PDF") {
-      if (reportName === "Monthly Item Registration Summary") {
-        handleMonthlyRegistrationPDF();
-        return;
-      }
+/* QRPASS_PCO_REPORTS_SYSADMIN_LAYOUT_V160 */
+/* QRPASS_PCO_REPORTS_WHITE_DROPDOWNS_V161 */
+function PCOReports() {
+  type PCOReportKey = "monthly" | "issuance" | "approval" | "registry";
+  type PCOPeriod = "day" | "week" | "month";
+  type PCOFormat = "pdf" | "xlsx";
+  const reportOptions: { key: PCOReportKey; name: string }[] = [
+    { key: "monthly", name: "Monthly Item Registration Summary" },
+    { key: "issuance", name: "QR Code Issuance Log" },
+    { key: "approval", name: "Approval History with Timestamps" },
+    { key: "registry", name: "Registered Items Export" },
+  ];
+  const [report, setReport] = useState<PCOReportKey>("monthly");
+  const [period, setPeriod] = useState<PCOPeriod>("day");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
 
-      if (reportName === "Approval History with Timestamps") {
-        handleApprovalHistoryPDF();
-        return;
-      }
-    }
-
-    if (format === "Excel") {
-      if (reportName === "QR Code Issuance Log") {
-        handleQrIssuanceExcel();
-        return;
-      }
-
-      if (reportName === "Registered Items Export") {
-        handleItemRegistryExcel();
-        return;
-      }
-    }
-
+  const stringify = (value: unknown): string =>
+    value === undefined || value === null ? "" : String(value);
+  const showDate = (value: unknown): string => {
+    if (!value) return "";
+    const parsed = new Date(String(value));
+    return Number.isNaN(parsed.getTime()) ? stringify(value) : parsed.toLocaleString("en-PH");
+  };
+  const periodBounds = () => {
     const now = new Date();
-
-    const isThisMonth = (dateValue: any) => {
-      if (!dateValue) return false;
-      const date = new Date(dateValue);
-
-      return !Number.isNaN(date.getTime()) &&
-        date.getMonth() === now.getMonth() &&
-        date.getFullYear() === now.getFullYear();
-    };
-
-    let filtered = [...items];
-
-    if (reportName === "Monthly Item Registration Summary") {
-      filtered = items.filter(item =>
-        isThisMonth(item.created_at)
-      );
-    } else if (reportName === "QR Code Issuance Log") {
-      filtered = items.filter(item =>
-        item.status === "approved" &&
-        Boolean(item.qr_code) &&
-        isThisMonth(
-          item.approved_at ||
-          item.updated_at ||
-          item.created_at
-        )
-      );
-    } else if (reportName === "Approval History with Timestamps") {
-      filtered = items.filter(item =>
-        item.status === "approved"
-      );
-    } else if (reportName !== "Registered Items Export") {
-      alert("Unknown report type.");
-      return;
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = new Date(start);
+    if (period === "day") {
+      end.setDate(end.getDate() + 1);
+    } else if (period === "week") {
+      start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+      end.setTime(start.getTime());
+      end.setDate(end.getDate() + 7);
+    } else {
+      start.setDate(1);
+      end.setTime(start.getTime());
+      end.setMonth(end.getMonth() + 1);
     }
+    return { start, end };
+  };
 
-    const rows = filtered.map(item => ({
-      "Date Registered": formatDateTime(item.created_at),
-      Owner: item.user?.name ?? "Unknown",
-      "Owner ID": item.user?.username ?? "—",
-      Item: item.item_name ?? "—",
-      Category: item.item_type ?? "—",
-      "Brand / Model": item.brand_model ?? "—",
-      "Serial Number": item.serial_number ?? "—",
-      "QR ID": item.qr_code ?? "Not issued",
-      "Approved At": item.approved_at
-        ? formatDateTime(item.approved_at)
-        : "—",
-      Status: item.status ?? "—",
-    }));
-
-    const period =
-      reportName === "Monthly Item Registration Summary" ||
-      reportName === "QR Code Issuance Log"
-        ? currentPeriod
-        : "All time";
-
-    QRpassWriteReport(reportName, rows, format, period);
+  async function generate(format: PCOFormat) {
+    if (busy) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      // Fetch fresh PCO records; never use Sysadmin users/audit/security endpoints.
+      const response = await getAllItems();
+      if (!Array.isArray(response?.items)) {
+        throw new Error("The item records could not be loaded.");
+      }
+      const items = response.items as any[];
+      const bounds = periodBounds();
+      const stamp = (item: any) => report === "issuance" || report === "approval"
+        ? (item.approved_at ?? item.updated_at ?? item.created_at)
+        : item.created_at;
+      const records = items.filter((item: any) => {
+        const status = String(item.status ?? "").toLowerCase();
+        if (report === "issuance" && !(status === "approved" && item.qr_code)) return false;
+        if (report === "approval" && status !== "approved") return false;
+        if (report === "registry" && (status !== "approved" || item.is_flagged)) return false;
+        const dateValue = stamp(item);
+        if (!dateValue) return false;
+        const date = new Date(dateValue);
+        return !Number.isNaN(date.getTime()) && date >= bounds.start && date < bounds.end;
+      });
+      if (!records.length) {
+        setMessage("No PCO records found for the selected report and period.");
+        return;
+      }
+      const headers = [
+        "Registered At", "Owner", "Owner ID", "Item", "Category",
+        "Brand / Model", "Serial Number", "QR ID", "Approved At", "Status"
+      ];
+      const rows: string[][] = records.map((item: any) => [
+        showDate(item.created_at), stringify(item.user?.name ?? "Unknown"),
+        stringify(item.user?.username), stringify(item.item_name),
+        stringify(item.item_type ?? item.category), stringify(item.brand_model),
+        stringify(item.serial_number), stringify(item.qr_code),
+        showDate(item.approved_at ?? (String(item.status).toLowerCase() === "approved" ? item.updated_at : null)),
+        stringify(item.status),
+      ]);
+      const label = reportOptions.find(option => option.key === report)?.name ?? "PCO Report";
+      const filename = `QRPass-PCO-${report}-${period}-${new Date().toISOString().slice(0, 10)}`;
+      if (format === "xlsx") {
+        const sheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        sheet["!cols"] = headers.map((_value, i) => ({ wch: i === 0 || i === 8 ? 22 : 18 }));
+        const book = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(book, sheet, "PCO Report");
+        XLSX.writeFile(book, `${filename}.xlsx`);
+      } else {
+        const pdf = new jsPDF({ orientation: "landscape" });
+        pdf.setFontSize(16);
+        pdf.text(label, 14, 18);
+        pdf.setFontSize(9);
+        pdf.text("University of Cebu - Main Campus | Property Custodian Office", 14, 26);
+        pdf.text(`Period: ${period}   Records: ${records.length}`, 14, 33);
+        autoTable(pdf, {
+          startY: 40, head: [headers], body: rows,
+          styles: { fontSize: 7, cellPadding: 2 },
+          headStyles: { fillColor: [26, 58, 123] },
+        });
+        pdf.save(`${filename}.pdf`);
+      }
+      setMessage(`${label}: ${records.length} records downloaded.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not generate the PCO report.");
+    } finally {
+      setBusy(false);
+    }
   }
-function handleReportDownload(
-                          reportName: string
-                        ) {
-                          if (
-                            reportName ===
-                            "Monthly Item Registration Summary"
-                          ) {
-                            handleMonthlyRegistrationPDF();
-                            return;
-                          }
 
-                      
-                          if (
-                            reportName ===
-                            "QR Code Issuance Log"
-                          ) {
-                            handleQrIssuanceExcel();
-                            return;
-                          }
-                      
-                          if (
-                            reportName ===
-                            "Approval History with Timestamps"
-                          ) {
-                            handleApprovalHistoryPDF();
-                            return;
-                          }
-                      
-                          if (
-                            reportName ===
-                            "Registered Items Export"
-                          ) {
-                            handleItemRegistryExcel();
-                          }
-                        }
-                      
-                        // =========================================================
-                        // REPORT LIST
-                        // =========================================================
-                      
-                        const reports = [
-                          {
-                            name:
-                              "Monthly Item Registration Summary",
-                            period:
-                              currentPeriod,
-                            format:
-                              "PDF",
-                          },
-                      
-                          {
-                            name:
-                              "QR Code Issuance Log",
-                            period:
-                              currentPeriod,
-                            format:
-                              "Excel",
-                          },
-                      
-                          {
-                            name:
-                              "Approval History with Timestamps",
-                            period:
-                              "All time",
-                            format:
-                              "PDF",
-                          },
-                      
-                          {
-                            name:
-                              "Registered Items Export",
-                            period:
-                              "All time",
-                            format:
-                              "Excel",
-                          },
-                        ];
-                      
-                        return (
-                          <div className="space-y-5">
-                            <PageHeader
-                              title="Reports"
-                              subtitle="Item registration, approval, QR issuance, and registered-item reports."
-                              
-                            />
-                      
-                            {/* ERROR MESSAGE */}
-                            {error && (
-                              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-4 py-3">
-                                {error}
-                              </div>
-                            )}
-                      
-                            {/* AVAILABLE REPORTS */}
-                            <Card title="Available Reports">
-                              <div className="divide-y divide-border">
-                                {reports.map(
-                                  (report) => (
-                                    <div
-                                      key={
-                                        report.name
-                                      }
-                                      className="flex min-w-0 flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
-                                    >
-                                      <div className="min-w-0 flex-1">
-                                        <p className="break-words text-sm font-medium text-foreground">
-                                          {
-                                            report.name
-                                          }
-                                        </p>
-                      
-                                        <p className="text-xs text-muted-foreground">
-                                          {
-                                            report.period
-                                          }
-                                        </p>
-                                      </div>
-                      
-                                      <QRpassReportDownloadButtons
-                                          disabled={loading || items.length === 0}
-                                          onPdf={() => handlePCOReportFormat(report.name, "PDF")}
-                                          onExcel={() => handlePCOReportFormat(report.name, "Excel")}
-                                        />
-                                    </div>
-                                  )
-                                )}
-                              </div>
-                            </Card>
-                          </div>
-                        );
-                      }
+  return (
+    <div id="qrpass-pco-reports-v160" className="w-full min-w-0 space-y-4 overflow-x-hidden">
+      <PageHeader title="Downloadable Reports" subtitle="Generate and export official PCO item registration reports." />
+      <div className="overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-sm">
+        <div className="border-b border-[#e6ebf2] px-5 py-4 sm:px-6">
+          <h3 className="text-lg font-semibold leading-none text-[#17336d]">Generate a report</h3>
+        </div>
+        <div className="grid gap-5 px-5 py-5 sm:px-6 lg:grid-cols-2">
+          <div>
+            <label htmlFor="pco-report-type-v160" className="mb-2 block text-sm font-semibold leading-6 text-[#17336d]">Report Type</label>
+            <select id="pco-report-type-v160" aria-label="Report type"
+              value={report}
+              onChange={event => { setReport(event.target.value as PCOReportKey); setMessage(""); }}
+              className="h-14 w-full rounded-xl border border-[#cbd5e1] bg-white px-4 text-base font-medium text-[#17336d] outline-none transition hover:border-[#9fb8e4] hover:bg-[#eef2ff] focus:border-[#80a4df] focus:bg-white focus:ring-2 focus:ring-[#dbe7ff] !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
+            
+    ref={(element) => { if (element) { element.style.setProperty("background", "#ffffff", "important"); element.style.setProperty("background-color", "#ffffff", "important"); } }}
+    onMouseEnter={(event) => { event.currentTarget.style.setProperty("background", "#eef2ff", "important"); event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onFocus={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onBlur={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+            >
+              {reportOptions.map(option => <option key={option.key} value={option.key}>{option.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="pco-report-period-v160" className="mb-2 block text-sm font-semibold leading-6 text-[#17336d]">Filter by Date</label>
+            <select id="pco-report-period-v160" aria-label="Filter reports by date"
+              value={period}
+              onChange={event => { setPeriod(event.target.value as PCOPeriod); setMessage(""); }}
+              className="h-14 w-full rounded-xl border border-[#cbd5e1] bg-white px-4 text-base font-medium text-[#17336d] outline-none transition hover:border-[#9fb8e4] hover:bg-[#eef2ff] focus:border-[#80a4df] focus:bg-white focus:ring-2 focus:ring-[#dbe7ff] !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
+            
+    ref={(element) => { if (element) { element.style.setProperty("background", "#ffffff", "important"); element.style.setProperty("background-color", "#ffffff", "important"); } }}
+    onMouseEnter={(event) => { event.currentTarget.style.setProperty("background", "#eef2ff", "important"); event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onFocus={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+    onBlur={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+            >
+              <option value="day">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+        </div>
+        <div className="border-t border-[#e6ebf2] px-5 py-4 sm:px-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+            {([
+              { key: "pdf", label: "Download PDF" },
+              { key: "xlsx", label: "Download Excel" },
+            ] as const).map(({key, label}) => (
+              <button key={key} type="button" disabled={busy}
+                onClick={() => void generate(key)}
+                className="inline-flex min-h-[52px] min-w-[190px] items-center justify-center gap-2 rounded-xl border border-[#c7d2fe] bg-white px-5 py-3 text-sm font-semibold text-[#17336d] transition hover:bg-[#eef2ff] disabled:opacity-50"
+              >
+                <Download size={17} />{busy ? "Preparing..." : label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {message && <div className="border-t border-[#e6ebf2] px-5 py-3 sm:px-6">
+          <p role="status" className="text-sm text-[#17336d]">{message}</p>
+        </div>}
+      </div>
+    </div>
+  );
+}
 function PCONotifications() {
+  const [manageOpenV158,setManageOpenV158]=useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -13819,7 +13412,7 @@ function PCONotifications() {
     notifications.length - unreadCount;
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 space-y-5 overflow-x-hidden">      {manageOpenV158 && <QRPassPCOManageV158 title="Manage Notifications" records={notifications} onClose={()=>setManageOpenV158(false)}/>}
       {/* HEADER */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <PageHeader
@@ -13827,16 +13420,27 @@ function PCONotifications() {
           subtitle="PCO item registration alerts and system updates."
         />
 
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => loadNotifications(true)}
-            disabled={loading}
-            className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-          > <RefreshCw size={13} className="shrink-0" />
-            {loading
-              ? "Refreshing..."
-              : "Refresh"}
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-2 md:w-auto">
+          <button type="button" title="Manage Notifications" aria-label="Manage Notifications"
+            onClick={()=>setManageOpenV158(true)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] hover:bg-[#eef2ff] !hidden md:!inline-flex">
+            <SlidersHorizontal size={18} strokeWidth={1.8}/>
           </button>
+  
+<button
+  type="button"
+  title="Refresh"
+  aria-label="Refresh"
+  onClick={() => loadNotifications(true)}
+  disabled={loading}
+  className="!inline-flex md:!hidden !w-auto !min-w-[115px] h-11 shrink-0 flex-nowrap items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-[#c7d2fe] !bg-white px-4 py-2 text-sm font-semibold text-[#17336d] hover:!bg-[#eef2ff] disabled:opacity-50"
+>
+  <RefreshCw size={16} className="shrink-0" />
+  <span className="!inline whitespace-nowrap">
+    {loading ? "Refreshing..." : "Refresh"}
+  </span>
+</button>
+
 
           <button
             onClick={handleMarkAllRead}
@@ -13862,7 +13466,7 @@ function PCONotifications() {
 
       {/* SUMMARY */}
       <StatisticalCardsSection>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard
           label="All Notifications"
           value={String(
@@ -14761,6 +14365,8 @@ async function downloadQrScanActivityExcel() {
 // Administrator oversight is read-only. CSU verifies and releases items.
 // =========================================================
 function SysAdminLostFound() {
+  /* QRPASS_LOSTFOUND_ROLE_REPORTS_V117 */
+  const openSysadminLostFoundManagerV117 = React.useContext(QRPassSysadminManageContext);
   const [qrpassSortOrder, setQrpassSortOrder] = useState<"newest" | "oldest">("newest");
   const [items, setItems] = useState<any[]>([]);
   const [tab, setTab] = useState<"all" | "lost" | "found" | "recovered">("all");
@@ -14893,6 +14499,17 @@ function SysAdminLostFound() {
             <option value="all">All Reports ({counts.reports})</option><option value="lost">Lost ({counts.lost})</option><option value="found">Found ({counts.found})</option><option value="recovered">Recovered / Claimed ({counts.recovered})</option>
           </select>
           <select aria-label="Sort records" value={qrpassSortOrder} onChange={e => setQrpassSortOrder(e.target.value as "newest" | "oldest")} className="h-12 min-w-[150px] rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7]"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+          {openSysadminLostFoundManagerV117 && (
+            <button
+              type="button"
+              aria-label="Manage Reports"
+              title="Manage Reports"
+              onClick={openSysadminLostFoundManagerV117}
+              className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#cbd5e1] bg-white text-[#31539b] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
+            >
+              <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
+            </button>
+          )}
           <button type="button" data-qrpass-refresh-toolbar="v1" onClick={() => { void loadItems(); }} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff]" aria-label="Refresh records"><RefreshCw size={15} />Refresh</button>
 
         </div>
@@ -14906,7 +14523,7 @@ function SysAdminLostFound() {
               {(["Item / Category","Report Type","Reported By","Location","Status",tab==="recovered"?"Claimant":"Date","Details"]).map(h=><th key={h} className="text-left px-4 py-3 font-semibold">{h}</th>)}
             </tr></thead>
             <tbody className="divide-y divide-slate-100">
-              {loading ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">Loading records...</td></tr> : filtered.length===0 ? <tr><td colSpan={7} className="py-12 text-center text-slate-500"><div className="qrpass-empty-state-v3"><Search size={26} aria-hidden="true" /><strong>No {tab === "all" ? "reports" : tab + " reports"} match the selected filters.</strong></div></td></tr> : filtered.map(item => (
+              {loading ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">Loading records...</td></tr> : filtered.length===0 ? <tr><td colSpan={7} className="py-12 text-center text-slate-500"><div className="qrpass-empty-state-v3"><BookOpen size={26} aria-hidden="true" /><strong>No {tab === "all" ? "reports" : tab + " reports"} match the selected filters.</strong></div></td></tr> : filtered.map(item => (
                 <tr key={item.id} className="hover:bg-blue-50/40">
                   <td className="px-4 py-3"><p className="font-semibold text-slate-800">{item.item_name ?? "Unnamed Item"}</p><p className="text-xs text-slate-500">{item.category ?? "Other"}</p></td>
                   <td className="px-4 py-3 capitalize">{item.report_type ?? "—"}</td>
@@ -16334,6 +15951,17 @@ async function downloadGateEntryExitPDF() {
     <option value="newest">Newest first</option>
     <option value="oldest">Oldest first</option>
   </select>
+          {reportRole && (
+            <button
+              type="button"
+              aria-label="Manage Reports"
+              title="Manage Reports"
+              onClick={() => setRoleReportManagerOpenV16(true)}
+              className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#cbd5e1] bg-white text-[#31539b] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
+            >
+              <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
+            </button>
+          )}
           {/* QRPASS_REPORT_REFRESH_BESIDE_SORT_V3 */}
           <button
           onClick={loadReports}
@@ -16419,11 +16047,7 @@ return (
       )}
 
       {/* QRPASS_ROLE_REPORT_LAUNCH_V16 — inside selected role only */}
-      {reportRole && (
-        <div className="flex justify-end">
-          <button type="button" data-qrpass-manage-launch-v31="true" onClick={() => setRoleReportManagerOpenV16(true)} className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-4 text-sm font-semibold text-[#17336d] transition-colors hover:bg-white"><Settings size={15}/> Manage Reports</button>
-        </div>
-      )}
+      
       {roleReportManagerOpenV16 && reportRole && (
         <QrpassRoleReportManagerV16 key={`${reportRole}-${recentCategory}`} role={reportRole} category={recentCategory} onClose={() => {setRoleReportManagerOpenV16(false); void loadReports();}} />
       )}
@@ -16683,6 +16307,8 @@ function SysAdminUserAccounts() {
     useState<number | null>(null);
   // QRPASS_USER_ACCOUNT_REVOKE_V33
   const [revokingUserId, setRevokingUserId] = useState<number | null>(null);
+  /* QRPASS_REVOKE_YES_NO_V118 */
+  const [pendingRevokeUserV118, setPendingRevokeUserV118] = useState<any | null>(null);
 
   const [showAddUser, setShowAddUser] =
     useState(false);
@@ -17094,10 +16720,14 @@ function SysAdminUserAccounts() {
   async function handleRevokeUserSessions(user: any) {
     const uid = Number(user?.id);
     if (!Number.isSafeInteger(uid) || uid <= 0 || revokingUserId !== null) return;
-    const answer = window.prompt(
-      'Permanently delete ' + (user?.name ?? 'this account') + '? This cannot be undone. Type DELETE to confirm:'
-    );
-    if (answer !== 'DELETE') return;
+    setPendingRevokeUserV118(user);
+  }
+
+  async function confirmRevokeV118() {
+    const user = pendingRevokeUserV118;
+    const uid = Number(user?.id);
+    if (!Number.isSafeInteger(uid) || uid <= 0 || revokingUserId !== null) return;
+    setPendingRevokeUserV118(null);
     setRevokingUserId(uid);
     setError(''); setSuccess('');
     try {
@@ -17796,6 +17426,65 @@ function SysAdminUserAccounts() {
             </div>
           )}
       </Card>
+
+      {/* QRPASS_REVOKE_WHITE_CENTERED_V119 */}
+      {pendingRevokeUserV118 && (
+        <div
+          role="presentation"
+          className="fixed inset-0 z-[300] flex items-center justify-center bg-[#0f172a]/50 p-4"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && revokingUserId === null) {
+              setPendingRevokeUserV118(null);
+            }
+          }}
+        >
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="qrpass-revoke-title-v118"
+            aria-describedby="qrpass-revoke-description-v118"
+            className="w-full max-w-[410px] rounded-2xl border border-[#dce3ee] bg-white p-6 text-center shadow-2xl" style={{ backgroundColor: "#ffffff" }}
+          >
+            <h3 id="qrpass-revoke-title-v118" className="text-center text-lg font-bold text-[#17336d]">
+              Revoke Account?
+            </h3>
+                        {/* QRPASS_VISIBLE_REVOKE_DESCRIPTION_V124 */}
+            <div
+              id="qrpass-revoke-description-v118"
+              style={{
+                display: "block",
+                visibility: "visible",
+                opacity: 1,
+                color: "#475569",
+                fontSize: "14px",
+                lineHeight: "24px",
+                textAlign: "center",
+                marginTop: "12px",
+                marginBottom: "0",
+                width: "100%",
+              }}
+            >
+              Are you sure you want to permanently revoke this account? This action cannot be undone, and the user will lose access immediately.
+            </div>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setPendingRevokeUserV118(null)}
+                className="min-w-[90px] rounded-xl border border-[#cbd5e1] bg-white px-4 py-2.5 text-sm font-semibold text-[#17336d] transition-colors hover:bg-[#eef2ff]"
+              >
+                No
+              </button>
+              <button
+                type="button"
+                onClick={() => { void confirmRevokeV118(); }}
+                className="min-w-[90px] rounded-xl border border-[#17336d] bg-[#17336d] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#244e9c]"
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -18277,7 +17966,11 @@ function SysAdminSettings() {
               type="button"
               data-qrpass-save-v31="true" onClick={saveGeneralSettings}
               disabled={loading || !settingsReady || savingGeneral}
-              className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+                ref={(el) => { if (el) { el.style.setProperty("background", "#ffffff", "important"); el.style.setProperty("background-color", "#ffffff", "important"); } }}
+                onMouseEnter={(event) => { event.currentTarget.style.setProperty("background", "#eef2ff", "important"); event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+                onMouseLeave={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+                onFocus={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+                className="text-xs   px-4 py-2 rounded-md font-semibold  disabled:opacity-50    transition-colors !bg-white hover:!bg-[#eef2ff] focus:!bg-white !text-[#17336d] !border-[#c7d2fe] transition-colors"
             >
               {savingGeneral
                 ? "Saving..."
@@ -18351,7 +18044,11 @@ function SysAdminSettings() {
               type="button"
               data-qrpass-save-v31="true" onClick={saveSecurityPolicy}
               disabled={loading || !settingsReady || savingPolicy}
-              className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 disabled:opacity-50"
+                ref={(el) => { if (el) { el.style.setProperty("background", "#ffffff", "important"); el.style.setProperty("background-color", "#ffffff", "important"); } }}
+                onMouseEnter={(event) => { event.currentTarget.style.setProperty("background", "#eef2ff", "important"); event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+                onMouseLeave={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+                onFocus={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+                className="text-xs   px-4 py-2 rounded-md font-semibold  disabled:opacity-50    transition-colors !bg-white hover:!bg-[#eef2ff] focus:!bg-white !text-[#17336d] !border-[#c7d2fe] transition-colors"
             >
               {savingPolicy
                 ? "Saving..."
@@ -18963,12 +18660,10 @@ function SysAdminAuditLogs() {
 </div>
                     <button
             type="button"
-            data-qrpass-manage-launch-v31="true"
-            data-qrpass-audit-manage-icon-v38="true"
             aria-label="Manage Logs"
             title="Manage Logs"
             onClick={() => setManageLogsOpen(true)}
-            className="qrpass-audit-manage-icon-v38 inline-flex shrink-0 items-center justify-center"
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#cbd5e1] bg-white text-[#31539b] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
           >
             <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
           </button>
@@ -21701,6 +21396,7 @@ function SysAdminAnnouncementManagement() {
 // Data is returned by the role-restricted /security-reports endpoint.
 // =========================================================
 function SecurityItemRegistry() {
+  const openManageV147 = React.useContext(QRPassCSUManageContextV147);
   const [csuListSort, setCsuListSort] =
     useState<"newest" | "oldest">("newest");
   const [items, setItems] = useState<any[]>([]);
@@ -21796,7 +21492,7 @@ function SecurityItemRegistry() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search item, owner, QR ID or serial..."
-              className="h-12 w-full rounded-xl border border-[#bfceff] bg-[#eef2ff] pl-10 pr-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:ring-2 focus:ring-[#6488ff]/15 dark:border-[#35537e] dark:bg-[#1b2b49]"
+              className="h-12 w-full rounded-xl border border-[#bfceff] pl-10 pr-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:ring-2 focus:ring-[#6488ff]/15 dark:border-[#35537e] dark:bg-[#1b2b49] !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
             />
           </label>
 
@@ -21807,7 +21503,7 @@ function SecurityItemRegistry() {
               aria-label="Filter QR status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none"
+              className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
             >
               <option value="all">All QR Statuses</option>
               <option value="active">Active</option>
@@ -21824,17 +21520,24 @@ function SecurityItemRegistry() {
                   e.target.value as "newest" | "oldest"
                 )
               }
-              className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff] bg-[#eef2ff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none"
+              className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
             </select>
+        {openManageV147 && (
+          <button type="button" title="Manage Logs" aria-label="Manage Logs"
+            onClick={openManageV147}
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] transition-colors hover:bg-[#eef2ff]">
+            <SlidersHorizontal size={18} strokeWidth={1.8}/>
+          </button>
+        )}
 
             <button
               type="button"
               onClick={() => { void refresh(); }}
               disabled={loading}
-              className="inline-flex h-12 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-primary hover:bg-muted disabled:opacity-50"
+              className="inline-flex h-12 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-primary hover:bg-muted disabled:opacity-50 md:!hidden"
             >
               <RefreshCw size={14} />
               {loading ? "Refreshing..." : "Refresh"}
@@ -22036,7 +21739,11 @@ function SysAdminDownloadableReports() {
                 type="button"
                 disabled={busy}
                 onClick={() => void generate(key)}
-                className="inline-flex min-h-[52px] min-w-[190px] items-center justify-center gap-2 rounded-xl border border-[#c7d2fe] bg-white px-5 py-3 text-sm font-semibold text-[#17336d] transition hover:bg-[#eef2ff] disabled:opacity-50"
+                ref={(el) => { if (el) { el.style.setProperty("background", "#ffffff", "important"); el.style.setProperty("background-color", "#ffffff", "important"); } }}
+                onMouseEnter={(event) => { event.currentTarget.style.setProperty("background", "#eef2ff", "important"); event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
+                onMouseLeave={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+                onFocus={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+                className="inline-flex min-h-[52px] min-w-[190px] items-center justify-center gap-2 rounded-xl border border-[#c7d2fe]  px-5 py-3 text-sm font-semibold  transition  disabled:opacity-50    transition-colors !bg-white hover:!bg-[#eef2ff] focus:!bg-white !text-[#17336d] !border-[#c7d2fe] transition-colors"
               >
                 <Download size={17} />
                 {label}
@@ -24868,6 +24575,7 @@ function Dashboard({
     return () => { mounted = false; window.removeEventListener("qrpass-settings-updated", refreshBrand); };
   }, []);
 
+  const [csuManagerOpenV147, setCsuManagerOpenV147] = useState(false);
   const [qrpassPageManageType, setQrpassPageManageType] = useState<'items'|'lost-found'|'users'|'announcements'|'choose'|null>(null);
   const [activeNav, setActiveNav] = useState<number>(() => {
     try {
@@ -28058,6 +27766,58 @@ const handleSaveAccountProfile = async () => {
             MAIN CONTENT
         ==================================================== */}
 
+        {/* QRPASS_STUDENT_WHITE_CONTROLS_V130 â€” Student only, style-only */}
+        <style>{`
+          .qrpass-dashboard-root[data-qrpass-role="student"] .qrpass-main :is(
+            input[type="search"], input[aria-label^="Search" i], input[placeholder^="Search" i],
+            select[aria-label*="sort" i], select[aria-label*="filter" i],
+            select[aria-label*="status" i], select[data-qrpass-filter],
+            select[class*="bg-[#eef2ff]"], select[class*="bg-[#edf2ff]"],
+            input[class*="bg-[#eef2ff]"][type="search"]
+          ) {
+            background-color: #ffffff !important;
+            border-color: #c7d2fe !important;
+            color: #17336d !important;
+            transition: background-color .16s ease, border-color .16s ease !important;
+          }
+          .qrpass-dashboard-root[data-qrpass-role="student"] .qrpass-main :is(
+            input[type="search"], input[aria-label^="Search" i], input[placeholder^="Search" i],
+            select[aria-label*="sort" i], select[aria-label*="filter" i],
+            select[aria-label*="status" i], select[data-qrpass-filter],
+            select[class*="bg-[#eef2ff]"], select[class*="bg-[#edf2ff]"]
+          ):hover:not(:focus):not(:disabled) {
+            background-color: #eef2ff !important;
+            border-color: #a8bde4 !important;
+          }
+          .qrpass-dashboard-root[data-qrpass-role="student"] .qrpass-main :is(
+            input[type="search"], input[aria-label^="Search" i], input[placeholder^="Search" i],
+            select[aria-label*="sort" i], select[aria-label*="filter" i],
+            select[aria-label*="status" i], select[data-qrpass-filter]
+          ):focus {
+            background-color: #ffffff !important;
+            border-color: #5278e7 !important;
+            box-shadow: 0 0 0 3px rgba(82,120,231,.14) !important;
+          }
+          .qrpass-dashboard-root[data-qrpass-role="student"] .qrpass-main button:is(
+            [class*="bg-[#eef2ff]"], [class*="bg-[#edf2ff]"], [class*="bg-blue-50"]
+          ):not([aria-pressed="true"]):not([aria-selected="true"]):not([data-state="active"])
+           :not([class*="bg-primary"]):not([class*="bg-red"]):not([class*="bg-green"])
+           :not([class*="bg-yellow"]):not([class*="bg-amber"])
+           :not([class*="bg-[#17336d]"]):not([type="submit"]) {
+            background-color: #ffffff !important;
+            border-color: #c7d2fe !important;
+            transition: background-color .16s ease, border-color .16s ease !important;
+          }
+          .qrpass-dashboard-root[data-qrpass-role="student"] .qrpass-main button:is(
+            [class*="bg-[#eef2ff]"], [class*="bg-[#edf2ff]"], [class*="bg-blue-50"]
+          ):not([aria-pressed="true"]):not([aria-selected="true"]):not([data-state="active"])
+           :not([class*="bg-primary"]):not([class*="bg-red"]):not([class*="bg-green"])
+           :not([class*="bg-yellow"]):not([class*="bg-amber"])
+           :not([class*="bg-[#17336d]"]):not([type="submit"]):hover:not(:disabled) {
+            background-color: #eef2ff !important;
+            border-color: #a8bde4 !important;
+          }
+        `}</style>
         <main
           data-qrpass-csu={role === "security"}
           data-qrpass-hide-page-subtitles={role !== "sysadmin"}
@@ -28280,15 +28040,22 @@ const handleSaveAccountProfile = async () => {
             )}
 
           <div className={role === "sysadmin" ? `qrpass-admin-page mx-auto w-full max-w-[1480px] ${[0, 1, 3].includes(activeNav) ? "" : "qrpass-sysadmin-hide-search-v24"}` : "w-full"}>
-            {role === "sysadmin" && [0, 1, 3, 6].includes(activeNav) && (
+            {role === "sysadmin" && [3, 6].includes(activeNav) && (
   <button type="button" className="qrpass-manage-logs-shortcut-v3 qrpass-page-manage-v1"
     onClick={() => { setQrpassPageManageType(activeNav===0?'items':activeNav===1?'lost-found':activeNav===3?'users':activeNav===6?'announcements':'choose'); }}>
     <Settings size={15} /> {({0:'Manage Items',1:'Manage Reports',2:'Manage Reports',3:'Manage Users',6:'Manage Announcements'} as Record<number,string>)[activeNav]}
   </button>
 )}
-            <QRPassPageSubtitleContext.Provider value={role === "sysadmin"}>
-              <ActivePage onNavigate={handleNavClick} />
-            </QRPassPageSubtitleContext.Provider>
+            <QRPassSysadminManageContext.Provider value={role === "sysadmin" ? () => setQrpassPageManageType(activeNav === 0 ? "items" : activeNav === 1 ? "lost-found" : activeNav === 6 ? "announcements" : "choose") : null}>
+            <QRPassCSUManageContextV147.Provider value={role === "security" && activeNav < 5 ? () => setCsuManagerOpenV147(true) : null}>
+              <QRPassPageSubtitleContext.Provider value={role === "sysadmin"}>
+                <ActivePage onNavigate={handleNavClick} />
+              </QRPassPageSubtitleContext.Provider>
+            </QRPassCSUManageContextV147.Provider>
+            {role === "security" && csuManagerOpenV147 && activeNav < 5 && (
+              <QRPassCSUPageManagerV147 key={activeNav} page={activeNav} onClose={() => setCsuManagerOpenV147(false)} />
+            )}
+            </QRPassSysadminManageContext.Provider>
             {qrpassPageManageType && qrpassPageManageType !== 'choose' && <QrpassPageManager key={qrpassPageManageType} module={qrpassPageManageType} onClose={() => setQrpassPageManageType(null)} />}
           </div>
         </main>

@@ -1,0 +1,69 @@
+/*
+ QRPass Sysadmin Manage placement v111
+ No JS, no DOM observers. User Accounts remains unchanged.
+ Uses CSS anchor positioning supported in current Chromium browsers.
+ Keeps original React handlers and management dialogs.
+*/
+
+/* Established exact sort controls act as anchors. */
+@supports (anchor-name: --qrpass-manage-sort-v111) {
+  html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"]))
+    select:is([aria-label="Sort reports"],[aria-label="Sort records"]) {
+    anchor-name: --qrpass-manage-sort-v111;
+  }
+
+  /* Role-specific Reports & Analytics manager:
+     original button is retained, not duplicated. */
+  html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"]))
+    :has(> select[aria-label="Sort reports"]) + button[data-qrpass-manage-launch-v31="true"] {
+    position:absolute!important;
+    position-anchor: --qrpass-manage-sort-v111;
+    left:calc(anchor(right) + 12px)!important;
+    top:anchor(top)!important;
+  }
+  html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"]))
+    div.flex.justify-end:has(> button[data-qrpass-manage-launch-v31="true"]:not([data-qrpass-audit-manage-icon-v38="true"])) {
+    height:0!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+  }
+  html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"]))
+    div.flex.justify-end > button[data-qrpass-manage-launch-v31="true"]:not([data-qrpass-audit-manage-icon-v38="true"]) {
+    position:absolute!important;
+    position-anchor:--qrpass-manage-sort-v111;
+    left:calc(anchor(right) + 12px)!important;
+    top:anchor(top)!important;
+    right:auto!important;
+    bottom:auto!important;
+    margin:0!important;
+    z-index:6!important;
+  }
+
+  /* Page-specific Manage Items / Lost & Found / Announcements:
+     anchor to their native sort select, rather than page-header position. */
+  html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"]))
+    select:is([aria-label="Sort QR codes"],[aria-label="Sort items"],
+              [aria-label="Sort lost and found"],[aria-label="Sort announcements"]) {
+    anchor-name: --qrpass-page-sort-v111;
+  }
+  html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"]))
+    :is(button.qrpass-manage-logs-shortcut-v3.qrpass-page-manage-v1) {
+    position-anchor:--qrpass-page-sort-v111;
+    left:calc(anchor(right) + 12px)!important;
+    top:anchor(top)!important;
+    right:auto!important;
+    bottom:auto!important;
+    margin:0!important;
+    z-index:6!important;
+  }
+}
+/* Audit Logs Manage already sits directly beside Newest first in React.
+   Keep it aligned; no repositioning necessary. */
+html body #root .qrpass-admin-page:not(:has([data-qrpass-users-toolbar-v49="true"]))
+ [data-qrpass-audit-toolbar-v42="true"] button[data-qrpass-audit-manage-icon-v38="true"] {
+  margin:0!important;
+  align-self:center!important;
+  flex-shrink:0!important;
+}

@@ -1,0 +1,98 @@
+/* v129: Student / CSU / PCO control surfaces only. Never Sysadmin. */
+/* White initially, pale blue on hover. Keep status badges / primary actions intact. */
+:where(.qrpass-dashboard-root[data-qrpass-role="student"],
+       .qrpass-dashboard-root[data-qrpass-role="security"],
+       .qrpass-dashboard-root[data-qrpass-role="pco"])
+.qrpass-main :is(
+ input[type="search"],
+ input[aria-label^="Search" i],
+ input[placeholder^="Search" i],
+ select[aria-label*="sort" i],
+ select[aria-label*="filter" i],
+ select[data-qrpass-filter],
+ select[aria-label*="status" i],
+ button[aria-label^="Manage" i],
+ button[data-qrpass-refresh-toolbar],
+ button[data-qrpass-manage-launch-v31]
+) {
+ background-color:#ffffff !important;
+ background-image:none !important;
+ border-color:#c7d2fe !important;
+ color:#17336d !important;
+ transition:background-color .16s ease, border-color .16s ease !important;
+}
+:where(.qrpass-dashboard-root[data-qrpass-role="student"],
+       .qrpass-dashboard-root[data-qrpass-role="security"],
+       .qrpass-dashboard-root[data-qrpass-role="pco"])
+.qrpass-main :is(
+ input[type="search"],input[aria-label^="Search" i],input[placeholder^="Search" i],
+ select[aria-label*="sort" i],select[aria-label*="filter" i],
+ select[data-qrpass-filter],select[aria-label*="status" i],
+ button[aria-label^="Manage" i],button[data-qrpass-refresh-toolbar],
+ button[data-qrpass-manage-launch-v31]
+):hover:not(:disabled):not(:focus) {
+ background-color:#eef2ff !important;
+ border-color:#a8bde4 !important;
+}
+:where(.qrpass-dashboard-root[data-qrpass-role="student"],
+       .qrpass-dashboard-root[data-qrpass-role="security"],
+       .qrpass-dashboard-root[data-qrpass-role="pco"])
+.qrpass-main :is(
+ input[type="search"],input[aria-label^="Search" i],input[placeholder^="Search" i],
+ select[aria-label*="sort" i],select[aria-label*="filter" i],
+ select[data-qrpass-filter],select[aria-label*="status" i]
+):focus {
+ background-color:#ffffff !important;
+ border-color:#5278e7 !important;
+ box-shadow:0 0 0 3px rgba(82,120,231,.13) !important;
+ outline:none !important;
+}
+/* More generic toolbar dropdowns, search wrappers and pale-blue secondary action buttons.
+   Explicitly exclude primary, warning, danger, toggle states and navigation. */
+:where(.qrpass-dashboard-root[data-qrpass-role="student"],
+       .qrpass-dashboard-root[data-qrpass-role="security"],
+       .qrpass-dashboard-root[data-qrpass-role="pco"])
+.qrpass-main :is(select[class*="bg-[#eef2ff]"], select[class*="bg-[#edf2ff]"],
+                   input[class*="bg-[#eef2ff]"], input[class*="bg-[#edf2ff]"],
+                   input[class*="bg-card"], select[class*="bg-card"]) {
+ background-color:#ffffff !important;
+}
+:where(.qrpass-dashboard-root[data-qrpass-role="student"],
+       .qrpass-dashboard-root[data-qrpass-role="security"],
+       .qrpass-dashboard-root[data-qrpass-role="pco"])
+.qrpass-main :is(select[class*="bg-[#eef2ff]"], select[class*="bg-[#edf2ff]"],
+                   input[class*="bg-[#eef2ff]"], input[class*="bg-[#edf2ff]"],
+                   input[class*="bg-card"], select[class*="bg-card"]):hover:not(:focus) {
+ background-color:#eef2ff !important;
+}
+/* Secondary toolbar buttons with known light blue background */
+:where(.qrpass-dashboard-root[data-qrpass-role="student"],
+       .qrpass-dashboard-root[data-qrpass-role="security"],
+       .qrpass-dashboard-root[data-qrpass-role="pco"])
+.qrpass-main button:is([class*="bg-[#eef2ff]"],[class*="bg-[#edf2ff]"],[class*="bg-blue-50"]):not([aria-pressed="true"]):not([aria-selected="true"]):not([data-state="active"]):not([class*="bg-primary"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-[#17336d]"]) {
+ background-color:#ffffff !important;
+ border-color:#c7d2fe !important;
+ transition:background-color .16s ease,border-color .16s ease !important;
+}
+:where(.qrpass-dashboard-root[data-qrpass-role="student"],
+       .qrpass-dashboard-root[data-qrpass-role="security"],
+       .qrpass-dashboard-root[data-qrpass-role="pco"])
+.qrpass-main button:is([class*="bg-[#eef2ff]"],[class*="bg-[#edf2ff]"],[class*="bg-blue-50"]):not([aria-pressed="true"]):not([aria-selected="true"]):not([data-state="active"]):not([class*="bg-primary"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-[#17336d]"]):hover:not(:disabled) {
+ background-color:#eef2ff !important;
+ border-color:#a8bde4 !important;
+}
+/* Override for dark-mode intentionally avoided: existing dark theme remains. */
+html.dark :where(.qrpass-dashboard-root[data-qrpass-role="student"],
+       .qrpass-dashboard-root[data-qrpass-role="security"],
+       .qrpass-dashboard-root[data-qrpass-role="pco"]) .qrpass-main :is(input,select,button),
+:where(.dark .qrpass-dashboard-root[data-qrpass-role="student"],
+       .dark .qrpass-dashboard-root[data-qrpass-role="security"],
+       .dark .qrpass-dashboard-root[data-qrpass-role="pco"]) .qrpass-main :is(input,select,button) {
+ background-color:revert-layer;
+}
+@media (prefers-reduced-motion:reduce) {
+ :where(.qrpass-dashboard-root[data-qrpass-role="student"],
+        .qrpass-dashboard-root[data-qrpass-role="security"],
+        .qrpass-dashboard-root[data-qrpass-role="pco"])
+ .qrpass-main :is(input,select,button) {transition:none !important}
+}
