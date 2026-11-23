@@ -1,0 +1,35 @@
+/* QRPASS_SEARCH_EFFECTS_VERIFIED_V87
+ * Matching Audit Logs dropdown effects. Search inputs ONLY.
+ * Runtime writes inline important styles for legacy specificity conflicts;
+ * these rules are a durable fallback if an element is briefly re-rendered.
+ */
+html body #root#root :is(input[type="search"],input[aria-label*="search" i],input[placeholder*="search" i])[data-qrpass-search-v87] {
+  background-color:#fff !important;
+  border-color:#cbd5e1 !important;
+  box-shadow:none !important;
+  outline:0 !important;
+  transition:background-color 160ms ease,border-color 160ms ease,box-shadow 160ms ease !important;
+}
+html body #root#root :is(input[type="search"],input[aria-label*="search" i],input[placeholder*="search" i])[data-qrpass-search-v87="hover"]:not(:focus) {
+  background-color:#eef2ff !important;
+  border-color:#a8bde4 !important;
+  box-shadow:none !important;
+}
+html body #root#root :is(input[type="search"],input[aria-label*="search" i],input[placeholder*="search" i])[data-qrpass-search-v87="focus"] {
+  background-color:#fff !important;
+  border-color:#5278e7 !important;
+  box-shadow:0 0 0 3px rgba(82,120,231,.17) !important;
+}
+@media(prefers-reduced-motion:reduce) {
+  html body #root#root [data-qrpass-search-v87] {transition:none !important;}
+}
+html.dark body #root#root [data-qrpass-search-v87="idle"] {
+  background-color:#19345f !important;border-color:#526c92 !important;
+}
+html.dark body #root#root [data-qrpass-search-v87="hover"] {
+  background-color:#25456e !important;border-color:#7291bd !important;
+}
+html.dark body #root#root [data-qrpass-search-v87="focus"] {
+  background-color:#19345f !important;border-color:#83a6ed !important;
+  box-shadow:0 0 0 3px rgba(131,166,237,.18) !important;
+}

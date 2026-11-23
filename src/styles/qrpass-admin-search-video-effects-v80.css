@@ -1,0 +1,74 @@
+/* QRPASS_AUDIT_USERS_SEARCH_VIDEO_V80
+ * Reference: Lost & Found search video (22 November 2026).
+ * Idle: white; hover: pale blue; focus/typing: white + soft blue outline.
+ * Only 2 Sysadmin search inputs by their stable accessible names.
+ * Preserve size, shape, icon, padding, existing onChange and filter behavior.
+ * Repeated #root IDs counter QRPass legacy high-specificity !important styles.
+ */
+html body #root#root#root#root#root#root#root .qrpass-admin-page :is(
+  input[type="search"][aria-label="Search system logs"],
+  input[type="search"][aria-label="Search user accounts"]
+) {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: background-color 180ms ease,
+              border-color 180ms ease,
+              box-shadow 180ms ease !important;
+}
+/* Hover only, without focus: gentle blue fill like the recording. */
+html body #root#root#root#root#root#root#root .qrpass-admin-page :is(
+  input[type="search"][aria-label="Search system logs"],
+  input[type="search"][aria-label="Search user accounts"]
+):hover:not(:focus):not(:focus-visible) {
+  background: #eef2ff !important;
+  background-color: #eef2ff !important;
+  border-color: #b7c7e6 !important;
+  box-shadow: none !important;
+}
+/* Click, keyboard focus or typing, even while hovered: white with blue ring. */
+html body #root#root#root#root#root#root#root .qrpass-admin-page :is(
+  input[type="search"][aria-label="Search system logs"],
+  input[type="search"][aria-label="Search user accounts"]
+):is(:focus, :focus-visible) {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #638bcb !important;
+  box-shadow: 0 0 0 3px rgba(82,120,231,.16) !important;
+  outline: none !important;
+}
+/* Dark mode keeps readable dark surfaces with the same interaction pattern. */
+html.dark body #root#root#root#root#root#root#root .qrpass-admin-page :is(
+  input[type="search"][aria-label="Search system logs"],
+  input[type="search"][aria-label="Search user accounts"]
+) {
+  background: #19345f !important;
+  background-color: #19345f !important;
+  color: #eef4ff !important;
+  border-color: #526c92 !important;
+}
+html.dark body #root#root#root#root#root#root#root .qrpass-admin-page :is(
+  input[type="search"][aria-label="Search system logs"],
+  input[type="search"][aria-label="Search user accounts"]
+):hover:not(:focus):not(:focus-visible) {
+  background: #25456e !important;
+  background-color: #25456e !important;
+  border-color: #7291bd !important;
+}
+html.dark body #root#root#root#root#root#root#root .qrpass-admin-page :is(
+  input[type="search"][aria-label="Search system logs"],
+  input[type="search"][aria-label="Search user accounts"]
+):is(:focus, :focus-visible) {
+  background: #19345f !important;
+  background-color: #19345f !important;
+  border-color: #83a6ed !important;
+  box-shadow: 0 0 0 3px rgba(131,166,237,.19) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html body #root#root#root#root#root#root#root .qrpass-admin-page :is(
+    input[type="search"][aria-label="Search system logs"],
+    input[type="search"][aria-label="Search user accounts"]
+  ) { transition: none !important; }
+}

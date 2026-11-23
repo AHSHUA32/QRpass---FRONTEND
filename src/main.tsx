@@ -12,6 +12,7 @@ import "./qrpass-custom-dropdown-v53.js";
 import "./styles/qrpass-sign-in-polish-v58.css";
 import "./styles/qrpass-forgot-password-v59.css";
 import "./styles/qrpass-auth-responsive-v65.css";
+import './qrpass-outline-match-v68.js';
 
 
 import "./styles/qrpass-dropdown-arrow-position-v83.css";
@@ -22,7 +23,6 @@ import "./styles/qrpass-responsive-roles-v101.css";import "./styles/qrpass-butt
 
 import "./styles/qrpass-dropdown-chevron-rotate-v25.css";
 import "./qrpass-dropdown-single-arrow-v26.js";
-import "./styles/qrpass-announcement-dropdown-rotate-v27.css";
 import "./styles/qrpass-audit-logs-dropdown-v28.css";
 import "./qrpass-audit-logs-white-default-v29.js";
 import "./styles/qrpass-audit-logs-match-reports-v31.css";
@@ -41,4 +41,8 @@ import "./styles/qrpass-user-list-heading-v60.css";
 import "./styles/qrpass-user-list-heading-align-v61.css";
 import './styles/QRPass-Sysadmin-Toolbar-Standard-v110.css';
 import './styles/QRPass-Manage-Beside-Newest-v111.css';
+
+import "./styles/qrpass-search-effects-verified-v87.css";
+import "./qrpass-search-effects-verified-v87.js";
+import "./styles/qrpass-user-accounts-action-colors-v92.css";
 createRoot(document.getElementById("root")!).render(<App />);

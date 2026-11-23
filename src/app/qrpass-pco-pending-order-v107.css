@@ -1,0 +1,93 @@
+/* QRPASS_PCO_PENDING_ORDER_V107 – only PCO Pending Requests; preserves the v106 responsive container */
+html body .qrpass-pco-pending-table-v106 {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+html body .qrpass-pco-pending-table-v106 thead tr {
+  background: #f7f9fd !important;
+}
+html body .qrpass-pco-pending-table-v106 thead th {
+  padding: 15px 10px !important;
+  color: #697b96 !important;
+  border-bottom: 1px solid #e1e8f2 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 18px !important;
+  letter-spacing: 0.01em !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody td {
+  padding: 16px 10px !important;
+  color: #4c6282 !important;
+  font-size: 12px !important;
+  line-height: 20px !important;
+  vertical-align: middle !important;
+  border-bottom: 1px solid #e9eff6 !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody tr:hover {
+  background: #f8fbff !important;
+}
+/* Headers and cells use the same alignment within each column. */
+html body .qrpass-pco-pending-table-v106 thead th:nth-child(2),
+html body .qrpass-pco-pending-table-v106 thead th:nth-child(4),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(2),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(4) {
+  text-align: left !important;
+}
+html body .qrpass-pco-pending-table-v106 thead th:not(:nth-child(2)):not(:nth-child(4)),
+html body .qrpass-pco-pending-table-v106 tbody td:not(:nth-child(2)):not(:nth-child(4)) {
+  text-align: center !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(2) {
+  color: #1c355f !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  overflow-wrap: anywhere !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(4) {
+  color: #4c6282 !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  overflow-wrap: anywhere !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(1),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(3),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(6),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(7) {
+  font-variant-numeric: tabular-nums !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(6),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(7) {
+  white-space: nowrap !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(8) button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 68px !important;
+  height: 34px !important;
+  padding: 0 14px !important;
+  color: #244780 !important;
+  background: #f8fbff !important;
+  border: 1px solid #cfdaea !important;
+  border-radius: 9px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  transition: background-color .18s ease, border-color .18s ease !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(8) button:hover:not(:disabled) {
+  background: #eaf1ff !important;
+  border-color: #abc2e9 !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(8) button:focus-visible {
+  outline: 2px solid #5278e7 !important;
+  outline-offset: 2px !important;
+}
+/* The eight-column table is never wider than its parent; v106 switches to cards in narrow panels. */
+.qrpass-pco-pending-grid-v106 { max-width: 100% !important; overflow-x: hidden !important; }
+.qrpass-pco-pending-cards-v106 article { background: #ffffff !important; }
+.qrpass-pco-pending-cards-v106 article:hover { background: #f9fbff !important; }

@@ -1,0 +1,193 @@
+/* QRPASS_USER_ACCOUNTS_NO_SIDE_SCROLL_V95 — User Accounts table ONLY. */
+/* The old v94 table used min-width: 1500px !important, causing sideways scrolling. */
+html body #root [data-qrpass-users-responsive-v95="true"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow-x: clip !important;
+  container: qrpass-user-list / inline-size;
+}
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+  box-sizing: border-box !important;
+}
+/* Fixed widths shared by header and cells: total exactly 100%. */
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] col:nth-child(1) { width: 15% !important; }
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] col:nth-child(2) { width: 9% !important; }
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] col:nth-child(3) { width: 20% !important; }
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] col:nth-child(4) { width: 15% !important; }
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] col:nth-child(5) { width: 11% !important; }
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] col:nth-child(6) { width: 8% !important; }
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] col:nth-child(7) { width: 22% !important; }
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] thead th,
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td {
+  box-sizing: border-box !important;
+  padding: 13px 9px !important;
+  vertical-align: middle !important;
+  line-height: 20px !important;
+  overflow-wrap: anywhere !important;
+}
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] thead th {
+  height: 46px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #61718b !important;
+  white-space: nowrap !important;
+}
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody tr { height: 65px !important; }
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td { font-size: 13px !important; }
+/* Name and email text left; all other cells centered directly under the heading. */
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] :is(thead th, tbody td):nth-child(1),
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] :is(thead th, tbody td):nth-child(3) { text-align: left !important; }
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] :is(thead th, tbody td):nth-child(2),
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] :is(thead th, tbody td):nth-child(4),
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] :is(thead th, tbody td):nth-child(5),
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] :is(thead th, tbody td):nth-child(6),
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] :is(thead th, tbody td):nth-child(7) { text-align: center !important; }
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(1) > div {
+  line-height: 20px !important;
+}
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(2) {
+  white-space: nowrap !important;
+  font-variant-numeric: tabular-nums !important;
+  font-size: 12px !important;
+}
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(3) {
+  overflow-wrap: anywhere !important;
+}
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(4) > span,
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(6) > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  white-space: normal !important;
+  line-height: 17px !important;
+  text-align: center !important;
+  padding: 6px 9px !important;
+}
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(5) {
+  white-space: nowrap !important;
+  font-size: 12px !important;
+}
+/* Do not let action buttons expand the seventh column or force a wide table. */
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(7) > div {
+  display: flex !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+}
+html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(7) > div > button {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: 100% !important;
+  height: 34px !important;
+  padding: 0 9px !important;
+  border-radius: 9px !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+}
+/* Responsive layout at narrow content widths. No horizontal scroll and no hidden fields. */
+@container qrpass-user-list (max-width: 960px) {
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"],
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] {
+    display: block !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] thead,
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] colgroup { display: none !important; }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody tr {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    grid-auto-rows: auto !important;
+    align-content: start !important;
+    min-width: 0 !important;
+    height: auto !important;
+    gap: 0 10px !important;
+    padding: 12px 13px !important;
+    border: 1px solid #e1e8f2 !important;
+    border-radius: 13px !important;
+    background: #fff !important;
+  }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td {
+    display: flex !important;
+    min-width: 0 !important;
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 5px !important;
+    padding: 8px 0 !important;
+    height: auto !important;
+    border-bottom: 0 !important;
+    text-align: left !important;
+    white-space: normal !important;
+  }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(1),
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(3),
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(7) {
+    grid-column: 1 / -1 !important;
+  }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td::before {
+    font-size: 10px !important;
+    line-height: 14px !important;
+    font-weight: 700 !important;
+    letter-spacing: .03em !important;
+    text-transform: uppercase !important;
+    color: #75859a !important;
+  }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(1)::before { content: 'Name' !important; }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(2)::before { content: 'User ID' !important; }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(3)::before { content: 'Email' !important; }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(4)::before { content: 'Role' !important; }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(5)::before { content: 'Created' !important; }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(6)::before { content: 'Status' !important; }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(7)::before { content: 'Actions' !important; }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(4) > span,
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(6) > span {
+    max-width: 100% !important;
+  }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(7) > div {
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    white-space: normal !important;
+  }
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody td:nth-child(7) > div > button {
+    flex: 0 1 auto !important;
+    height: 34px !important;
+    padding: 0 12px !important;
+  }
+}
+@container qrpass-user-list (max-width: 620px) {
+  html body #root table[data-qrpass-user-accounts-fit-v95="true"] tbody {
+    grid-template-columns: minmax(0,1fr) !important;
+    padding: 10px !important;
+  }
+}

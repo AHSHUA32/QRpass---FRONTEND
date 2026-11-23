@@ -63,5 +63,7 @@
     run();
   }
   const observer = new MutationObserver(run);
-  observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true });
+  // QRPASS_V89: React re-renders introduce nodes; observe DOM changes only.
+  // Ignore search-input style and attribute changes to avoid repaint churn.
+  observer.observe(document.documentElement, { subtree: true, childList: true });
 })();

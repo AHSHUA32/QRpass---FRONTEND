@@ -1,4 +1,6 @@
 import "./qrpass-sysadmin-report-dropdown-v4.css";
+import "./qrpass-pco-item-details-compact-v120.css";
+import "./qrpass-pco-item-details-no-inner-scroll-v121.css";
 import "./qrpass-sysadmin-manage-buttons-v32.css";
 import "./qrpass-manage-logs-modal-syssettings-v47.css";
 import "./qrpass-manage-logs-compact-v36.css";
@@ -25,6 +27,11 @@ import "./qrpass-sysadmin-white-inputs-v8.css";
 import "./qrpass-system-settings-segmented-stepper-v9.css";
 import "./qrpass-system-settings-click-focus-white-v10.css";
 import "./qrpass-system-settings-match-reports-v7.css";
+import "./qrpass-twofactor-align-to-stepper-v79.css";
+import "./qrpass-pco-pending-uniform-v106.css";
+import "./qrpass-pco-pending-order-v107.css";
+import "./qrpass-user-accounts-layout-v94.css";
+import "./qrpass-user-accounts-no-side-scroll-v95.css";
 // =========================================================
 // REACT
 // =========================================================
@@ -149,7 +156,7 @@ import {
   createUser,
   updateUser,
   updateUserStatus,
-  deleteUserPermanently,
+  revokeUserAccessV91,
 
   requestPasswordReset,
   verifyPasswordResetCode,
@@ -171,13 +178,6 @@ import {
   getPerformance,
   getSessionPolicy,
   verifyTwoFactor,
-
-  getAnnouncements,
-  getManagedAnnouncements,
-  createAnnouncement,
-  updateAnnouncement,
-  setAnnouncementPublished,
-  deleteAnnouncement,
 } from "../services/api";
 
 // ── QRpass Logo ───────────────────────────────────────────────────────────────
@@ -897,6 +897,151 @@ function QRPassInlineOtherSelect({
   );
 }
 
+/* QRPASS_REGISTER_DOWNWARD_CHOICES_V116: student Register Item dropdowns always expand BELOW the field.
+ * Render list in normal document flow instead of browser-native select popup.
+ * This allows the page to scroll downward even near its bottom edge.
+ */
+function QRPassDownwardRegistrationChoiceV116({
+  label, value, options, onChange, specifyPlaceholder, className,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+  specifyPlaceholder?: string;
+  className: string;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [activeIndex, setActiveIndex] = React.useState(0);
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+  const listId = React.useId();
+  const isCustom = value === "__OTHER__" || (value !== "" && !options.includes(value));
+  const allOptions = [...options, "Others (Specify)"];
+
+  React.useEffect(() => {
+    if (!open) return;
+    const outside = (event: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [open]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const frame = window.requestAnimationFrame(() => {
+      menuRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [open]);
+
+  React.useEffect(() => {
+    if (value === "__OTHER__") inputRef.current?.focus();
+  }, [value === "__OTHER__"]);
+
+  const show = () => {
+    setActiveIndex(Math.max(0, options.indexOf(value)));
+    setOpen(true);
+  };
+  const pick = (option: string) => {
+    onChange(option === "Others (Specify)" ? "__OTHER__" : option);
+    setOpen(false);
+    if (option !== "Others (Specify)") triggerRef.current?.focus();
+  };
+  const keyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (!open) { show(); return; }
+      setActiveIndex(index => (index + (event.key === "ArrowDown" ? 1 : -1) + allOptions.length) % allOptions.length);
+    } else if (event.key === "Enter" || event.key === " " ) {
+      if (!open) { event.preventDefault(); show(); }
+      else { event.preventDefault(); pick(allOptions[activeIndex]); }
+    } else if (event.key === "Escape" && open) {
+      event.preventDefault(); setOpen(false);
+    }
+  };
+
+  return (
+    <div ref={rootRef} className="w-full min-w-0">
+      {isCustom ? (
+        <div className="relative w-full min-w-0">
+          <input
+            ref={inputRef}
+            type="text"
+            value={value === "__OTHER__" ? "" : value}
+            onChange={event => onChange(event.target.value || "__OTHER__")}
+            aria-label={`Specify ${label}`}
+            placeholder={specifyPlaceholder || `Specify ${label.toLowerCase()}`}
+            className={`${className} !pr-12`}
+          />
+          <button
+            type="button"
+            aria-label={`Show ${label} choices`}
+            aria-haspopup="listbox"
+            aria-expanded={open}
+            onClick={() => open ? setOpen(false) : show()}
+            className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg border-0 bg-transparent text-[#244780] hover:bg-[#edf2ff]"
+          >
+            <ChevronRight size={16} aria-hidden="true" className={`transition-transform ${open ? "-rotate-90" : "rotate-90"}`} />
+          </button>
+        </div>
+      ) : (
+        <button
+          ref={triggerRef}
+          type="button"
+          role="combobox"
+          aria-label={label}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-controls={open ? listId : undefined}
+          onClick={() => open ? setOpen(false) : show()}
+          onKeyDown={keyDown}
+          className={`${className} flex items-center justify-between gap-2 text-left`}
+        >
+          <span className={`min-w-0 flex-1 truncate ${value ? "" : "text-[#667d9e]"}`}>{value || `Select ${label}`}</span>
+          <ChevronRight size={16} aria-hidden="true" className={`shrink-0 transition-transform ${open ? "-rotate-90" : "rotate-90"}`} />
+        </button>
+      )}
+
+      {open && (
+        <div
+          id={listId}
+          ref={menuRef}
+          role="listbox"
+          aria-label={`${label} choices`}
+          data-qrpass-registration-downward-v116="true"
+          className="relative z-[70] mt-2 max-h-[224px] w-full min-w-0 overflow-y-auto rounded-xl border border-[#c7d2fe] bg-white p-1.5 shadow-[0_10px_22px_rgba(23,51,109,0.1)]"
+          style={{ overscrollBehavior: "contain" }}
+        >
+          {allOptions.map((option, index) => (
+            <button
+              key={option}
+              type="button"
+              role="option"
+              aria-selected={option === value || (option === "Others (Specify)" && isCustom)}
+              onMouseEnter={() => setActiveIndex(index)}
+              onClick={() => pick(option)}
+              className={`mb-1 flex min-h-[40px] w-full items-center rounded-lg border-0 px-3 py-2 text-left text-sm font-medium transition-colors last:mb-0 ${activeIndex === index ? "bg-[#e8efff] text-[#17336d]" : "bg-[#f7f9ff] text-[#17336d] hover:bg-[#e8efff]"}`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* QRPASS_REGISTER_DROPDOWN_V133 */
 function RegistrationDropdown({
   label, field, value, options, onChange, optional = false,
@@ -916,7 +1061,7 @@ function RegistrationDropdown({
           <span className="ml-1 text-[11px] font-normal text-muted-foreground">(Optional)</span>
         )}
       </label>
-      <QRPassInlineOtherSelect
+      <QRPassDownwardRegistrationChoiceV116
         label={label}
         value={value}
         options={options}
@@ -929,6 +1074,154 @@ function RegistrationDropdown({
 }
 
 /* QRPASS_STUDENT_MOBILE_RESPONSIVE_V171 */
+/* QRPASS_COMPUTER_ACCESSORIES_MULTISELECT_V117
+ * Multi-select only for Student Register Item > Computer Equipment.
+ * Value is a comma-separated string, preserving the existing registration API.
+ * Empty optional values are not submitted as accessory descriptions.
+ */
+function QRPassComputerAccessoriesMultiSelectV117({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const choices = [
+    "Charger / Power Adapter",
+    "Mouse",
+    "Keyboard",
+    "Laptop Bag / Sleeve",
+    "Headset / Headphones",
+    "USB Cable",
+    "HDMI / Display Cable",
+    "USB Flash Drive",
+    "External Hard Drive / SSD",
+    "Cooling Pad",
+    "Laptop Stand",
+  ];
+  const [open, setOpen] = React.useState(false);
+  const [otherOpen, setOtherOpen] = React.useState(false);
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const menuId = React.useId();
+  const rawEntries = String(value || "").split(",");
+  const entries = rawEntries.map(part => part.trim()).filter(Boolean);
+  const known = choices.filter(choice => entries.includes(choice));
+  // Preserve trailing spaces as the user types multiword custom accessories.
+  const rawOther = rawEntries.find(part => part.trimStart().startsWith("Others: "));
+  const extra = rawOther !== undefined
+    ? rawOther.trimStart().slice("Others: ".length)
+    : entries.filter(part => !choices.includes(part)).join("; ");
+  const showOther = otherOpen || extra.length > 0;
+
+  const save = (selected: string[], custom: string) => {
+    const clean = custom.replace(/[,|]/g, ";");
+    const parts = [...selected, ...(clean.trim() ? ["Others: " + clean] : [])];
+    onChange(parts.join(", "));
+  };
+
+  React.useEffect(() => {
+    if (!open) return;
+    const outside = (event: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [open]);
+
+  const toggle = (choice: string) => {
+    save(known.includes(choice) ? known.filter(item => item !== choice) : [...known, choice], extra);
+  };
+
+  return (
+    <div ref={rootRef} className="min-w-0">
+      <label className="mb-1.5 block text-xs font-semibold text-foreground">
+        Accessories Included
+        <span className="ml-1 text-[11px] font-normal text-muted-foreground">(Optional)</span>
+      </label>
+      <button
+        type="button"
+        role="combobox"
+        aria-label="Accessories Included"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
+        onClick={() => setOpen(previous => !previous)}
+        className="qrpass-register-white-v132 qrpass-register-white-v133 flex min-h-[44px] w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-[#c7d2fe] !bg-white px-3 py-2.5 text-left text-sm text-[#17336d] outline-none transition-colors hover:!bg-[#eef2ff] focus:!bg-white focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
+      >
+        <span className="min-w-0 flex-1 truncate">
+          {entries.length ? entries.join(", ") : <span className="text-[#667d9e]">Select accessories</span>}
+        </span>
+        <ChevronRight size={16} aria-hidden="true" className={(open ? "-rotate-90" : "rotate-90") + " shrink-0 transition-transform"} />
+      </button>
+
+      {open && (
+        <div
+          id={menuId}
+          role="dialog"
+          aria-label="Choose accessories included"
+          className="relative z-[70] mt-2 w-full min-w-0 rounded-xl border border-[#c7d2fe] bg-white p-2 shadow-[0_10px_22px_rgba(23,51,109,0.10)]"
+        >
+          <p className="px-2 pb-2 text-xs text-[#64748b]">Select all accessories included with the item.</p>
+          <div className="max-h-[230px] space-y-1 overflow-y-auto" style={{overscrollBehavior:"contain"}}>
+            {choices.map(choice => (
+              <label
+                key={choice}
+                className="flex min-h-[38px] cursor-pointer items-center gap-2.5 rounded-lg bg-[#f7f9ff] px-3 py-2 text-sm font-medium text-[#17336d] hover:bg-[#e8efff]"
+              >
+                <input
+                  type="checkbox"
+                  checked={known.includes(choice)}
+                  onChange={() => toggle(choice)}
+                  className="h-4 w-4 shrink-0 accent-[#244780]"
+                />
+                <span>{choice}</span>
+              </label>
+            ))}
+            <label className="flex min-h-[38px] cursor-pointer items-center gap-2.5 rounded-lg bg-[#f7f9ff] px-3 py-2 text-sm font-medium text-[#17336d] hover:bg-[#e8efff]">
+              <input
+                type="checkbox"
+                checked={showOther}
+                onChange={event => {
+                  setOtherOpen(event.target.checked);
+                  if (!event.target.checked) save(known, "");
+                }}
+                className="h-4 w-4 shrink-0 accent-[#244780]"
+              />
+              <span>Others (Specify)</span>
+            </label>
+          </div>
+          {showOther && (
+            <input
+              type="text"
+              value={extra}
+              aria-label="Specify other accessory"
+              placeholder="Specify other accessory"
+              onChange={event => save(known, event.target.value)}
+              className="mt-2 min-h-[40px] w-full rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm text-[#17336d] outline-none focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
+            />
+          )}
+          <div className="flex justify-end pt-2">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="rounded-lg border border-[#c7d2fe] bg-[#244780] px-4 py-2 text-xs font-semibold text-white hover:bg-[#17336d]"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StudentRegisterItem() {
   type RegistrationGroupId =
     | "computer"
@@ -1418,6 +1711,16 @@ function StudentRegisterItem() {
         `Casing: ${form.casing.trim()}`,
         `Operating System: ${form.operating_system.trim()}`
       );
+      // Preserve only filled optional computer fields in the existing description.
+      if (form.cd_dvd_rom.trim()) {
+        detailParts.push(`CD / DVD ROM: ${form.cd_dvd_rom.trim()}`);
+      }
+    }
+
+    // The backend stores complete_description but may not save
+    // standalone accessories_included. Keep it with the request.
+    if (selectedGroup !== "other" && form.accessories_included.trim()) {
+      detailParts.push(`Accessories Included: ${form.accessories_included.trim()}`);
     }
 
     if (
@@ -1614,18 +1917,9 @@ options={["Acer", "ASUS", "Dell", "HP", "Lenovo", "Apple", "MSI"]}
   placeholder="e.g. Academic use, thesis documentation"
 />
 
-                  <RegistrationField
-  label="Accessories Included"
-  field="accessories_included"
+                  <QRPassComputerAccessoriesMultiSelectV117
   value={form.accessories_included}
-  onChange={(field, value) =>
-    updateField(
-      field as keyof RegistrationForm,
-      value
-    )
-  }
-  placeholder="e.g. Charger, mouse, laptop bag"
-  optional
+  onChange={(next) => updateField("accessories_included", next)}
 />
                 </div>
 
@@ -1729,7 +2023,8 @@ options={["19-inch", "21.5-inch", "24-inch", "27-inch", "32-inch"]}
 options={["Mid Tower", "Full Tower", "Mini Tower", "Micro-ATX", "Mini-ITX", "Laptop Built-in"]}
 />
 
-                    <RegistrationField
+                    {/* QRPASS_CD_DVD_DROPDOWN_V115 */}
+                    <RegistrationDropdown
   label="CD / DVD ROM"
   field="cd_dvd_rom"
   value={form.cd_dvd_rom}
@@ -1739,7 +2034,15 @@ options={["Mid Tower", "Full Tower", "Mini Tower", "Micro-ATX", "Mini-ITX", "Lap
       value
     )
   }
-  placeholder="e.g. None / DVD-RW"
+  options={[
+    "None / No Optical Drive",
+    "CD-ROM (Read Only)",
+    "CD-RW (Read / Write)",
+    "DVD-ROM (Read Only)",
+    "DVD-RW (Read / Write)",
+    "Blu-ray Drive",
+    "External CD/DVD Drive",
+  ]}
   optional
 />
 
@@ -2255,7 +2558,9 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
         title="Register Item"
         subtitle="Register an item for campus entry and exit verification. PCO approval is required before a QR code is issued."
       />
+      {/* QRPASS_STUDENT_CATEGORY_ONLY_GUIDE_V127 */}
       {/* Student How It Works button */}
+      {!selectedGroup && (
       <div className="flex justify-end">
         <button
           type="button"
@@ -2269,9 +2574,10 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
           <ChevronRight size={14} />
         </button>
       </div>
+      )}
 
       {/* Student floating registration guide */}
-      {showRegistrationGuide && (
+      {!selectedGroup && showRegistrationGuide && (
         <div
           id="student-registration-guide"
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4 sm:p-6"
@@ -8821,11 +9127,7 @@ function SecurityReports() {
           ] as const).map(({format,name}) => (
             <button key={format} type="button" disabled={busyV149}
               onClick={() => void generateV149(format)}
-              ref={element => styleButtonV149(element,"#ffffff")}
-              onMouseEnter={event => styleButtonV149(event.currentTarget,"#eef2ff")}
-              onMouseLeave={event => styleButtonV149(event.currentTarget,"#ffffff")}
-              onFocus={event => styleButtonV149(event.currentTarget,"#ffffff")}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[#c7d2fe] !bg-white px-4 py-2 text-sm font-semibold text-[#17336d] transition-colors hover:!bg-[#eef2ff] disabled:cursor-not-allowed disabled:opacity-50">
+              className="qrpass-report-download-registration-v71">
               <Download size={15} />{busyV149 ? "Generating..." : name}
             </button>
           ))}
@@ -11907,7 +12209,57 @@ function PCOResponsiveToolbar({
 }
 
 /* QRPASS_PCO_RESPONSIVE_V170 */
+/* QRPASS_PCO_COMPLETE_FILLED_ITEM_DETAILS_V113 */
+function qrpassPCOHasFieldV113(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  const text = String(value).trim();
+  if (!text) return false;
+  return !["n/a", "na", "not provided", "null", "undefined", "—", "-"].includes(text.toLowerCase());
+}
+
+function qrpassPCOSpecRowsV113(item: any): Array<{ label: string; value: string }> {
+  const raw = String(item?.complete_description ?? "").trim();
+  const parts = raw.split("|").map((part) => part.trim()).filter(Boolean);
+  const rows = parts.map((part) => {
+    const colon = part.indexOf(":");
+    const hasLabel = colon > 0 && colon < 80;
+    const label = hasLabel ? part.slice(0, colon).trim() : "Description";
+    const value = hasLabel ? part.slice(colon + 1).trim() : part;
+    return { label, value };
+  }).filter(({value}) => qrpassPCOHasFieldV113(value));
+
+  const directFields: Array<[string, unknown]> = [
+    ["Computer / Laptop Type", item?.computer_type],
+    ["Processor", item?.processor],
+    ["Motherboard", item?.motherboard],
+    ["Memory / RAM", item?.memory],
+    ["Hard Drive / Storage", item?.hard_drive],
+    ["Monitor", item?.monitor],
+    ["Casing", item?.casing],
+    ["Operating System", item?.operating_system],
+    ["CD / DVD ROM", item?.cd_dvd_rom],
+    ["Accessories Included", item?.accessories_included],
+    ["Storage / Capacity", item?.storage_capacity],
+    ["Unit Type", item?.unit_type],
+    ["Power Source / Cable", item?.power_source],
+    ["Lens / Attachment Included", item?.lens_attachment],
+    ["Material / Body", item?.material_body],
+    ["Model No.", item?.model_no],
+    ["Size", item?.size],
+  ];
+  for (const [label, value] of directFields) {
+    if (!qrpassPCOHasFieldV113(value)) continue;
+    if (rows.some((entry) => entry.label.toLowerCase() === label.toLowerCase())) continue;
+    rows.push({label, value: String(value).trim()});
+  }
+  return rows;
+}
+
 function PCOPermitRequests() {
+  /* QRPASS_PCO_PENDING_ORDER_V107 */
+  // QRPASS_PCO_COMPACT_PENDING_V101: list shows summary only; full details and approval stay in popup.
+  // QRPASS_PCO_APPROVAL_IN_DETAILS_ONLY_V100: approval is available only after opening View.
+  // QRPASS_PCO_HIDE_ITEM_NAME_V98: the name remains searchable and visible in View.
   const [manageOpenV158,setManageOpenV158]=useState(false);
   const [requestSearch, setRequestSearch] = useState("");
   const [requestSort, setRequestSort] = useState<"newest" | "oldest">("newest");
@@ -11915,6 +12267,7 @@ function PCOPermitRequests() {
   const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [viewingItemV96, setViewingItemV96] = useState<any | null>(null);
 
   async function loadPendingItems() {
     try {
@@ -11978,7 +12331,7 @@ function PCOPermitRequests() {
     if (!keyword) return true;
     return [
       item.id ? `REQ-${String(item.id).padStart(3, "0")}` : "",
-      item.user?.name, item.user?.username, item.item_name,
+      item.user?.name, item.user?.username, item.user?.email, item.user?.college, item.user?.year_level, item.item_name,
       item.complete_description, item.item_type, item.serial_number,
       item.purpose, item.qr_code,
     ].filter(Boolean).join(" ").toLowerCase().includes(keyword);
@@ -11991,6 +12344,26 @@ function PCOPermitRequests() {
       return requestSort === "newest" ? yDate - xDate : xDate - yDate;
     });
   const pendingResults = sortRequests(pending);
+
+  // QRPASS_PCO_STUDENT_INFO_TIME_V102 — keep the main list compact; show full student contact in the popup.
+  // QRPASS_PCO_ACADEMIC_COLUMNS_V103 — show missing academic details explicitly instead of hiding the row.
+  const collegeV103 = (user: any) => {
+    const level = String(user?.year_level ?? "").trim();
+    if (level.toLowerCase() === "senior high school") return "N/A (Senior High)";
+    return String(user?.college ?? "").trim() || "Not provided";
+  };
+  const yearV103 = (user: any) => String(user?.year_level ?? "").trim() || "Not provided";
+  const filedAtV102 = (value: any, part: "date" | "time") => {
+    if (!value) return "—";
+    const dt = new Date(value);
+    if (Number.isNaN(dt.getTime())) return "—";
+    if (part === "date") return dt.toLocaleDateString("en-PH", {
+      timeZone: "Asia/Manila", year: "numeric", month: "short", day: "numeric",
+    });
+    return dt.toLocaleTimeString("en-PH", {
+      timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit", hour12: true,
+    });
+  };
 
   return (
     <div className="w-full min-w-0 space-y-5 overflow-x-hidden">
@@ -12034,8 +12407,9 @@ function PCOPermitRequests() {
           </span>
         }
       >
-        {/* Mobile: show all important request fields, not a clipped ten-column table. */}
-        <div className="min-w-0 divide-y divide-border lg:hidden">
+        {/* QRPASS_PCO_PENDING_UNIFORM_V106: responsive by available panel width, not browser width. */}
+        <div className="qrpass-pco-pending-wrap-v106">
+        <div className="qrpass-pco-pending-cards-v106 min-w-0 divide-y divide-border">
           {loading ? (
             <p className="p-6 text-center text-sm text-muted-foreground">Loading pending requests...</p>
           ) : pendingResults.length === 0 ? (
@@ -12044,49 +12418,71 @@ function PCOPermitRequests() {
             <article key={item.id} className="min-w-0 space-y-3 p-4">
               <div className="flex min-w-0 items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="break-words text-sm font-semibold text-foreground">{item.item_name || "Unnamed item"}</p>
                   <p className="mt-1 text-[11px] font-mono text-muted-foreground">REQ-{String(item.id).padStart(3, "0")}</p>
                 </div>
               </div>
               <dl className="grid min-w-0 grid-cols-2 gap-3 text-xs">
-                <div className="min-w-0"><dt className="text-muted-foreground">Student</dt><dd className="mt-1 break-words font-medium">{item.user?.name || "Unknown"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Student ID</dt><dd className="mt-1 break-words font-medium">{item.user?.username || "—"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Category</dt><dd className="mt-1 break-words font-medium">{item.item_type || "—"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Quantity</dt><dd className="mt-1 font-medium">{item.quantity ?? "—"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Serial number</dt><dd className="mt-1 break-all font-mono">{item.serial_number || "—"}</dd></div>
-                <div className="min-w-0"><dt className="text-muted-foreground">Date filed</dt><dd className="mt-1 font-medium">{item.created_at ? new Date(item.created_at).toLocaleDateString("en-PH", {month:"short",day:"numeric",year:"numeric"}) : "—"}</dd></div>
+                <div className="min-w-0">
+                  <dt className="text-muted-foreground">Student</dt>
+                  <dd className="mt-1 break-words font-semibold text-foreground">{item.user?.name || "Unknown"}</dd>
+                </div>
+                <div className="min-w-0"><dt className="text-muted-foreground">User ID</dt><dd className="mt-1 break-words font-medium">{item.user?.username || "—"}</dd></div>
+                <div className="min-w-0">
+                  <dt className="text-muted-foreground">Department</dt>
+                  <dd className="mt-1 break-words font-medium">{collegeV103(item.user)}</dd>
+                </div>
+                <div className="min-w-0">
+                  <dt className="text-muted-foreground">Year Level</dt>
+                  <dd className="mt-1 break-words font-medium">{yearV103(item.user)}</dd>
+                </div>
+                <div className="min-w-0">
+                  <dt className="text-muted-foreground">Time</dt>
+                  <dd className="mt-1 font-medium">{filedAtV102(item.created_at, "time")}</dd>
+                </div>
+                <div className="min-w-0">
+                  <dt className="text-muted-foreground">Date Filed</dt>
+                  <dd className="mt-1 font-medium">{filedAtV102(item.created_at, "date")}</dd>
+                </div>
               </dl>
-              {item.complete_description && String(item.complete_description).trim().toLowerCase() !== String(item.item_name || "").trim().toLowerCase() && (
-                <p className="break-words text-xs text-muted-foreground">{item.complete_description}</p>
-              )}
-              <p className="break-words text-xs text-muted-foreground"><span className="font-semibold text-foreground">Purpose:</span> {item.purpose || "—"}</p>
-              <button type="button" onClick={() => handleApprove(item)} disabled={approvingId === item.id}
-                className="inline-flex w-full items-center justify-center gap-1 rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50">
-                <CheckCircle size={14} />
-                {approvingId === item.id ? "Approving..." : "Approve & Issue QR"}
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => setViewingItemV96(item)}
+                  className="inline-flex w-full items-center justify-center rounded-md border border-[#cfd8e6] bg-white px-4 py-2.5 text-sm font-semibold text-[#244780] transition hover:bg-[#eef4ff]"
+                >
+                  View
+                </button>
+              </div>
             </article>
           ))}
         </div>
-        <div className="hidden overflow-x-auto lg:block">
-          <table className="w-full">
+        <div className="qrpass-pco-pending-grid-v106 min-w-0">
+          <table className="qrpass-pco-pending-table-v106 w-full table-fixed">
+            <colgroup>
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "19%" }} />
+              <col style={{ width: "11%" }} />
+              <col style={{ width: "21%" }} />
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "9%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "10%" }} />
+            </colgroup>
             <thead>
               <tr className="bg-[#fafbfc]">
                 {[
-                  "Ref #",
+                  "Request No.",
                   "Student",
-                  "ID",
-                  "Item / Description",
-                  "Type",
-                  "Qty",
-                  "Serial No.",
-                  "Purpose / Reason",
-                  "Date Filed",
-                  "Action",
+                  "Student ID",
+                  "Department",
+                  "Year Level",
+                  "Time",
+                  "Date",
+                  "Item Details",
                 ].map((h) => (
                   <th
                     key={h}
-                    className="text-left py-2 px-3 text-xs text-muted-foreground font-medium"
+                    className={`py-3 px-3 text-xs text-muted-foreground font-semibold ${h === "Student" || h === "Department" ? "text-left" : "text-center"}`}
                   >
                     {h}
                   </th>
@@ -12098,7 +12494,7 @@ function PCOPermitRequests() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={8}
                     className="text-center py-8 text-sm text-muted-foreground"
                   >
                     Loading pending requests...
@@ -12107,7 +12503,7 @@ function PCOPermitRequests() {
               ) : pendingResults.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={8}
                     className="text-center py-8 text-sm text-muted-foreground"
                   >
                     No pending item registration requests.
@@ -12119,79 +12515,174 @@ function PCOPermitRequests() {
                     key={item.id}
                     className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
                   >
-                    <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
+                    <td className="py-3 px-3 text-center text-xs font-mono text-muted-foreground">
                       REQ-{String(item.id).padStart(3, "0")}
                     </td>
 
-                    <td className="py-2.5 px-3 text-sm text-foreground font-medium">
+                    <td className="py-3 px-3 text-left text-sm text-foreground font-semibold break-words">
                       {item.user?.name ?? "Unknown"}
                     </td>
 
-                    <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground">
+                    <td className="py-3 px-3 text-center text-xs font-mono text-muted-foreground">
                       {item.user?.username ?? "—"}
                     </td>
 
-                    <td className="py-2.5 px-3 text-sm text-foreground min-w-[190px]">
-                      <div className="font-medium">
-                        {item.item_name}
-                      </div>
-
-                      {item.complete_description &&
-                        String(item.complete_description).trim() &&
-                        String(item.complete_description).trim().toLowerCase() !==
-                          String(item.item_name ?? "").trim().toLowerCase() && (
-                          <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
-                            {item.complete_description}
-                          </div>
-                        )}
+                    <td className="py-3 px-3 text-center text-xs text-muted-foreground break-words">
+                      {collegeV103(item.user)}
                     </td>
 
-                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                      {item.item_type}
+                    <td className="py-3 px-3 text-center text-xs text-muted-foreground break-words">
+                      {yearV103(item.user)}
                     </td>
 
-                    <td className="py-2.5 px-3 text-xs text-foreground text-center">
-                      {item.quantity ?? "—"}
+                    <td className="py-3 px-2 text-center text-xs text-muted-foreground whitespace-nowrap tabular-nums">
+                      {filedAtV102(item.created_at, "time")}
                     </td>
 
-                    <td className="py-2.5 px-3 text-xs font-mono text-muted-foreground whitespace-nowrap">
-                      {item.serial_number || "—"}
+                    <td className="py-3 px-2 text-center text-xs text-muted-foreground whitespace-nowrap tabular-nums">
+                      {filedAtV102(item.created_at, "date")}
                     </td>
 
-                    <td className="py-2.5 px-3 text-xs text-muted-foreground min-w-[180px]">
-                      {item.purpose || "—"}
-                    </td>
-
-
-                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(
-                        item.created_at
-                      ).toLocaleDateString("en-PH", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
-
-                    <td className="py-2.5 px-3">
+                    <td className="py-3 px-3 text-center text-sm text-foreground">
                       <button
-                        onClick={() => handleApprove(item)}
-                        disabled={approvingId === item.id}
-                        className="inline-flex items-center justify-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 whitespace-nowrap disabled:opacity-50"
+                        type="button"
+                        onClick={() => setViewingItemV96(item)}
+                        className="inline-flex items-center justify-center rounded-md border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-[#244780] transition hover:bg-[#eef4ff]"
                       >
-                        <CheckCircle size={12} />
-                        {approvingId === item.id
-                          ? "Approving..."
-                          : "Approve & Issue QR"}
+                        View
                       </button>
                     </td>
+
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
+        </div>
       </Card>
+
+      {viewingItemV96 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div data-qrpass-pco-fixed-modal-v119="true" className="flex h-[calc(100dvh-1.5rem)] max-h-[800px] w-full max-w-[860px] min-h-0 flex-col overflow-hidden rounded-2xl border border-[#dbe4f0] bg-card shadow-2xl sm:h-[88dvh]">
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#cfd8e6] bg-card px-5 py-4 sm:px-6">
+              <div>
+                <h3 className="font-semibold text-foreground">Item Details</h3>
+                <p className="mt-1 text-xs text-muted-foreground">Review the full item details and description.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewingItemV96(null)}
+                className="rounded-md border border-[#d9e2ef] bg-white px-3 py-1.5 text-sm font-medium text-[#244780] transition hover:bg-[#eef4ff]"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-4 sm:px-6 sm:pb-5">
+              {/* QRPASS_PCO_ITEM_DETAILS_SINGLE_CARD_V111 */}
+              <div data-qrpass-pco-item-card-v120="true" className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-[#dbe4f0] bg-[#f8fbff] p-4 sm:p-6">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#617693]">Item Information</p>
+                <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Item Name</p>
+                    <p className="mt-1 break-words text-sm font-medium text-foreground">{viewingItemV96.item_name || "Unnamed item"}</p>
+                  </div>
+                  {qrpassPCOHasFieldV113(viewingItemV96.brand_model) && (
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Brand / Model</p>
+                      <p className="mt-1 break-words text-sm font-medium text-foreground">{viewingItemV96.brand_model}</p>
+                    </div>
+                  )}
+                  {qrpassPCOHasFieldV113(viewingItemV96.serial_number) && (
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Serial Number</p>
+                      <p className="mt-1 break-all text-sm font-medium text-foreground">{viewingItemV96.serial_number}</p>
+                    </div>
+                  )}
+                  {qrpassPCOHasFieldV113(viewingItemV96.color) && (
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Color</p>
+                      <p className="mt-1 break-words text-sm font-medium text-foreground">{viewingItemV96.color}</p>
+                    </div>
+                  )}
+                  {qrpassPCOHasFieldV113(viewingItemV96.item_type) && (
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Type</p>
+                      <p className="mt-1 break-words text-sm font-medium text-foreground">{viewingItemV96.item_type}</p>
+                    </div>
+                  )}
+                  {/* QRPASS_PCO_QUANTITY_FORM_ONLY_V114 */}
+                  {(
+                    ["sports equipment", "other equipment"].includes(
+                      String(viewingItemV96.item_type ?? "").trim().toLowerCase()
+                    ) && qrpassPCOHasFieldV113(viewingItemV96.quantity)
+                  ) && (
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Quantity</p>
+                      <p className="mt-1 text-sm font-medium text-foreground">{viewingItemV96.quantity}</p>
+                    </div>
+                  )}
+                  {qrpassPCOHasFieldV113(viewingItemV96.purpose) && (
+                    <div className="min-w-0 sm:col-span-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Purpose / Reason for Bringing</p>
+                      <p className="mt-1 break-words text-sm font-medium text-foreground">{viewingItemV96.purpose}</p>
+                    </div>
+                  )}
+                </div>
+                {qrpassPCOSpecRowsV113(viewingItemV96).length > 0 && (
+                  <div className="mt-5 border-t border-[#dbe4f0] pt-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#617693]">Description / Specifications</p>
+                    <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+                      {/* QRPASS_PCO_ACCESSORIES_CHIPS_V123: Accessories use full-width wrapped chips; other specs are unchanged. */}
+                      {qrpassPCOSpecRowsV113(viewingItemV96).map((spec, index) => (
+                        <div
+                          key={index}
+                          className="min-w-0"
+                          style={spec.label.trim().toLowerCase() === "accessories included" ? { gridColumn: "1 / -1" } : undefined}
+                        >
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{spec.label}</p>
+                          {spec.label.trim().toLowerCase() === "accessories included" ? (
+                            <div data-qrpass-accessories-v125="QRPASS_PCO_ACCESSORIES_UNIFORM_FIELDS_V125" className="mt-3 grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Accessories included">
+                              {String(spec.value).split(",").map((value) => value.trim()).filter(Boolean).map((accessory, accessoryIndex) => (
+                                <div key={accessoryIndex} className="min-w-0" role="group" aria-label={`Accessory ${accessoryIndex + 1}`}>
+                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Accessory {accessoryIndex + 1}</p>
+                                  <p className="mt-1 whitespace-pre-wrap break-words text-sm font-medium leading-relaxed text-foreground">{accessory}</p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="mt-1 whitespace-pre-wrap break-words text-sm font-medium leading-relaxed text-foreground">{spec.value}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 flex shrink-0 flex-col gap-2 border-t border-[#dbe4f0] pt-4 sm:flex-row sm:items-center sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setViewingItemV96(null)}
+                  className="inline-flex items-center justify-center rounded-md border border-[#d9e2ef] bg-white px-4 py-2.5 text-sm font-semibold text-[#244780] transition hover:bg-[#eef4ff]"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleApprove(viewingItemV96)}
+                  disabled={approvingId === viewingItemV96.id}
+                  className="inline-flex items-center justify-center gap-1 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+                >
+                  <CheckCircle size={14} />
+                  {approvingId === viewingItemV96.id ? "Approving..." : "Approve & Issue QR"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
@@ -13147,8 +13638,7 @@ function PCOReports() {
             ] as const).map(({key, label}) => (
               <button key={key} type="button" disabled={busy}
                 onClick={() => void generate(key)}
-                className="inline-flex min-h-[52px] min-w-[190px] items-center justify-center gap-2 rounded-xl border border-[#c7d2fe] bg-white px-5 py-3 text-sm font-semibold text-[#17336d] transition hover:bg-[#eef2ff] disabled:opacity-50"
-              >
+                className="qrpass-report-download-registration-v71">
                 <Download size={17} />{busy ? "Preparing..." : label}
               </button>
             ))}
@@ -16279,6 +16769,20 @@ function AdminNotifications() {
 // ══════════════════════════════════════════════════════════════════════════════
 // SYSADMIN PAGES
 // ══════════════════════════════════════════════════════════════════════════════
+/* QRPASS_STUDENT_ACADEMIC_V105: use the same academic choices as student registration. */
+const QRPassStudentAcademicDepartmentsV105 = [
+  "College of Allied Engineering",
+  "College of Arts and Sciences",
+  "College of Business and Accountancy",
+  "College of Computer Studies",
+  "College of Criminal Justice",
+  "College of Customs Administration",
+  "College of Hospitality Management",
+  "College of Nursing",
+  "College of Social Work",
+  "College of Teacher Education"
+];
+
 function SysAdminUserAccounts() {
   const [qrpassSortOrder, setQrpassSortOrder] = useState<"newest" | "oldest">("newest");
   const [users, setUsers] = useState<any[]>([]);
@@ -16309,6 +16813,7 @@ function SysAdminUserAccounts() {
   const [revokingUserId, setRevokingUserId] = useState<number | null>(null);
   /* QRPASS_REVOKE_YES_NO_V118 */
   const [pendingRevokeUserV118, setPendingRevokeUserV118] = useState<any | null>(null);
+  const [revokeReasonV91, setRevokeReasonV91] = useState(""); // QRPASS_PERMANENT_ACCESS_V91
 
   const [showAddUser, setShowAddUser] =
     useState(false);
@@ -16328,6 +16833,8 @@ function SysAdminUserAccounts() {
     username: "",
     role: "student",
     password: "",
+    college: "",
+    year_level: "",
   });
 
   const periodAccounts = users.filter((user:any) => csuMatchesPeriod(user.created_at ?? user.registered_at, accountsPeriod, accountsFrom, accountsTo));
@@ -16562,6 +17069,11 @@ function SysAdminUserAccounts() {
       return;
     }
 
+    if (newUser.role === 'student' && (!newUser.year_level || (newUser.year_level !== 'Senior High School' && !newUser.college))) {
+      setError('Please select the student year level and department (department is not required for Senior High School).');
+      return;
+    }
+
     if (newUser.password.length < 6) {
       setError(
         "Password must contain at least 6 characters."
@@ -16589,6 +17101,8 @@ function SysAdminUserAccounts() {
             | "sysadmin",
 
         password: newUser.password,
+        college: newUser.role === 'student' && newUser.year_level !== 'Senior High School' ? newUser.college : null,
+        year_level: newUser.role === 'student' ? newUser.year_level : null,
       });
 
       setSuccess(
@@ -16602,6 +17116,8 @@ function SysAdminUserAccounts() {
         username: "",
         role: "student",
         password: "",
+    college: "",
+    year_level: "",
       });
 
       setShowAddUser(false);
@@ -16634,6 +17150,8 @@ function SysAdminUserAccounts() {
       email: user.email ?? "",
       username: user.username ?? "",
       role: user.role ?? "student",
+      college: user.college ?? "",
+      year_level: user.year_level ?? "",
     });
   }
 
@@ -16666,6 +17184,11 @@ function SysAdminUserAccounts() {
       return;
     }
 
+    if (editUser.role === 'student' && (!editUser.year_level || (editUser.year_level !== 'Senior High School' && !editUser.college))) {
+      setError('Please select the student year level and department (department is not required for Senior High School).');
+      return;
+    }
+
     try {
       setSavingEdit(true);
 
@@ -16687,6 +17210,8 @@ function SysAdminUserAccounts() {
               | "security"
               | "pco"
               | "sysadmin",
+          college: editUser.role === 'student' && editUser.year_level !== 'Senior High School' ? editUser.college : null,
+          year_level: editUser.role === 'student' ? editUser.year_level : null,
         }
       );
 
@@ -16720,28 +17245,33 @@ function SysAdminUserAccounts() {
   async function handleRevokeUserSessions(user: any) {
     const uid = Number(user?.id);
     if (!Number.isSafeInteger(uid) || uid <= 0 || revokingUserId !== null) return;
+    if (user?.qrpass_revoked_at) return;
+    setRevokeReasonV91("");
     setPendingRevokeUserV118(user);
   }
 
+  // QRPASS_PERMANENT_ACCESS_V91: Revoke access forever, but preserve the account and audit data.
   async function confirmRevokeV118() {
     const user = pendingRevokeUserV118;
     const uid = Number(user?.id);
+    const reason = revokeReasonV91.trim();
     if (!Number.isSafeInteger(uid) || uid <= 0 || revokingUserId !== null) return;
-    setPendingRevokeUserV118(null);
+    if (reason.length < 5) { setError('Enter a reason of at least 5 characters.'); return; }
     setRevokingUserId(uid);
     setError(''); setSuccess('');
     try {
-      const result = await deleteUserPermanently(uid);
-      setSuccess(result.message ?? 'Account permanently deleted; login tokens revoked.');
+      const result = await revokeUserAccessV91(uid, reason);
+      setSuccess(result.message ?? 'Access revoked permanently. User and records retained.');
+      setPendingRevokeUserV118(null); setRevokeReasonV91('');
       await loadUsers();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Permanent deletion failed.');
-    } finally { setRevokingUserId(null); }
+    } catch (e) { setError(e instanceof Error ? e.message : 'Failed to revoke access.'); }
+    finally { setRevokingUserId(null); }
   }
 
   async function handleToggleStatus(
     user: any
   ) {
+    if (user?.qrpass_revoked_at) { setError("A revoked account cannot be enabled."); return; }
     const currentStatus =
       String(
         user.status ?? ""
@@ -16820,7 +17350,7 @@ function SysAdminUserAccounts() {
         user.username,
         user.email,
         getRoleLabel(user.role),
-        getStatusLabel(user.status),
+        user.qrpass_revoked_at ? "Revoked" : getStatusLabel(user.status),
       ]
         .join(" ")
         .toLowerCase();
@@ -16978,6 +17508,39 @@ function SysAdminUserAccounts() {
 </span>
               </div>
 
+              {/* QRPASS_STUDENT_ACADEMIC_V105: student academic fields */}
+              {newUser.role === "student" && (
+                <>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold">Year Level *</label>
+                    <select aria-label="Student Year Level" required value={newUser.year_level}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setNewUser((current) => ({ ...current, year_level: value, college: value === "Senior High School" ? "" : current.college }));
+                      }}
+                      className="w-full rounded-xl border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#17336d] outline-none focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20">
+                      <option value="">Select year level</option>
+                      {['Senior High School', '1st Year', '2nd Year', '3rd Year', '4th Year'].map(level => (
+                        <option key={level} value={level}>{level}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {newUser.year_level !== "Senior High School" && (
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold">Department *</label>
+                      <select aria-label="Student Department" required value={newUser.college}
+                        onChange={(e) => setNewUser((current) => ({ ...current, college: e.target.value }))}
+                        className="w-full rounded-xl border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#17336d] outline-none focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20">
+                        <option value="">Select department</option>
+                        {QRPassStudentAcademicDepartmentsV105.map((department) => (
+                  <option key={department} value={department}>{department}</option>
+                ))}
+                      </select>
+                    </div>
+                  )}
+                </>
+              )}
+
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold mb-1">
                   Temporary Password *
@@ -17026,6 +17589,8 @@ function SysAdminUserAccounts() {
                     username: "",
                     role: "student",
                     password: "",
+    college: "",
+    year_level: "",
                   });
 
                   setError("");
@@ -17165,6 +17730,39 @@ function SysAdminUserAccounts() {
 <svg className="qrpass-account-role-chevron-v54" aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
 </span>
               </div>
+
+              {/* QRPASS_STUDENT_ACADEMIC_V105: student academic fields */}
+              {editUser.role === "student" && (
+                <>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold">Year Level *</label>
+                    <select aria-label="Student Year Level" required value={editUser.year_level}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setEditUser({ ...editUser, year_level: value, college: value === "Senior High School" ? "" : editUser.college });
+                      }}
+                      className="w-full rounded-xl border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#17336d] outline-none focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20">
+                      <option value="">Select year level</option>
+                      {['Senior High School', '1st Year', '2nd Year', '3rd Year', '4th Year'].map(level => (
+                        <option key={level} value={level}>{level}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {editUser.year_level !== "Senior High School" && (
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold">Department *</label>
+                      <select aria-label="Student Department" required value={editUser.college}
+                        onChange={(e) => setEditUser({ ...editUser, college: e.target.value })}
+                        className="w-full rounded-xl border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#17336d] outline-none focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20">
+                        <option value="">Select department</option>
+                        {QRPassStudentAcademicDepartmentsV105.map((department) => (
+                  <option key={department} value={department}>{department}</option>
+                ))}
+                      </select>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="bg-amber-50 border border-amber-200 rounded-md px-3 py-2 text-xs text-amber-700">
@@ -17266,8 +17864,17 @@ function SysAdminUserAccounts() {
             <RefreshCw size={15} className={loading ? "animate-spin" : ""}/> Refresh
           </button>
         </div>
-        <div data-qrpass-users-table-v57="true" className="overflow-x-auto">
-          <table className="w-full min-w-[1000px]">
+        <div data-qrpass-users-table-v57="true" data-qrpass-users-responsive-v95="true" className="w-full min-w-0 overflow-hidden">
+          <table data-qrpass-user-accounts-fit-v95="true" data-qrpass-user-accounts-v94="true" className="w-full min-w-0 table-fixed">
+            <colgroup>
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+            </colgroup>
             <thead>
               <tr className="bg-[#fafbfc]">
                 {[
@@ -17320,6 +17927,7 @@ function SysAdminUserAccounts() {
                           ""
                       ).toLowerCase() ===
                       "approved";
+                    const isRevoked = Boolean(user.qrpass_revoked_at); // QRPASS_PERMANENT_ACCESS_V91
 
                     const isUpdating =
                       updatingId ===
@@ -17341,7 +17949,7 @@ function SysAdminUserAccounts() {
 
                         {/* USER ID */}
                         <td className="py-3 px-3 text-xs font-mono text-muted-foreground">
-                          {user.id ?? "—"}
+                          {String(user.username ?? "").trim() || "—"}
                         </td>
 
                         {/* EMAIL */}
@@ -17370,37 +17978,35 @@ function SysAdminUserAccounts() {
                         <td className="py-3 px-3">
                           <span
                             className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                              isActive
+                              isRevoked ? "bg-slate-200 text-slate-700" : isActive
                                 ? "bg-green-100 text-green-700"
                                 : "bg-red-100 text-red-700"
                             }`}
                           >
-                            {isActive
-                              ? "Active"
-                              : "Disabled"}
+                            {isRevoked ? "Revoked" : isActive ? "Active" : "Disabled"}
                           </span>
                         </td>
 
                         {/* ACTIONS */}
                         <td className="py-3 px-3">
                           <div className="flex flex-wrap items-center gap-2">
-                            <button type="button" onClick={() => handleStartEdit(user)}
+                            <button type="button" data-qrpass-user-action-v92="edit" onClick={() => handleStartEdit(user)}
                               className="rounded-lg border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] transition-colors hover:bg-[#eef2fc]">
                               Edit
                             </button>
-                            <button type="button" onClick={() => handleToggleStatus(user)} disabled={isUpdating}
+                            <button type="button" data-qrpass-user-action-v92={user?.qrpass_revoked_at ? "revoked" : isActive ? "disable" : "enable"} onClick={() => handleToggleStatus(user)} disabled={isUpdating || isRevoked}
                               className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${isActive
                                 ? "border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
                                 : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"}`}>
-                              {isUpdating ? "Updating..." : isActive ? "Disable" : "Enable"}
+                              {isRevoked ? "Revoked" : isUpdating ? "Updating..." : isActive ? "Disable" : "Enable"}
                             </button>
-                            <button type="button"
+                            {!isRevoked && (<button type="button" data-qrpass-user-action-v92="revoke"
                               onClick={() => { void handleRevokeUserSessions(user); }}
-                              disabled={isUpdating || revokingUserId !== null}
-                              title="Permanently delete this account and revoke every login token"
+                              disabled={isUpdating || isRevoked || revokingUserId !== null}
+                              title="Permanently revoke access while retaining the account and records"
                               className="rounded-lg border border-[#c7d2fe] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] transition-colors hover:bg-[#eef2ff] focus:border-[#5278e7] disabled:opacity-50">
-                              {revokingUserId === Number(user.id) ? 'Deleting...' : 'Revoke'}
-                            </button>
+                              {isRevoked ? 'Revoked' : revokingUserId === Number(user.id) ? 'Revoking...' : 'Revoke'}
+                            </button>)}
                           </div>
                         </td>
                       </tr>
@@ -17464,8 +18070,15 @@ function SysAdminUserAccounts() {
                 width: "100%",
               }}
             >
-              Are you sure you want to permanently revoke this account? This action cannot be undone, and the user will lose access immediately.
+              Permanently revoke QRPass access? The user will be signed out and cannot log in again, but their account, permits and history will remain.
             </div>
+            <label htmlFor="qrpass-revoke-reason-v91" className="mt-5 block text-left text-xs font-semibold text-[#17336d]">Reason for revocation (required)</label>
+            <textarea id="qrpass-revoke-reason-v91" rows={3} maxLength={500} value={revokeReasonV91}
+              onChange={(e) => setRevokeReasonV91(e.target.value)}
+              placeholder="e.g. Access terminated after leaving university"
+              className="mt-2 w-full rounded-xl border border-[#cbd5e1] bg-white p-3 text-sm text-[#17336d] focus:border-[#5278e7]" />
+            <p className="mt-1 text-left text-[11px] text-[#64748b]">At least 5 characters. Saved to audit logs. No user data deleted.</p>
+            {error && <p role="alert" className="mt-3 text-left text-xs text-red-700">{error}</p>}
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <button
                 type="button"
@@ -17476,10 +18089,10 @@ function SysAdminUserAccounts() {
               </button>
               <button
                 type="button"
-                onClick={() => { void confirmRevokeV118(); }}
+                onClick={() => { void confirmRevokeV118(); }} disabled={revokingUserId !== null || revokeReasonV91.trim().length < 5}
                 className="min-w-[90px] rounded-xl border border-[#17336d] bg-[#17336d] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#244e9c]"
               >
-                Yes
+                {revokingUserId !== null ? "Revoking..." : "Yes, Revoke"}
               </button>
             </div>
           </div>
@@ -17964,13 +18577,12 @@ function SysAdminSettings() {
 
             <button
               type="button"
-              data-qrpass-save-v31="true" onClick={saveGeneralSettings}
+              data-qrpass-save-v31="true"
+              onClick={saveGeneralSettings}
               disabled={loading || !settingsReady || savingGeneral}
-                ref={(el) => { if (el) { el.style.setProperty("background", "#ffffff", "important"); el.style.setProperty("background-color", "#ffffff", "important"); } }}
-                onMouseEnter={(event) => { event.currentTarget.style.setProperty("background", "#eef2ff", "important"); event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
-                onMouseLeave={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-                onFocus={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-                className="text-xs   px-4 py-2 rounded-md font-semibold  disabled:opacity-50    transition-colors !bg-white hover:!bg-[#eef2ff] focus:!bg-white !text-[#17336d] !border-[#c7d2fe] transition-colors"
+              className="qrpass-settings-save-registration-v72"
+                data-qrpass-uniform-v75="true"
+                ref={qrpassUniformSysadminActionButtonV75}
             >
               {savingGeneral
                 ? "Saving..."
@@ -18042,13 +18654,12 @@ function SysAdminSettings() {
 
             <button
               type="button"
-              data-qrpass-save-v31="true" onClick={saveSecurityPolicy}
+              data-qrpass-save-v31="true"
+              onClick={saveSecurityPolicy}
               disabled={loading || !settingsReady || savingPolicy}
-                ref={(el) => { if (el) { el.style.setProperty("background", "#ffffff", "important"); el.style.setProperty("background-color", "#ffffff", "important"); } }}
-                onMouseEnter={(event) => { event.currentTarget.style.setProperty("background", "#eef2ff", "important"); event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
-                onMouseLeave={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-                onFocus={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-                className="text-xs   px-4 py-2 rounded-md font-semibold  disabled:opacity-50    transition-colors !bg-white hover:!bg-[#eef2ff] focus:!bg-white !text-[#17336d] !border-[#c7d2fe] transition-colors"
+              className="qrpass-settings-save-registration-v72"
+                data-qrpass-uniform-v75="true"
+                ref={qrpassUniformSysadminActionButtonV75}
             >
               {savingPolicy
                 ? "Saving..."
@@ -20170,1228 +20781,6 @@ function SysAdminSecurityConfig() {
 // ── Page registry ─────────────────────────────────────────────────────────────
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SYSTEM ADMINISTRATOR - ANNOUNCEMENT MANAGEMENT
-// ══════════════════════════════════════════════════════════════════════════════
-
-type ManagedAnnouncement = {
-  id: number;
-  title: string;
-  message: string;
-  audience:
-    | "everyone"
-    | "student"
-    | "security"
-    | "pco"
-    | "sysadmin";
-  priority:
-    | "info"
-    | "important"
-    | "urgent";
-  start_at?: string | null;
-  end_at?: string | null;
-  is_published: boolean;
-  display_status?:
-    | "draft"
-    | "scheduled"
-    | "active"
-    | "expired"
-    | string;
-  created_at?: string | null;
-  updated_at?: string | null;
-  creator?: {
-    id?: number;
-    name?: string;
-    username?: string;
-  } | null;
-};
-
-type AnnouncementFormState = {
-  title: string;
-  message: string;
-  audience:
-    | "everyone"
-    | "student"
-    | "security"
-    | "pco"
-    | "sysadmin";
-  priority:
-    | "info"
-    | "important"
-    | "urgent";
-  start_at: string;
-  end_at: string;
-  is_published: boolean;
-};
-
-function SysAdminAnnouncementManagement() {
-  const emptyForm: AnnouncementFormState = {
-    title: "",
-    message: "",
-    audience: "everyone",
-    priority: "info",
-    start_at: "",
-    end_at: "",
-    is_published: false,
-  };
-
-  const [
-    announcements,
-    setAnnouncements,
-  ] = useState<ManagedAnnouncement[]>([]);
-
-  const [form, setForm] =
-    useState<AnnouncementFormState>(
-      emptyForm
-    );
-
-  const [editingId, setEditingId] =
-    useState<number | null>(null);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [saving, setSaving] =
-    useState(false);
-
-  const [
-    changingPublishId,
-    setChangingPublishId,
-  ] = useState<number | null>(null);
-
-  const [
-    deletingId,
-    setDeletingId,
-  ] = useState<number | null>(null);
-
-  const [error, setError] =
-    useState("");
-
-  const [success, setSuccess] =
-    useState("");
-  const [announcementTab, setAnnouncementTab] = useState<"list" | "form">("list");
-  const [announcementPriority, setAnnouncementPriority] = useState<"all" | "info" | "important" | "urgent">("all");
-  // QRPASS_ANNOUNCEMENTS_SEARCH_SORT_20261120
-  const [announcementSearch, setAnnouncementSearch] = useState("");
-  const [announcementSort, setAnnouncementSort] = useState<"newest" | "oldest">("newest");
-  const [annPeriod, setAnnPeriod] = useState<CSUDatePeriod>("all");
-  const [annFrom, setAnnFrom] = useState("");
-  const [annTo, setAnnTo] = useState("");
-
-  function toLocalDateTimeInput(
-    value?: string | null
-  ) {
-    if (!value) {
-      return "";
-    }
-
-    const date = new Date(value);
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-      return "";
-    }
-
-    const offset =
-      date.getTimezoneOffset();
-
-    return new Date(
-      date.getTime() -
-        offset * 60 * 1000
-    )
-      .toISOString()
-      .slice(0, 16);
-  }
-
-  function toApiDateTime(
-    value: string
-  ) {
-    if (!value) {
-      return null;
-    }
-
-    const date = new Date(value);
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-      return null;
-    }
-
-    return date.toISOString();
-  }
-
-  function formatDateTime(
-    value?: string | null
-  ) {
-    if (!value) {
-      return "—";
-    }
-
-    const date = new Date(value);
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-      return "—";
-    }
-
-    return date.toLocaleString(
-      "en-PH",
-      {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      }
-    );
-  }
-
-  function audienceLabel(
-    audience: string
-  ) {
-    const labels:
-      Record<string, string> = {
-        everyone: "Everyone",
-        student: "Students",
-        security: "CSU / Security",
-        pco: "PCO Staff",
-        sysadmin:
-          "System Administrators",
-      };
-
-    return (
-      labels[audience] ??
-      audience
-    );
-  }
-
-  function priorityLabel(
-    priority: string
-  ) {
-    const labels:
-      Record<string, string> = {
-        info: "Information",
-        important: "Important",
-        urgent: "Urgent",
-      };
-
-    return (
-      labels[priority] ??
-      priority
-    );
-  }
-
-  function statusStyle(
-    status?: string
-  ) {
-    const normalized =
-      String(status ?? "")
-        .toLowerCase();
-
-    if (
-      normalized === "active"
-    ) {
-      return {
-        label: "Active",
-        className:
-          "bg-green-100 text-green-700 border-green-200",
-      };
-    }
-
-    if (
-      normalized === "scheduled"
-    ) {
-      return {
-        label: "Scheduled",
-        className:
-          "bg-blue-100 text-blue-700 border-blue-200",
-      };
-    }
-
-    if (
-      normalized === "expired"
-    ) {
-      return {
-        label: "Expired",
-        className:
-          "bg-gray-100 text-gray-600 border-gray-200",
-      };
-    }
-
-    return {
-      label: "Draft",
-      className:
-        "bg-yellow-100 text-yellow-700 border-yellow-200",
-    };
-  }
-
-  function priorityStyle(
-    priority: string
-  ) {
-    if (
-      priority === "urgent"
-    ) {
-      return "bg-red-100 text-red-700 border-red-200";
-    }
-
-    if (
-      priority === "important"
-    ) {
-      return "bg-amber-100 text-amber-700 border-amber-200";
-    }
-
-    return "bg-blue-100 text-blue-700 border-blue-200";
-  }
-
-  async function loadAnnouncements() {
-    try {
-      setLoading(true);
-      setError("");
-
-      const data =
-        await getManagedAnnouncements();
-
-      setAnnouncements(
-        Array.isArray(
-          data?.announcements
-        )
-          ? data.announcements
-          : []
-      );
-    } catch (err) {
-      console.error(
-        "Failed to load announcements:",
-        err
-      );
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load announcements."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadAnnouncements();
-  }, []);
-
-  function resetForm() {
-    setEditingId(null);
-
-    setForm(
-      emptyForm
-    );
-
-    setError("");
-  }
-
-  function startEdit(
-    announcement:
-      ManagedAnnouncement
-  ) {
-    setAnnouncementTab("form");
-    setEditingId(
-      announcement.id
-    );
-
-    setForm({
-      title:
-        announcement.title ?? "",
-      message:
-        announcement.message ?? "",
-      audience:
-        announcement.audience ??
-        "everyone",
-      priority:
-        announcement.priority ??
-        "info",
-      start_at:
-        toLocalDateTimeInput(
-          announcement.start_at
-        ),
-      end_at:
-        toLocalDateTimeInput(
-          announcement.end_at
-        ),
-      is_published:
-        Boolean(
-          announcement.is_published
-        ),
-    });
-
-    setError("");
-    setSuccess("");
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }
-
-  async function handleSubmit(
-    event: React.FormEvent
-  ) {
-    event.preventDefault();
-
-    if (!form.title.trim()) {
-      setError(
-        "Please enter an announcement title."
-      );
-      return;
-    }
-
-    if (!form.message.trim()) {
-      setError(
-        "Please enter the announcement message."
-      );
-      return;
-    }
-
-    if (
-      form.end_at &&
-      !form.start_at
-    ) {
-      setError(
-        "Please set a start date and time before adding an expiration date."
-      );
-      return;
-    }
-
-    if (
-      form.start_at &&
-      form.end_at &&
-      new Date(
-        form.end_at
-      ).getTime() <
-        new Date(
-          form.start_at
-        ).getTime()
-    ) {
-      setError(
-        "Expiration date and time cannot be earlier than the start date and time."
-      );
-      return;
-    }
-
-    try {
-      setSaving(true);
-      setError("");
-      setSuccess("");
-
-      const payload = {
-        title:
-          form.title.trim(),
-        message:
-          form.message.trim(),
-        audience:
-          form.audience,
-        priority:
-          form.priority,
-        start_at:
-          toApiDateTime(
-            form.start_at
-          ),
-        end_at:
-          toApiDateTime(
-            form.end_at
-          ),
-        is_published:
-          form.is_published,
-      };
-
-      const result =
-        editingId
-          ? await updateAnnouncement(
-              editingId,
-              payload
-            )
-          : await createAnnouncement(
-              payload
-            );
-
-      setSuccess(
-        result?.message ||
-          (editingId
-            ? "Announcement updated successfully."
-            : "Announcement created successfully.")
-      );
-
-      setEditingId(null);
-      setForm(emptyForm);
-      setAnnouncementTab("list");
-
-      await loadAnnouncements();
-
-      window.setTimeout(
-        () => {
-          setSuccess("");
-        },
-        5000
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to save announcement."
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handlePublishToggle(
-    announcement:
-      ManagedAnnouncement
-  ) {
-    try {
-      setChangingPublishId(
-        announcement.id
-      );
-
-      setError("");
-      setSuccess("");
-
-      const nextPublished =
-        !announcement.is_published;
-
-      const result =
-        await setAnnouncementPublished(
-          announcement.id,
-          nextPublished
-        );
-
-      setSuccess(
-        result?.message ||
-          (nextPublished
-            ? "Announcement published successfully."
-            : "Announcement unpublished successfully.")
-      );
-
-      await loadAnnouncements();
-
-      window.setTimeout(
-        () => {
-          setSuccess("");
-        },
-        4000
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to update announcement publication status."
-      );
-    } finally {
-      setChangingPublishId(
-        null
-      );
-    }
-  }
-
-  async function handleDelete(
-    announcement:
-      ManagedAnnouncement
-  ) {
-    const confirmed =
-      window.confirm(
-        `Delete the announcement "${announcement.title}"? This cannot be undone.`
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      setDeletingId(
-        announcement.id
-      );
-
-      setError("");
-      setSuccess("");
-
-      const result =
-        await deleteAnnouncement(
-          announcement.id
-        );
-
-      if (
-        editingId ===
-        announcement.id
-      ) {
-        resetForm();
-      }
-
-      setSuccess(
-        result?.message ||
-          "Announcement deleted successfully."
-      );
-
-      await loadAnnouncements();
-
-      window.setTimeout(
-        () => {
-          setSuccess("");
-        },
-        4000
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to delete announcement."
-      );
-    } finally {
-      setDeletingId(
-        null
-      );
-    }
-  }
-
-  // Date filters target when the announcement record was created.
-  const periodAnnouncements = announcements.filter(item => {
-    const matchesPeriod = csuMatchesPeriod(item.created_at, annPeriod, annFrom, annTo);
-    const query = announcementSearch.trim().toLowerCase();
-    const matchesSearch = !query || [item.title, item.message, item.audience, item.priority, item.display_status].some(value => String(value ?? "").toLowerCase().includes(query));
-    return matchesPeriod && matchesSearch;
-  }).sort((a, b) => {
-    const aTime = new Date(a.created_at ?? 0).getTime() || 0;
-    const bTime = new Date(b.created_at ?? 0).getTime() || 0;
-    return announcementSort === "newest" ? bTime - aTime : aTime - bTime;
-  });
-
-  const activeCount =
-    periodAnnouncements.filter(
-      (announcement) =>
-        announcement.display_status ===
-        "active"
-    ).length;
-
-  const scheduledCount =
-    periodAnnouncements.filter(
-      (announcement) =>
-        announcement.display_status ===
-        "scheduled"
-    ).length;
-
-  const draftCount =
-    periodAnnouncements.filter(
-      (announcement) =>
-        announcement.display_status ===
-        "draft"
-    ).length;
-
-  const expiredCount =
-    periodAnnouncements.filter(
-      (announcement) =>
-        announcement.display_status ===
-        "expired"
-    ).length;
-
-  return (
-    <div className="space-y-5">
-      <PageHeader
-        title="Announcement Management"
-        subtitle="Create, schedule, publish, and manage QRPass announcements for specific user roles."
-
-      />
-
-      {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <div className="flex items-start gap-2">
-            <AlertCircle
-              size={16}
-              className="mt-0.5 shrink-0"
-            />
-            <span>{error}</span>
-          </div>
-        </div>
-      )}
-
-      {success && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          <div className="flex items-start gap-2">
-            <CheckCircle
-              size={16}
-              className="mt-0.5 shrink-0"
-            />
-            <span>{success}</span>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-2 rounded-xl border border-[#dce3ee] bg-white p-3">
-        <button type="button" onClick={() => setAnnouncementTab("list")} className={`rounded-xl px-4 py-2 text-xs font-semibold ${announcementTab === "list" ? "bg-[#17336d] text-white" : "bg-[#f3f6fb] text-[#17336d]"}`}>Announcement Records</button>
-        <button type="button" onClick={() => { setAnnouncementTab("form"); if (editingId) resetForm(); }} className={`rounded-xl px-4 py-2 text-xs font-semibold ${announcementTab === "form" ? "bg-[#17336d] text-white" : "bg-[#f3f6fb] text-[#17336d]"}`}>+ Create Announcement</button>
-      </div>
-      {announcementTab === "list" && <>
-      {/* Standalone Reporting Period selector removed from staff page. */}
-
-      </>}
-      {announcementTab === "form" && <>
-      <Card
-        title={
-          editingId
-            ? "Edit Announcement"
-            : "Create Announcement"
-        }
-        action={
-          editingId ? (
-            <button
-              type="button"
-              onClick={
-                resetForm
-              }
-              className="text-xs font-semibold text-[#64748b] hover:text-[#1a3a7b]"
-            >
-              Cancel Editing
-            </button>
-          ) : undefined
-        }
-      >
-        <form
-          onSubmit={
-            handleSubmit
-          }
-          className="p-4 space-y-4"
-        >
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="lg:col-span-2">
-              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
-                Announcement Title
-              </label>
-
-              <input
-                type="text"
-                value={form.title}
-                onChange={(event) =>
-                  setForm(
-                    (current) => ({
-                      ...current,
-                      title:
-                        event.target.value,
-                    })
-                  )
-                }
-                maxLength={255}
-                placeholder="e.g. Campus QR Item Inspection"
-                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
-                Target Audience
-              </label>
-
-              <select
-                value={
-                  form.audience
-                }
-                onChange={(event) =>
-                  setForm(
-                    (current) => ({
-                      ...current,
-                      audience:
-                        event.target
-                          .value as AnnouncementFormState["audience"],
-                    })
-                  )
-                }
-                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6]"
-              >
-                <option value="everyone">
-                  Everyone
-                </option>
-                <option value="student">
-                  Students
-                </option>
-                <option value="security">
-                  CSU / Security
-                </option>
-                <option value="pco">
-                  PCO Staff
-                </option>
-                
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
-                Priority
-              </label>
-
-              <select
-                value={
-                  form.priority
-                }
-                onChange={(event) =>
-                  setForm(
-                    (current) => ({
-                      ...current,
-                      priority:
-                        event.target
-                          .value as AnnouncementFormState["priority"],
-                    })
-                  )
-                }
-                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6]"
-              >
-                <option value="info">
-                  Information
-                </option>
-                <option value="important">
-                  Important
-                </option>
-                <option value="urgent">
-                  Urgent
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
-                Start Date & Time
-              </label>
-
-              <input
-                type="datetime-local"
-                value={
-                  form.start_at
-                }
-                onChange={(event) =>
-                  setForm(
-                    (current) => ({
-                      ...current,
-                      start_at:
-                        event.target.value,
-                    })
-                  )
-                }
-                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6]"
-              />
-
-              <p className="mt-1 text-[10px] text-[#94a3b8]">
-                Leave blank to start immediately after publishing.
-              </p>
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
-                Expiration Date & Time
-              </label>
-
-              <input
-                type="datetime-local"
-                value={
-                  form.end_at
-                }
-                min={
-                  form.start_at ||
-                  undefined
-                }
-                onChange={(event) =>
-                  setForm(
-                    (current) => ({
-                      ...current,
-                      end_at:
-                        event.target.value,
-                    })
-                  )
-                }
-                className="w-full rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6]"
-              />
-
-              <p className="mt-1 text-[10px] text-[#94a3b8]">
-                Leave blank if the announcement should stay active until manually unpublished.
-              </p>
-            </div>
-
-            <div className="lg:col-span-2">
-              <label className="mb-1.5 block text-xs font-semibold text-[#52637a]">
-                Message
-              </label>
-
-              <textarea
-                value={
-                  form.message
-                }
-                onChange={(event) =>
-                  setForm(
-                    (current) => ({
-                      ...current,
-                      message:
-                        event.target.value,
-                    })
-                  )
-                }
-                maxLength={5000}
-                rows={5}
-                placeholder="Enter the complete announcement message..."
-                className="w-full resize-y rounded-lg border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-              />
-
-              <div className="mt-1 text-right text-[10px] text-[#94a3b8]">
-                {
-                  form.message
-                    .length
-                }
-                /5000
-              </div>
-            </div>
-          </div>
-
-                    <div className="flex flex-col gap-3 rounded-lg border border-[#d7e0f3] bg-[#f8faff] p-3 transition-colors sm:flex-row sm:items-center sm:justify-between dark:border-[#263b58] dark:bg-[#0b1930]">
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={
-                  form.is_published
-                }
-                onChange={(event) =>
-                  setForm(
-                    (current) => ({
-                      ...current,
-                      is_published:
-                        event.target.checked,
-                    })
-                  )
-                }
-                className="mt-0.5 h-4 w-4 accent-[#1a3a7b] dark:accent-[#4f7df3]"
-              />
-
-              <span>
-                <span className="block text-sm font-semibold text-[#111827] dark:text-[#e8eef8]">
-                  Publish announcement
-                </span>
-
-                <span className="block text-xs text-[#64748b] dark:text-[#94a3b8]">
-                  If unchecked, the announcement is saved as a draft and is invisible to users.
-                </span>
-              </span>
-            </label>
-
-            <div className="flex items-center justify-end gap-2">
-              {editingId && (
-                <button
-                  type="button"
-                  onClick={
-                    resetForm
-                  }
-                  disabled={saving}
-                  className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#334155] transition-colors hover:bg-[#eef2fc] disabled:opacity-50 dark:border-[#29415f] dark:bg-[#13233d] dark:text-[#dbeafe] dark:hover:bg-[#1a2d4a]"
-                >
-                  Cancel
-                </button>
-              )}
-
-              <button
-                type="submit"
-                disabled={saving}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#1a3a7b] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#153164] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#2f5fd6] dark:hover:bg-[#3b6be0]"
-              >
-                {saving ? (
-                  <RefreshCw
-                    size={14}
-                    className="animate-spin"
-                  />
-                ) : (
-                  <CheckCircle
-                    size={14}
-                  />
-                )}
-
-                {saving
-                  ? "Saving..."
-                  : editingId
-                    ? "Save Changes"
-                    : form.is_published
-                      ? "Create & Publish"
-                      : "Save Draft"}
-              </button>
-            </div>
-          </div>
-        </form>
-      </Card>
-
-      </>}
-      {announcementTab === "list" && <>
-      <div className="mb-3">
-        <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
-  <div className="relative min-w-0 flex-1">
-    <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
-
-    
-<input
-  type="search"
-  aria-label="Search announcements"
-  value={announcementSearch}
-  onChange={(e) => setAnnouncementSearch(e.target.value)}
-  placeholder="Search announcements..."
-  className="h-12 w-full min-w-0 rounded-xl border border-[#c7d2fe] pl-11 pr-4 text-sm text-[#17336d] outline-none transition-colors placeholder:text-[#8195bb] focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
-  ref={(input) => {
-    if (input) {
-      input.style.setProperty("background-color", "#ffffff", "important");
-    }
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.setProperty("background-color", "#ffffff", "important");
-  }}
-  onFocus={(e) => {
-    e.currentTarget.style.setProperty("background-color", "#ffffff", "important");
-  }}
-  onBlur={(e) => {
-    e.currentTarget.style.setProperty("background-color", "#ffffff", "important");
-  }}
-/>
-
-  </div>
-  <div data-qrpass-announcement-chevron-v27="priority" className="qrpass-announcement-chevron-v27 relative inline-flex max-w-full shrink-0">
-<select data-qrpass-filter="announcements" aria-label="Filter announcements" value={announcementPriority} onChange={e => setAnnouncementPriority(e.target.value as typeof announcementPriority)} className="h-12 min-w-[165px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
-            <option value="all">All Announcements</option><option value="info">Information</option><option value="important">Important</option><option value="urgent">Urgent</option>
-          </select>
-</div>
-          <div data-qrpass-announcement-chevron-v27="sort" className="qrpass-announcement-chevron-v27 relative inline-flex w-full min-w-0 shrink-0 sm:w-[150px]">
-<select aria-label="Sort announcements" value={announcementSort} onChange={e => setAnnouncementSort(e.target.value as 'newest' | 'oldest')} className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-4 text-sm font-medium text-[#17336d] outline-none sm:w-[150px] focus:border-[#2f5fd6]">
-    <option value="newest">Newest first</option>
-    <option value="oldest">Oldest first</option>
-  </select>
-</div>
-          {/* QRPASS_REFRESH_POSITION_V3: Announcement Management */}
-          <button type="button" onClick={loadAnnouncements} disabled={loading} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff] disabled:opacity-50"><RefreshCw size={14} className={loading ? "animate-spin" : ""}/> Refresh</button>
-</div>
-      </div>
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#dce3ee] bg-white p-3">
-        <span className="mr-1 text-xs font-semibold text-[#17336d]">Priority:</span>
-
-      </div>
-      <Card
-        title="All Announcements"
-        action={
-          <span className="rounded-full bg-[#eef2fc] px-2.5 py-1 text-[10px] font-bold text-[#1a3a7b]">
-            {
-              periodAnnouncements.filter(a => announcementPriority === "all" || a.priority === announcementPriority).length
-            }{" "}
-            matching
-          </span>
-        }
-      >
-        {loading ? (
-          <div className="py-14 text-center text-sm text-[#64748b]">
-            Loading announcements...
-          </div>
-        ) : periodAnnouncements.filter(a => announcementPriority === "all" || a.priority === announcementPriority).length ===
-          0 ? (
-          <div className="py-14 text-center">
-            <Bell
-              size={28}
-              className="mx-auto text-[#b8c4d6]"
-            />
-
-            <p className="mt-3 text-sm font-semibold text-[#334155]">
-              No announcements yet.
-            </p>
-
-
-          </div>
-        ) : (
-          <div className="divide-y divide-[#e5eaf2]">
-            {periodAnnouncements.filter(a => announcementPriority === "all" || a.priority === announcementPriority).map(
-              (
-                announcement
-              ) => {
-                const status =
-                  statusStyle(
-                    announcement.display_status
-                  );
-
-                return (
-                  <div
-                    key={
-                      announcement.id
-                    }
-                    className="p-4 hover:bg-[#fbfcfe]"
-                  >
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-sm font-bold text-[#111827]">
-                            {
-                              announcement.title
-                            }
-                          </h3>
-
-                          <span
-                            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${status.className}`}
-                          >
-                            {
-                              status.label
-                            }
-                          </span>
-
-                          <span
-                            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${priorityStyle(
-                              announcement.priority
-                            )}`}
-                          >
-                            {priorityLabel(
-                              announcement.priority
-                            )}
-                          </span>
-                        </div>
-
-                        <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[#52637a]">
-                          {
-                            announcement.message
-                          }
-                        </p>
-
-                        <div className="mt-3 grid gap-2 text-xs text-[#64748b] sm:grid-cols-2 xl:grid-cols-4">
-                          <div>
-                            <span className="font-semibold text-[#334155]">
-                              Audience:
-                            </span>{" "}
-                            {audienceLabel(
-                              announcement.audience
-                            )}
-                          </div>
-
-                          <div>
-                            <span className="font-semibold text-[#334155]">
-                              Starts:
-                            </span>{" "}
-                            {announcement.start_at
-                              ? formatDateTime(
-                                  announcement.start_at
-                                )
-                              : "Immediately"}
-                          </div>
-
-                          <div>
-                            <span className="font-semibold text-[#334155]">
-                              Expires:
-                            </span>{" "}
-                            {announcement.end_at
-                              ? formatDateTime(
-                                  announcement.end_at
-                                )
-                              : "No expiration"}
-                          </div>
-
-                          <div>
-                            <span className="font-semibold text-[#334155]">
-                              Created by:
-                            </span>{" "}
-                            {announcement.creator
-                              ?.name ??
-                              "System Administrator"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex shrink-0 flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            startEdit(
-                              announcement
-                            )
-                          }
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#cfd8e6] bg-white px-3 py-2 text-xs font-semibold text-[#1a3a7b] hover:bg-[#eef2fc]"
-                        >
-                          <Settings
-                            size={13}
-                          />
-                          Edit
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handlePublishToggle(
-                              announcement
-                            )
-                          }
-                          disabled={
-                            changingPublishId ===
-                            announcement.id
-                          }
-                          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-50 ${
-                            announcement.is_published
-                              ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
-                              : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
-                          }`}
-                        >
-                          {announcement.is_published ? (
-                            <EyeOff
-                              size={13}
-                            />
-                          ) : (
-                            <Eye
-                              size={13}
-                            />
-                          )}
-
-                          {changingPublishId ===
-                          announcement.id
-                            ? "Updating..."
-                            : announcement.is_published
-                              ? "Unpublish"
-                              : "Publish"}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleDelete(
-                              announcement
-                            )
-                          }
-                          disabled={
-                            deletingId ===
-                            announcement.id
-                          }
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
-                        >
-                          <XCircle
-                            size={13}
-                          />
-
-                          {deletingId ===
-                          announcement.id
-                            ? "Deleting..."
-                            : "Delete"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-            )}
-          </div>
-        )}
-      </Card>
-      </>}
-    </div>
-  );
-}
-
-
-
-// =========================================================
 // CSU READ-ONLY ITEM REGISTRY - approved items only
 // Data is returned by the role-restricted /security-reports endpoint.
 // =========================================================
@@ -21558,6 +20947,56 @@ function SecurityItemRegistry() {
 }
 
 // QRPass centralized Sysadmin-only report generator (page access follows Sysadmin navigation).
+
+/* QRPASS_SYSADMIN_FOUR_UNIFORM_BUTTONS_V75 */
+/* QRPASS_COMPACT_ROUNDED_BUTTONS_V76 */
+/**
+ * The four System Administrator save/download buttons use identical geometry.
+ * Inline-important values deliberately outrank all prior QRPass CSS patches.
+ * Downloading/saving handlers, disabled/loading states and card layout are unchanged.
+ */
+function qrpassUniformSysadminActionButtonV75(button: HTMLButtonElement | null): void {
+  if (!button) return;
+  const rules: ReadonlyArray<readonly [string, string]> = [
+    ['box-sizing', 'border-box'],
+    ['display', 'inline-flex'],
+    ['align-items', 'center'],
+    ['justify-content', 'center'],
+    ['vertical-align', 'middle'],
+    ['width', '176px'],
+    ['min-width', '0'],
+    ['max-width', '100%'],
+    ['height', '48px'],
+    ['min-height', '48px'],
+    ['max-height', '48px'],
+    ['padding', '0 14px'],
+    ['border', '1px solid transparent'],
+    ['border-radius', '18px'],
+    ['font-size', '14px'],
+    ['font-weight', '600'],
+    ['line-height', '20px'],
+    ['letter-spacing', 'normal'],
+    ['white-space', 'nowrap'],
+    ['gap', '8px'],
+    ['text-align', 'center'],
+    ['background', 'linear-gradient(180deg, #294c90 0%, #1c335b 100%)'],
+    ['background-color', '#294c90'],
+    ['background-image', 'linear-gradient(180deg, #294c90 0%, #1c335b 100%)'],
+    ['color', '#ffffff'],
+    ['box-shadow', 'none'],
+    ['text-shadow', 'none'],
+  ];
+  for (const [name, value] of rules) button.style.setProperty(name, value, 'important');
+  const icon = button.querySelector('svg');
+  if (icon) {
+    icon.style.setProperty('width', '16px', 'important');
+    icon.style.setProperty('height', '16px', 'important');
+    icon.style.setProperty('flex-shrink', '0', 'important');
+    icon.style.setProperty('color', '#ffffff', 'important');
+    icon.style.setProperty('stroke', '#ffffff', 'important');
+  }
+}
+
 function SysAdminDownloadableReports() {
   type ReportKey = "items" | "users" | "audit" | "entryexit" | "lostfound" | "incidents" | "sessions";
   type ReportFormat = "xlsx" | "pdf" | "csv";
@@ -21739,11 +21178,9 @@ function SysAdminDownloadableReports() {
                 type="button"
                 disabled={busy}
                 onClick={() => void generate(key)}
-                ref={(el) => { if (el) { el.style.setProperty("background", "#ffffff", "important"); el.style.setProperty("background-color", "#ffffff", "important"); } }}
-                onMouseEnter={(event) => { event.currentTarget.style.setProperty("background", "#eef2ff", "important"); event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
-                onMouseLeave={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-                onFocus={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-                className="inline-flex min-h-[52px] min-w-[190px] items-center justify-center gap-2 rounded-xl border border-[#c7d2fe]  px-5 py-3 text-sm font-semibold  transition  disabled:opacity-50    transition-colors !bg-white hover:!bg-[#eef2ff] focus:!bg-white !text-[#17336d] !border-[#c7d2fe] transition-colors"
+                className="qrpass-report-download-registration-v71"
+                data-qrpass-uniform-v75="true"
+                ref={qrpassUniformSysadminActionButtonV75}
               >
                 <Download size={17} />
                 {label}
@@ -21775,7 +21212,7 @@ function SysAdminRegisteredItemsPage() {
 
 
 /* qrpass-sysadmin-manage-ui-v4: targeted page manager controls */
-function QrpassPageManager({ module, onClose }: { module: 'items' | 'lost-found' | 'users' | 'announcements'; onClose: () => void }) {
+function QrpassPageManager({ module, onClose }: { module: 'items' | 'lost-found' | 'users'; onClose: () => void }) {
   const [view, setView] = React.useState<'active' | 'archived'>('active');
   const [rows, setRows] = React.useState<any[]>([]);
   const [chosen, setChosen] = React.useState<number[]>([]);
@@ -21784,7 +21221,7 @@ function QrpassPageManager({ module, onClose }: { module: 'items' | 'lost-found'
   const [message, setMessage] = React.useState('');
   const [error, setError] = React.useState('');
   const [confirmAction, setConfirmAction] = React.useState('');
-  const titles: Record<string,string> = {items:'Manage Items','lost-found':'Manage Reports',users:'Manage Users',announcements:'Manage Announcements'};
+  const titles: Record<string,string> = {items:'Manage Items','lost-found':'Manage Reports',users:'Manage Users'};
 
   /* QRPASS_MANAGE_USERS_STATUS_MATCH_USER_LIST_V50 */
   const renderManageUserStatusV50 = (value: unknown) => {
@@ -21957,7 +21394,6 @@ sysadmin: [
   SysAdminUserAccounts,
   SysAdminSystemLogs,
   SysAdminActiveSessions,
-  SysAdminAnnouncementManagement,
   SysAdminSettings,
   SysAdminDownloadableReports,
 ],
@@ -22040,10 +21476,6 @@ const NAV: Record<
     {
       icon: <Eye size={16} />,
       label: "Active Sessions",
-    },
-    {
-      icon: <Bell size={16} />,
-      label: "Announcement Management",
     },
     {
       icon: <Settings size={16} />,
@@ -24576,7 +24008,7 @@ function Dashboard({
   }, []);
 
   const [csuManagerOpenV147, setCsuManagerOpenV147] = useState(false);
-  const [qrpassPageManageType, setQrpassPageManageType] = useState<'items'|'lost-found'|'users'|'announcements'|'choose'|null>(null);
+  const [qrpassPageManageType, setQrpassPageManageType] = useState<'items'|'lost-found'|'users'|'choose'|null>(null);
   const [activeNav, setActiveNav] = useState<number>(() => {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -24596,7 +24028,7 @@ function Dashboard({
         item => item.label === saved.label
       );
 
-      return index >= 0 && index < pages.length ? index : 0;
+      return (index >= 0 && index < pages.length ? index : 0);
     } catch {
       return 0;
     }
@@ -24726,21 +24158,6 @@ function Dashboard({
   const [notificationFilter, setNotificationFilter] =
   useState<"all" | "unread" | "read">("unread");
 
-  // =========================================================
-  // ACTIVE ANNOUNCEMENTS
-  // =========================================================
-
-  const [
-    activeAnnouncements,
-    setActiveAnnouncements,
-  ] = useState<any[]>([]);
-
-  const [
-    announcementsLoading,
-    setAnnouncementsLoading,
-  ] = useState(false);
-
-  // =========================================================
   // CURRENT USER
   // =========================================================
 
@@ -24757,224 +24174,7 @@ function Dashboard({
     }
   });
 
-  // =========================================================
-  // LOAD ACTIVE ANNOUNCEMENTS FOR CURRENT ROLE
-  // =========================================================
-
-  async function loadActiveAnnouncements(
-    showLoading = true
-  ) {
-    try {
-      if (showLoading) {
-        setAnnouncementsLoading(
-          true
-        );
-      }
-
-      const data =
-        await getAnnouncements();
-
-     const announcements =
-  Array.isArray(
-    data?.announcements
-  )
-    ? data.announcements
-    : [];
-
-const userId =
-  currentUser?.id ??
-  currentUser?.username ??
-  "user";
-
-const storageKey =
-  `qrpass-viewed-announcements-${userId}`;
-
-let viewedIds: number[] = [];
-
-try {
-  const saved =
-    localStorage.getItem(
-      storageKey
-    );
-
-  viewedIds = saved
-    ? JSON.parse(saved)
-    : [];
-} catch {
-  viewedIds = [];
-}
-
-setActiveAnnouncements(
-  announcements.filter(
-    (announcement: any) =>
-      !viewedIds.includes(
-        Number(announcement.id)
-      )
-  )
-);
-    } catch (error) {
-      console.error(
-        "Failed to load active announcements:",
-        error
-      );
-
-      setActiveAnnouncements(
-        []
-      );
-    } finally {
-      if (showLoading) {
-        setAnnouncementsLoading(
-          false
-        );
-      }
-    }
-  }
-
-  useEffect(() => {
-    loadActiveAnnouncements(
-      true
-    );
-
-    const intervalId =
-      window.setInterval(
-        () => {
-          loadActiveAnnouncements(
-            false
-          );
-        },
-        60000
-      );
-
-    const handleFocus = () => {
-      loadActiveAnnouncements(
-        false
-      );
-    };
-
-    const handleVisibility =
-      () => {
-        if (
-          document.visibilityState ===
-          "visible"
-        ) {
-          loadActiveAnnouncements(
-            false
-          );
-        }
-      };
-
-    window.addEventListener(
-      "focus",
-      handleFocus
-    );
-
-    document.addEventListener(
-      "visibilitychange",
-      handleVisibility
-    );
-
-    return () => {
-      window.clearInterval(
-        intervalId
-      );
-
-      window.removeEventListener(
-        "focus",
-        handleFocus
-      );
-
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisibility
-      );
-    };
-  }, [role]);
-
-  function getAnnouncementBannerStyle(
-    priority:
-      | string
-      | null
-      | undefined
-  ) {
-    if (
-      String(priority).toLowerCase() ===
-      "urgent"
-    ) {
-      return {
-        wrapper:
-          "bg-red-50 border-red-200",
-        icon:
-          "bg-red-100 text-red-700",
-        title:
-          "text-red-800",
-        badge:
-          "bg-red-100 text-red-700 border-red-200",
-      };
-    }
-
-    if (
-      String(priority).toLowerCase() ===
-      "important"
-    ) {
-      return {
-        wrapper:
-          "bg-amber-50 border-amber-200",
-        icon:
-          "bg-amber-100 text-amber-700",
-        title:
-          "text-amber-800",
-        badge:
-          "bg-amber-100 text-amber-700 border-amber-200",
-      };
-    }
-
-    return {
-      wrapper:
-        "bg-[#eef2fc] border-[#d7e0f3]",
-      icon:
-        "bg-[#dfe7fb] text-[#2f5fd6]",
-      title:
-        "text-[#1a3a7b]",
-      badge:
-        "bg-blue-100 text-blue-700 border-blue-200",
-    };
-  }
-
-  function formatAnnouncementEnd(
-    value:
-      | string
-      | null
-      | undefined
-  ) {
-    if (!value) {
-      return "";
-    }
-
-    const date =
-      new Date(value);
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-      return "";
-    }
-
-    return date.toLocaleString(
-      "en-PH",
-      {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      }
-    );
-  }
-
-  // =========================================================
-// LOAD LATEST ACCOUNT DATA
+  // LOAD LATEST ACCOUNT DATA
 // =========================================================
 
 useEffect(() => {
@@ -25904,8 +25104,7 @@ const handleSaveAccountProfile = async () => {
     | 4 = User Accounts
     | 5 = System Logs
     | 6 = Active Sessions
-    | 7 = Announcement Management
-    | 8 = System Settings
+    | 7 = System Settings
     |
     */
   
@@ -25922,11 +25121,11 @@ const handleSaveAccountProfile = async () => {
         normalizedType.includes("security_config") ||
         normalizedType.includes("permission")
       ) {
-        return 8; // System Settings (Security Config no longer appears in sidebar)
+        return 7; // System Settings (Security Config no longer appears in sidebar)
       }
   
       if (normalizedType.includes("setting")) {
-        return 8; // System Settings
+        return 7; // System Settings
       }
   
       if (
@@ -27713,7 +26912,7 @@ const handleSaveAccountProfile = async () => {
 
           <nav className="flex-1 py-2 overflow-y-auto">
             {navItems.map(
-              (item, i) => (role === "sysadmin" && item.label === "Active Sessions" ? null : (
+              (item, i) => (role === "sysadmin" && (item.label === "Active Sessions") ? null : (
                 <button
                   key={i}
                   onClick={() =>
@@ -27858,195 +27057,14 @@ const handleSaveAccountProfile = async () => {
             </span>
           </div>
 
-                    {/* ACTIVE ANNOUNCEMENTS */}
-
-          {!announcementsLoading &&
-            activeAnnouncements.length > 0 && (
-              <div className="mb-4 space-y-2">
-                {activeAnnouncements.map((announcement) => {
-                  const bannerStyle =
-                    getAnnouncementBannerStyle(
-                      announcement.priority
-                    );
-
-                  async function markAnnouncementAsViewed() {function markAnnouncementAsViewed() {
-  const userId =
-    currentUser?.id ??
-    currentUser?.username ??
-    "user";
-
-  const storageKey =
-    `qrpass-viewed-announcements-${userId}`;
-
-  let viewedIds: number[] = [];
-
-  try {
-    const saved =
-      localStorage.getItem(storageKey);
-
-    viewedIds = saved
-      ? JSON.parse(saved)
-      : [];
-  } catch {
-    viewedIds = [];
-  }
-
-  const announcementId =
-    Number(announcement.id);
-
-  if (
-    !viewedIds.includes(
-      announcementId
-    )
-  ) {
-    viewedIds.push(
-      announcementId
-    );
-  }
-
-  localStorage.setItem(
-    storageKey,
-    JSON.stringify(viewedIds)
-  );
-
-  setActiveAnnouncements(
-    (current) =>
-      current.filter(
-        (item) =>
-          Number(item.id) !==
-          announcementId
-      )
-  );
-} 
-                  const announcementId = Number(announcement.id);
-
-                  try {
-                    const token = localStorage.getItem("token");
-
-                    if (!token) {
-                      throw new Error("Authentication token not found.");
-                    }
-
-                    const response = await fetch(
-                      `http://localhost:8000/api/announcements/${announcementId}/view`,
-                      {
-                        method: "PUT",
-                        headers: {
-                          Authorization: `Bearer ${token}`,
-                          Accept: "application/json",
-                          "Content-Type": "application/json",
-                        },
-                      }
-                    );
-
-                    const data = await response.json().catch(() => null);
-
-                    if (!response.ok) {
-                      console.error(
-                        "Mark announcement viewed failed:",
-                        response.status,
-                        data
-                      );
-
-                      throw new Error(
-                        data?.message ||
-                          "Failed to mark announcement as viewed."
-                      );
-                    }
-
-                    setActiveAnnouncements((current) =>
-                      current.filter(
-                        (item) => Number(item.id) !== announcementId
-                      )
-                    );
-                  } catch (error) {
-                    console.error(
-                      "Failed to mark announcement as viewed:",
-                      error
-                    );
-                  }
-                }
-
-                  return (
-                    <div
-                      key={announcement.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={markAnnouncementAsViewed}
-                      onKeyDown={(event) => {
-                        if (
-                          event.key === "Enter" ||
-                          event.key === " "
-                        ) {
-                          event.preventDefault();
-                          markAnnouncementAsViewed();
-                        }
-                      }}
-                      className={`rounded-lg border px-3 py-3 flex items-start gap-3 cursor-pointer hover:shadow-md transition-all ${bannerStyle.wrapper}`}
-                      title="Click to mark this announcement as viewed"
-                    >
-                      <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${bannerStyle.icon}`}
-                      >
-                        {String(
-                          announcement.priority
-                        ).toLowerCase() === "urgent" ? (
-                          <AlertTriangle size={15} />
-                        ) : (
-                          <Bell size={15} />
-                        )}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p
-                            className={`text-xs font-bold ${bannerStyle.title}`}
-                          >
-                            {announcement.title}
-                          </p>
-
-                          <span
-                            className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase ${bannerStyle.badge}`}
-                          >
-                            {String(
-                              announcement.priority ?? "info"
-                            )}
-                          </span>
-                        </div>
-
-                        <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-[#334155]">
-                          {announcement.message}
-                        </p>
-
-                        {announcement.end_at && (
-                          <p className="mt-1.5 text-[10px] text-[#64748b]">
-                            Available until{" "}
-                            <span className="font-semibold">
-                              {formatAnnouncementEnd(
-                                announcement.end_at
-                              )}
-                            </span>
-                          </p>
-                        )}
-
-                        <p className="mt-1.5 text-[9px] font-medium text-[#64748b]">
-                          Click to mark as viewed
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-          <div className={role === "sysadmin" ? `qrpass-admin-page mx-auto w-full max-w-[1480px] ${[0, 1, 3].includes(activeNav) ? "" : "qrpass-sysadmin-hide-search-v24"}` : "w-full"}>
-            {role === "sysadmin" && [3, 6].includes(activeNav) && (
+                    <div className={role === "sysadmin" ? `qrpass-admin-page mx-auto w-full max-w-[1480px] ${[0, 1, 3].includes(activeNav) ? "" : "qrpass-sysadmin-hide-search-v24"}` : "w-full"}>
+            {role === "sysadmin" && [3].includes(activeNav) && (
   <button type="button" className="qrpass-manage-logs-shortcut-v3 qrpass-page-manage-v1"
-    onClick={() => { setQrpassPageManageType(activeNav===0?'items':activeNav===1?'lost-found':activeNav===3?'users':activeNav===6?'announcements':'choose'); }}>
-    <Settings size={15} /> {({0:'Manage Items',1:'Manage Reports',2:'Manage Reports',3:'Manage Users',6:'Manage Announcements'} as Record<number,string>)[activeNav]}
+    onClick={() => { setQrpassPageManageType(activeNav===0?'items':activeNav===1?'lost-found':activeNav===3?'users':'choose'); }}>
+    <Settings size={15} /> {({0:'Manage Items',1:'Manage Reports',2:'Manage Reports',3:'Manage Users'} as Record<number,string>)[activeNav]}
   </button>
 )}
-            <QRPassSysadminManageContext.Provider value={role === "sysadmin" ? () => setQrpassPageManageType(activeNav === 0 ? "items" : activeNav === 1 ? "lost-found" : activeNav === 6 ? "announcements" : "choose") : null}>
+            <QRPassSysadminManageContext.Provider value={role === "sysadmin" ? () => setQrpassPageManageType(activeNav === 0 ? "items" : activeNav === 1 ? "lost-found"  : "choose") : null}>
             <QRPassCSUManageContextV147.Provider value={role === "security" && activeNav < 5 ? () => setCsuManagerOpenV147(true) : null}>
               <QRPassPageSubtitleContext.Provider value={role === "sysadmin"}>
                 <ActivePage onNavigate={handleNavClick} />

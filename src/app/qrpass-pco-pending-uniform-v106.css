@@ -1,0 +1,142 @@
+/* QRPASS_PCO_PENDING_UNIFORM_V106: PCO Pending Requests ONLY — uniform desktop table and mobile cards. */
+.qrpass-pco-pending-wrap-v106 {
+  width: 100%;
+  min-width: 0;
+  container-name: qrpass-pco-pending-v106;
+  container-type: inline-size;
+}
+.qrpass-pco-pending-cards-v106 { display: none !important; }
+.qrpass-pco-pending-grid-v106 { display: block !important; min-width: 0; width: 100%; }
+
+html body .qrpass-pco-pending-table-v106 {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+html body .qrpass-pco-pending-table-v106 thead tr {
+  background: #f8fafc !important;
+}
+html body .qrpass-pco-pending-table-v106 thead th {
+  padding: 15px 11px !important;
+  border-bottom: 1px solid #dee6f0 !important;
+  color: #5d6f87 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 18px !important;
+  vertical-align: middle !important;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+html body .qrpass-pco-pending-table-v106 tbody td {
+  padding: 16px 11px !important;
+  border-bottom: 1px solid #edf1f7 !important;
+  color: #526782 !important;
+  font-size: 13px !important;
+  line-height: 20px !important;
+  vertical-align: middle !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody tr:hover {
+  background: #f8fbff !important;
+}
+/* Same alignment for each header and its corresponding row value. */
+html body .qrpass-pco-pending-table-v106 thead th:nth-child(2),
+html body .qrpass-pco-pending-table-v106 thead th:nth-child(4),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(2),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(4) {
+  text-align: left !important;
+}
+html body .qrpass-pco-pending-table-v106 thead th:nth-child(1),
+html body .qrpass-pco-pending-table-v106 thead th:nth-child(3),
+html body .qrpass-pco-pending-table-v106 thead th:nth-child(5),
+html body .qrpass-pco-pending-table-v106 thead th:nth-child(6),
+html body .qrpass-pco-pending-table-v106 thead th:nth-child(7),
+html body .qrpass-pco-pending-table-v106 thead th:nth-child(8),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(1),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(3),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(5),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(6),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(7),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(8) {
+  text-align: center !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(2) {
+  color: #17336d !important;
+  font-size: 14px !important;
+  font-weight: 650 !important;
+  overflow-wrap: anywhere;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(4) {
+  color: #526782 !important;
+  font-size: 13px !important;
+  overflow-wrap: anywhere;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(1),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(3),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(7),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(8) {
+  font-variant-numeric: tabular-nums;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(7),
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(8) {
+  white-space: nowrap;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(6) button {
+  height: 34px;
+  min-width: 74px;
+  padding: 0 14px !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  border: 1px solid #cfd9e9 !important;
+  color: #244780 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: none !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(6) button:hover {
+  background: #eef4ff !important;
+  border-color: #b9cdf0 !important;
+}
+html body .qrpass-pco-pending-table-v106 tbody td:nth-child(6) button:focus-visible {
+  outline: 2px solid #5278e7 !important;
+  outline-offset: 2px !important;
+}
+/* Switch to full-width, readable cards when the card itself is too narrow. */
+@container qrpass-pco-pending-v106 (max-width: 1150px) {
+  .qrpass-pco-pending-grid-v106 { display: none !important; }
+  .qrpass-pco-pending-cards-v106 { display: block !important; }
+}
+.qrpass-pco-pending-cards-v106 article {
+  padding: 18px 20px;
+  background: #ffffff;
+}
+.qrpass-pco-pending-cards-v106 article:hover { background: #f9fbff; }
+.qrpass-pco-pending-cards-v106 article dl {
+  column-gap: 18px;
+  row-gap: 15px;
+}
+.qrpass-pco-pending-cards-v106 article dt {
+  color: #63758c;
+  font-size: 11px;
+  font-weight: 700;
+}
+.qrpass-pco-pending-cards-v106 article dd {
+  color: #344763;
+  font-size: 13px;
+  line-height: 19px;
+}
+.qrpass-pco-pending-cards-v106 article > div:last-child button {
+  border-radius: 10px;
+  min-height: 38px;
+  background: #ffffff;
+}
+@media (max-width: 520px) {
+  .qrpass-pco-pending-cards-v106 article { padding: 16px; }
+  .qrpass-pco-pending-cards-v106 article dl { column-gap: 12px; }
+}

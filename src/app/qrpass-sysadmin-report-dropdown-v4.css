@@ -239,3 +239,127 @@
 }
 /* No color changes: keep existing navy gradient + white icons/text. */
 /* QRPASS_REPORTS_FOOTER_GAP_SAME_AS_SAVE_V23_END */
+
+/* QRPASS_REPORT_BUTTONS_MATCH_REGISTRATION_V71_START */
+/* Exact Submit Registration reference: navy-to-deep-navy gradient,
+   white text, 15px semibold label, 54px height and 14px rounded corners.
+   Only the three role-specific PDF / Excel report button pairs are marked. */
+#root button.qrpass-report-download-registration-v71,
+#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(3) button.qrpass-report-download-registration-v71 {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  min-width: 172px !important;
+  min-height: 54px !important;
+  height: 54px !important;
+  width: auto !important;
+  max-width: 100% !important;
+  padding: 0 20px !important;
+  border: 1px solid transparent !important;
+  border-radius: 14px !important;
+  background: linear-gradient(180deg, #294c90 0%, #1c335b 100%) !important;
+  background-color: #294c90 !important;
+  background-image: linear-gradient(180deg, #294c90 0%, #1c335b 100%) !important;
+  color: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 20px !important;
+  text-align: center !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: filter 160ms ease, box-shadow 160ms ease, transform 160ms ease !important;
+}
+#root button.qrpass-report-download-registration-v71 svg,
+#root #qrpass-sysadmin-reports-v4 button.qrpass-report-download-registration-v71 svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  flex-shrink: 0 !important;
+}
+#root button.qrpass-report-download-registration-v71:hover:not(:disabled),
+#root #qrpass-sysadmin-reports-v4 button.qrpass-report-download-registration-v71:hover:not(:disabled) {
+  filter: brightness(1.055) !important;
+  box-shadow: 0 5px 12px rgba(26, 54, 111, .16) !important;
+}
+#root button.qrpass-report-download-registration-v71:active:not(:disabled),
+#root #qrpass-sysadmin-reports-v4 button.qrpass-report-download-registration-v71:active:not(:disabled) {
+  filter: brightness(.97) !important;
+  transform: translateY(0) !important;
+}
+#root button.qrpass-report-download-registration-v71:focus-visible,
+#root #qrpass-sysadmin-reports-v4 button.qrpass-report-download-registration-v71:focus-visible {
+  outline: 2px solid #7c9cf6 !important;
+  outline-offset: 2px !important;
+}
+#root button.qrpass-report-download-registration-v71:disabled,
+#root #qrpass-sysadmin-reports-v4 button.qrpass-report-download-registration-v71:disabled {
+  opacity: .5 !important;
+  cursor: not-allowed !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  #root button.qrpass-report-download-registration-v71 { transition: none !important; }
+}
+/* QRPASS_REPORT_BUTTONS_MATCH_REGISTRATION_V71_END */
+
+/* QRPASS_ADD_USER_BUTTON_GEOMETRY_V73_START */
+/* Exact Add User reference: 60px tall, 16px semibold text, 16px radius,
+   natural button width and 24px horizontal padding. Both report formats. */
+html body #root#root button.qrpass-report-download-registration-v71,
+html body #root#root #qrpass-sysadmin-reports-v4 > :is(div, section).overflow-hidden > :nth-child(3) button.qrpass-report-download-registration-v71 {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  padding: 0 24px !important;
+  border-radius: 16px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  line-height: 24px !important;
+  gap: 10px !important;
+}
+/* QRPASS_ADD_USER_BUTTON_GEOMETRY_V73_END */
+
+/* QRPASS_UNIFORM_SAVE_REPORT_BUTTONS_V74_START */
+/* v74: System Administrator > Downloadable Reports (PDF and Excel only).
+   Match Save Settings/Policy dimensions; preserve the v71 blue/white finish. */
+html body #root#root#root #qrpass-sysadmin-reports-v4 button.qrpass-report-download-registration-v71 {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 200px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  padding: 0 18px !important;
+  border-radius: 16px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  line-height: 24px !important;
+  letter-spacing: normal !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  gap: 10px !important;
+}
+/* Keep download glyphs aligned with the 16px label. */
+html body #root#root#root #qrpass-sysadmin-reports-v4 button.qrpass-report-download-registration-v71 svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0 !important;
+}
+@media (max-width: 639px) {
+  html body #root#root#root #qrpass-sysadmin-reports-v4 button.qrpass-report-download-registration-v71 {
+    width: 100% !important;
+  }
+}
+/* QRPASS_UNIFORM_SAVE_REPORT_BUTTONS_V74_END */

@@ -1,0 +1,92 @@
+/* QRPass v121: targeted only to PCO Pending Requests Item Details popup. */
+[data-qrpass-pco-fixed-modal-v119="true"] {
+  /* Let a typical desktop record fit naturally instead of forcing a tall empty modal. */
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(100dvh - 24px) !important;
+  overflow: hidden !important;
+}
+[data-qrpass-pco-fixed-modal-v119="true"] > div:first-child {
+  flex: 0 0 auto !important;
+}
+[data-qrpass-pco-fixed-modal-v119="true"] > div:nth-child(2) {
+  /* Only a *short viewport* may scroll this middle area. The card never scrolls. */
+  flex: 0 1 auto !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+[data-qrpass-pco-fixed-modal-v119="true"] [data-qrpass-pco-item-card-v120="true"] {
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overscroll-behavior: auto !important;
+  scrollbar-width: none !important;
+  padding: 17px 20px !important;
+}
+[data-qrpass-pco-fixed-modal-v119="true"] [data-qrpass-pco-item-card-v120="true"] .grid {
+  row-gap: 12px !important;
+  column-gap: 20px !important;
+  margin-top: 12px !important;
+  align-items: start !important;
+}
+[data-qrpass-pco-fixed-modal-v119="true"] [data-qrpass-pco-item-card-v120="true"] .grid > div {
+  min-width: 0 !important;
+  align-self: start !important;
+  overflow-wrap: anywhere !important;
+}
+[data-qrpass-pco-fixed-modal-v119="true"] [data-qrpass-pco-item-card-v120="true"] .grid > div > p:first-child {
+  font-size: 10.5px !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+  color: #62748f !important;
+  letter-spacing: .005em !important;
+}
+[data-qrpass-pco-fixed-modal-v119="true"] [data-qrpass-pco-item-card-v120="true"] .grid > div > p:nth-child(2) {
+  margin-top: 3px !important;
+  font-size: 13px !important;
+  line-height: 1.32 !important;
+  font-weight: 550 !important;
+  color: #172c4d !important;
+  overflow-wrap: anywhere !important;
+}
+[data-qrpass-pco-fixed-modal-v119="true"] [data-qrpass-pco-item-card-v120="true"] > div[class*="border-t"] {
+  margin-top: 13px !important;
+  padding-top: 12px !important;
+}
+/* Compact three-column information and specifications on ordinary desktop widths. */
+@media (min-width: 800px) {
+  [data-qrpass-pco-fixed-modal-v119="true"] [data-qrpass-pco-item-card-v120="true"] .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  [data-qrpass-pco-fixed-modal-v119="true"] [data-qrpass-pco-item-card-v120="true"] .grid > div[class*="sm:col-span-2"] {
+    grid-column: span 1 / span 1 !important;
+  }
+}
+@media (min-width: 560px) and (max-width: 799px) {
+  [data-qrpass-pco-fixed-modal-v119="true"] [data-qrpass-pco-item-card-v120="true"] .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 559px) {
+  [data-qrpass-pco-fixed-modal-v119="true"] [data-qrpass-pco-item-card-v120="true"] {
+    padding: 14px 15px !important;
+  }
+  [data-qrpass-pco-fixed-modal-v119="true"] [data-qrpass-pco-item-card-v120="true"] .grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    row-gap: 11px !important;
+  }
+  [data-qrpass-pco-fixed-modal-v119="true"] [data-qrpass-pco-item-card-v120="true"] .grid > div[class*="sm:col-span-2"] {
+    grid-column: auto !important;
+  }
+}
+/* Keep modal footer accessible on short screens where the middle area needs to scroll. */
+[data-qrpass-pco-fixed-modal-v119="true"] > div:nth-child(2) > div:last-child {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 1 !important;
+  background-color: #ffffff !important;
+}

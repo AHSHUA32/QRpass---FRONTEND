@@ -1,0 +1,45 @@
+/* QRPASS_USER_ACCOUNT_ACTION_COLORS_V92 — only User Accounts row action buttons. */
+/* Strong, attribute-scoped selectors win over the older global white-outline CSS. */
+html body #root button[data-qrpass-user-action-v92="edit"][data-qrpass-user-action-v92="edit"] {
+  background: #244780 !important; background-image: none !important;
+  color: #ffffff !important; border: 1px solid #244780 !important;
+  box-shadow: none !important;
+}
+html body #root button[data-qrpass-user-action-v92="edit"]:not(:disabled):hover {
+  background: #315b9e !important; border-color: #315b9e !important; color: #ffffff !important;
+}
+html body #root button[data-qrpass-user-action-v92="disable"][data-qrpass-user-action-v92="disable"] {
+  background: #fde8e8 !important; background-image: none !important;
+  color: #b91c1c !important; border: 1px solid #f5bbbb !important;
+  box-shadow: none !important;
+}
+html body #root button[data-qrpass-user-action-v92="disable"]:not(:disabled):hover {
+  background: #fbd5d5 !important; border-color: #eeaaaa !important; color: #991b1b !important;
+}
+html body #root button[data-qrpass-user-action-v92="enable"][data-qrpass-user-action-v92="enable"] {
+  background: #dcfce7 !important; background-image: none !important;
+  color: #166534 !important; border: 1px solid #86efac !important;
+  box-shadow: none !important;
+}
+html body #root button[data-qrpass-user-action-v92="enable"]:not(:disabled):hover {
+  background: #bbf7d0 !important; border-color: #4ade80 !important; color: #14532d !important;
+}
+html body #root button[data-qrpass-user-action-v92="revoke"][data-qrpass-user-action-v92="revoke"] {
+  background: #334155 !important; background-image: none !important;
+  color: #ffffff !important; border: 1px solid #334155 !important;
+  box-shadow: none !important;
+}
+html body #root button[data-qrpass-user-action-v92="revoke"]:not(:disabled):hover {
+  background: #475569 !important; border-color: #475569 !important; color: #ffffff !important;
+}
+html body #root button[data-qrpass-user-action-v92="revoked"][data-qrpass-user-action-v92="revoked"],
+html body #root button[data-qrpass-user-action-v92="revoke"]:disabled,
+html body #root button[data-qrpass-user-action-v92="disable"]:disabled,
+html body #root button[data-qrpass-user-action-v92="enable"]:disabled {
+  background: #e2e8f0 !important; color: #64748b !important;
+  border: 1px solid #cbd5e1 !important; cursor: not-allowed !important;
+}
+html body #root button[data-qrpass-user-action-v92]:focus-visible {
+  outline: 3px solid rgba(82,120,231,.58) !important;
+  outline-offset: 2px !important;
+}

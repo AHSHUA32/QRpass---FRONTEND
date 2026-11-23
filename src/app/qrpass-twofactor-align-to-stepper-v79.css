@@ -1,0 +1,68 @@
+/* QRPASS_TWOFACTOR_MATCH_STEPPER_V79
+ * QRPass: style only the row for Enable Two-Factor Auth in SysAdmin Settings.
+ * The v78 selector '.p-3.border' did not match the actual JSX.
+ * The numeric stepper uses 16px left inset and 7px right control margin.
+ * Use those exact insets on the toggle row while retaining a native switch.
+ */
+html body #root#root .qrpass-sysadmin-settings-v31
+[data-qrpass-settings-report-skin="v7"]
+[data-qrpass-two-factor-aligned="v12"] > div {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  padding: 0 7px 0 16px !important;
+  margin: 0 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+/* Left text: aligned with the number typed into the field above. */
+html body #root#root .qrpass-sysadmin-settings-v31
+[data-qrpass-settings-report-skin="v7"]
+[data-qrpass-two-factor-aligned="v12"] > div > span {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #17336d !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 400 !important;
+  text-align: left !important;
+}
+
+/* Toggle's RIGHT edge aligns with the number stepper's right control edge.
+ * Keep existing onClick, switch size, disabled state, and motion.
+ */
+html body #root#root .qrpass-sysadmin-settings-v31
+[data-qrpass-settings-report-skin="v7"]
+[data-qrpass-two-factor-aligned="v12"] > div > button[aria-label="Toggle two-factor authentication"] {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+
+/* Align hover/focus surfaces with the numeric stepper. */
+html body #root#root .qrpass-sysadmin-settings-v31
+[data-qrpass-settings-report-skin="v7"]
+[data-qrpass-two-factor-aligned="v12"] > div:hover:not(:focus-within) {
+  background: #eef4ff !important;
+  border-color: #9fb5d5 !important;
+}
+html body #root#root .qrpass-sysadmin-settings-v31
+[data-qrpass-settings-report-skin="v7"]
+[data-qrpass-two-factor-aligned="v12"] > div:focus-within {
+  background: #ffffff !important;
+  border-color: #6b90c7 !important;
+  box-shadow: 0 0 0 2px rgba(82,120,231,.13) !important;
+}

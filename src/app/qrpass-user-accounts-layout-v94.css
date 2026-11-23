@@ -1,0 +1,148 @@
+/* QRPASS_USER_ACCOUNTS_V94 — scoped to Sysadmin > User Accounts table only. */
+html body #root table[data-qrpass-user-accounts-v94="true"] {
+  width: 100% !important;
+  min-width: 1500px !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] col:nth-child(1) { width: 17%; }
+html body #root table[data-qrpass-user-accounts-v94="true"] col:nth-child(2) { width: 9%; }
+html body #root table[data-qrpass-user-accounts-v94="true"] col:nth-child(3) { width: 21%; }
+html body #root table[data-qrpass-user-accounts-v94="true"] col:nth-child(4) { width: 16%; }
+html body #root table[data-qrpass-user-accounts-v94="true"] col:nth-child(5) { width: 10%; }
+html body #root table[data-qrpass-user-accounts-v94="true"] col:nth-child(6) { width: 9%; }
+html body #root table[data-qrpass-user-accounts-v94="true"] col:nth-child(7) { width: 18%; }
+
+html body #root table[data-qrpass-user-accounts-v94="true"] thead tr { background-color: #f8fafc !important; }
+html body #root table[data-qrpass-user-accounts-v94="true"] thead th {
+  box-sizing: border-box !important;
+  color: #566985 !important;
+  background: transparent !important;
+  border-bottom: 1px solid #dde5ef !important;
+  padding: 14px 12px !important;
+  vertical-align: middle !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 19px !important;
+  white-space: nowrap !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td {
+  box-sizing: border-box !important;
+  padding: 14px 12px !important;
+  border-bottom: 1px solid #e8edf5 !important;
+  vertical-align: middle !important;
+  font-size: 13px !important;
+  line-height: 19px !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody tr:last-child td { border-bottom: none !important; }
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody tr:hover { background: #f8fbff !important; }
+
+/* Name and email are left-aligned; other headers/data centered on the same column axis. */
+html body #root table[data-qrpass-user-accounts-v94="true"] :is(thead th,tbody td):nth-child(1),
+html body #root table[data-qrpass-user-accounts-v94="true"] :is(thead th,tbody td):nth-child(3) { text-align: left !important; }
+html body #root table[data-qrpass-user-accounts-v94="true"] :is(thead th,tbody td):nth-child(2),
+html body #root table[data-qrpass-user-accounts-v94="true"] :is(thead th,tbody td):nth-child(4),
+html body #root table[data-qrpass-user-accounts-v94="true"] :is(thead th,tbody td):nth-child(5),
+html body #root table[data-qrpass-user-accounts-v94="true"] :is(thead th,tbody td):nth-child(6),
+html body #root table[data-qrpass-user-accounts-v94="true"] :is(thead th,tbody td):nth-child(7) { text-align: center !important; }
+
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(1) > div {
+  color: #294363 !important;
+  font-size: 14px !important;
+  line-height: 21px !important;
+  font-weight: 650 !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(2) {
+  color: #526987 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  font-size: 12px !important;
+  font-variant-numeric: tabular-nums !important;
+  white-space: nowrap !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(3) {
+  color: #526987 !important;
+  overflow-wrap: anywhere !important;
+  font-size: 13px !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(5) {
+  color: #526987 !important;
+  white-space: nowrap !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(4) > span,
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(6) > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 30px !important;
+  line-height: 16px !important;
+  padding: 6px 12px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  text-align: center !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(4) > span {
+  background: #edf3fc !important;
+  color: #244b80 !important;
+}
+
+/* Keep all row actions on one level, evenly spaced and centered under Actions. */
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(7) > div {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px !important;
+  white-space: nowrap !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(7) > div > button {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  min-width: 72px !important;
+  height: 36px !important;
+  padding: 0 12px !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  background-image: none !important;
+  transition: background .16s ease, color .16s ease, border-color .16s ease !important;
+}
+/* These selectors outrank the old v92 button rules without changing their handlers. */
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(7) > div > button:first-child {
+  background: #eaf1fb !important; color: #284b7b !important; border-color: #d3e0f4 !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(7) > div > button:first-child:hover:not(:disabled) {
+  background: #dbe8fa !important; border-color: #bcd0eb !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(7) > div > button:nth-child(2) {
+  background: #fff5e8 !important; color: #a04d16 !important; border-color: #f4ddbc !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(7) > div > button:nth-child(2):hover:not(:disabled) {
+  background: #ffead1 !important; border-color: #ebc99c !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(7) > div > button:nth-child(2)[data-qrpass-user-action-v92="enable"] {
+  background: #eaf7ef !important; color: #246a45 !important; border-color: #cbe9d6 !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(7) > div > button:nth-child(2)[data-qrpass-user-action-v92="enable"]:hover:not(:disabled) {
+  background: #d9f2e3 !important; border-color: #b9e3c9 !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(7) > div > button:last-child {
+  background: #fbeef0 !important; color: #9f3142 !important; border-color: #eed7db !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(7) > div > button:last-child:hover:not(:disabled) {
+  background: #f8e2e7 !important; border-color: #e8c5cf !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(7) > div > button:disabled {
+  opacity: .54 !important; cursor: not-allowed !important;
+}
+html body #root table[data-qrpass-user-accounts-v94="true"] tbody td:nth-child(7) > div > button:focus-visible {
+  outline: 2px solid #5278e7 !important; outline-offset: 2px !important;
+}
