@@ -1,3 +1,4 @@
+import "./styles/qrpass-select.css";
 import "./qrpass-hide-download-csv-v84.js";
 import "./utils/qrpassAuthEnhancer";
 import "./styles/qrpass-auth-center-resend-v103.css";
@@ -7,24 +8,18 @@ import "./qrpass-uniform-blue-buttons-v57.js";
 import "./qrpass-dropdown-v51.js";
 import React from "react";import { createRoot } from "react-dom/client";import App from "./app/App.tsx";import "./styles/index.css";
 import "./styles/qrpass-csu-spacing.css";
-import "./qrpass-dropdown-v52-runtime.js";
-import "./qrpass-custom-dropdown-v53.js";
 import "./styles/qrpass-sign-in-polish-v58.css";
 import "./styles/qrpass-forgot-password-v59.css";
 import "./styles/qrpass-auth-responsive-v65.css";
 import './qrpass-outline-match-v68.js';
 
 
-import "./styles/qrpass-dropdown-arrow-position-v83.css";
 import "./styles/qrpass-focus-white-v102.css";
 import "./styles/qrpass-mobile-uniform-v1.css";
 import "./styles/qrpass-csu-scanner-size.css";
 import "./styles/qrpass-responsive-roles-v101.css";import "./styles/qrpass-button-soft-focus-ring-v24.css";
 
-import "./styles/qrpass-dropdown-chevron-rotate-v25.css";
-import "./qrpass-dropdown-single-arrow-v26.js";
 import "./styles/qrpass-audit-logs-dropdown-v28.css";
-import "./qrpass-audit-logs-white-default-v29.js";
 import "./styles/qrpass-audit-logs-match-reports-v31.css";
 import "./styles/qrpass-audit-dropdown-video-effects-v44.css";
 import "./qrpass-manage-logs-system-settings-v46.js";

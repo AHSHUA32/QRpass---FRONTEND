@@ -137,6 +137,8 @@
           panel.classList.contains('qrp-v51-popup') ||
           panel.classList.contains('qrp-v52-popup')) continue;
       if (!(panel instanceof HTMLElement)) continue;
+      // CSU Lost & Found menus use their own scoped interaction styles.
+      if (panel.classList.contains('csu-form-menu')) continue;
       const trigger = isConnectedToCombobox(panel);
       if (!trigger && !panel.closest('#root')) continue;
       const opts = optionsFor(panel);

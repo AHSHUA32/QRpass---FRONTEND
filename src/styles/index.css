@@ -247,3 +247,52 @@ html body #root h3[data-qrpass-audit-records-heading-v32="true"] {
   letter-spacing: normal !important;
 }
 /* QRPASS_AUDIT_RECORDS_HEADING_V32_END */
+
+/* QRPASS_SYSADMIN_SETTINGS_SHORTCUT_ONLY_V12 */
+/* Hide only the duplicate injected Manage shortcut on the Sysadmin System Settings page.
+   The main settings form, saves and other admin pages are unchanged. */
+html body #root .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-admin-page:has(.qrpass-sysadmin-settings-v31) button.qrpass-manage-logs-shortcut-v3.qrpass-page-manage-v1,
+html body #root .qrpass-admin-page:has(.qrpass-sysadmin-settings-v31) > button.qrpass-manage-logs-shortcut-v3,
+html body #root .qrpass-admin-page:has(.qrpass-sysadmin-settings-v31) button.qrpass-manage-logs-shortcut-v3.qrpass-page-manage-v1 {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+/* END QRPASS_SYSADMIN_SETTINGS_SHORTCUT_ONLY_V12 */
+
+/* QRPASS AUDIT ARCHIVE ACTIONS V13 */
+/* Archive-row actions only; all buttons match size, including destructive Delete. */
+html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] tbody td button:not([role="switch"]) {
+  box-sizing: border-box !important;
+  min-width: 78px !important;
+  width: 78px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  white-space: nowrap !important;
+}
+/* Preserve delete's red destructive appearance. */
+
+/* QRPASS_STUDENT_REMOVE_MANAGE_ICONS_V21_START */
+/* Student only: remove redundant Manage/Filter shortcut buttons.
+   Preserve search, sort, dropdowns, View Details, and other actions.
+   QR Codes / Permit Status / Lost & Found use the same toolbar shortcut. */
+html body #root [data-qrpass-role="student"] .qrpass-main button.qrpass-page-manage-v1,
+html body #root [data-qrpass-role="student"] .qrpass-main button.qrpass-manage-logs-shortcut-v3,
+html body #root [data-qrpass-role="student"] .qrpass-main button[data-qrpass-manage-launch-v31="true"],
+html body #root [data-qrpass-role="student"] .qrpass-main button[aria-label="Manage Logs"],
+html body #root [data-qrpass-role="student"] .qrpass-main button[title="Manage Logs"],
+html body #root [data-qrpass-role="student"] .qrpass-main button[aria-label="Manage Records"],
+html body #root [data-qrpass-role="student"] .qrpass-main button[title="Manage Records"],
+/* Icon-only sliders shortcut used by the three student toolbars. */
+html body #root [data-qrpass-role="student"] .qrpass-main button:has(> svg.lucide-sliders-horizontal):not(:has(span)),
+html body #root [data-qrpass-role="student"] .qrpass-main button:has(> svg.lucide-sliders-vertical):not(:has(span)) {
+  display: none !important;
+}
+/* QRPASS_STUDENT_REMOVE_MANAGE_ICONS_V21_END */

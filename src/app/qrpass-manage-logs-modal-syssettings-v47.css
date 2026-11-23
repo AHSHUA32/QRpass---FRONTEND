@@ -131,3 +131,13 @@ html body [data-qrpass-manage-v31="true"][data-qrpass-manage-v32="true"] p.text-
     padding-inline: 12px !important;
   }
 }
+
+html body #root main button[data-operational-manage-logs]:hover:not(:disabled) {
+  background: #eef2ff !important;
+  border-color: #a8bde4 !important;
+}
+
+html body #root main button[data-operational-manage-logs]:focus-visible {
+  outline: 2px solid #5278e7;
+  outline-offset: 2px;
+}

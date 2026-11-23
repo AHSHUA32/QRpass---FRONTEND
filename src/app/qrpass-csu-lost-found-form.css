@@ -1,0 +1,208 @@
+#root .qrpass-csu-lost-found-form :is(input:not([type="file"], [type="hidden"]), textarea),
+#root button.csu-form-trigger {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  background-color: #fff !important;
+  color: #17336d !important;
+  color-scheme: light;
+  font-size: 0.875rem;
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+@media (hover: hover) {
+  #root .qrpass-csu-lost-found-form :is(input:not([type="file"], [type="hidden"]), textarea):hover:not(:disabled),
+  #root button.csu-form-trigger:hover:not(:disabled) {
+    background-color: #eff6ff !important;
+  }
+}
+
+#root .qrpass-csu-lost-found-form :is(input:not([type="file"], [type="hidden"]), textarea):focus,
+#root .qrpass-csu-lost-found-form :is(textarea, .csu-lost-found-description):active:not(:disabled),
+#root button.csu-form-trigger:is(:focus-visible, [data-state="open"]) {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 16%) !important;
+  outline: none !important;
+}
+
+#root button.csu-form-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+#root button.csu-form-toolbar-select {
+  width: max-content;
+  max-width: 100%;
+  min-width: min(var(--csu-toolbar-select-width, 148px), 100%);
+  height: 48px;
+  padding: 0 12px;
+}
+
+#root button.csu-form-toolbar-select:first-child {
+  --csu-toolbar-select-width: 180px;
+}
+
+@media (min-width: 48rem) {
+  #root div:has(> button.csu-form-toolbar-select) {
+    flex: none;
+    max-width: 100%;
+  }
+
+  #root button.csu-form-toolbar-select {
+    width: auto;
+    min-width: var(--csu-toolbar-select-width, 148px);
+  }
+}
+
+.csu-form-trigger > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csu-form-chevron {
+  flex: none;
+  pointer-events: none;
+  transition: transform 180ms ease;
+}
+
+.csu-form-trigger[data-state="open"] .csu-form-chevron {
+  transform: rotate(180deg);
+}
+
+.csu-form-item-choice {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.csu-form-menu {
+  z-index: 100;
+  box-sizing: border-box;
+  width: var(--radix-select-trigger-width);
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #fff;
+  color: #17336d;
+  box-shadow: 0 8px 24px rgb(23 51 109 / 14%);
+}
+
+.csu-form-menu-viewport {
+  max-height: min(280px, calc(var(--radix-select-content-available-height) - 2px));
+  overscroll-behavior: contain;
+  padding: 4px;
+}
+
+.csu-form-option {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #fff;
+  color: #17336d;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+  transition: background-color 180ms ease;
+  cursor: pointer;
+}
+
+.csu-form-menu .csu-form-option[data-state="checked"] {
+  font-weight: 600;
+}
+
+@media (hover: hover) {
+  .csu-form-menu .csu-form-option:hover:not([data-disabled]) {
+    background: #eff6ff;
+  }
+}
+
+.csu-form-menu .csu-form-option:focus-visible {
+  outline: 2px solid #6b90c7;
+  outline-offset: -2px;
+}
+
+.csu-form-option-group {
+  padding: 8px 12px 4px;
+  color: #526581;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+#root .qrpass-csu-lost-found-form :is(textarea, input.csu-lost-found-description) {
+  background: #fff !important;
+  -webkit-text-fill-color: currentColor;
+}
+
+#root .qrpass-csu-lost-found-form :is(textarea, input.csu-lost-found-description)::placeholder {
+  color: #526581 !important;
+  opacity: 1;
+  -webkit-text-fill-color: currentColor;
+}
+
+#root .qrpass-csu-lost-found-form :is(textarea, input.csu-lost-found-description):is(:focus, :active):not(:disabled) {
+  background-color: #eff6ff !important;
+}
+
+#root .qrpass-csu-lost-found-form textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root button.csu-form-trigger,
+  .csu-form-chevron,
+  .csu-form-option {
+    transition: none;
+  }
+}
+
+/* Match the report download action with 12px corners for the Lost & Found tabs. */
+#root .csu-lost-found-tabs > button.csu-lost-found-tab {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  background: #294c90 linear-gradient(180deg, #294c90 0%, #1c335b 100%) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+  text-decoration: none !important;
+  text-shadow: none;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+#root .csu-lost-found-tabs > button.csu-lost-found-tab:is(:hover, :focus-visible) {
+  filter: none !important;
+}
+
+#root .csu-lost-found-tabs > button.csu-lost-found-tab:active {
+  filter: brightness(.97) !important;
+  transform: translateY(0) !important;
+}
+
+#root .csu-lost-found-tabs > button.csu-lost-found-tab:focus-visible {
+  outline: 2px solid #7c9cf6 !important;
+  outline-offset: 2px !important;
+}
+
+@media (max-width: 479px) {
+  #root .csu-lost-found-tabs > button.csu-lost-found-tab {
+    grid-column: 1 / -1;
+  }
+}

@@ -1,0 +1,203 @@
+/* Loaded before the legacy styles so scoped important rules win without
+   increasing selector specificity or writing inline styles at runtime. */
+@layer qrpass-select;
+
+@property --qrpass-select-chevron-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@layer qrpass-select {
+  :root {
+    --qrpass-select-white: #fff;
+    --qrpass-select-trigger-hover: #eff6ff;
+    --qrpass-select-option: #fff;
+    --qrpass-select-option-hover: #eaf2ff;
+    --qrpass-select-selected: #dfe8ff;
+    --qrpass-select-navy: #17336d;
+    --qrpass-select-border: #cbd5e1;
+    --qrpass-select-focus: #5278e7;
+    --qrpass-select-duration: 180ms;
+  }
+
+  #root :is(select:not([multiple], [aria-hidden="true"], [data-qrpass-native-select] select):is(:not([size]), [size="0"], [size="1"]), .qrpass-select-trigger) {
+    max-width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--qrpass-select-border) !important;
+    border-radius: 12px !important;
+    background-color: var(--qrpass-select-white) !important;
+    color: var(--qrpass-select-navy) !important;
+    -webkit-text-fill-color: currentColor !important;
+    box-shadow: none !important;
+    color-scheme: light;
+    cursor: pointer;
+    transition: background-color var(--qrpass-select-duration) ease,
+      border-color var(--qrpass-select-duration) ease,
+      box-shadow var(--qrpass-select-duration) ease,
+      --qrpass-select-chevron-angle var(--qrpass-select-duration) ease !important;
+  }
+
+  @media (hover: hover) {
+    #root :is(select:not([multiple], [aria-hidden="true"], [data-qrpass-native-select] select):is(:not([size]), [size="0"], [size="1"]), .qrpass-select-trigger):hover:not(:disabled) {
+      background-color: var(--qrpass-select-trigger-hover) !important;
+    }
+  }
+
+  #root :is(select:not([multiple], [aria-hidden="true"], [data-qrpass-native-select] select):is(:not([size]), [size="0"], [size="1"]), .qrpass-select-trigger):is(:focus, [aria-expanded="true"]) {
+    background-color: var(--qrpass-select-white) !important;
+    border-color: var(--qrpass-select-focus) !important;
+  }
+
+  #root :is(select:not([multiple], [aria-hidden="true"], [data-qrpass-native-select] select):is(:not([size]), [size="0"], [size="1"]), .qrpass-select-trigger):focus-visible {
+    outline: 2px solid var(--qrpass-select-focus) !important;
+    outline-offset: 2px !important;
+  }
+
+  #root :is(select:not([multiple], [aria-hidden="true"], [data-qrpass-native-select] select):is(:not([size]), [size="0"], [size="1"]), .qrpass-select-trigger):disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+
+  #root .qrpass-select-trigger {
+    background-image: none !important;
+  }
+
+  #root .qrpass-registration-trigger {
+    min-height: 44px;
+  }
+
+  #root select:not([multiple], [aria-hidden="true"], [data-qrpass-native-select] select):is(:not([size]), [size="0"], [size="1"]) {
+    appearance: none !important;
+    padding-inline-end: 36px !important;
+    /* Two strokes of the native control's chevron, animated without wrapping
+       the select or changing its position in a toolbar or form. */
+    --qrpass-chevron-stroke: transparent calc(50% - .8px), #31539b calc(50% - .8px) calc(50% + .8px), transparent calc(50% + .8px);
+    background-image:
+      linear-gradient(calc(45deg + var(--qrpass-select-chevron-angle)), var(--qrpass-chevron-stroke)),
+      linear-gradient(calc(135deg - var(--qrpass-select-chevron-angle)), var(--qrpass-chevron-stroke)) !important;
+    background-size: 6px 7px !important;
+    background-position: right 19px center, right 13px center !important;
+    background-repeat: no-repeat !important;
+  }
+
+  #root select[aria-expanded="true"] {
+    --qrpass-select-chevron-angle: 90deg;
+  }
+
+  #root .qrpass-audit-dropdown-v28::after {
+    content: none !important;
+  }
+
+  #root :is(.qrpass-users-dd-chevron-v53, .qrpass-account-role-chevron-v54) {
+    display: none !important;
+  }
+
+  #root .qrpass-select-chevron {
+    color: #31539b !important;
+    flex: none;
+    pointer-events: none;
+    transform: rotate(0deg) !important;
+    transition: transform var(--qrpass-select-duration) ease !important;
+  }
+
+  #root .qrpass-select-trigger[aria-expanded="true"] > .qrpass-select-chevron {
+    transform: rotate(180deg) !important;
+  }
+
+  .qrpass-select-menu {
+    box-sizing: border-box;
+    background: var(--qrpass-select-white) !important;
+    border: 1px solid #d1def8 !important;
+    border-radius: 14px !important;
+    color: var(--qrpass-select-navy) !important;
+    box-shadow: 0 10px 24px rgb(23 51 109 / 13%) !important;
+    animation: qrpass-select-in var(--qrpass-select-duration) ease-out !important;
+  }
+
+  .qrpass-select-viewport {
+    padding: 8px !important;
+    overscroll-behavior: contain;
+  }
+
+  .qrpass-select-menu .qrpass-select-option {
+    box-sizing: border-box;
+    min-height: 42px;
+    padding: 10px 12px !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    background: var(--qrpass-select-option) !important;
+    color: var(--qrpass-select-navy) !important;
+    -webkit-text-fill-color: currentColor !important;
+    font-weight: 500 !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    transition: background-color var(--qrpass-select-duration) ease !important;
+  }
+
+  .qrpass-select-option + .qrpass-select-option {
+    margin-block-start: 6px !important;
+  }
+
+  @media (hover: hover) {
+    .qrpass-select-menu .qrpass-select-option:hover:not([aria-disabled="true"], [data-disabled]) {
+      background: var(--qrpass-select-option-hover) !important;
+    }
+  }
+
+  .qrpass-select-menu .qrpass-select-option:is([data-highlighted], [data-active="true"], :focus-within) {
+    background: var(--qrpass-select-option-hover) !important;
+    outline: 2px solid var(--qrpass-select-focus) !important;
+    outline-offset: -2px !important;
+  }
+
+  .qrpass-select-menu .qrpass-select-option:is([aria-selected="true"], [data-state="checked"], :has(input:checked)) {
+    background: var(--qrpass-select-selected) !important;
+    font-weight: 700 !important;
+  }
+
+  .qrpass-select-menu .qrpass-select-option:is([aria-disabled="true"], [data-disabled]) {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #root :is(select:not([multiple], [aria-hidden="true"], [data-qrpass-native-select] select):is(:not([size]), [size="0"], [size="1"]), .qrpass-select-trigger, .qrpass-select-chevron),
+    .qrpass-select-menu .qrpass-select-option {
+      transition: none !important;
+    }
+    .qrpass-select-menu {
+      animation: none !important;
+    }
+  }
+}
+
+@keyframes qrpass-select-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* Native-select listboxes are mounted under body so scroll containers do not
+   clip them. Their dimensions and position come from the original select. */
+.qrp-v51-popup {
+  position: fixed;
+  z-index: 101;
+  overflow: auto;
+  font: 500 14px/1.35 system-ui, sans-serif;
+}
+
+.qrp-v51-option {
+  display: flex;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+
+/* The accessories list is interactive until Done, so the whole panel scrolls
+   when the visual viewport has room for only part of it. */
+.qrpass-accessories-overlay {
+  z-index: 90;
+  width: var(--radix-popover-trigger-width);
+  max-height: min(380px, var(--radix-popover-content-available-height));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+}

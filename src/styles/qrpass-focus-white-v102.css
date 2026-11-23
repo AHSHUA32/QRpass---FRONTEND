@@ -10,7 +10,7 @@
   textarea,
   button[role="combobox"],
   [data-slot="select-trigger"]
-):not([data-qrpass-keep-style]):focus {
+):not([data-qrpass-keep-style]):where(:not(.qrpass-csu-lost-found-form *)):focus {
   background: #ffffff !important;
   background-color: #ffffff !important;
   border-color: #6488ff !important;

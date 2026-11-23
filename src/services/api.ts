@@ -1388,6 +1388,8 @@ export async function updateSystemSettings(settings: {
 
 
 
+export const AUDIT_API_URL = API_URL.endsWith("/api") ? API_URL : API_URL + "/api";
+
 export async function getAuditLogs(params?: {
 
   search?: string;
@@ -1401,6 +1403,14 @@ export async function getAuditLogs(params?: {
   date?: string;
 
   limit?: number;
+  view?: "activity" | "manage";
+  activity?: string;
+  sort?: "newest" | "oldest";
+  from?: string;
+  before?: string;
+  cursor?: string;
+  ids_only?: string;
+  ids?: string;
 
 }) {
 
@@ -1460,13 +1470,18 @@ export async function getAuditLogs(params?: {
 
 
 
+  for (const key of ["view", "activity", "sort", "from", "before", "cursor", "ids_only", "ids"] as const) {
+    const value = params?.[key];
+    if (value) query.set(key, value);
+  }
+
   const queryString = query.toString();
 
 
 
   const response = await fetch(
 
-    `${API_URL}/audit-logs${
+    `${AUDIT_API_URL}/audit-logs${
 
       queryString ? `?${queryString}` : ""
 
@@ -1475,6 +1490,7 @@ export async function getAuditLogs(params?: {
     {
 
       method: "GET",
+      cache: "no-store",
 
       headers: {
 
@@ -1741,6 +1757,8 @@ export async function updateUser(
     name: string;
 
     email: string;
+
+    contact_number?: string | null;
 
     username: string;
 

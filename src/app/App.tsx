@@ -40,8 +40,13 @@ import "./qrpass-user-accounts-no-side-scroll-v95.css";
 
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ManageLogsDialog, ManageLogsTable, OperationalManageLogs } from "./OperationalManageLogs";
+import * as DropdownPopover from "@radix-ui/react-popover";
+import { ValidatedInput, fieldRules, isEmail, isPersonName, wholeNumber } from "./components/ui/validated-input";
+import * as CSUSelect from "@radix-ui/react-select";
 import "./qrpass-dark-contrast.css";
 import "./qrpass-student-csu-pco-white-v129.css";
+import "./qrpass-csu-lost-found-form.css";
 import "./qrpass-white-toolbar-login-v128.css";
 
 
@@ -68,6 +73,7 @@ import {
   Bell,
   BookOpen,
   CheckCircle,
+  ChevronDown,
   ChevronRight,
   ClipboardList,
   Clock,
@@ -81,8 +87,6 @@ import {
   LogOut,
   Map,
   Menu,
-  Moon,
-  Sun,
   Trash2,
   Monitor,
   Camera,
@@ -491,6 +495,8 @@ const sampleItems = [
 // STUDENT PAGES
 // ══════════════════════════════════════════════════════════════════════════════
 
+const RegistrationErrors = React.createContext<string[]>([]);
+
 function RegistrationField({
   label,
   field,
@@ -511,6 +517,9 @@ function RegistrationField({
   const fieldClass =
     "w-full px-3 py-2.5 text-sm border border-[#c7d2fe] rounded-lg !bg-white hover:!bg-[#eef2ff] focus:!bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15";
 
+  const errorId = React.useId();
+  const invalid = React.useContext(RegistrationErrors).includes(label);
+
   return (
     <div>
       <label className="block text-xs font-semibold text-foreground mb-1.5">
@@ -523,6 +532,9 @@ function RegistrationField({
       </label>
 
       <input
+        aria-label={label}
+        aria-invalid={invalid}
+        aria-describedby={invalid ? errorId : undefined}
         type={type}
         value={value}
         onChange={(e) =>
@@ -536,6 +548,7 @@ function RegistrationField({
         onFocus={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
         onBlur={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
       />
+      {invalid && <p id={errorId} className="mt-1 text-xs text-red-600" role="alert">Complete this field.</p>}
     </div>
   );
 }
@@ -548,6 +561,9 @@ function RegistrationQuantityField({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const quantityErrorId = React.useId();
+  const [quantityTouched, setQuantityTouched] = useState(false);
+  const quantityError = wholeNumber(1)(value);
   const currentValue =
     Math.max(
       1,
@@ -556,42 +572,6 @@ function RegistrationQuantityField({
         10
       ) || 1
     );
-
-  function handleChange(
-    rawValue: string
-  ) {
-    if (
-      rawValue === ""
-    ) {
-      onChange("");
-      return;
-    }
-
-    const digitsOnly =
-      rawValue.replace(
-        /\D/g,
-        ""
-      );
-
-    if (
-      digitsOnly === ""
-    ) {
-      onChange("");
-      return;
-    }
-
-    onChange(
-      String(
-        Math.max(
-          1,
-          Number.parseInt(
-            digitsOnly,
-            10
-          ) || 1
-        )
-      )
-    );
-  }
 
   function increaseQuantity() {
     onChange(
@@ -646,30 +626,34 @@ function RegistrationQuantityField({
         }
       }}
       className="flex h-[42px] w-full items-center overflow-hidden rounded-lg border border-[#c7d2fe] !bg-white hover:!bg-[#eef2ff] focus-within:!bg-white transition-colors focus-within:border-[#2f5fd6] focus-within:ring-2 focus-within:ring-[#2f5fd6]/15">
-        <input
+        <input required
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
           value={value}
-          onChange={(e) => handleChange(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
+          aria-invalid={quantityTouched && Boolean(quantityError)}
+          aria-describedby={quantityTouched && quantityError ? quantityErrorId : undefined}
+          onInvalid={() => setQuantityTouched(true)}
           onKeyDown={(e) => {
+            if (e.nativeEvent.isComposing) return;
             if (e.key === "ArrowUp") {
               e.preventDefault();
               increaseQuantity();
             } else if (e.key === "ArrowDown") {
               e.preventDefault();
               decreaseQuantity();
-            } else if (e.key.length === 1 && !/[0-9]/.test(e.key) && !(e.ctrlKey || e.metaKey || e.altKey)) {
-              e.preventDefault();
             }
           }}
           onBlur={() => {
-            if (value === "" || Number(value) < 1) onChange("1");
+            setQuantityTouched(true);
+            if (value === "") onChange("1");
           }}
           className="min-w-0 flex-1 !bg-white hover:!bg-[#eef2ff] focus:!bg-white px-3 py-2.5 text-sm text-[#111827] outline-none transition-colors"
           placeholder="1"
           aria-label="Quantity"
           ref={(element) => {
+            element?.setCustomValidity(quantityError);
             if (element) {
               element.style.setProperty("background", "#ffffff", "important");
               element.style.setProperty("background-color", "#ffffff", "important");
@@ -714,6 +698,7 @@ function RegistrationQuantityField({
         </div>
       </div>
 
+      {quantityTouched && quantityError && <p id={quantityErrorId} className="mt-1 text-xs text-red-600" aria-live="polite">{quantityError}</p>}
       <p className="mt-1 text-[11px] text-muted-foreground">
         Numbers only. Minimum quantity is 1.
       </p>
@@ -733,313 +718,57 @@ const COMMON_ITEM_COLORS = [
 // QRPASS_INLINE_OTHER_V80: one field for choosing or typing Others (Specify).
 // QRPASS_INLINE_OTHER_V80 — same field for Others, preserved from v80/v81.
 // QRPASS_INLINE_OTHER_ONE_CLICK_V82 — open existing choices on first arrow click.
-function QRPassInlineOtherSelect({
-  label, value, options, onChange, placeholder, specifyPlaceholder,
-  required = false, maxLength = 255,
-  className = "w-full min-h-[44px] rounded-lg border border-[#c7d2fe] bg-[#eef2ff] px-3 py-2.5 text-sm text-[#17336d] outline-none transition-[background-color,border-color,box-shadow] duration-150 focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20",
+function RegistrationChoice({
+  label, value, options, onChange, specifyPlaceholder, className, errorId,
 }: {
   label: string;
   value: string;
   options: string[];
   onChange: (value: string) => void;
-  placeholder?: string;
-  specifyPlaceholder?: string;
-  required?: boolean;
-  maxLength?: number;
-  className?: string;
-}) {
-  /* QRPASS_REGISTER_WHITE_V132 - student registration only; no other callers changed */
-  const registrationWhiteV132 = className.includes("qrpass-register-white-v132");
-  const registerBgV132 = (element: HTMLElement | null, hover: boolean) => {
-    if (!element || !registrationWhiteV132) return;
-    element.style.setProperty("background-color", hover ? "#eef2ff" : "#ffffff", "important");
-  };
-  const isCustom = value === "__OTHER__" || (value !== "" && !options.includes(value));
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const wrapperRef = React.useRef<HTMLDivElement>(null);
-  const [choicesOpen, setChoicesOpen] = React.useState(false);
-
-  // Keep the typing cursor in the same field when Others is first selected.
-  React.useEffect(() => {
-    if (isCustom && value === "__OTHER__") inputRef.current?.focus();
-  }, [isCustom, value === "__OTHER__"]);
-
-  // Clicking elsewhere or pressing Escape closes the floating list.
-  React.useEffect(() => {
-    if (!choicesOpen) return;
-    const outside = (event: PointerEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setChoicesOpen(false);
-      }
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setChoicesOpen(false);
-    };
-    document.addEventListener("pointerdown", outside);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("pointerdown", outside);
-      document.removeEventListener("keydown", escape);
-    };
-  }, [choicesOpen]);
-
-  React.useEffect(() => {
-    if (!isCustom) setChoicesOpen(false);
-  }, [isCustom]);
-
-  if (isCustom) {
-    return (
-      <div ref={wrapperRef} className="relative w-full min-w-0" style={{ zIndex: choicesOpen ? 90 : undefined }}>
-        <input
-          ref={(element) => { inputRef.current = element; registerBgV132(element, false); }}
-          type="text"
-          value={value === "__OTHER__" ? "" : value}
-          onChange={e => onChange(e.target.value || "__OTHER__")}
-          placeholder={specifyPlaceholder || `Specify ${label.toLowerCase()}`}
-          aria-label={`Specify ${label}`}
-          required={required}
-          maxLength={maxLength}
-          className={`${className} !pr-12 focus:!bg-white`}
-          onMouseEnter={(event) => registerBgV132(event.currentTarget, document.activeElement !== event.currentTarget)}
-          onMouseLeave={(event) => registerBgV132(event.currentTarget, false)}
-          onFocus={(event) => registerBgV132(event.currentTarget, false)}
-          onBlur={(event) => registerBgV132(event.currentTarget, false)}
-        />
-        <button
-          type="button"
-          aria-label={`Show ${label} choices`}
-          aria-haspopup="menu"
-          aria-expanded={choicesOpen}
-          title="Show choices"
-          onClick={() => setChoicesOpen(open => !open)}
-          className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg !border-0 !bg-transparent !shadow-none text-[#31539b] transition-[background-color,transform] duration-150 hover:!bg-[#e5edff] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]"
-          >
-          <ChevronRight size={17} className={`transition-transform duration-150 ${choicesOpen ? "-rotate-90" : "rotate-90"}`} aria-hidden="true" />
-        </button>
-
-        {choicesOpen && (
-          <div
-            role="menu"
-            aria-label={`${label} choices`}
-            data-qrpass-others-menu="v82"
-            className="absolute left-0 right-0 top-[calc(100%+8px)] z-[100] flex min-w-0 flex-col gap-2 overflow-y-auto rounded-2xl border border-[#c7d2fe] bg-white p-2 shadow-[0_12px_26px_rgba(23,51,109,0.14)]"
-            style={{ maxHeight: "min(280px, 48vh)", overscrollBehavior: "contain" }}
-          >
-            {options.map(option => (
-              <button
-                key={option}
-                type="button"
-                role="menuitem"
-                onClick={() => { onChange(option); setChoicesOpen(false); }}
-                className="min-h-[44px] w-full shrink-0 rounded-xl !border-0 !bg-[#f7f9ff] px-4 py-2.5 text-left text-sm font-medium !text-[#17336d] !shadow-none transition-colors duration-150 hover:!bg-[#dfe8ff] focus-visible:!bg-[#dfe8ff] focus-visible:outline-none active:!bg-[#d6e3ff]"
-          >
-                {option}
-              </button>
-            ))}
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => { setChoicesOpen(false); inputRef.current?.focus(); }}
-              className="min-h-[44px] w-full shrink-0 rounded-xl !border-0 !bg-[#dfe8ff] px-4 py-2.5 text-left text-sm font-semibold !text-[#17336d] !shadow-none transition-colors duration-150 hover:!bg-[#d6e3ff] focus-visible:outline-none active:!bg-[#c8d8f4]"
-          >
-              Others (Specify)
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // When a predefined option is shown, keep the same QRPass dropdown
-  // implementation and the original option values as before.
-  return (
-    <select
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      aria-label={label}
-      required={required}
-      className={className}
-      ref={(element) => {
-        if (element && className.includes("qrpass-register-white-v133")) {
-          element.style.setProperty("background", "#ffffff", "important");
-          element.style.setProperty("background-color", "#ffffff", "important");
-          element.style.setProperty("background-image", "none", "important");
-        }
-      }}
-      onPointerEnter={(event) => {
-        if (className.includes("qrpass-register-white-v133") && document.activeElement !== event.currentTarget) {
-          event.currentTarget.style.setProperty("background", "#eef2ff", "important");
-          event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
-        }
-      }}
-      onPointerLeave={(event) => {
-        if (className.includes("qrpass-register-white-v133")) {
-          event.currentTarget.style.setProperty("background", "#ffffff", "important");
-          event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
-        }
-      }}
-      onFocus={(event) => {
-        if (className.includes("qrpass-register-white-v133")) {
-          event.currentTarget.style.setProperty("background", "#ffffff", "important");
-          event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
-        }
-      }}
-      onBlur={(event) => {
-        if (className.includes("qrpass-register-white-v133")) {
-          event.currentTarget.style.setProperty("background", "#ffffff", "important");
-          event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
-        }
-      }}
-    >
-      <option value="" disabled hidden>{placeholder || `Select ${label}`}</option>
-      {options.map(option => (
-        <option key={option} value={option}>{option}</option>
-      ))}
-      <option value="__OTHER__">Others (Specify)</option>
-    </select>
-  );
-}
-
-/* QRPASS_REGISTER_DOWNWARD_CHOICES_V116: student Register Item dropdowns always expand BELOW the field.
- * Render list in normal document flow instead of browser-native select popup.
- * This allows the page to scroll downward even near its bottom edge.
- */
-function QRPassDownwardRegistrationChoiceV116({
-  label, value, options, onChange, specifyPlaceholder, className,
-}: {
-  label: string;
-  value: string;
-  options: string[];
-  onChange: (value: string) => void;
-  specifyPlaceholder?: string;
+  specifyPlaceholder: string;
   className: string;
+  errorId?: string;
 }) {
-  const [open, setOpen] = React.useState(false);
-  const [activeIndex, setActiveIndex] = React.useState(0);
-  const rootRef = React.useRef<HTMLDivElement>(null);
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const menuRef = React.useRef<HTMLDivElement>(null);
-  const listId = React.useId();
-  const isCustom = value === "__OTHER__" || (value !== "" && !options.includes(value));
-  const allOptions = [...options, "Others (Specify)"];
-
-  React.useEffect(() => {
-    if (!open) return;
-    const outside = (event: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("pointerdown", outside);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("pointerdown", outside);
-      document.removeEventListener("keydown", escape);
-    };
-  }, [open]);
-
-  React.useEffect(() => {
-    if (!open) return;
-    const frame = window.requestAnimationFrame(() => {
-      menuRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [open]);
-
-  React.useEffect(() => {
-    if (value === "__OTHER__") inputRef.current?.focus();
-  }, [value === "__OTHER__"]);
-
-  const show = () => {
-    setActiveIndex(Math.max(0, options.indexOf(value)));
-    setOpen(true);
-  };
-  const pick = (option: string) => {
-    onChange(option === "Others (Specify)" ? "__OTHER__" : option);
-    setOpen(false);
-    if (option !== "Others (Specify)") triggerRef.current?.focus();
-  };
-  const keyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      if (!open) { show(); return; }
-      setActiveIndex(index => (index + (event.key === "ArrowDown" ? 1 : -1) + allOptions.length) % allOptions.length);
-    } else if (event.key === "Enter" || event.key === " " ) {
-      if (!open) { event.preventDefault(); show(); }
-      else { event.preventDefault(); pick(allOptions[activeIndex]); }
-    } else if (event.key === "Escape" && open) {
-      event.preventDefault(); setOpen(false);
-    }
-  };
+  const custom = value === "__OTHER__" || (value !== "" && !options.includes(value));
+  const inputRef = useRef<HTMLInputElement>(null);
+  const focusCustom = useRef(false);
 
   return (
-    <div ref={rootRef} className="w-full min-w-0">
-      {isCustom ? (
-        <div className="relative w-full min-w-0">
-          <input
-            ref={inputRef}
-            type="text"
-            value={value === "__OTHER__" ? "" : value}
-            onChange={event => onChange(event.target.value || "__OTHER__")}
-            aria-label={`Specify ${label}`}
-            placeholder={specifyPlaceholder || `Specify ${label.toLowerCase()}`}
-            className={`${className} !pr-12`}
-          />
-          <button
-            type="button"
-            aria-label={`Show ${label} choices`}
-            aria-haspopup="listbox"
-            aria-expanded={open}
-            onClick={() => open ? setOpen(false) : show()}
-            className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg border-0 bg-transparent text-[#244780] hover:bg-[#edf2ff]"
-          >
-            <ChevronRight size={16} aria-hidden="true" className={`transition-transform ${open ? "-rotate-90" : "rotate-90"}`} />
-          </button>
-        </div>
-      ) : (
-        <button
-          ref={triggerRef}
-          type="button"
-          role="combobox"
-          aria-label={label}
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          aria-controls={open ? listId : undefined}
-          onClick={() => open ? setOpen(false) : show()}
-          onKeyDown={keyDown}
-          className={`${className} flex items-center justify-between gap-2 text-left`}
-        >
-          <span className={`min-w-0 flex-1 truncate ${value ? "" : "text-[#667d9e]"}`}>{value || `Select ${label}`}</span>
-          <ChevronRight size={16} aria-hidden="true" className={`shrink-0 transition-transform ${open ? "-rotate-90" : "rotate-90"}`} />
-        </button>
-      )}
-
-      {open && (
-        <div
-          id={listId}
-          ref={menuRef}
-          role="listbox"
-          aria-label={`${label} choices`}
-          data-qrpass-registration-downward-v116="true"
-          className="relative z-[70] mt-2 max-h-[224px] w-full min-w-0 overflow-y-auto rounded-xl border border-[#c7d2fe] bg-white p-1.5 shadow-[0_10px_22px_rgba(23,51,109,0.1)]"
-          style={{ overscrollBehavior: "contain" }}
-        >
-          {allOptions.map((option, index) => (
-            <button
-              key={option}
-              type="button"
-              role="option"
-              aria-selected={option === value || (option === "Others (Specify)" && isCustom)}
-              onMouseEnter={() => setActiveIndex(index)}
-              onClick={() => pick(option)}
-              className={`mb-1 flex min-h-[40px] w-full items-center rounded-lg border-0 px-3 py-2 text-left text-sm font-medium transition-colors last:mb-0 ${activeIndex === index ? "bg-[#e8efff] text-[#17336d]" : "bg-[#f7f9ff] text-[#17336d] hover:bg-[#e8efff]"}`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
+    <div className="min-w-0">
+      <QRPassChoiceSelect
+        label={label}
+        errorId={custom ? undefined : errorId}
+        value={custom ? "__OTHER__" : value}
+        options={[
+          ...options.map(option => ({ value: option, label: option })),
+          { value: "__OTHER__", label: "Others (Specify)" },
+        ]}
+        onChange={next => {
+          focusCustom.current = next === "__OTHER__";
+          onChange(next);
+        }}
+        placeholder={`Select ${label}`}
+        className={className}
+        onCloseAutoFocus={event => {
+          if (focusCustom.current && inputRef.current) {
+            event.preventDefault();
+            inputRef.current.focus({ preventScroll: true });
+          }
+          focusCustom.current = false;
+        }}
+      />
+      {custom && (
+        <input
+          ref={inputRef}
+          type="text"
+          aria-label={`Specify ${label}`}
+          aria-invalid={Boolean(errorId)}
+          aria-describedby={errorId}
+          value={value === "__OTHER__" ? "" : value}
+          onChange={event => onChange(event.target.value || "__OTHER__")}
+          placeholder={specifyPlaceholder}
+          className={`${className} mt-2`}
+        />
       )}
     </div>
   );
@@ -1056,6 +785,9 @@ function RegistrationDropdown({
   onChange: (field: string, value: string) => void;
   optional?: boolean;
 }) {
+  const errorId = React.useId();
+  const invalid = React.useContext(RegistrationErrors).includes(label);
+
   return (
     <div className="min-w-0">
       <label className="block text-xs font-semibold text-foreground mb-1.5">
@@ -1064,7 +796,8 @@ function RegistrationDropdown({
           <span className="ml-1 text-[11px] font-normal text-muted-foreground">(Optional)</span>
         )}
       </label>
-      <QRPassDownwardRegistrationChoiceV116
+      <RegistrationChoice
+        errorId={invalid ? errorId : undefined}
         label={label}
         value={value}
         options={options}
@@ -1072,6 +805,7 @@ function RegistrationDropdown({
         specifyPlaceholder={`Specify ${label.toLowerCase()}`}
         className="qrpass-register-white-v132 w-full min-h-[44px] rounded-lg border border-[#c7d2fe] !bg-white hover:!bg-white focus:!bg-white px-3 py-2.5 text-sm text-[#17336d] outline-none transition-colors duration-150 focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20 qrpass-register-white-v133"
       />
+      {invalid && <p id={errorId} className="mt-1 text-xs text-red-600" role="alert">Complete this field.</p>}
     </div>
   );
 }
@@ -1104,79 +838,58 @@ function QRPassComputerAccessoriesMultiSelectV117({
   ];
   const [open, setOpen] = React.useState(false);
   const [otherOpen, setOtherOpen] = React.useState(false);
-  const rootRef = React.useRef<HTMLDivElement>(null);
-  const menuId = React.useId();
-  const rawEntries = String(value || "").split(",");
-  const entries = rawEntries.map(part => part.trim()).filter(Boolean);
-  const known = choices.filter(choice => entries.includes(choice));
-  // Preserve trailing spaces as the user types multiword custom accessories.
-  const rawOther = rawEntries.find(part => part.trimStart().startsWith("Others: "));
-  const extra = rawOther !== undefined
-    ? rawOther.trimStart().slice("Others: ".length)
-    : entries.filter(part => !choices.includes(part)).join("; ");
+  // The custom entry is serialized last so its punctuation stays intact.
+  const marker = /(?:^|,\s*)Others: /.exec(value);
+  const selected = (marker ? value.slice(0, marker.index) : value).split(",").map(part => part.trim()).filter(Boolean);
+  const known = choices.filter(choice => selected.includes(choice));
+  const extra = marker
+    ? value.slice(marker.index + marker[0].length)
+    : selected.filter(part => !choices.includes(part)).join(", ");
+  const entries = [...known, ...(extra.trim() ? ["Others: " + extra] : [])];
   const showOther = otherOpen || extra.length > 0;
 
   const save = (selected: string[], custom: string) => {
-    const clean = custom.replace(/[,|]/g, ";");
-    const parts = [...selected, ...(clean.trim() ? ["Others: " + clean] : [])];
+    const parts = [...selected, ...(custom ? ["Others: " + custom] : [])];
     onChange(parts.join(", "));
   };
-
-  React.useEffect(() => {
-    if (!open) return;
-    const outside = (event: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("pointerdown", outside);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("pointerdown", outside);
-      document.removeEventListener("keydown", escape);
-    };
-  }, [open]);
 
   const toggle = (choice: string) => {
     save(known.includes(choice) ? known.filter(item => item !== choice) : [...known, choice], extra);
   };
 
   return (
-    <div ref={rootRef} className="min-w-0">
+    <div className="min-w-0">
       <label className="mb-1.5 block text-xs font-semibold text-foreground">
         Accessories Included
         <span className="ml-1 text-[11px] font-normal text-muted-foreground">(Optional)</span>
       </label>
+      <DropdownPopover.Root open={open} onOpenChange={setOpen}>
+      <DropdownPopover.Trigger asChild>
       <button
         type="button"
-        role="combobox"
         aria-label="Accessories Included"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-controls={open ? menuId : undefined}
-        onClick={() => setOpen(previous => !previous)}
-        className="qrpass-register-white-v132 qrpass-register-white-v133 flex min-h-[44px] w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-[#c7d2fe] !bg-white px-3 py-2.5 text-left text-sm text-[#17336d] outline-none transition-colors hover:!bg-[#eef2ff] focus:!bg-white focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
+        className="qrpass-select-trigger qrpass-register-white-v132 qrpass-register-white-v133 flex min-h-[44px] w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-[#c7d2fe] !bg-white px-3 py-2.5 text-left text-sm text-[#17336d] outline-none transition-colors hover:!bg-[#eef2ff] focus:!bg-white focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
           >
         <span className="min-w-0 flex-1 truncate">
           {entries.length ? entries.join(", ") : <span className="text-[#667d9e]">Select accessories</span>}
         </span>
-        <ChevronRight size={16} aria-hidden="true" className={(open ? "-rotate-90" : "rotate-90") + " shrink-0 transition-transform"} />
+        <ChevronDown size={16} aria-hidden="true" className="qrpass-select-chevron" />
       </button>
-
-      {open && (
-        <div
-          id={menuId}
-          role="dialog"
+      </DropdownPopover.Trigger>
+      <DropdownPopover.Portal>
+        <DropdownPopover.Content
           aria-label="Choose accessories included"
-          className="relative z-[70] mt-2 w-full min-w-0 rounded-xl border border-[#c7d2fe] bg-white p-2 shadow-[0_10px_22px_rgba(23,51,109,0.10)]"
+          className="qrpass-select-menu qrpass-accessories-overlay"
+          sideOffset={4}
+          align="start"
+          collisionPadding={8}
         >
           <p className="px-2 pb-2 text-xs text-[#64748b]">Select all accessories included with the item.</p>
-          <div className="max-h-[230px] space-y-1 overflow-y-auto" style={{overscrollBehavior:"contain"}}>
+          <div className="qrpass-select-viewport max-h-[230px] overflow-y-auto" style={{overscrollBehavior:"contain"}}>
             {choices.map(choice => (
               <label
                 key={choice}
-                className="flex min-h-[38px] cursor-pointer items-center gap-2.5 rounded-lg bg-[#f7f9ff] px-3 py-2 text-sm font-medium text-[#17336d] hover:bg-[#e8efff]"
+                className="qrpass-select-option flex items-center gap-2.5 text-sm"
               >
                 <input
                   type="checkbox"
@@ -1187,7 +900,7 @@ function QRPassComputerAccessoriesMultiSelectV117({
                 <span>{choice}</span>
               </label>
             ))}
-            <label className="flex min-h-[38px] cursor-pointer items-center gap-2.5 rounded-lg bg-[#f7f9ff] px-3 py-2 text-sm font-medium text-[#17336d] hover:bg-[#e8efff]">
+            <label className="qrpass-select-option flex items-center gap-2.5 text-sm">
               <input
                 type="checkbox"
                 checked={showOther}
@@ -1219,8 +932,9 @@ function QRPassComputerAccessoriesMultiSelectV117({
               Done
             </button>
           </div>
-        </div>
-      )}
+        </DropdownPopover.Content>
+      </DropdownPopover.Portal>
+      </DropdownPopover.Root>
     </div>
   );
 }
@@ -1436,9 +1150,12 @@ function StudentRegisterItem() {
     }));
   }
 
+  const [showRegistrationErrors, setShowRegistrationErrors] = useState(false);
+
   function selectGroup(
     groupId: RegistrationGroupId
   ) {
+    setShowRegistrationErrors(false);
     setSelectedGroup(groupId);
     setForm(emptyForm());
   }
@@ -1546,6 +1263,7 @@ function StudentRegisterItem() {
 
   function buildPayload() {
     const detailParts: string[] = [];
+    const accessories = form.accessories_included.trim().replace(/(?:^|, )Others:$/, "");
 
     let itemName =
       form.item_name.trim();
@@ -1562,19 +1280,9 @@ function StudentRegisterItem() {
     let itemType =
       "Other Equipment";
 
-    let quantity =
-      String(
-        Math.max(
-          1,
-          Number.parseInt(
-            form.quantity.replace(
-              /\D/g,
-              ""
-            ),
-            10
-          ) || 1
-        )
-      );
+    const quantity = selectedGroup === "sports" || selectedGroup === "other"
+      ? String(Number(form.quantity))
+      : "1";
 
     let computerType = "";
     let processor = "";
@@ -1722,8 +1430,8 @@ function StudentRegisterItem() {
 
     // The backend stores complete_description but may not save
     // standalone accessories_included. Keep it with the request.
-    if (selectedGroup !== "other" && form.accessories_included.trim()) {
-      detailParts.push(`Accessories Included: ${form.accessories_included.trim()}`);
+    if (selectedGroup !== "other" && accessories) {
+      detailParts.push(`Accessories Included: ${accessories}`);
     }
 
     if (
@@ -1763,8 +1471,7 @@ function StudentRegisterItem() {
       operating_system:
         operatingSystem,
 
-      accessories_included:
-        form.accessories_included.trim(),
+      accessories_included: accessories,
 
     };
   }
@@ -1778,20 +1485,10 @@ function StudentRegisterItem() {
       return;
     }
 
-    const missing =
-      missingRequiredFields();
+    if ((selectedGroup === "sports" || selectedGroup === "other") && wholeNumber(1)(form.quantity)) return;
 
-    if (missing.length > 0) {
-      alert(
-        `Please complete all required fields before submitting:\n\n${missing
-          .map(
-            (field) => `• ${field}`
-          )
-          .join("\n")}`
-      );
-
-      return;
-    }
+    setShowRegistrationErrors(true);
+    if (missingRequiredFields().length) return;
 
     try {
       setSubmitting(true);
@@ -1846,8 +1543,10 @@ function StudentRegisterItem() {
             </div>
           </div>
 
+          <RegistrationErrors.Provider value={showRegistrationErrors ? missingRequiredFields() : []}>
           <form
             onSubmit={handleItemSubmit}
+            onInvalid={() => setShowRegistrationErrors(true)}
             className="p-3 sm:p-5"
           >
             {/* COMPUTER EQUIPMENT */}
@@ -2535,7 +2234,7 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
                 type="button"
                 onClick={backToSelection}
                 className="text-xs px-4 py-2 border border-[#cfd8e6] rounded-md text-muted-foreground !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-               
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -2587,6 +2286,7 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
               </button>
             </div>
           </form>
+          </RegistrationErrors.Provider>
         </div>
       </div>
     );
@@ -3005,6 +2705,10 @@ function StudentMyQRCodes() {
       .replace(/^-|-$/g, "");
   }
 
+  function approvedByLabel(item: any) {
+    return `Approved By: ${item.approved_by_name?.trim() || "?"}`;
+  }
+
   async function downloadQRCode(item: any) {
     try {
       setDownloadingQrId(item.id);
@@ -3059,7 +2763,7 @@ function StudentMyQRCodes() {
           document.createElement("canvas");
 
         canvas.width = 1024;
-        canvas.height = 1024;
+        canvas.height = 1096;
 
         const ctx =
           canvas.getContext("2d");
@@ -3086,8 +2790,16 @@ function StudentMyQRCodes() {
           0,
           0,
           canvas.width,
-          canvas.height
+          1024
         );
+
+        if (item.status === "approved") {
+          ctx.fillStyle = "#000000";
+          ctx.font = "32px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(approvedByLabel(item), canvas.width / 2, 1060, canvas.width - 48);
+        }
 
         canvas.toBlob(
           (blob) => {
@@ -3191,11 +2903,6 @@ function StudentMyQRCodes() {
           value={qrSortOrder}
           onChange={(e) => setQrSortOrder(e.target.value as "newest" | "oldest")}
           className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0 w-full sm:w-auto"
-    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
-    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
-    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
           >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
@@ -3336,6 +3043,9 @@ function StudentMyQRCodes() {
                           )}
                         </span>
                       </div>
+                      <p className="break-words text-xs text-foreground">
+                        {approvedByLabel(item)}
+                      </p>
                     </div>
 
                     <div className="mt-2">
@@ -3456,6 +3166,12 @@ function StudentMyQRCodes() {
                     ? ` • Serial: ${qrModalItem.serial_number}`
                     : ""}
                 </p>
+
+                {qrModalItem.status === "approved" && (
+                  <p className="mt-2 break-words text-xs text-foreground">
+                    {approvedByLabel(qrModalItem)}
+                  </p>
+                )}
 
                 {isExpired(qrModalItem) && (
                   <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
@@ -3870,7 +3586,7 @@ function StudentPermitStatus() {
     onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
           />
         </div>
-        
+
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <select
             aria-label="Filter permit requests"
@@ -3879,11 +3595,6 @@ function StudentPermitStatus() {
               setPermitFilter(e.target.value as PermitFilter)
             }
             className="h-12 min-w-[165px] flex-1 rounded-xl border border-[#bfceff] bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff]  focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0 w-full sm:w-auto"
-    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
-    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
-    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
           >
             <option value="all">
               All Permits ({items.length})
@@ -3904,11 +3615,6 @@ function StudentPermitStatus() {
           value={permitSortOrder}
           onChange={(e) => setPermitSortOrder(e.target.value as "newest" | "oldest")}
           className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0 w-full sm:w-auto"
-    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
-    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
-    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
           >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
@@ -3931,7 +3637,7 @@ function StudentPermitStatus() {
       </div>
 
       {/* FILTERS — four equal-width buttons on mobile; natural width on desktop */}
-      
+
 
       {permitManageOpenV139 && (
         <StudentPageManagerV141
@@ -4965,7 +4671,7 @@ function StudentLostAndFound() {
           />
         </div>
 
-        
+
         <div className="flex min-w-0 flex-wrap items-center gap-2">
 
           <select
@@ -4977,11 +4683,6 @@ function StudentLostAndFound() {
               )
             }
             className="h-12 min-w-[175px] flex-1 rounded-xl border border-[#bfceff] bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff]  focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0 w-full sm:w-auto"
-    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
-    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
-    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
           >
             <option value="all">
               All Reports ({items.length})
@@ -5009,11 +4710,6 @@ function StudentLostAndFound() {
               )
             }
             className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff] bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff]  focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0 w-full sm:w-auto"
-    ref={(element) => { if (element) element.style.setProperty("background-color", "#ffffff", "important"); }}
-    onMouseEnter={(event) => { if (document.activeElement !== event.currentTarget) event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
-    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onFocus={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onBlur={(event) => { event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
           >
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
@@ -5025,7 +4721,7 @@ function StudentLostAndFound() {
             onClick={() => setStudentManageLogsOpenV136(true)}
             data-qrpass-hover-uniform-v141="true"
             className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] !bg-white text-[#17336d] transition-colors hover:!bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
-          
+
   onMouseEnter={(e) => {
     const s = e.currentTarget.style;
     s.setProperty('background', '#eef2ff', 'important');
@@ -5126,7 +4822,7 @@ function StudentLostAndFound() {
         </div>
       )}
       {/* FILTERS */}
-      
+
 
       {loading && (
         <div className="rounded-xl border border-border bg-card p-10 text-center">
@@ -5927,29 +5623,19 @@ function SecurityScanVerify() {
     field: keyof typeof flaggedForm,
     value: string
   ) {
-    const cleanedValue =
-      field === "item_name" ||
-      field === "owner_name" ||
-      field === "carrier_name"
-        ? value.replace(/[^\p{L} ]/gu, "")
-        : field === "owner_id_number" ||
-          field === "carrier_id_number"
-        ? value.replace(/[^0-9]/g, "")
-        : value;
-
     setFlaggedForm((current) => {
       const next = {
         ...current,
-        [field]: cleanedValue,
+        [field]: value,
       };
 
       if (sameAsOwner) {
         if (field === "owner_name") {
-          next.carrier_name = cleanedValue;
+          next.carrier_name = value;
         }
 
         if (field === "owner_id_number") {
-          next.carrier_id_number = cleanedValue;
+          next.carrier_id_number = value;
         }
       }
 
@@ -5999,31 +5685,8 @@ function SecurityScanVerify() {
       return;
     }
 
-    // Strict validation before submitting the flagged item.
-    const nameFields: Array<[string, string]> = [
-      ["Item Name", flaggedForm.item_name],
-      ["Owner Name", flaggedForm.owner_name],
-      ["Person Carrying Item", flaggedForm.carrier_name],
-    ];
-
-    for (const [label, value] of nameFields) {
-      if (!/^[\p{L} ]+$/u.test(value.trim())) {
-        alert(`${label} must contain letters and spaces only.`);
-        return;
-      }
-    }
-
-    const idFields: Array<[string, string]> = [
-      ["Owner Student ID", flaggedForm.owner_id_number],
-      ["Carrier Student ID", flaggedForm.carrier_id_number],
-    ];
-
-    for (const [label, value] of idFields) {
-      if (!/^[0-9]+$/.test(value)) {
-        alert(`${label} must contain numbers only.`);
-        return;
-      }
-    }
+    if ([flaggedForm.owner_name, flaggedForm.carrier_name].some(value => !isPersonName(value)) ||
+        [flaggedForm.owner_id_number, flaggedForm.carrier_id_number].some(value => fieldRules.id(value))) return;
     try {
       setSavingIncident(true);
 
@@ -6149,7 +5812,7 @@ function SecurityScanVerify() {
         direction
       );
 
-      
+
 
       // Clear the verified item after a successful IN / OUT log
       // so CSU is ready to scan the next item immediately.
@@ -6173,7 +5836,7 @@ function SecurityScanVerify() {
     }
   }
 
-  
+
 
   // Start the camera directly when the CSU scanning page opens.
   // Manual QR ID / serial-number entry stays available if camera access is denied.
@@ -6277,7 +5940,7 @@ function SecurityScanVerify() {
             <div key={cameraRetry} id="qr-reader" className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-slate-50" />
             {cameraError && <p role="alert" className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">{cameraError}</p>}
             <div className="flex w-full items-center justify-center">
-              
+
               <button type="button" onClick={resumeCamera} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold hover:bg-muted">
                 <RefreshCw size={14} /> {cameraError ? "Retry Camera" : "Scan Next Item"}
               </button>
@@ -6398,7 +6061,7 @@ function SecurityScanVerify() {
                     Item Name *
                   </label>
 
-                  <input
+                  <ValidatedInput rule={fieldRules.nonBlank} aria-label="Item Name"
                     type="text"
                     value={flaggedForm.item_name}
                     onChange={(e) =>
@@ -6419,7 +6082,7 @@ function SecurityScanVerify() {
                     Owner Name *
                   </label>
 
-                  <input
+                  <ValidatedInput rule={fieldRules.name} aria-label="Owner Name"
                     type="text"
                     value={flaggedForm.owner_name}
                     onChange={(e) =>
@@ -6440,7 +6103,7 @@ function SecurityScanVerify() {
                     Owner Student ID *
                   </label>
 
-                  <input
+                  <ValidatedInput rule={fieldRules.id} aria-label="Owner ID Number"
                     type="text"
                     value={flaggedForm.owner_id_number}
                     inputMode="numeric"
@@ -6478,7 +6141,7 @@ function SecurityScanVerify() {
                     Person Carrying the Item *
                   </label>
 
-                  <input
+                  <ValidatedInput rule={fieldRules.name} aria-label="Person Carrying Item"
                     type="text"
                     value={flaggedForm.carrier_name}
                     onChange={(e) =>
@@ -6500,7 +6163,7 @@ function SecurityScanVerify() {
                     Student ID (Carrier) *
                   </label>
 
-                  <input
+                  <ValidatedInput rule={fieldRules.id} aria-label="Carrier ID Number"
                     type="text"
                     value={flaggedForm.carrier_id_number}
                     inputMode="numeric"
@@ -6567,7 +6230,7 @@ function SecurityScanVerify() {
                   }}
                   disabled={savingIncident}
                   className="h-11 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-foreground disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-                 
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -6823,172 +6486,12 @@ function SecurityScanVerify() {
         </div>
       )}
 
-      
+
     </div>
   );
 }
 
 
-
-function SecurityRecentScanLogs() {
-  const [csuListSearch, setCsuListSearch] = useState("");
-  const [csuListSort, setCsuListSort] =
-    useState<"newest" | "oldest">("newest");
-  const [recentLogs, setRecentLogs] = useState<any[]>([]);
-  const [loadingLogs, setLoadingLogs] = useState(true);
-
-  async function loadRecentLogs() {
-    try {
-      setLoadingLogs(true);
-
-      const data = await getScanLogs();
-
-      setRecentLogs((data.logs ?? []).slice(0, 5));
-    } catch (error) {
-      console.error(
-        "Failed to load recent scan logs:",
-        error
-      );
-    } finally {
-      setLoadingLogs(false);
-    }
-  }
-
-
-
-  useEffect(() => {
-    void loadRecentLogs();
-  }, []);
-
-  const shownRecentLogs = [...recentLogs].filter((row: any) =>
-    [row.qr_code, row.item?.item_name,
-      row.item?.user?.name, row.item?.user?.username,
-      row.scanned_at, row.gate, row.direction, row.result]
-      .join(" ").toLowerCase()
-      .includes(csuListSearch.trim().toLowerCase())
-  ).sort((a: any, b: any) => {
-    const x = new Date(a.scanned_at ?? a.created_at ?? 0).getTime() || 0;
-    const y = new Date(b.scanned_at ?? b.created_at ?? 0).getTime() || 0;
-    return csuListSort === "newest" ? y - x : x - y;
-  });
-
-  return (
-    <div className="w-full min-w-0 space-y-5">
-      <PageHeader
-        title="Recent Scan Logs"
-        subtitle="Latest QR verification and gate scan records."
-      />
-
-      
-      <CSURecordToolbar
-        search={csuListSearch} onSearch={setCsuListSearch}
-        sort={csuListSort} onSort={setCsuListSort}
-        onRefresh={loadRecentLogs} loading={loadingLogs}
-        placeholder="Search QR ID, item, owner, gate..."
-      />
-      <Card
-        title="Recent Scan Logs"
-        
-      >
-        <div className="w-full max-w-full overflow-x-auto overscroll-x-contain rounded-lg border border-border">
-          <table className="w-full min-w-[760px]">
-            <thead>
-              <tr className="bg-[#fafbfc]">
-                {[
-                  "Date and Time",
-                  "QR ID",
-                  "Item",
-                  "Owner",
-                  "Gate",
-                  "Direction",
-                  "Result",
-                ].map((heading) => (
-                  <th
-                    key={heading}
-                    className="text-left py-2 px-3 text-xs text-muted-foreground font-medium whitespace-nowrap"
-                  >
-                    {heading}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-
-            <tbody>
-              {loadingLogs ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="text-center py-6 text-sm text-muted-foreground"
-                  >
-                    Loading recent scans...
-                  </td>
-                </tr>
-              ) : shownRecentLogs.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="text-center py-6 text-sm text-muted-foreground"
-                  >
-                    No scan records yet.
-                  </td>
-                </tr>
-              ) : (
-                shownRecentLogs.map((log) => (
-                  <tr
-                    key={log.id}
-                    className="border-t border-[#cfd8e6] hover:bg-[#eef2fc] transition-colors"
-                  >
-                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(
-                        log.scanned_at
-                      ).toLocaleString(
-                        "en-PH",
-                        {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }
-                      )}
-                    </td>
-
-                    <td className="py-2.5 px-3 text-xs font-mono text-primary whitespace-nowrap">
-                      {log.qr_code}
-                    </td>
-
-                    <td className="py-2.5 px-3 text-sm font-medium whitespace-nowrap">
-                      {log.item?.item_name ??
-                        "Unknown"}
-                    </td>
-
-                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                      {log.item?.user?.name ??
-                        "Unknown"}
-                    </td>
-
-                    <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                      {log.gate}
-                    </td>
-
-                    <td className="py-2.5 px-3">
-                      <QRpassDirectionBadge direction={log.direction} />
-                    </td>
-
-                    <td className="py-2.5 px-3">
-                      <StatusBadge
-                        status={log.result}
-                      />
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-    </div>
-  );
-}
 
 type CSUDatePeriod = "today" | "week" | "month" | "all" | "custom";
 
@@ -7087,26 +6590,42 @@ function CSUStatsPeriodFilter({
 
 
 
-/* QRPASS_CSU_PAGE_MANAGE_V147: CSU-only, page-scoped record manager */
-const QRPassCSUManageContextV147 = React.createContext<(() => void) | null>(null);
+type CSUExportPage = 1 | 2 | 3 | 4;
 
-function QRPassCSUPageManagerV147({ page, onClose }: { page: number; onClose: () => void }) {
+function CSUExportAction({ page }: { page: CSUExportPage }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}
+        className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-semibold text-[#17336d] hover:bg-[#eef2ff]">
+        Export CSV
+      </button>
+      {open && <CSUExportDialog page={page} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+function CSUExportDialog({ page, onClose }: { page: CSUExportPage; onClose: () => void }) {
   const [rows, setRows] = React.useState<any[]>([]);
   const [query, setQuery] = React.useState("");
   const [selected, setSelected] = React.useState<string[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
-  const pageNames = ["Manage Scan Records", "Manage Recent Scan Logs", "Manage Entry / Exit Logs", "Manage Registered Items", "Manage Lost & Found"];
-  const title = pageNames[page] ?? "Manage Records";
+  const title = {
+    1: "Export Recent Scan Logs",
+    2: "Export Entry / Exit Logs",
+    3: "Export Registered Items",
+    4: "Export Lost & Found",
+  }[page];
   const getKey = (row: any, i: number) => String(row.__qrpassManagerKey ?? row.id ?? `${page}-${i}`);
   const load = React.useCallback(async () => {
     setLoading(true); setError("");
     try {
       let data: any[] = [];
-      if (page === 0 || page === 1) {
+      if (page === 1) {
         const response = await getScanLogs();
         data = Array.isArray(response?.logs) ? response.logs : [];
-        if (page === 1) data = data.slice(0,5);
+        data = data.slice(0, 5);
       } else if (page === 2) {
         const [scans, incidents] = await Promise.all([getScanLogs(), getSecurityIncidents()]);
         const logRows = Array.isArray(scans?.logs) ? scans.logs : [];
@@ -7170,7 +6689,6 @@ function QRPassCSUPageManagerV147({ page, onClose }: { page: number; onClose: ()
            data-qrpass-neutral-v169="true">Close</button>
         </div>
         <div className="mb-3 flex items-center gap-2">
-          <button disabled type="button" title="CSU archive endpoint not available" className="shrink-0 rounded-xl border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm opacity-50">View Archives</button>
           <input aria-label={`Search ${title}`} type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search records..."
             className="min-w-0 flex-1 rounded-xl border border-[#c7d2fe] bg-white px-4 py-2.5 text-sm outline-none hover:bg-[#eef2ff] focus:bg-white" />
         </div>
@@ -7197,18 +6715,15 @@ function QRPassCSUPageManagerV147({ page, onClose }: { page: number; onClose: ()
           <button type="button" disabled={loading||!ids.length} onClick={()=>setSelected(v=>allSelected?v.filter(id=>!ids.includes(id)):Array.from(new Set([...v,...ids])))} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50"
           >{allSelected?"Deselect All":"Select All"}</button>
           <button type="button" onClick={download} disabled={loading||!filtered.length} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50"
-          >Download</button>
-          <button type="button" disabled title="Requires CSU-authorized archive endpoint" className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm opacity-50">Archive</button>
-          <button type="button" disabled title="Bulk deletion is unavailable for CSU audit history" className="rounded-xl border border-red-200 bg-white px-3 py-2 text-sm text-red-600 opacity-50">Delete</button>
+          >Download CSV</button>
         </div>
-        <p className="mt-2 text-xs text-[#64748b]">Archive/Delete require CSU-authorized backend support. Search, selection and download work on this page's records.</p>
       </div>
     </div>
   );
 }
 
 function CSURecordToolbar({
-  search, onSearch, sort, onSort, onRefresh, loading, placeholder, filter
+  search, onSearch, sort, onSort, onRefresh, loading, placeholder, filter, sortControl, manageAction
 }: {
   search: string;
   onSearch: (v: string) => void;
@@ -7218,8 +6733,9 @@ function CSURecordToolbar({
   loading?: boolean;
   placeholder: string;
   filter?: React.ReactNode;
+  sortControl?: React.ReactNode;
+  manageAction?: React.ReactNode;
 }) {
-  const openManageV147 = React.useContext(QRPassCSUManageContextV147);
   return (
     <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
       <label className="relative min-w-0 flex-1">
@@ -7235,52 +6751,13 @@ function CSURecordToolbar({
       </label>
       <div className="flex flex-wrap items-center gap-2">
         {filter}
-        <select aria-label="Sort records" value={sort}
+        {sortControl ?? <select aria-label="Sort records" value={sort}
           onChange={e => onSort(e.target.value as "newest" | "oldest")}
           className="h-12 min-w-[148px] flex-1 rounded-xl border border-[#bfceff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white">
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
-        </select>
-        {openManageV147 && (
-          <button type="button" title="Manage Logs" aria-label="Manage Logs"
-            onClick={openManageV147}
-            data-qrpass-hover-uniform-v141="true"
-            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] transition-colors hover:bg-[#eef2ff]"
-  onMouseEnter={(e) => {
-    const s = e.currentTarget.style;
-    s.setProperty('background', '#eef2ff', 'important');
-    s.setProperty('background-color', '#eef2ff', 'important');
-    s.setProperty('border-color', '#a8bde4', 'important');
-    s.setProperty('box-shadow', 'none', 'important');
-    s.setProperty('outline', 'none', 'important');
-  }}
-  onMouseLeave={(e) => {
-    const s = e.currentTarget.style;
-    s.setProperty('background', '#ffffff', 'important');
-    s.setProperty('background-color', '#ffffff', 'important');
-    s.setProperty('border-color', '#cbd5e1', 'important');
-    s.setProperty('box-shadow', 'none', 'important');
-    s.setProperty('outline', 'none', 'important');
-  }}
-  onFocus={(e) => {
-    const s = e.currentTarget.style;
-    s.setProperty('background', e.currentTarget.matches(':hover') ? '#eef2ff' : '#ffffff', 'important');
-    s.setProperty('border-color', e.currentTarget.matches(':hover') ? '#a8bde4' : '#cbd5e1', 'important');
-    s.setProperty('box-shadow', 'none', 'important');
-    s.setProperty('outline', 'none', 'important');
-  }}
-  onBlur={(e) => {
-    const s = e.currentTarget.style;
-    s.setProperty('background', '#ffffff', 'important');
-    s.setProperty('background-color', '#ffffff', 'important');
-    s.setProperty('border-color', '#cbd5e1', 'important');
-    s.setProperty('box-shadow', 'none', 'important');
-    s.setProperty('outline', 'none', 'important');
-  }}
->
-            <SlidersHorizontal size={18} strokeWidth={1.8}/>
-          </button>
-        )}
+        </select>}
+        {manageAction}
         <button type="button"
           onClick={() => { void onRefresh(); }}
           disabled={loading}
@@ -7642,9 +7119,6 @@ function SecurityEntryExitLog() {
   const flaggedCount = periodIncidents.filter((incident) =>
     String(incident.status ?? "").toLowerCase() !== "resolved"
   ).length;
-  const uniqueStudents = new Set(periodLogs.map((log) =>
-    log.item?.user?.id ?? log.item?.user?.username ?? null
-  ).filter(Boolean)).size;
   const scanCount = periodLogs.length;
 
 /*
@@ -8055,17 +7529,9 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
   return (
     <div className="w-full min-w-0 space-y-5 sm:space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Entry / Exit Log
-          </h1>
-
-          
-        </div>
-
-        
-      </div>
+      <h1 className="text-2xl font-bold text-foreground">
+        Entry / Exit Log
+      </h1>
 
       {/* SUMMARY */}
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
@@ -8091,18 +7557,25 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
         />
 
         <StatCard
-          label="Unique Students"
-          value={String(uniqueStudents)}
-          icon={<Users size={20} />}
+          label="Resolved"
+          value={String(resolvedIncidents.length)}
+          icon={<CheckCircle size={20} />}
           color="#2f5fd6"
         />
       </div>
 
-      
+
       <CSURecordToolbar
         search={csuListSearch} onSearch={setCsuListSearch}
         sort={csuListSort} onSort={setCsuListSort}
         onRefresh={loadData} loading={loading}
+        manageAction={entryExitTab !== "flagged" && (
+          <OperationalManageLogs
+            key={entryExitTab === "resolved" ? "resolved-incidents" : "scans"}
+            module={entryExitTab === "resolved" ? "resolved-incidents" : "scans"}
+            onChange={loadData}
+          />
+        )}
         placeholder="Search QR ID, owner, item, gate..."
 
         filter={
@@ -9014,7 +8487,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                   setResolutionDetails("");
                 }}
                 className="rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-               
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -9333,6 +8806,140 @@ function SecurityReports() {
   );
 }
 
+type CSUChoice = { value: string; label: string; disabled?: boolean };
+type CSUChoiceGroup = { label?: string; options: CSUChoice[] };
+
+function QRPassChoiceSelect({
+  label, value, onChange, options = [], groups = [], placeholder, required,
+  onCloseAutoFocus, className = "", errorId,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options?: CSUChoice[];
+  groups?: CSUChoiceGroup[];
+  placeholder?: string;
+  required?: boolean;
+  onCloseAutoFocus?: (event: Event) => void;
+  className?: string;
+  errorId?: string;
+}) {
+  const hasChoice = options.some(option => option.value === value) ||
+    groups.some(group => group.options.some(option => option.value === value));
+  const renderChoice = (choice: CSUChoice) => (
+    <CSUSelect.Item key={choice.value} value={choice.value} disabled={choice.disabled} className="csu-form-option qrpass-select-option">
+      <CSUSelect.ItemText>{choice.label}</CSUSelect.ItemText>
+    </CSUSelect.Item>
+  );
+
+  return (
+    <CSUSelect.Root
+      value={value}
+      onValueChange={onChange}
+      required={required}
+    >
+      <CSUSelect.Trigger
+        aria-label={label}
+        aria-invalid={Boolean(errorId)}
+        aria-describedby={errorId}
+        className={`csu-form-trigger qrpass-select-trigger ${className}`}
+        data-qrpass-keep-style
+      >
+        <CSUSelect.Value placeholder={placeholder}>{value && !hasChoice ? value : undefined}</CSUSelect.Value>
+        <CSUSelect.Icon className="qrpass-select-chevron">
+          <ChevronDown size={16} aria-hidden="true" />
+        </CSUSelect.Icon>
+      </CSUSelect.Trigger>
+      <CSUSelect.Portal>
+        <CSUSelect.Content
+          aria-label={label}
+          className="csu-form-menu qrpass-select-menu"
+          position="popper"
+          side="bottom"
+          align="start"
+          sideOffset={4}
+          collisionPadding={8}
+          onCloseAutoFocus={onCloseAutoFocus}
+        >
+          <CSUSelect.Viewport className="csu-form-menu-viewport qrpass-select-viewport">
+            {options.map(renderChoice)}
+            {groups.map(group => (
+              <CSUSelect.Group key={group.label ?? group.options[0]?.value}>
+                {group.label && <CSUSelect.Label className="csu-form-option-group">{group.label}</CSUSelect.Label>}
+                {group.options.map(renderChoice)}
+              </CSUSelect.Group>
+            ))}
+          </CSUSelect.Viewport>
+        </CSUSelect.Content>
+      </CSUSelect.Portal>
+    </CSUSelect.Root>
+  );
+}
+
+function CSUItemChoice({
+  label, value, options, onChange, placeholder, specifyPlaceholder, required, maxLength,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+  placeholder?: string;
+  specifyPlaceholder?: string;
+  required?: boolean;
+  maxLength?: number;
+}) {
+  const otherValue = "__OTHER__";
+  const [typingCustom, setTypingCustom] = useState(false);
+  const isCustom = typingCustom || (value !== "" && !options.includes(value));
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const focusInputOnClose = useRef(false);
+
+  return (
+    <div className="csu-form-item-choice">
+      <QRPassChoiceSelect
+        label={label}
+        value={isCustom ? otherValue : value}
+        options={[
+          ...(!required ? [{ value: "__CLEAR__", label: "Clear selection" }] : []),
+          ...options.map(option => ({ value: option, label: option })),
+          { value: otherValue, label: "Others (Specify)" },
+        ]}
+        onChange={choice => {
+          const nextValue = choice === "__CLEAR__" ? "" : choice;
+          focusInputOnClose.current = nextValue === otherValue;
+          setTypingCustom(nextValue === otherValue);
+          onChange(nextValue);
+        }}
+        placeholder={placeholder ?? `Select ${label}`}
+        required={required && !isCustom}
+        onCloseAutoFocus={event => {
+          if (focusInputOnClose.current && inputRef.current) {
+            event.preventDefault();
+            inputRef.current.focus({ preventScroll: true });
+          }
+          focusInputOnClose.current = false;
+        }}
+      />
+      {isCustom && (
+        <ValidatedInput
+          rule={required ? fieldRules.nonBlank : undefined}
+          inputRef={element => { inputRef.current = element; }}
+          type="text"
+          aria-label={`Specify ${label}`}
+          value={value === otherValue ? "" : value}
+          onChange={event => {
+            setTypingCustom(true);
+            onChange(event.target.value || otherValue);
+          }}
+          placeholder={specifyPlaceholder ?? `Specify ${label.toLowerCase()}`}
+          maxLength={maxLength}
+          required={required}
+        />
+      )}
+    </div>
+  );
+}
+
 // Campus location picker shared by CSU Lost, Found, Edit, and Recovery forms.
 // Values remain strings to match existing Laravel location_found/location_lost fields.
 const QR_CAMPUS_FLOORS: Record<string, string[]> = {
@@ -9371,48 +8978,54 @@ function CSULocationPicker({
       ? value.slice("Other Campus Area - ".length)
       : value
     : "";
-  const inputStyle = "w-full min-w-0 rounded-lg border border-[#cfd8e6] bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20";
+  const floorGroups = knownBuilding
+    ? [[knownBuilding, QR_CAMPUS_FLOORS[knownBuilding]] as const]
+    : Object.entries(QR_CAMPUS_FLOORS);
+
+  function renderLocationChoice(
+    field: string, selected: string, placeholder: string,
+    onSelect: (value: string) => void, groups: CSUChoiceGroup[],
+  ) {
+    return (
+      <QRPassChoiceSelect
+        label={`${label} ${field}`}
+        value={selected}
+        onChange={onSelect}
+        placeholder={placeholder}
+        groups={groups}
+        required={required}
+      />
+    );
+  }
 
   return (
     <div className="min-w-0 space-y-2">
       <label className="block text-xs font-medium text-foreground">{label}{required ? " *" : ""}</label>
       <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
-        <select
-          aria-label={`${label} building`}
-          value={building}
-          onChange={e => onChange(e.target.value === "Other Campus Area"
-            ? "Other Campus Area - "
-            : e.target.value ? `${e.target.value} - ` : "")}
-          className={inputStyle}
-          required={required}
-        >
-          <option value="" disabled hidden>Choose building</option>
-          {Object.keys(QR_CAMPUS_FLOORS).map(b => <option value={b} key={b}>{b}</option>)}
-          <option value="Other Campus Area">Other Campus Area</option>
-        </select>
-        {building && building !== "Other Campus Area" ? (
-          <select
-            aria-label={`${label} floor`}
-            value={floor}
-            onChange={e => onChange(`${building} - ${e.target.value}`)}
-            className={inputStyle}
-            required={required}
-          >
-            <option value="" disabled hidden>Choose floor</option>
-            {QR_CAMPUS_FLOORS[building].map(f => <option value={f} key={f}>{f}</option>)}
-          </select>
-        ) : building === "Other Campus Area" ? (
-          <input
+        {renderLocationChoice(
+          "building", building, "Choose building",
+          nextBuilding => {
+            const nextFloor = QR_CAMPUS_FLOORS[nextBuilding]?.includes(floor) ? floor : "";
+            onChange(nextBuilding ? `${nextBuilding} - ${nextFloor}` : "");
+          },
+          [{ options: [...Object.keys(QR_CAMPUS_FLOORS), "Other Campus Area"].map(name => ({ label: name, value: name })) }],
+        )}
+        {building === "Other Campus Area" ? (
+          <ValidatedInput
+            rule={required ? fieldRules.nonBlank : undefined}
             aria-label={`${label} other campus area`}
             value={custom}
             onChange={e => onChange(`Other Campus Area - ${e.target.value}`)}
-            className={inputStyle}
             placeholder="e.g. Security Office / Library / Gym"
             maxLength={235}
             required={required}
           />
-        ) : (
-          <div className="flex items-center rounded-lg border border-dashed border-[#cfd8e6] bg-muted/20 px-3 py-2 text-xs text-muted-foreground">Choose a building to see its floors.</div>
+        ) : renderLocationChoice(
+          "floor", floor ? value : "", "Choose floor", onChange,
+          floorGroups.map(([name, floors]) => ({
+            label: knownBuilding ? undefined : name,
+            options: floors.map(floor => ({ label: floor, value: `${name} - ${floor}` })),
+          })),
         )}
       </div>
       {isCompleteCSULocation(value) && (
@@ -9535,27 +9148,27 @@ function SecurityLostFound() {
     setSuccess("");
   }
 
+  const suggestions: Record<CSUReportGroupId, string[]> = {
+    computer: ["Laptop"],
+    highvalue: ["Desktop Computer", "Smart TV", "Projector", "Digital Camera", "Drone", "Professional Video Camera", "3D Printer", "Graphics Tablet", "Monitor"],
+    mobile: ["Mobile Phone", "Tablet", "Audio Equipment"],
+    musical: ["Acoustic Guitar", "Electric Guitar", "Bass Guitar", "Keyboard", "Drum Set", "Snare Drum", "Violin", "Ukelele", "Flute"],
+    sports: ["Basketball", "Volleyball", "Soccer Ball", "Badminton Racket", "Speak Takraw Ball", "Boxing Gloves"],
+    other: ["Backpack", "Wallet", "School ID", "Keys", "Eyeglasses", "Umbrella", "Tumbler", "Notebook"],
+  };
+
+  const brandSuggestions: Record<CSUReportGroupId, string[]> = {
+    computer: ["Acer", "ASUS", "Dell", "HP", "Lenovo", "Apple", "MSI"],
+    highvalue: ["Samsung", "LG", "Sony", "Canon", "Nikon", "Epson", "BenQ", "DJI", "Apple", "GoPro"],
+    mobile: ["Samsung", "Apple", "Xiaomi", "OPPO", "Vivo", "Realme", "Huawei", "Honor", "JBL", "Sony"],
+    musical: ["Fender", "Casio", "Roland", "Gibson", "Ibanez", "Korg", "Pearl", "Suzuki", "Yamaha"],
+    sports: ["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "Puma"],
+    other: ["Jansport", "Hawk", "Secosana", "Aquaflask", "Hydro Flask", "Pilot", "Parker"],
+  };
+
   // Lost & Found needs recognizable identity, not student permit specifications.
   // These fields are common to every category; the report's category was selected above.
   function renderStudentStyleReportFields() {
-    const suggestions: Record<CSUReportGroupId, string[]> = {
-      computer: ["Laptop"],
-      highvalue: ["Desktop Computer", "Smart TV", "Projector", "Digital Camera", "Drone", "Professional Video Camera", "3D Printer", "Graphics Tablet", "Monitor"],
-      mobile: ["Mobile Phone", "Tablet", "Audio Equipment"],
-      musical: ["Acoustic Guitar", "Electric Guitar", "Bass Guitar", "Keyboard", "Drum Set", "Snare Drum", "Violin", "Ukelele", "Flute"],
-      sports: ["Basketball", "Volleyball", "Soccer Ball", "Badminton Racket", "Speak Takraw Ball", "Boxing Gloves"],
-      other: ["Backpack", "Wallet", "School ID", "Keys", "Eyeglasses", "Umbrella", "Tumbler", "Notebook"],
-    };
-
-    const brandSuggestions: Record<CSUReportGroupId, string[]> = {
-      computer: ["Acer", "ASUS", "Dell", "HP", "Lenovo", "Apple", "MSI"],
-      highvalue: ["Samsung", "LG", "Sony", "Canon", "Nikon", "Epson", "BenQ", "DJI", "Apple", "GoPro"],
-      mobile: ["Samsung", "Apple", "Xiaomi", "OPPO", "Vivo", "Realme", "Huawei", "Honor", "JBL", "Sony"],
-      musical: ["Fender", "Casio", "Roland", "Gibson", "Ibanez", "Korg", "Pearl", "Suzuki", "Yamaha"],
-      sports: ["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "Puma"],
-      other: ["Jansport", "Hawk", "Secosana", "Aquaflask", "Hydro Flask", "Pilot", "Parker"],
-    };
-
     const categoryNames = selectedReportGroup ? suggestions[selectedReportGroup] : [];
     const categoryBrands = selectedReportGroup ? brandSuggestions[selectedReportGroup] : [];
 
@@ -9567,7 +9180,7 @@ function SecurityLostFound() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">Item Name *</label>
-            <QRPassInlineOtherSelect
+            <CSUItemChoice
               label="Item Name"
               value={form.item_name}
               options={categoryNames}
@@ -9576,13 +9189,12 @@ function SecurityLostFound() {
               specifyPlaceholder="Specify item name"
               maxLength={255}
               required
-              className="w-full min-h-[44px] rounded-lg border border-[#c7d2fe] bg-[#eef2ff] px-3 py-2.5 text-sm text-[#17336d] outline-none transition-[background-color,border-color,box-shadow] duration-150 focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20"
             />
           </div>
 
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">Brand / Model (if known)</label>
-            <QRPassInlineOtherSelect
+            <CSUItemChoice
               label="Brand / Model"
               value={form.brand_model}
               options={categoryBrands}
@@ -9590,13 +9202,12 @@ function SecurityLostFound() {
               placeholder="Brand / Model (optional)"
               specifyPlaceholder="Specify brand and model (optional)"
               maxLength={255}
-              className="w-full min-h-[44px] rounded-lg border border-[#c7d2fe] bg-[#eef2ff] px-3 py-2.5 text-sm text-[#17336d] outline-none transition-[background-color,border-color,box-shadow] duration-150 focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20"
             />
           </div>
 
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">Color (if known)</label>
-            <QRPassInlineOtherSelect
+            <CSUItemChoice
               label="Item Color"
               value={form.color}
               options={COMMON_ITEM_COLORS}
@@ -9604,7 +9215,6 @@ function SecurityLostFound() {
               placeholder="Color (optional)"
               specifyPlaceholder="Specify item color (optional)"
               maxLength={100}
-              className="w-full min-h-[44px] rounded-lg border border-[#c7d2fe] bg-[#eef2ff] px-3 py-2.5 text-sm text-[#17336d] outline-none transition-[background-color,border-color,box-shadow] duration-150 focus:border-[#5278e7] focus:bg-white focus:ring-2 focus:ring-[#5278e7]/20"
             />
           </div>
 
@@ -9626,7 +9236,8 @@ function SecurityLostFound() {
               onChange={e => setItemSpecs(current => ({...current, accessories_included: e.target.value}))}
               maxLength={600}
               placeholder="e.g. Sticker on the lid, scratches, carrying case, charger, keychain"
-              className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
+              className="csu-lost-found-description"
+              data-qrpass-keep-style
             />
           </div>
         </div>
@@ -10334,8 +9945,10 @@ function SecurityLostFound() {
       | HTMLSelectElement
     >
   ) {
-    const { name, value } = e.target;
+    updateEditField(e.target.name, e.target.value);
+  }
 
+  function updateEditField(name: string, value: string) {
     setEditForm((current) => ({
       ...current,
       [name]: value,
@@ -10345,6 +9958,8 @@ function SecurityLostFound() {
       setEditError("");
     }
   }
+
+  const editReportGroup = reportCategories.find(category => category.name === editForm.category)?.id;
 
   async function handleEditSubmit(
     e: React.FormEvent
@@ -10368,7 +9983,7 @@ function SecurityLostFound() {
       return;
     }
 
-    if (!editForm.item_name.trim()) {
+    if (!editForm.item_name.trim() || editForm.item_name === "__OTHER__") {
       setError("Please enter the item name.");
       return;
     }
@@ -10407,9 +10022,9 @@ function SecurityLostFound() {
         category:
           editForm.category.trim() || undefined,
         brand_model:
-          editForm.brand_model.trim() || undefined,
+          (editForm.brand_model === "__OTHER__" ? "" : editForm.brand_model.trim()) || undefined,
         color:
-          editForm.color.trim() || undefined,
+          (editForm.color === "__OTHER__" ? "" : editForm.color.trim()) || undefined,
         description:
           editForm.description.trim() || undefined,
       };
@@ -10797,11 +10412,11 @@ function SecurityLostFound() {
       </div>
       </StatisticalCardsSection>
 
-            
 
-      
-<div className="grid grid-cols-2 gap-2 border-b border-border pb-3 sm:flex sm:flex-wrap">
-        
+
+
+      <div className="csu-lost-found-tabs grid grid-cols-2 gap-2 border-b border-border pb-3 sm:flex sm:flex-wrap">
+
         <button
           type="button"
           aria-pressed={tab === "registry"}
@@ -10809,32 +10424,12 @@ function SecurityLostFound() {
             setTab("registry");
             setError("");
           }}
-          className="min-h-11 w-full rounded-full border px-4 py-2 text-xs font-semibold transition-colors sm:w-auto sm:px-5 sm:text-sm"
-          ref={(button) => {
-            if (!button) return;
-            button.style.setProperty("background", "#ffffff", "important");
-            button.style.setProperty("background-color", "#ffffff", "important");
-            button.style.setProperty("color", "#17336d", "important");
-            button.style.setProperty("border-color", "#c7d2fe", "important");
-            button.style.setProperty("box-shadow", "none", "important");
-          }}
-          onMouseEnter={(event) => {
-            event.currentTarget.style.setProperty("background", "#eef2ff", "important");
-            event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
-          }}
-          onMouseLeave={(event) => {
-            event.currentTarget.style.setProperty("background", "#ffffff", "important");
-            event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
-          }}
-          onFocus={(event) => {
-            event.currentTarget.style.setProperty("background", "#ffffff", "important");
-            event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
-          }}
+          className="csu-lost-found-tab"
         >
           Lost & Found Reports
         </button>
 
-        
+
         <button
           type="button"
           aria-pressed={tab === "report"}
@@ -10843,27 +10438,7 @@ function SecurityLostFound() {
             setError("");
             setSuccess("");
           }}
-          className="min-h-11 w-full rounded-full border px-4 py-2 text-xs font-semibold transition-colors sm:w-auto sm:px-5 sm:text-sm"
-          ref={(button) => {
-            if (!button) return;
-            button.style.setProperty("background", "#ffffff", "important");
-            button.style.setProperty("background-color", "#ffffff", "important");
-            button.style.setProperty("color", "#17336d", "important");
-            button.style.setProperty("border-color", "#c7d2fe", "important");
-            button.style.setProperty("box-shadow", "none", "important");
-          }}
-          onMouseEnter={(event) => {
-            event.currentTarget.style.setProperty("background", "#eef2ff", "important");
-            event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
-          }}
-          onMouseLeave={(event) => {
-            event.currentTarget.style.setProperty("background", "#ffffff", "important");
-            event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
-          }}
-          onFocus={(event) => {
-            event.currentTarget.style.setProperty("background", "#ffffff", "important");
-            event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
-          }}
+          className="csu-lost-found-tab"
         >
           + Record Lost / Found Item
         </button>
@@ -10963,54 +10538,46 @@ function SecurityLostFound() {
       )}
       {tab === "registry" && (
         <div className="space-y-4">
-          
+
           <CSURecordToolbar
             search={search} onSearch={setSearch}
             sort={csuListSort} onSort={setCsuListSort}
             onRefresh={loadItems} loading={loading}
             placeholder="Search report, item, owner/finder, claimant..."
             filter={
-              <select
-                aria-label="Filter Lost and Found reports"
+              <QRPassChoiceSelect
+                label="Filter Lost and Found reports"
                 value={lostFoundFilter}
-                onChange={(e) =>
-                  setLostFoundFilter(
-                    e.target.value as
-                      "all" | "lost" | "found" | "recovered"
-                  )
-                }
-                className="h-12 min-w-[170px] max-w-full flex-1 rounded-xl border border-[#bfceff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
-              >
-                <option value="all">
-                  All Reports ({periodItems.length})
-                </option>
-                <option value="lost">
-                  Lost ({periodItems.filter(item =>
-                    String(item.report_type ?? "").toLowerCase() === "lost" &&
-                    !["claimed", "recovered"].includes(
-                      String(item.status ?? "").toLowerCase()
-                    )
-                  ).length})
-                </option>
-                <option value="found">
-                  Found ({periodItems.filter(item =>
-                    String(item.report_type ?? "found").toLowerCase() === "found" &&
-                    !["claimed", "recovered"].includes(
-                      String(item.status ?? "").toLowerCase()
-                    )
-                  ).length})
-                </option>
-                <option value="recovered">
-                  Recovered / Claimed ({periodItems.filter(item =>
-                    ["recovered", "claimed"].includes(
-                      String(item.status ?? "").toLowerCase()
-                    )
-                  ).length})
-                </option>
-              </select>
+                onChange={value => setLostFoundFilter(value as typeof lostFoundFilter)}
+                className="csu-form-toolbar-select"
+                options={[
+                  { value: "all", label: `All Reports (${periodItems.length})` },
+                  ...(["lost", "found", "recovered"] as const).map(value => {
+                    const count = periodItems.filter(item => {
+                      const closed = ["claimed", "recovered"].includes(String(item.status ?? "").toLowerCase());
+                      const type = String(item.report_type ?? (value === "found" ? "found" : "")).toLowerCase();
+                      return value === "recovered" ? closed : !closed && type === value;
+                    }).length;
+                    const label = { lost: "Lost", found: "Found", recovered: "Recovered / Claimed" }[value];
+                    return { value, label: `${label} (${count})` };
+                  }),
+                ]}
+              />
+            }
+            sortControl={
+              <QRPassChoiceSelect
+                label="Sort records"
+                value={csuListSort}
+                onChange={value => setCsuListSort(value as typeof csuListSort)}
+                className="csu-form-toolbar-select"
+                options={[
+                  { value: "newest", label: "Newest first" },
+                  { value: "oldest", label: "Oldest first" },
+                ]}
+              />
             }
           />
-          
+
 
 
           {loading && (
@@ -11429,26 +10996,28 @@ function SecurityLostFound() {
 
           <form
             onSubmit={handleSubmit}
-            className="space-y-5 p-4"
+            className="qrpass-csu-lost-found-form space-y-5 p-4"
+            data-qrpass-native-select
           >
             <div className="rounded-lg border border-[#cfd8e6] bg-muted/30 p-4">
               <label className="mb-1 block text-xs font-medium text-foreground">
                 Report Type *
               </label>
 
-              <select
+              <QRPassChoiceSelect
+                label="Report Type"
                 value={reportMode}
-                onChange={(e) => {
-                  const nextMode = e.target.value as "found" | "lost";
+                onChange={choice => {
+                  const nextMode = choice as "found" | "lost";
                   setReportMode(nextMode);
                   setError("");
                   setSuccess("");
                 }}
-                className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
-              >
-                <option value="found">Found Item</option>
-                <option value="lost">Lost Item</option>
-              </select>
+                options={[
+                  { value: "found", label: "Found Item" },
+                  { value: "lost", label: "Lost Item" },
+                ]}
+              />
 
               <p className="mt-2 text-xs text-muted-foreground">
                 Choose whether Security is recording an item that was found and turned over, or an item reported as lost. The required fields below will change automatically.
@@ -11470,7 +11039,7 @@ function SecurityLostFound() {
                   Finder Student / Employee ID *
                 </label>
 
-                <input
+                <ValidatedInput rule={fieldRules.nonBlank} aria-label="Finder Student / Employee ID"
                   type="text"
                   name="found_by_identifier"
                   value={form.found_by_identifier}
@@ -11495,7 +11064,7 @@ function SecurityLostFound() {
                   Owner Student / Employee ID *
                 </label>
 
-                <input
+                <ValidatedInput rule={fieldRules.nonBlank} aria-label="Owner Student / Employee ID"
                   type="text"
                   name="lost_by_identifier"
                   value={form.lost_by_identifier}
@@ -11508,7 +11077,7 @@ function SecurityLostFound() {
             )}
 
             {/* Simple item identification fields. No permit-only specifications. */}
-            <section className="overflow-hidden rounded-[14px] border border-[#dce3ee] bg-white">
+            <section className="rounded-[14px] border border-[#dce3ee] bg-white">
               <div className="flex items-center gap-3 border-b border-[#dce3ee] px-3 py-4 sm:px-5">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#dce3ee] bg-[#f2f5fb] text-[#16224b]">
                   {activeReportCategory?.icon}
@@ -11545,7 +11114,8 @@ function SecurityLostFound() {
                     ? "Date & Time Found *"
                     : "Date & Time Lost / Last Seen *"}
                 </label>
-                <input
+                <ValidatedInput
+                  aria-label="Report date and time"
                   type="datetime-local"
                   name={
                     reportMode === "found"
@@ -11574,7 +11144,7 @@ function SecurityLostFound() {
                 onChange={handleFormChange}
                 rows={4}
                 placeholder="Describe identifying features, case, stickers, scratches, accessories, or other useful details."
-                className="w-full resize-none rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                data-qrpass-keep-style
               />
             </div>
 
@@ -11666,7 +11236,7 @@ function SecurityLostFound() {
                         type="button"
                         onClick={closeCamera}
                         className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-                       
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -11782,7 +11352,7 @@ function SecurityLostFound() {
                   setSuccess("");
                 }}
                 className="rounded-lg border border-[#cfd8e6] bg-background px-5 py-2 text-sm font-medium !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-               
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -11903,7 +11473,8 @@ function SecurityLostFound() {
 
             <form
               onSubmit={handleEditSubmit}
-              className="space-y-4 p-5"
+              className="qrpass-csu-lost-found-form space-y-4 p-5"
+              data-qrpass-native-select
             >
               <div
                 className={`rounded-lg border px-4 py-3 ${
@@ -11947,7 +11518,7 @@ function SecurityLostFound() {
                     : "Finder Student / Employee ID *"}
                 </label>
 
-                <input
+                <ValidatedInput rule={fieldRules.nonBlank} aria-label="Student / Employee ID"
                   type="text"
                   name="person_identifier"
                   value={editForm.person_identifier}
@@ -11966,13 +11537,12 @@ function SecurityLostFound() {
                   <label className="mb-1 block text-xs font-medium text-foreground">
                     Item Name *
                   </label>
-                  <input
-                    type="text"
-                    name="item_name"
+                  <CSUItemChoice
+                    label="Item Name"
                     value={editForm.item_name}
-                    onChange={handleEditFormChange}
+                    options={editReportGroup ? suggestions[editReportGroup] : []}
+                    onChange={value => updateEditField("item_name", value)}
                     required
-                    className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
                   />
                 </div>
 
@@ -11980,33 +11550,40 @@ function SecurityLostFound() {
                   <label className="mb-1 block text-xs font-medium text-foreground">
                     Category
                   </label>
-                  <select
-                    name="category"
+                  <QRPassChoiceSelect
+                    label="Category"
                     value={editForm.category}
-                    onChange={handleEditFormChange}
-                    className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
-                  >
-                    <option value="">Select category</option>
-                    <optgroup label="Campus Item Categories">
-                      <option value="Computer Equipment">Computer Equipment</option>
-                      <option value="High-Value Electronics">High-Value Electronics</option>
-                      <option value="Mobile / Personal Electronics">Mobile / Personal Electronics</option>
-                      <option value="Musical Instrument">Musical Instrument</option>
-                      <option value="Sports Equipment">Sports Equipment</option>
-                      <option value="Other Equipment">Other Equipment (legacy)</option>
-                      <option value="Personal Belongings & Other Items">Personal Belongings &amp; Other Items</option>
-                    </optgroup>
-                    <optgroup label="Common Lost & Found Items">
-                      <option value="Laptop">Laptop</option>
-                      <option value="Mobile Phone">Mobile Phone</option>
-                      <option value="Tablet">Tablet</option>
-                      <option value="Bag">Bag</option>
-                      <option value="Wallet">Wallet</option>
-                      <option value="ID / Card">ID / Card</option>
-                      <option value="Accessories">Accessories</option>
-                      <option value="Other">Other</option>
-                    </optgroup>
-                  </select>
+                    onChange={choice => updateEditField("category", choice === "__CLEAR__" ? "" : choice)}
+                    placeholder="Select category"
+                    options={[{ value: "__CLEAR__", label: "Clear selection" }]}
+                    groups={[
+                      {
+                        label: "Campus Item Categories",
+                        options: [
+                          { value: "Computer Equipment", label: "Computer Equipment" },
+                          { value: "High-Value Electronics", label: "High-Value Electronics" },
+                          { value: "Mobile / Personal Electronics", label: "Mobile / Personal Electronics" },
+                          { value: "Musical Instrument", label: "Musical Instrument" },
+                          { value: "Sports Equipment", label: "Sports Equipment" },
+                          { value: "Other Equipment", label: "Other Equipment (legacy)" },
+                          { value: "Personal Belongings & Other Items", label: "Personal Belongings & Other Items" },
+                        ],
+                      },
+                      {
+                        label: "Common Lost & Found Items",
+                        options: [
+                          { value: "Laptop", label: "Laptop" },
+                          { value: "Mobile Phone", label: "Mobile Phone" },
+                          { value: "Tablet", label: "Tablet" },
+                          { value: "Bag", label: "Bag" },
+                          { value: "Wallet", label: "Wallet" },
+                          { value: "ID / Card", label: "ID / Card" },
+                          { value: "Accessories", label: "Accessories" },
+                          { value: "Other", label: "Other" },
+                        ],
+                      },
+                    ]}
+                  />
                 </div>
               </div>
 
@@ -12015,12 +11592,11 @@ function SecurityLostFound() {
                   <label className="mb-1 block text-xs font-medium text-foreground">
                     Brand / Model
                   </label>
-                  <input
-                    type="text"
-                    name="brand_model"
+                  <CSUItemChoice
+                    label="Brand / Model"
                     value={editForm.brand_model}
-                    onChange={handleEditFormChange}
-                    className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
+                    options={editReportGroup ? brandSuggestions[editReportGroup] : []}
+                    onChange={value => updateEditField("brand_model", value)}
                   />
                 </div>
 
@@ -12028,12 +11604,11 @@ function SecurityLostFound() {
                   <label className="mb-1 block text-xs font-medium text-foreground">
                     Color
                   </label>
-                  <input
-                    type="text"
-                    name="color"
+                  <CSUItemChoice
+                    label="Color"
                     value={editForm.color}
-                    onChange={handleEditFormChange}
-                    className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
+                    options={COMMON_ITEM_COLORS}
+                    onChange={value => updateEditField("color", value)}
                   />
                 </div>
               </div>
@@ -12055,7 +11630,8 @@ function SecurityLostFound() {
                       ? "Date & Time Lost / Last Seen *"
                       : "Date & Time Found *"}
                   </label>
-                  <input
+                  <ValidatedInput
+                    aria-label="Report date and time"
                     type="datetime-local"
                     name="date_time"
                     value={editForm.date_time}
@@ -12075,7 +11651,7 @@ function SecurityLostFound() {
                   value={editForm.description}
                   onChange={handleEditFormChange}
                   rows={4}
-                  className="w-full resize-none rounded-lg border border-[#cfd8e6] bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  data-qrpass-keep-style
                 />
               </div>
 
@@ -12088,7 +11664,7 @@ function SecurityLostFound() {
                   }}
                   disabled={editSubmitting}
                   className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-                 
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -12199,7 +11775,8 @@ function SecurityLostFound() {
 
             <form
               onSubmit={handleLostRecoverySubmit}
-              className="space-y-4 p-5"
+              className="qrpass-csu-lost-found-form space-y-4 p-5"
+              data-qrpass-native-select
             >
               <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
                 <p className="text-xs font-medium text-red-800">
@@ -12220,7 +11797,7 @@ function SecurityLostFound() {
                 <label className="mb-1 block text-xs font-medium text-foreground">
                   Found / Turned Over By Student or Employee ID *
                 </label>
-                <input
+                <ValidatedInput rule={fieldRules.nonBlank} aria-label="Found / Turned Over By Student or Employee ID"
                   type="text"
                   value={recoveryForm.found_by_identifier}
                   onChange={(e) =>
@@ -12247,7 +11824,7 @@ function SecurityLostFound() {
                 <label className="mb-1 block text-xs font-medium text-foreground">
                   Date & Time Found / Turned Over *
                 </label>
-                <input
+                <ValidatedInput
                   type="datetime-local"
                   value={recoveryForm.date_found}
                   onChange={(e) =>
@@ -12270,7 +11847,7 @@ function SecurityLostFound() {
                   }}
                   disabled={recoveringId !== null}
                   className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-                 
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -12335,116 +11912,6 @@ function SecurityLostFound() {
 // PCO pages reuse the Student search/sort/refresh layout on desktop and mobile.
 
 /* QRPASS_PCO_DIRECT_CONTROLS_V156 */
-/* QRPASS_PCO_MANAGE_V158: page-specific PCO management window */
-function QRPassPCOManageV158({
-  title, records, onClose, onView,
-}: {
-  title: string;
-  records: any[];
-  onClose: () => void;
-  onView?: (item: any) => void;
-}) {
-  const [searchV157, setSearchV157] = useState("");
-  const [selectedV157, setSelectedV157] = useState<string[]>([]);
-  const [detailV157, setDetailV157] = useState<any | null>(null);
-  const safeV157 = Array.isArray(records) ? records : [];
-  const visibleV157 = safeV157.filter((item) =>
-    [item.id, item.item_name, item.item_type, item.serial_number, item.qr_code,
-     item.status, item.created_at, item.user?.name, item.user?.username,
-     item.title, item.message, item.type]
-      .filter(v => v !== undefined && v !== null)
-      .join(" ").toLowerCase().includes(searchV157.trim().toLowerCase())
-  );
-  const keyV157 = (item: any, i: number) => String(item.id ?? `row-${i}`);
-  const visibleIdsV157 = visibleV157.map(keyV157);
-  const allV157 = visibleIdsV157.length > 0 &&
-    visibleIdsV157.every(id => selectedV157.includes(id));
-  const exportV157 = () => {
-    const chosen = selectedV157.length
-      ? visibleV157.filter((item,i) => selectedV157.includes(keyV157(item,i)))
-      : visibleV157;
-    if (!chosen.length) return;
-    const columns = ["id","item_name","item_type","serial_number","qr_code","status","created_at","title","message"];
-    const quote = (value: unknown) => {
-      let v=String(value ?? "");
-      if (/^[\s]*[=+\-@]/.test(v)) v="'"+v;
-      return `"${v.replace(/"/g,'""')}"`;
-    };
-    const csv=[columns.map(quote).join(","),...chosen.map(item=>columns.map(k=>quote(item[k])).join(","))].join("\r\n");
-    const blob = new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8"});
-    const url=URL.createObjectURL(blob);
-    const link=document.createElement("a"); link.href=url;
-    link.download=`QRPass-PCO-${title.replace(/[^a-z0-9]+/gi,"-")}.csv`;
-    document.body.appendChild(link); link.click(); link.remove();
-    window.setTimeout(()=>URL.revokeObjectURL(url),1000);
-  };
-  return (
-    <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/65 p-3"
-      onMouseDown={e=>{if(e.target===e.currentTarget) onClose();}}>
-      <div role="dialog" aria-modal="true" aria-label={title}
-        className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#c7d2fe] bg-white p-4 text-[#17336d] shadow-2xl sm:p-5">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold">{title}</h2>
-          <button type="button" onClick={onClose}
-            className="rounded-xl border border-[#c7d2fe] bg-white px-4 py-2 text-sm hover:bg-[#eef2ff]"
-           data-qrpass-neutral-v169="true">Close</button>
-        </div>
-        <div className="mb-3 flex gap-2">
-          <button type="button" disabled title="No PCO archive endpoint is connected"
-            className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm opacity-50">View Archives</button>
-          <input type="search" aria-label={`Search ${title}`} placeholder="Search records..."
-            value={searchV157} onChange={e=>setSearchV157(e.target.value)}
-            className="min-w-0 flex-1 rounded-xl border border-[#c7d2fe] bg-white px-4 py-2.5 text-sm outline-none hover:bg-[#eef2ff] focus:bg-white"/>
-        </div>
-        <div className="min-h-[70px] flex-1 overflow-y-auto rounded-xl border border-[#d8e1ee]">
-          {!visibleV157.length ? <p className="p-7 text-center text-sm font-semibold">No matching records</p> :
-          <div className="divide-y divide-[#e5eaf2]">{visibleV157.map((item,i)=>{
-            const id=keyV157(item,i);
-            return <div key={id} className="flex items-center gap-3 p-3 hover:bg-[#f8faff]">
-              <input type="checkbox" aria-label={`Select record ${id}`}
-                checked={selectedV157.includes(id)}
-                onChange={()=>setSelectedV157(list=>list.includes(id)?list.filter(x=>x!==id):[...list,id])}/>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{String(item.item_name ?? item.title ?? `Record #${id}`)}</p>
-                <p className="truncate text-xs text-[#64748b]">{String(item.user?.name ?? item.item_type ?? item.type ?? "")} Â· {String(item.status ?? item.created_at ?? "")}</p>
-              </div>
-              <button type="button"
-                onClick={()=>{if(onView){onView(item);onClose();} else setDetailV157(item);}}
-                className="rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff]"
-          >View</button>
-            </div>;
-          })}</div>}
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="mr-auto text-xs text-[#64748b]">{selectedV157.length} selected Â· {visibleV157.length} shown</span>
-          <button type="button" disabled={!visibleIdsV157.length}
-            onClick={()=>setSelectedV157(v=>allV157?v.filter(id=>!visibleIdsV157.includes(id)):Array.from(new Set([...v,...visibleIdsV157])))}
-            className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50"
-          >{allV157?"Deselect All":"Select All"}</button>
-          <button type="button" disabled={!visibleV157.length} onClick={exportV157}
-            className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50"
-          >Download</button>
-          <button type="button" disabled title="PCO archive endpoint not verified"
-            className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm opacity-50">Archive</button>
-          <button type="button" disabled title="Bulk permanent deletion not authorized"
-            className="rounded-xl border border-red-200 bg-white px-3 py-2 text-sm text-red-600 opacity-50">Delete</button>
-        </div>
-        {detailV157 && <div role="dialog" aria-modal="true" aria-label="Record details"
-          className="absolute inset-4 z-[1] flex items-center justify-center bg-black/40 p-2">
-          <div className="max-h-[75vh] w-full max-w-xl overflow-auto rounded-xl bg-white p-5 text-[#17336d] shadow-2xl">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-bold">Record Details</h3>
-              <button type="button" onClick={()=>setDetailV157(null)} className="rounded-lg border border-[#c7d2fe] px-3 py-2" data-qrpass-neutral-v169="true">Close</button>
-            </div>
-            {Object.entries(detailV157).filter(([k,v])=>typeof v!=="object" && !k.startsWith("__")).slice(0,30).map(([k,v])=>
-              <p key={k} className="border-b border-[#edf2ff] py-1 text-sm"><strong>{k}:</strong> {String(v??"")}</p>)}
-          </div>
-        </div>}
-      </div>
-    </div>
-  );
-}
-
 /* QRPASS_PCO_MOBILE_REFRESH_V162 */
 /* QRPASS_PCO_MOBILE_REFRESH_V165 */
 function PCOResponsiveToolbar({
@@ -12458,7 +11925,7 @@ function PCOResponsiveToolbar({
   sortLabels = ["Newest first", "Oldest first"],
   qrpassFilterSlot,
   manageAction,
-  onManageV158,
+  mobileRefreshOnly = false,
 }: {
   search: string;
   onSearchChange: (value: string) => void;
@@ -12470,7 +11937,7 @@ function PCOResponsiveToolbar({
   sortLabels?: [string, string];
   qrpassFilterSlot?: React.ReactNode;
   manageAction?: React.ReactNode;
-  onManageV158?: () => void;
+  mobileRefreshOnly?: boolean;
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-3 lg:flex-row">
@@ -12501,45 +11968,24 @@ function PCOResponsiveToolbar({
         value={sort}
         onChange={(e) => onSortChange(e.target.value)}
         className="w-full rounded-xl border border-border  px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary lg:w-auto !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
-          ref={(element) => {
-            if (element) element.style.setProperty("background-color", "#ffffff", "important");
-          }}
-          onMouseEnter={(event) => {
-            if (document.activeElement !== event.currentTarget)
-              event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
-          }}
-          onMouseLeave={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
-          onFocus={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
-          onBlur={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
       >
         <option value="newest">{sortLabels[0]}</option>
         <option value="oldest">{sortLabels[1]}</option>
       </select>
       {manageAction}
-      {onManageV158 ? (
-        <>
-          <button
-            type="button"
-            aria-label="Manage Records"
-            title="Manage Records"
-            onClick={onManageV158}
-            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] hover:bg-[#eef2ff] !hidden md:!inline-flex"
-          >
-            <SlidersHorizontal size={18} strokeWidth={1.8} />
-          </button>
-          <button
-            type="button"
-            data-qrpass-mobile-refresh-v167="true"
-            aria-label="Refresh"
-            title="Refresh"
-            onClick={onRefresh}
-            disabled={loading}
-            className="!inline-flex md:!hidden !w-auto !min-w-[112px] !max-w-none shrink-0 flex-nowrap items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-[#c7d2fe] !bg-white !px-4 !py-3 text-sm font-medium text-[#17336d] hover:!bg-[#eef2ff] disabled:opacity-50"
-          >
-            <RefreshCw size={16} className="shrink-0" />
-            <span className="!inline whitespace-nowrap">{loading ? "Refreshing..." : "Refresh"}</span>
-          </button>
-        </>
+      {mobileRefreshOnly ? (
+        <button
+          type="button"
+          data-qrpass-mobile-refresh-v167="true"
+          aria-label="Refresh"
+          title="Refresh"
+          onClick={onRefresh}
+          disabled={loading}
+          className="!inline-flex md:!hidden !w-auto !min-w-[112px] !max-w-none shrink-0 flex-nowrap items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-[#c7d2fe] !bg-white !px-4 !py-3 text-sm font-medium text-[#17336d] hover:!bg-[#eef2ff] disabled:opacity-50"
+        >
+          <RefreshCw size={16} className="shrink-0" />
+          <span className="!inline whitespace-nowrap">{loading ? "Refreshing..." : "Refresh"}</span>
+        </button>
       ) : (
         <button
           type="button"
@@ -12607,7 +12053,6 @@ function PCOPermitRequests() {
   // QRPASS_PCO_COMPACT_PENDING_V101: list shows summary only; full details and approval stay in popup.
   // QRPASS_PCO_APPROVAL_IN_DETAILS_ONLY_V100: approval is available only after opening View.
   // QRPASS_PCO_HIDE_ITEM_NAME_V98: the name remains searchable and visible in View.
-  const [manageOpenV158,setManageOpenV158]=useState(false);
   const [requestSearch, setRequestSearch] = useState("");
   const [requestSort, setRequestSort] = useState<"newest" | "oldest">("newest");
   const [pending, setPending] = useState<any[]>([]);
@@ -12620,9 +12065,9 @@ function PCOPermitRequests() {
     try {
       setLoading(true);
       setError("");
-  
+
       const data = await getPendingItems();
-  
+
       setPending(
         Array.isArray(data?.items)
           ? data.items
@@ -12633,9 +12078,9 @@ function PCOPermitRequests() {
         "Failed to load pending items:",
         error
       );
-  
+
       setPending([]);
-  
+
       setError(
         error instanceof Error
           ? error.message
@@ -12740,12 +12185,12 @@ function PCOPermitRequests() {
         sort={requestSort}
         onSortChange={(value) => setRequestSort(value as "newest" | "oldest")}
         onRefresh={loadPendingItems}
-        onManageV158={() => setManageOpenV158(true)}
+        manageAction={<OperationalManageLogs module="requests" onChange={loadPendingItems} />}
+        mobileRefreshOnly
         loading={loading}
         placeholder="Search student, item, category, serial number..."
       />
 
-      {manageOpenV158 && <QRPassPCOManageV158 title="Manage Registration Requests" records={pendingResults} onClose={()=>setManageOpenV158(false)}/>}
       <Card
         title="Pending Requests"
         action={
@@ -13038,7 +12483,6 @@ function PCOPermitRequests() {
 function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
   const openSysadminManageV116 = React.useContext(QRPassSysadminManageContext);
   const [items, setItems] = useState<any[]>([]);
-  const [manageOpenV158,setManageOpenV158]=useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
@@ -13138,7 +12582,6 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
         sort={sortOrder}
         onSortChange={(value) => setSortOrder(value as "newest" | "oldest")}
         onRefresh={loadItems}
-        onManageV158={!adminView ? () => setManageOpenV158(true) : undefined}
         loading={loading}
         placeholder="Search item, owner, serial number, QR ID..."
         manageAction={adminView && openSysadminManageV116 ? (
@@ -13147,7 +12590,7 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
             aria-label="Manage Items"
             title="Manage Items"
             onClick={openSysadminManageV116}
-            
+
             data-qrpass-manage-items-hover-v149="true"
             onMouseEnter={(e) => {
               const s = e.currentTarget.style;
@@ -13185,16 +12628,7 @@ className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "expired")}
             className="h-12 w-full rounded-xl border border-[#c7d2fe]  px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] lg:w-[185px] dark:border-[#5075b7] dark:bg-[#1e3765] dark:text-white !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
-          ref={(element) => {
-            if (element) element.style.setProperty("background-color", "#ffffff", "important");
-          }}
-          onMouseEnter={(event) => {
-            if (document.activeElement !== event.currentTarget)
-              event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
-          }}
-          onMouseLeave={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
-          onFocus={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
-          onBlur={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}>
+>
             <option value="all">All ({registeredItems.length})</option>
             <option value="active">Active ({registeredItems.filter((item) => registryStatus(item) === "Active").length})</option>
             <option value="expired">Expired ({expiredCount})</option>
@@ -13202,7 +12636,7 @@ className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl
         ) : undefined}
       />
       ) : (
-      
+
       <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
 
         <label className="relative block min-w-0 flex-1">
@@ -13210,10 +12644,10 @@ className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl
             size={17}
             className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
-          
 
 
-          
+
+
 
 <input
   type="search"
@@ -13255,16 +12689,6 @@ className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl
               )
             }
             className="h-12 min-w-[160px] flex-1 rounded-xl border border-[#bfceff]  px-3 text-sm text-foreground outline-none focus:border-[#6488ff]  dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white !min-w-0 !w-full sm:!w-auto"
-          ref={(element) => {
-            if (element) element.style.setProperty("background-color", "#ffffff", "important");
-          }}
-          onMouseEnter={(event) => {
-            if (document.activeElement !== event.currentTarget)
-              event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
-          }}
-          onMouseLeave={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
-          onFocus={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
-          onBlur={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
           >
             <option value="all">
               All Items ({registeredItems.length})
@@ -13286,55 +12710,13 @@ className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl
               )
             }
             className="h-12 min-w-[145px] flex-1 rounded-xl border border-[#bfceff]  px-3 text-sm text-foreground outline-none focus:border-[#6488ff]  dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white !min-w-0 !w-full sm:!w-auto"
-          ref={(element) => {
-            if (element) element.style.setProperty("background-color", "#ffffff", "important");
-          }}
-          onMouseEnter={(event) => {
-            if (document.activeElement !== event.currentTarget)
-              event.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
-          }}
-          onMouseLeave={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
-          onFocus={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
-          onBlur={(event) => event.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
           >
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
           </select>
 
-          <button type="button" title="Manage Items" aria-label="Manage Items"
-              onClick={()=>setManageOpenV158(true)}
-              
-            data-qrpass-manage-items-hover-v149="true"
-            onMouseEnter={(e) => {
-              const s = e.currentTarget.style;
-              s.setProperty('background-color', '#eef2ff', 'important');
-              s.setProperty('border-color', '#a8bde4', 'important');
-              s.setProperty('box-shadow', 'none', 'important');
-              s.setProperty('outline', 'none', 'important');
-            }}
-            onMouseLeave={(e) => {
-              const s = e.currentTarget.style;
-              s.setProperty('background-color', '#ffffff', 'important');
-              s.setProperty('border-color', '#cbd5e1', 'important');
-              s.setProperty('box-shadow', 'none', 'important');
-              s.setProperty('outline', 'none', 'important');
-            }}
-            onFocus={(e) => {
-              const s = e.currentTarget.style;
-              s.setProperty('box-shadow', 'none', 'important');
-              s.setProperty('outline', 'none', 'important');
-            }}
-            onBlur={(e) => {
-              const s = e.currentTarget.style;
-              s.setProperty('background-color', '#ffffff', 'important');
-              s.setProperty('border-color', '#cbd5e1', 'important');
-              s.setProperty('box-shadow', 'none', 'important');
-              s.setProperty('outline', 'none', 'important');
-            }}
-className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] hover:bg-[#eef2ff] !hidden md:!inline-flex">
-              <SlidersHorizontal size={18} strokeWidth={1.8}/>
-            </button>
-  
+          <OperationalManageLogs module="items" onChange={loadItems} />
+
 <button
   type="button"
   title="Refresh"
@@ -13355,7 +12737,6 @@ className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl
       )}
 
 
-      {manageOpenV158 && <QRPassPCOManageV158 title="Manage Registered Items" records={filteredItems} onClose={()=>setManageOpenV158(false)} onView={(item)=>setSelectedItem(item)}/>}
       <Card title="Registered Items"
       >
         {/* RESULT COUNT */}
@@ -14004,12 +13385,7 @@ function PCOReports() {
               value={report}
               onChange={event => { setReport(event.target.value as PCOReportKey); setMessage(""); }}
               className="h-14 w-full rounded-xl border border-[#cbd5e1] bg-white px-4 text-base font-medium text-[#17336d] outline-none transition hover:border-[#9fb8e4] hover:bg-[#eef2ff] focus:border-[#80a4df] focus:bg-white focus:ring-2 focus:ring-[#dbe7ff] !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
-            
-    ref={(element) => { if (element) { element.style.setProperty("background", "#ffffff", "important"); element.style.setProperty("background-color", "#ffffff", "important"); } }}
-    onMouseEnter={(event) => { event.currentTarget.style.setProperty("background", "#eef2ff", "important"); event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
-    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onFocus={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onBlur={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+
             >
               {reportOptions.map(option => <option key={option.key} value={option.key}>{option.name}</option>)}
             </select>
@@ -14020,12 +13396,7 @@ function PCOReports() {
               value={period}
               onChange={event => { setPeriod(event.target.value as PCOPeriod); setMessage(""); }}
               className="h-14 w-full rounded-xl border border-[#cbd5e1] bg-white px-4 text-base font-medium text-[#17336d] outline-none transition hover:border-[#9fb8e4] hover:bg-[#eef2ff] focus:border-[#80a4df] focus:bg-white focus:ring-2 focus:ring-[#dbe7ff] !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
-            
-    ref={(element) => { if (element) { element.style.setProperty("background", "#ffffff", "important"); element.style.setProperty("background-color", "#ffffff", "important"); } }}
-    onMouseEnter={(event) => { event.currentTarget.style.setProperty("background", "#eef2ff", "important"); event.currentTarget.style.setProperty("background-color", "#eef2ff", "important"); }}
-    onMouseLeave={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onFocus={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
-    onBlur={(event) => { event.currentTarget.style.setProperty("background", "#ffffff", "important"); event.currentTarget.style.setProperty("background-color", "#ffffff", "important"); }}
+
             >
               <option value="day">Today</option>
               <option value="week">This Week</option>
@@ -14055,7 +13426,6 @@ function PCOReports() {
   );
 }
 function PCONotifications() {
-  const [manageOpenV158,setManageOpenV158]=useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -14305,7 +13675,7 @@ function PCONotifications() {
     notifications.length - unreadCount;
 
   return (
-    <div className="w-full min-w-0 space-y-5 overflow-x-hidden">      {manageOpenV158 && <QRPassPCOManageV158 title="Manage Notifications" records={notifications} onClose={()=>setManageOpenV158(false)}/>}
+    <div className="w-full min-w-0 space-y-5 overflow-x-hidden">
       {/* HEADER */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <PageHeader
@@ -14314,13 +13684,6 @@ function PCONotifications() {
         />
 
         <div className="flex w-full min-w-0 flex-wrap items-center gap-2 md:w-auto">
-          <button type="button" title="Manage Notifications" aria-label="Manage Notifications"
-            onClick={()=>setManageOpenV158(true)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] hover:bg-[#eef2ff] !hidden md:!inline-flex"
-          >
-            <SlidersHorizontal size={18} strokeWidth={1.8}/>
-          </button>
-  
 <button
   type="button"
   title="Refresh"
@@ -15401,7 +14764,7 @@ function SysAdminLostFound() {
               title="Manage Reports"
               onClick={openSysadminLostFoundManagerV117}
               className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#cbd5e1] bg-white text-[#31539b] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
-            
+
   onMouseEnter={(e) => {
     const s = e.currentTarget.style;
     s.setProperty('background', '#eef2ff', 'important');
@@ -15618,7 +14981,7 @@ function QrpassRoleReportManagerV16({ role, category, onClose }: { role: QrpassR
            data-qrpass-neutral-v169="true">Close</button></div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
 
-        <button type="button" disabled={!canArchive || busy} title={canArchive ? "View archived records for this report" : "Archives unavailable: role-specific backend support required"} className="shrink-0 rounded-xl border border-[#cbd5e1] bg-white px-3 py-2 text-[#17336d] transition-colors disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#1e2d4b] dark:text-white !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none" onClick={() => { if (canArchive) setView(v => v === "active" ? "archived" : "active"); }} 
+        <button type="button" disabled={!canArchive || busy} title={canArchive ? "View archived records for this report" : "Archives unavailable: role-specific backend support required"} className="shrink-0 rounded-xl border border-[#cbd5e1] bg-white px-3 py-2 text-[#17336d] transition-colors disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#1e2d4b] dark:text-white !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none" onClick={() => { if (canArchive) setView(v => v === "active" ? "archived" : "active"); }}
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -17204,7 +16567,7 @@ async function downloadGateEntryExitPDF() {
               title="Manage Reports"
               onClick={() => setRoleReportManagerOpenV16(true)}
               className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#cbd5e1] bg-white text-[#31539b] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
-            
+
   onMouseEnter={(e) => {
     const s = e.currentTarget.style;
     s.setProperty('background', '#eef2ff', 'important');
@@ -17318,7 +16681,7 @@ return (
                         setRegistrationStatusFilter("all");
                       }}
                       className="inline-flex items-center gap-2 rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-sm font-semibold text-[#17336d] !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-                     
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -17362,7 +16725,7 @@ return (
       )}
 
       {/* QRPASS_ROLE_REPORT_LAUNCH_V16 — inside selected role only */}
-      
+
       {roleReportManagerOpenV16 && reportRole && (
         <QrpassRoleReportManagerV16 key={`${reportRole}-${recentCategory}`} role={reportRole} category={recentCategory} onClose={() => {setRoleReportManagerOpenV16(false); void loadReports();}} />
       )}
@@ -17389,7 +16752,7 @@ return (
           </div>
           <div className="flex items-center gap-2">
             <span className="rounded-full border border-[#dce3ee] bg-[#f8fafc] px-3 py-1 text-[11px] font-medium text-muted-foreground">Campus-wide</span>
-            
+
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -17664,6 +17027,7 @@ function SysAdminUserAccounts() {
 
   const [editUser, setEditUser] =
     useState<any | null>(null);
+  const [mobileNumberError, setMobileNumberError] = useState("");
 
   const [newUser, setNewUser] = useState({
     name: "",
@@ -17907,6 +17271,8 @@ function SysAdminUserAccounts() {
       return;
     }
 
+    if (!isPersonName(newUser.name) || !isEmail(newUser.email) || fieldRules.id(newUser.username)) return;
+
     if (newUser.role === 'student' && (!newUser.year_level || (newUser.year_level !== 'Senior High School' && !newUser.college))) {
       setError('Please select the student year level and department (department is not required for Senior High School).');
       return;
@@ -17980,12 +17346,15 @@ function SysAdminUserAccounts() {
   function handleStartEdit(user: any) {
     setError("");
     setSuccess("");
+    setMobileNumberError("");
     setShowAddUser(false);
 
     setEditUser({
       id: user.id,
       name: user.name ?? "",
       email: user.email ?? "",
+      contact_number: user.contact_number ?? "",
+      originalContactNumber: user.contact_number ?? "",
       username: user.username ?? "",
       role: user.role ?? "student",
       college: user.college ?? "",
@@ -18010,6 +17379,13 @@ function SysAdminUserAccounts() {
     setError("");
     setSuccess("");
 
+    const mobileNumber = editUser.contact_number.trim();
+    const mobileNumberChanged = editUser.contact_number !== editUser.originalContactNumber;
+    if (mobileNumberChanged && mobileNumber && fieldRules.mobile(mobileNumber)) {
+      setMobileNumberError("Enter an 11-digit mobile number in 09XXXXXXXXX format.");
+      return;
+    }
+
     if (
       !editUser.name.trim() ||
       !editUser.email.trim() ||
@@ -18021,6 +17397,8 @@ function SysAdminUserAccounts() {
 
       return;
     }
+
+    if (!isPersonName(editUser.name) || !isEmail(editUser.email) || fieldRules.id(editUser.username)) return;
 
     if (editUser.role === 'student' && (!editUser.year_level || (editUser.year_level !== 'Senior High School' && !editUser.college))) {
       setError('Please select the student year level and department (department is not required for Senior High School).');
@@ -18038,6 +17416,8 @@ function SysAdminUserAccounts() {
 
           email:
             editUser.email.trim(),
+
+          contact_number: mobileNumberChanged ? mobileNumber || null : undefined,
 
           username:
             editUser.username.trim(),
@@ -18263,7 +17643,7 @@ function SysAdminUserAccounts() {
           subtitle="Manage QRpass user accounts and role-based access."
         />
 
-        
+
       </div>
 
       {/* SUCCESS MESSAGE */}
@@ -18305,7 +17685,7 @@ function SysAdminUserAccounts() {
                   Full Name
                 </label>
                 {/* QRPASS_ADD_USER_FULL_NAME_RESTORED_V52 */}
-                <input
+                <ValidatedInput rule={fieldRules.name}
                   type="text"
                   name="fullName"
                   autoComplete="name"
@@ -18323,7 +17703,7 @@ function SysAdminUserAccounts() {
                   Email Address
                 </label>
 
-                <input
+                <ValidatedInput rule={fieldRules.email} aria-label="Email Address"
                   type="email"
                   value={newUser.email}
                   onChange={(e) =>
@@ -18346,7 +17726,7 @@ function SysAdminUserAccounts() {
                   ID NUMBER
                 </label>
 
-                <input
+                <ValidatedInput rule={fieldRules.id} aria-label="ID Number"
                   type="text" pattern="[0-9]*" inputMode="numeric"
                   value={
                     newUser.username
@@ -18356,7 +17736,7 @@ function SysAdminUserAccounts() {
                       (current) => ({
                         ...current,
                         username:
-                          e.target.value.replace(/[^0-9]/g, ""),
+                          e.target.value,
                       })
                     )
                   }
@@ -18385,16 +17765,12 @@ function SysAdminUserAccounts() {
                     )
                   }
                   className="h-[58px] min-h-[58px] w-full box-border rounded-xl border border-[#cbd5e1] bg-white px-4 pr-10 text-sm text-[#17336d] outline-none transition-colors hover:bg-[#eef2ff] focus:border-[#5278e7]"
-                
+
                       style={{ backgroundColor: "#ffffff", height: 58, minHeight: 58 }}
-                    
-                      onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.setProperty('background-color', '#eef2ff', 'important'); }}
-                    
-                      onMouseLeave={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
-                    
-                      onFocus={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
-                    
-                      onBlur={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
+
+
+
+
                     >
                   <option value="student">
                     Student
@@ -18422,30 +17798,21 @@ function SysAdminUserAccounts() {
                 <>
                   <div>
                     <label className="mb-1 block text-xs font-semibold">Year Level</label>
-                    <select data-qrpass-user-select-v175="true" ref={(element) => {
-                      if (element) {
-                        element.style.setProperty('background', '#ffffff', 'important');
-                        element.style.setProperty('background-color', '#ffffff', 'important');
-                      }
-                    }} aria-label="Student Year Level" required value={newUser.year_level}
-                      
-                      
-                      
-                      
+                    <select data-qrpass-user-select-v175="true" aria-label="Student Year Level" required value={newUser.year_level}
+
+
+
+
                       onChange={(e) => {
                         const value = e.target.value;
                         setNewUser((current) => ({ ...current, year_level: value, college: value === "Senior High School" ? "" : current.college }));
                       }}
                       className="h-[58px] min-h-[58px] w-full box-border rounded-xl border border-[#cbd5e1] bg-white px-4 pr-10 text-sm text-[#17336d] outline-none transition-colors hover:bg-[#eef2ff] focus:border-[#5278e7]"
                       style={{ backgroundColor: "#ffffff", height: 58, minHeight: 58 }}
-                    
-                      onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.setProperty('background-color', '#eef2ff', 'important'); }}
-                    
-                      onMouseLeave={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
-                    
-                      onFocus={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
-                    
-                      onBlur={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
+
+
+
+
                     >
                       <option value="">Select year level</option>
                       {['Senior High School', '1st Year', '2nd Year', '3rd Year', '4th Year'].map(level => (
@@ -18456,27 +17823,18 @@ function SysAdminUserAccounts() {
                   {newUser.year_level !== "Senior High School" && (
                     <div>
                       <label className="mb-1 block text-xs font-semibold">Department</label>
-                      <select data-qrpass-user-select-v175="true" ref={(element) => {
-                      if (element) {
-                        element.style.setProperty('background', '#ffffff', 'important');
-                        element.style.setProperty('background-color', '#ffffff', 'important');
-                      }
-                    }} aria-label="Student Department" required value={newUser.college}
-                      
-                      
-                      
-                      
+                      <select data-qrpass-user-select-v175="true" aria-label="Student Department" required value={newUser.college}
+
+
+
+
                         onChange={(e) => setNewUser((current) => ({ ...current, college: e.target.value }))}
                         className="h-[58px] min-h-[58px] w-full box-border rounded-xl border border-[#cbd5e1] bg-white px-4 pr-10 text-sm text-[#17336d] outline-none transition-colors hover:bg-[#eef2ff] focus:border-[#5278e7]"
                       style={{ backgroundColor: "#ffffff", height: 58, minHeight: 58 }}
-                    
-                      onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.setProperty('background-color', '#eef2ff', 'important'); }}
-                    
-                      onMouseLeave={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
-                    
-                      onFocus={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
-                    
-                      onBlur={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
+
+
+
+
                     >
                         <option value="">Select department</option>
                         {QRPassStudentAcademicDepartmentsV105.map((department) => (
@@ -18514,7 +17872,7 @@ function SysAdminUserAccounts() {
                  data-qrpass-add-user-field-v55="password"
                 />
 
-                
+
               </div>
             </div>
 
@@ -18542,7 +17900,7 @@ function SysAdminUserAccounts() {
                   creatingUser
                 }
                 className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-               
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -18625,7 +17983,7 @@ function SysAdminUserAccounts() {
                   Full Name
                 </label>
 
-                <input
+                <ValidatedInput rule={fieldRules.name} aria-label="Full Name"
                   type="text"
                   value={editUser.name}
                   onChange={(e) =>
@@ -18636,7 +17994,7 @@ function SysAdminUserAccounts() {
                     })
                   }
                   required
-                 
+
                 onMouseEnter={(event) => {
                   const s=event.currentTarget.style;
                   s.setProperty('background-color','#eef2ff','important');
@@ -18668,7 +18026,7 @@ function SysAdminUserAccounts() {
                   Email Address
                 </label>
 
-                <input
+                <ValidatedInput rule={fieldRules.email} aria-label="Email Address"
                   type="email"
                   value={editUser.email}
                   onChange={(e) =>
@@ -18679,7 +18037,7 @@ function SysAdminUserAccounts() {
                     })
                   }
                   required
-                 
+
                 onMouseEnter={(event) => {
                   const s=event.currentTarget.style;
                   s.setProperty('background-color','#eef2ff','important');
@@ -18711,7 +18069,7 @@ function SysAdminUserAccounts() {
                   ID NUMBER
                 </label>
 
-                <input
+                <ValidatedInput rule={fieldRules.id} aria-label="ID Number"
                   type="text" pattern="[0-9]*" inputMode="numeric"
                   value={
                     editUser.username
@@ -18720,11 +18078,11 @@ function SysAdminUserAccounts() {
                     setEditUser({
                       ...editUser,
                       username:
-                        e.target.value.replace(/[^0-9]/g, ""),
+                        e.target.value,
                     })
                   }
                   required
-                 
+
                 onMouseEnter={(event) => {
                   const s=event.currentTarget.style;
                   s.setProperty('background-color','#eef2ff','important');
@@ -18750,6 +18108,34 @@ function SysAdminUserAccounts() {
                 />
               </div>
 
+              <div>
+                <label htmlFor="edit-user-mobile-number" className="block text-xs font-semibold mb-1">
+                  Mobile Number
+                </label>
+                <ValidatedInput rule={editUser.contact_number === editUser.originalContactNumber ? undefined : fieldRules.mobile}
+                  id="edit-user-mobile-number"
+                  name="contact_number"
+                  maxLength={11}
+                  autoComplete="tel-national"
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="09XXXXXXXXX"
+                  value={editUser.contact_number}
+                  onChange={(event) => {
+                    setEditUser({ ...editUser, contact_number: event.target.value });
+                    setMobileNumberError("");
+                  }}
+                  aria-invalid={Boolean(mobileNumberError)}
+                  aria-describedby={mobileNumberError ? "edit-user-mobile-number-error" : undefined}
+                  className="w-full px-3 py-2 text-sm border rounded-md !bg-white hover:!bg-[#eef2ff] border-[#cbd5e1] hover:border-[#a8bde4] focus:outline-none focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/12 transition-colors"
+                />
+                {mobileNumberError && (
+                  <p id="edit-user-mobile-number-error" role="alert" className="mt-1 text-xs text-red-600">
+                    {mobileNumberError}
+                  </p>
+                )}
+              </div>
+
               {/* EDIT ROLE */}
               <div>
                 <label className="block text-xs font-semibold mb-1">
@@ -18766,28 +18152,7 @@ function SysAdminUserAccounts() {
                         e.target.value,
                     })
                   }
-                 
-                onMouseEnter={(event) => {
-                  const s=event.currentTarget.style;
-                  s.setProperty('background-color','#eef2ff','important');
-                  s.setProperty('border-color','#a8bde4','important');
-                }}
-                onMouseLeave={(event) => {
-                  const s=event.currentTarget.style;
-                  s.setProperty('background-color','#ffffff','important');
-                  s.setProperty('border-color','#cbd5e1','important');
-                }}
-                onFocus={(event) => {
-                  const s=event.currentTarget.style;
-                  s.setProperty('border-color','#5278e7','important');
-                  s.setProperty('box-shadow','0 0 0 2px rgba(82,120,231,.12)','important');
-                }}
-                onBlur={(event) => {
-                  const s=event.currentTarget.style;
-                  s.setProperty('background-color','#ffffff','important');
-                  s.setProperty('border-color','#cbd5e1','important');
-                  s.setProperty('box-shadow','none','important');
-                }}
+
                 className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none !bg-white hover:!bg-[#eef2ff] border-[#cbd5e1] transition-colors"
                 >
                   <option value="student">
@@ -18821,28 +18186,7 @@ function SysAdminUserAccounts() {
                         const value = e.target.value;
                         setEditUser({ ...editUser, year_level: value, college: value === "Senior High School" ? "" : editUser.college });
                       }}
-                     
-                onMouseEnter={(event) => {
-                  const s=event.currentTarget.style;
-                  s.setProperty('background-color','#eef2ff','important');
-                  s.setProperty('border-color','#a8bde4','important');
-                }}
-                onMouseLeave={(event) => {
-                  const s=event.currentTarget.style;
-                  s.setProperty('background-color','#ffffff','important');
-                  s.setProperty('border-color','#cbd5e1','important');
-                }}
-                onFocus={(event) => {
-                  const s=event.currentTarget.style;
-                  s.setProperty('border-color','#5278e7','important');
-                  s.setProperty('box-shadow','0 0 0 2px rgba(82,120,231,.12)','important');
-                }}
-                onBlur={(event) => {
-                  const s=event.currentTarget.style;
-                  s.setProperty('background-color','#ffffff','important');
-                  s.setProperty('border-color','#cbd5e1','important');
-                  s.setProperty('box-shadow','none','important');
-                }}
+
                 className="w-full rounded-xl border border-[#cfd8e6]  px-3 py-2.5 text-sm text-[#17336d] outline-none !bg-white hover:!bg-[#eef2ff] border-[#cbd5e1] transition-colors">
                       <option value="">Select year level</option>
                       {['Senior High School', '1st Year', '2nd Year', '3rd Year', '4th Year'].map(level => (
@@ -18855,28 +18199,7 @@ function SysAdminUserAccounts() {
                       <label className="mb-1 block text-xs font-semibold">Department</label>
                       <select data-qrpass-user-select-v175="true" aria-label="Student Department" required value={editUser.college}
                         onChange={(e) => setEditUser({ ...editUser, college: e.target.value })}
-                       
-                onMouseEnter={(event) => {
-                  const s=event.currentTarget.style;
-                  s.setProperty('background-color','#eef2ff','important');
-                  s.setProperty('border-color','#a8bde4','important');
-                }}
-                onMouseLeave={(event) => {
-                  const s=event.currentTarget.style;
-                  s.setProperty('background-color','#ffffff','important');
-                  s.setProperty('border-color','#cbd5e1','important');
-                }}
-                onFocus={(event) => {
-                  const s=event.currentTarget.style;
-                  s.setProperty('border-color','#5278e7','important');
-                  s.setProperty('box-shadow','0 0 0 2px rgba(82,120,231,.12)','important');
-                }}
-                onBlur={(event) => {
-                  const s=event.currentTarget.style;
-                  s.setProperty('background-color','#ffffff','important');
-                  s.setProperty('border-color','#cbd5e1','important');
-                  s.setProperty('box-shadow','none','important');
-                }}
+
                 className="w-full rounded-xl border border-[#cfd8e6]  px-3 py-2.5 text-sm text-[#17336d] outline-none !bg-white hover:!bg-[#eef2ff] border-[#cbd5e1] transition-colors">
                         <option value="">Select department</option>
                         {QRPassStudentAcademicDepartmentsV105.map((department) => (
@@ -18899,7 +18222,7 @@ function SysAdminUserAccounts() {
                 }
                 disabled={savingEdit}
                 className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-               
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -18971,7 +18294,7 @@ function SysAdminUserAccounts() {
               onChange={(e) => setSearch(e.target.value)} placeholder="Search name, user ID, email, role..."
               className="h-12 w-full min-w-0 rounded-xl border border-[#c7d2fe] pl-10 pr-4 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white !text-[#17336d] !border-[#c7d2fe] focus:!border-[#5278e7] transition-colors" />          </div>
           <span data-qrpass-users-dropdown-v53="roles" className="qrpass-users-dd-wrap-v53 qrpass-users-dd-roles-v53">
-<select data-qrpass-filter="roles" aria-label="Filter user roles" value={userRoleFilter} onChange={e => setUserRoleFilter(e.target.value as typeof userRoleFilter)} className="h-12 min-w-[165px] m!bg!bg-white hover:!bg-blue-50 focus:!bg-white transition-colors-white hover:!bg-blue-50 focus:!bg-white transition-colorsax-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
+<select data-qrpass-filter="roles" aria-label="Filter user roles" value={userRoleFilter} onChange={e => setUserRoleFilter(e.target.value as typeof userRoleFilter)} className="h-12 min-w-[165px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#5278b8] dark:bg-[#19345f] dark:text-white">
             <option value="all">All Roles</option><option value="student">Students</option><option value="security">CSU</option><option value="pco">PCO</option><option value="sysadmin">Admins</option>
           </select>
 <svg className="qrpass-users-dd-chevron-v53" aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -18998,7 +18321,7 @@ function SysAdminUserAccounts() {
               setError("");
               setSuccess("");
             }}
-            data-qrpass-hover-uniform-v141="true"  
+            data-qrpass-hover-uniform-v141="true"
             onMouseEnter={(e) => {
               const s = e.currentTarget.style;
               s.setProperty("background", "#eef2ff", "important");
@@ -19229,11 +18552,11 @@ function SysAdminUserAccounts() {
           </div>
         </div>
       )}
-      
+
       {/* QRPASS_DISABLE_FLOATING_CONFIRM_V183: Disable User confirmation only. Revoke modal remains untouched. */}
-      
+
       {/* QRPASS_ENABLE_FLOATING_CONFIRM_V195: floating enable confirmation matching Disable */}
-      
+
       {/* QRPASS_YES_ENABLE_HOVER_V198: Only the Yes, Enable button, including hover and focus. */}
       <style>{`
         html body button[data-qrpass-enable-v198="true"],
@@ -19317,7 +18640,7 @@ function SysAdminUserAccounts() {
             <h3 id="qrpass-disable-title-v183" className="text-lg font-bold text-[#17336d]">
               Disable Account?
             </h3>
-            
+
             {/* QRPASS_DISABLE_DESCRIPTION_UP_V186: reminder 10px below title, 20px before buttons */}
             <div
               id="qrpass-disable-desc-v183"
@@ -19435,19 +18758,21 @@ function QRPassNumberStepper({
   min,
   max,
   onChange,
+  showError,
 }: {
   label: string;
-  value: number;
+  value: string;
   min: number;
   max: number;
-  onChange: (value: number) => void;
+  onChange: (value: string) => void;
+  showError: boolean;
 }) {
   const safeValue = Number.isFinite(Number(value))
     ? Number(value)
     : 0;
 
   const setClamped = (v: number) =>
-    onChange(Math.min(max, Math.max(min, v)));
+    onChange(String(Math.min(max, Math.max(min, v))));
 
   // QRPASS_STEPPER_FOCUS_WHITE_V11: white must win on click for BOTH wrapper and child input.
   // Scoped to this numeric stepper; do not change the System Name input or other controls.
@@ -19474,7 +18799,12 @@ function QRPassNumberStepper({
     }
   };
 
+  const errorId = React.useId();
+  const [touched, setTouched] = useState(false);
+  const error = (touched || showError) && (value ? wholeNumber(min, max)(value) : "Complete this field.");
+
   return (
+    <>
     <div
       data-qrpass-segmented-stepper="v9"
       onPointerDownCapture={event => setQrpassV11Surface(event.currentTarget, true)}
@@ -19499,21 +18829,11 @@ function QRPassNumberStepper({
         pattern="[0-9]*"
         autoComplete="off"
         aria-label={label}
-        value={safeValue === 0 ? "" : String(safeValue)}
-        onChange={(e) => {
-          const digits = e.target.value.replace(/\D/g, "");
-
-          onChange(
-            digits
-              ? Math.min(max, Number(digits))
-              : 0
-          );
-        }}
-        onBlur={() => {
-          if (safeValue < min || safeValue > max) {
-            setClamped(safeValue);
-          }
-        }}
+        value={value}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
+        onChange={event => onChange(event.target.value)}
+        onBlur={() => setTouched(true)}
         className="h-full min-w-0 flex-1 !bg-transparent px-4 text-sm text-[#17336d] outline-none"
       />
 
@@ -19541,6 +18861,8 @@ function QRPassNumberStepper({
         </button>
       </div>
     </div>
+    {error && <p id={errorId} className="mt-1 text-xs text-red-600" aria-live="polite">{error}</p>}
+    </>
   );
 }
 
@@ -19555,53 +18877,15 @@ function QRPassReportsChoiceDropdownV210({
   options: {value: string; label: string}[];
   onChange: (value: string) => void;
 }) {
-  const [open, setOpen] = React.useState(false);
-  const rootRef = React.useRef<HTMLDivElement | null>(null);
-  React.useEffect(() => {
-    if (!open) return;
-    const onOutside = (event: MouseEvent | TouchEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
-    };
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onOutside);
-    document.addEventListener("touchstart", onOutside);
-    document.addEventListener("keydown", onEscape);
-    return () => {
-      document.removeEventListener("mousedown", onOutside);
-      document.removeEventListener("touchstart", onOutside);
-      document.removeEventListener("keydown", onEscape);
-    };
-  }, [open]);
-  const selected = options.find(item => item.value === value);
   return (
-    <div ref={rootRef} className="relative z-[50] min-w-0 w-full sm:w-auto sm:min-w-[185px]">
-      <button type="button" aria-label={label} aria-haspopup="listbox"
-        aria-expanded={open} onClick={() => setOpen(v => !v)}
-        className={`flex h-12 w-full min-w-0 items-center justify-between gap-3 rounded-xl border px-3 text-left text-sm font-medium shadow-sm transition-colors
-          ${open ? "border-[#7b9fff] ring-2 ring-[#dce8ff]" : "border-[#c7d2fe]"}
-          bg-white text-[#17336d] hover:bg-[#eef2ff] hover:text-[#17336d]
-          dark:border-[#597ab8] dark:bg-[#152b4d] dark:text-[#edf4ff] dark:hover:bg-[#203b63]`}>
-        <span className="min-w-0 truncate">{selected?.label ?? options[0]?.label ?? "Select"}</span>
-        <ChevronRight size={16} className={`shrink-0 rotate-90 transition-transform ${open ? "-rotate-90" : ""}`} />
-      </button>
-      {open && (
-        <div role="listbox" aria-label={label}
-          className="absolute left-0 right-0 top-[calc(100%+6px)] z-[999] min-w-[220px] overflow-y-auto rounded-2xl border border-[#c7d2fe] bg-white p-2 shadow-xl dark:border-[#405b86] dark:bg-[#101f38]"
-          style={{maxHeight:"min(60vh, 350px)"}}>
-          {options.map(option => (
-            <button key={option.value} type="button" role="option"
-              aria-selected={option.value===value}
-              onClick={() => {onChange(option.value);setOpen(false);}}
-              className={`mb-1 block w-full rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors last:mb-0
-                ${option.value===value ? "bg-[#dce6ff] text-[#17336d] dark:bg-[#244574] dark:text-white" :
-                "bg-[#f7f9ff] text-[#17336d] hover:bg-[#e7edff] dark:bg-[#152b4d] dark:text-[#edf4ff] dark:hover:bg-[#254772]"}`}>
-              {option.label}
-            </button>
-          ))}
-        </div>
-      )}
+    <div className="min-w-0 w-full sm:w-auto sm:min-w-[185px]">
+      <QRPassChoiceSelect
+        label={label}
+        value={value}
+        options={options}
+        placeholder={options[0]?.label ?? "Select"}
+        onChange={onChange}
+      />
     </div>
   );
 }
@@ -19613,9 +18897,9 @@ function SysAdminSettings() {
     institution: "University of Cebu Main Campus",
     academic_year: "2026-2027",
     semester: "1st Semester",
-    session_timeout: 30,
-    max_login_attempts: 5,
-    qr_code_validity_months: 6,
+    session_timeout: "30",
+    max_login_attempts: "5",
+    qr_code_validity_months: "6",
     two_factor_enabled: false,
   });
   // QRPASS_2FA_RENDER_STATE_V190: enforce state colors after React renders (no hover JS, no observer).
@@ -19645,18 +18929,20 @@ function SysAdminSettings() {
 
 
   // QRPASS_SETTINGS_STRICT_V1
-  const onlyLettersAndSpaces = (value: string) => value.replace(/[^A-Za-z ]/g, "").replace(/ {2,}/g, " ");
-  const validName = (value: string, max: number) => value.trim().length > 0 && value.trim().length <= max && /^[A-Za-z ]+$/.test(value.trim());
+  const validName = (value: string, max: number) => value.trim().length > 0 && value.trim().length <= max;
+  const validateSystemName = (value: string) => validName(value, 100) ? "" : "Enter a system name of up to 100 characters.";
+  const validateInstitution = (value: string) => validName(value, 150) ? "" : "Enter an institution name of up to 150 characters.";
   const validAcademicYear = (value: string) => {
     const match = /^(\d{4})-(\d{4})$/.exec(value);
     return !!match && Number(match[2]) === Number(match[1]) + 1;
   };
-  const validInteger = (value: number, low: number, high: number) => Number.isInteger(value) && value >= low && value <= high;
+  const validInteger = (value: string, low: number, high: number) => !wholeNumber(low, high)(value);
+  const semesters = ["1st Semester", "2nd Semester", "Summer"];
   const validateGeneral = () => {
-    if (!validName(settings.system_name, 100)) return "System Name: letters and spaces only (maximum 100).";
-    if (!validName(settings.institution, 150)) return "Institution: letters and spaces only (maximum 150).";
+    if (validateSystemName(settings.system_name)) return validateSystemName(settings.system_name);
+    if (validateInstitution(settings.institution)) return validateInstitution(settings.institution);
     if (!validAcademicYear(settings.academic_year)) return "Academic Year must be consecutive years (example: 2026-2027).";
-    if (!["1st Semester", "2nd Semester", "Summer"].includes(settings.semester)) return "Select a valid semester.";
+    if (!semesters.includes(settings.semester)) return "Select a valid semester.";
     return "";
   };
   const validatePolicy = () => {
@@ -19666,24 +18952,11 @@ function SysAdminSettings() {
     return "";
   };
 
-  // QRPASS_SETTINGS_LEGACY_INSTITUTION_FIX_V1
-  // Older database values can contain a hyphen (e.g. University of Cebu - Main Campus).
-  // Keep existing values editable while allowing current letters/spaces-only validation.
-  useEffect(() => {
-    setSettings((current) => {
-      const cleanName = String(current.system_name ?? "")
-        .replace(/[^A-Za-z\s]/g, "").replace(/\s+/g, " " ).trimStart();
-      const cleanInstitution = String(current.institution ?? "")
-        .replace(/[^A-Za-z\s]/g, "").replace(/\s+/g, " " ).trimStart();
-      if (cleanName === current.system_name && cleanInstitution === current.institution) return current;
-      return { ...current, system_name: cleanName, institution: cleanInstitution };
-    });
-  }, [settings.system_name, settings.institution]);
-
   const [loading, setLoading] = useState(true);
   const [settingsReady, setSettingsReady] = useState(false);
   const [savingGeneral, setSavingGeneral] = useState(false);
   const [savingPolicy, setSavingPolicy] = useState(false);
+  const [showSettingsErrors, setShowSettingsErrors] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -19717,13 +18990,13 @@ function SysAdminSettings() {
             data.settings.semester ?? "1st Semester",
 
           session_timeout:
-            Number(data.settings.session_timeout) || 30,
+            String(data.settings.session_timeout ?? 30),
 
           max_login_attempts:
-            Number(data.settings.max_login_attempts) || 5,
+            String(data.settings.max_login_attempts ?? 5),
 
           qr_code_validity_months:
-            Number(data.settings.qr_code_validity_months) || 6,
+            String(data.settings.qr_code_validity_months ?? 6),
 
           two_factor_enabled:
             Boolean(data.settings.two_factor_enabled),
@@ -19746,6 +19019,7 @@ function SysAdminSettings() {
   }
 
   async function saveGeneralSettings() {
+    setShowSettingsErrors(true);
     const validationError = validateGeneral() || validatePolicy();
     if (validationError) { setError(validationError); setSuccess(""); return; }
     try {
@@ -19753,7 +19027,14 @@ function SysAdminSettings() {
       setError("");
       setSuccess("");
 
-      const data = await updateSystemSettings(settings);
+      const data = await updateSystemSettings({
+        ...settings,
+        system_name: settings.system_name.trim(),
+        institution: settings.institution.trim(),
+        session_timeout: Number(settings.session_timeout),
+        max_login_attempts: Number(settings.max_login_attempts),
+        qr_code_validity_months: Number(settings.qr_code_validity_months),
+      });
 
       if (data?.settings) {
         setSettings({
@@ -19761,16 +19042,16 @@ function SysAdminSettings() {
           ...data.settings,
 
           session_timeout:
-            Number(data.settings.session_timeout) ||
-            settings.session_timeout,
+            String(data.settings.session_timeout ??
+            settings.session_timeout),
 
           max_login_attempts:
-            Number(data.settings.max_login_attempts) ||
-            settings.max_login_attempts,
+            String(data.settings.max_login_attempts ??
+            settings.max_login_attempts),
 
           qr_code_validity_months:
-            Number(data.settings.qr_code_validity_months) ||
-            settings.qr_code_validity_months,
+            String(data.settings.qr_code_validity_months ??
+            settings.qr_code_validity_months),
 
           two_factor_enabled:
             Boolean(data.settings.two_factor_enabled),
@@ -19803,6 +19084,7 @@ function SysAdminSettings() {
   }
 
   async function saveSecurityPolicy() {
+    setShowSettingsErrors(true);
     const validationError = validateGeneral() || validatePolicy();
     if (validationError) { setError(validationError); setSuccess(""); return; }
     try {
@@ -19810,7 +19092,14 @@ function SysAdminSettings() {
       setError("");
       setSuccess("");
 
-      const data = await updateSystemSettings(settings);
+      const data = await updateSystemSettings({
+        ...settings,
+        system_name: settings.system_name.trim(),
+        institution: settings.institution.trim(),
+        session_timeout: Number(settings.session_timeout),
+        max_login_attempts: Number(settings.max_login_attempts),
+        qr_code_validity_months: Number(settings.qr_code_validity_months),
+      });
 
       if (data?.settings) {
         setSettings({
@@ -19818,16 +19107,16 @@ function SysAdminSettings() {
           ...data.settings,
 
           session_timeout:
-            Number(data.settings.session_timeout) ||
-            settings.session_timeout,
+            String(data.settings.session_timeout ??
+            settings.session_timeout),
 
           max_login_attempts:
-            Number(data.settings.max_login_attempts) ||
-            settings.max_login_attempts,
+            String(data.settings.max_login_attempts ??
+            settings.max_login_attempts),
 
           qr_code_validity_months:
-            Number(data.settings.qr_code_validity_months) ||
-            settings.qr_code_validity_months,
+            String(data.settings.qr_code_validity_months ??
+            settings.qr_code_validity_months),
 
           two_factor_enabled:
             Boolean(data.settings.two_factor_enabled),
@@ -19924,17 +19213,16 @@ function SysAdminSettings() {
                 System Name
               </label>
 
-             
-<input
+
+<ValidatedInput required rule={validateSystemName} showError={showSettingsErrors} aria-label="System Name"
   type="text"
   data-qrpass-keep-style
-  title="Letters and spaces only"
   value={settings.system_name}
   maxLength={100}
   onChange={(e) =>
     setSettings((prev) => ({
       ...prev,
-      system_name: e.target.value.replace(/[^a-zA-Z\s]/g, ""),
+      system_name: e.target.value,
     }))
   }
   className="h-12 w-full rounded-xl border border-[#c7d2fe] !bg-white hover:!bg-[#eef2ff] focus:!bg-white px-4 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
@@ -19947,17 +19235,16 @@ function SysAdminSettings() {
                 Institution
               </label>
 
-              
-<input
+
+<ValidatedInput required rule={validateInstitution} showError={showSettingsErrors} aria-label="Institution"
   type="text"
   data-qrpass-keep-style
-  title="Letters and spaces only"
   value={settings.institution}
   maxLength={150}
   onChange={(e) =>
     setSettings((prev) => ({
       ...prev,
-      institution: e.target.value.replace(/[^a-zA-Z\s]/g, ""),
+      institution: e.target.value,
     }))
   }
   className="h-12 w-full rounded-xl border border-[#c7d2fe] !bg-white hover:!bg-[#eef2ff] focus:!bg-white px-4 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
@@ -19970,21 +19257,11 @@ function SysAdminSettings() {
                 Academic Year
               </label>
 
-              
-<select
-  data-qrpass-keep-style
-  aria-label="Academic Year"
-  value={settings.academic_year}
-  onChange={(e) =>
-    setSettings((prev) => ({
-      ...prev,
-      academic_year: e.target.value,
-    }))
-  }
-  className="h-12 w-full rounded-xl border border-[#c7d2fe] !bg-white hover:!bg-[#eef2ff] focus:!bg-white px-4 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
->
 
-                {(() => {
+<QRPassChoiceSelect
+                label="Academic Year"
+                value={settings.academic_year}
+                options={((() => {
                   const base = 2024;
                   const count = Math.max(10, new Date().getFullYear() - base + 6);
                   const years = Array.from({length: count}, (_, i) => {
@@ -19992,9 +19269,14 @@ function SysAdminSettings() {
                     return String(y) + '-' + String(y + 1);
                   });
                   if (settings.academic_year && !years.includes(settings.academic_year)) years.unshift(settings.academic_year);
-                  return years.map(year => <option key={year} value={year}>{year}</option>);
-                })()}
-              </select>
+                  return years;
+                })()).map(value => ({ value, label: value }))}
+                onChange={value => setSettings(prev => ({ ...prev, academic_year: value }))}
+                className="h-12 w-full"
+              />
+              {showSettingsErrors && !validAcademicYear(settings.academic_year) && (
+                <p className="mt-1 text-xs text-red-600" role="alert">Select consecutive years, such as 2026-2027.</p>
+              )}
             </div>
 
             <div>
@@ -20002,32 +19284,18 @@ function SysAdminSettings() {
                 Semester
               </label>
 
-              
-<select
-  data-qrpass-keep-style
-  aria-label="Semester"
-  value={settings.semester}
-  onChange={(e) =>
-    setSettings((prev) => ({
-      ...prev,
-      semester: e.target.value,
-    }))
-  }
-  className="h-12 w-full rounded-xl border border-[#c7d2fe] !bg-white hover:!bg-[#eef2ff] focus:!bg-white px-4 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
->
 
-                <option value="1st Semester">
-                  1st Semester
-                </option>
-
-                <option value="2nd Semester">
-                  2nd Semester
-                </option>
-
-                <option value="Summer">
-                  Summer
-                </option>
-              </select>
+<QRPassChoiceSelect
+                label="Semester"
+                value={settings.semester}
+                errorId={showSettingsErrors && !semesters.includes(settings.semester) ? "semester-error" : undefined}
+                options={semesters.map(value => ({ value, label: value }))}
+                onChange={value => setSettings(prev => ({ ...prev, semester: value }))}
+                className="h-12 w-full"
+              />
+              {showSettingsErrors && !semesters.includes(settings.semester) && (
+                <p id="semester-error" className="mt-1 text-xs text-red-600" role="alert">Select a valid semester.</p>
+              )}
             </div>
 
             <button
@@ -20053,7 +19321,7 @@ function SysAdminSettings() {
                 Session Timeout (minutes)
               </label>
 
-              <QRPassNumberStepper label="Session Timeout (minutes)" value={settings.session_timeout} min={5} max={1440} onChange={(value) => setSettings((prev) => ({ ...prev, session_timeout: value }))} />
+              <QRPassNumberStepper showError={showSettingsErrors} label="Session Timeout (minutes)" value={settings.session_timeout} min={5} max={1440} onChange={(value) => setSettings((prev) => ({ ...prev, session_timeout: value }))} />
             </div>
 
             <div>
@@ -20061,7 +19329,7 @@ function SysAdminSettings() {
                 Max Login Attempts
               </label>
 
-              <QRPassNumberStepper label="Max Login Attempts" value={settings.max_login_attempts} min={1} max={20} onChange={(value) => setSettings((prev) => ({ ...prev, max_login_attempts: value }))} />
+              <QRPassNumberStepper showError={showSettingsErrors} label="Max Login Attempts" value={settings.max_login_attempts} min={1} max={20} onChange={(value) => setSettings((prev) => ({ ...prev, max_login_attempts: value }))} />
             </div>
 
             <div>
@@ -20069,7 +19337,7 @@ function SysAdminSettings() {
                 QR Code Validity (months)
               </label>
 
-              <QRPassNumberStepper label="QR Code Validity (months)" value={settings.qr_code_validity_months} min={1} max={60} onChange={(value) => setSettings((prev) => ({ ...prev, qr_code_validity_months: value }))} />
+              <QRPassNumberStepper showError={showSettingsErrors} label="QR Code Validity (months)" value={settings.qr_code_validity_months} min={1} max={60} onChange={(value) => setSettings((prev) => ({ ...prev, qr_code_validity_months: value }))} />
             </div>
 
             {/* QRPASS_2FA_TOGGLE_V188: scoped directly to existing System Settings 2FA switch */}
@@ -20278,6 +19546,9 @@ function qrpassFloatingDeleteConfirmV196(message: string, title = "Delete Select
 
 function SysAdminAuditLogs() {
   const [logs, setLogs] = useState<any[]>([]);
+  const [managedLogs, setManagedLogs] = useState<any[]>([]);
+  const auditRequest = useRef(0);
+  const auditLoading = useRef(false);
 
   const [stats, setStats] = useState({
     logs_today: 0,
@@ -20308,15 +19579,60 @@ function SysAdminAuditLogs() {
   const [manageConfirmDelete, setManageConfirmDelete] = useState(false);
   const [manageShowArchives, setManageShowArchives] = useState(false);
   const [manageArchives, setManageArchives] = useState<Array<{archive_id:string;count:number;created_at:string;moved:boolean;restored_at:string|null}>>([]);
+  /* QRPASS_AUDIT_ARCHIVE_RECORDS_V14: show real rows from the selected archived batch, read-only. */
+  const [manageArchiveDetailV14, setManageArchiveDetailV14] = useState<{archive_id:string;records:Array<Record<string,any>>}|null>(null);
+  const [manageArchiveDetailLoadingV14, setManageArchiveDetailLoadingV14] = useState(false);
+  const [manageArchiveDetailErrorV14, setManageArchiveDetailErrorV14] = useState('');
+  const [manageArchiveDetailQueryV14, setManageArchiveDetailQueryV14] = useState('');
+  /* QRPASS_AUDIT_ARCHIVE_SELECT_V20: selection is scoped to the currently displayed archive. */
+  const [manageArchiveSelectedV20,setManageArchiveSelectedV20] = useState<string[]>([]);
+  const manageViewArchiveRecordsV14 = async (archiveId:string) => {
+    setManageArchiveSelectedV20([]);
+    if (manageArchiveDetailV14?.archive_id === archiveId) return;
+    setManageArchiveDetailV14(null);
+    setManageArchiveDetailErrorV14('');
+    setManageArchiveDetailLoadingV14(true);
+    try {
+      const response = await qrpassManageLogsRequest('archive/' + encodeURIComponent(archiveId), 'GET');
+      if (!response.ok) throw new Error('Archive request failed (' + response.status + ')');
+      const data = await response.json();
+      if (data.archive_id !== archiveId || !Array.isArray(data.records)) throw new Error('Archive records do not match the selected batch.');
+      setManageArchiveDetailV14({archive_id:archiveId, records:data.records});
+    } catch (e) {
+      setManageArchiveDetailErrorV14(e instanceof Error ? e.message : 'Could not load archived records.');
+    } finally {
+      setManageArchiveDetailLoadingV14(false);
+    }
+  };
+  const manageArchiveFilteredV14 = (manageArchiveDetailV14?.records ?? []).map((record, index) => ({
+    record,
+    key: String(record.id ?? index),
+  })).filter(({record}) => {
+    const q = manageArchiveDetailQueryV14.trim().toLowerCase();
+    if (!q) return true;
+    return [record.id, record.actor_name, record.actor_username, record.event_type, record.action,
+      record.module, record.description, record.status, record.created_at, record.ip_address]
+      .some(v => String(v ?? '').toLowerCase().includes(q));
+  });
   const manageListArchives = async () => {
-    try {const r=await qrpassManageLogsRequest("archives","GET");const j=await r.json();setManageArchives(Array.isArray(j.archives)?j.archives:[]);}
+    try {
+      const r=await qrpassManageLogsRequest("archives","GET");
+      if(!r.ok) throw new Error('Could not load archive list ('+r.status+')');
+      const j=await r.json();
+      const archives=Array.isArray(j.archives)?j.archives:[];
+      setManageArchives(archives);
+      const first = archives.find((a:any) => !a.restored_at && a.moved && a.archive_id === manageArchiveDetailV14?.archive_id)
+        ?? archives.find((a:any) => !a.restored_at && a.moved);
+      if(first) await manageViewArchiveRecordsV14(first.archive_id);
+      else {setManageArchiveDetailV14(null);setManageArchiveSelectedV20([]);setManageArchiveDetailErrorV14('');}
+    }
     catch(e){setManageMessage(e instanceof Error?e.message:"Could not load archives");}
   };
   const manageUnarchive = async (archiveId:string) => {
     if(manageBusy)return;
-    if(!window.confirm("Restore this archive to active System Logs?"))return;
+    if(!window.confirm("Restore every record in this archive batch to Audit Activity Records?"))return;
     setManageBusy(true);setManageMessage("");
-    try {const r=await qrpassManageLogsRequest("unarchive","POST",{archive_id:archiveId});const j=await r.json();setManageMessage(String(j.restored_count)+" logs restored.");await loadAuditLogs();await manageListArchives();}
+    try {const r=await qrpassManageLogsRequest("unarchive","POST",{archive_id:archiveId});const j=await r.json();setManageMessage(String(j.restored_count)+" logs restored.");await refreshAuditViews();}
     catch(e){setManageMessage(e instanceof Error?e.message:"Unarchive failed");}
     finally{setManageBusy(false);}
   };
@@ -20330,7 +19646,7 @@ function SysAdminAuditLogs() {
       const data=await response.json();
       setManageMessage(data.message || 'Archive permanently deleted.');
       if(manageArchiveId===archiveId){setManageArchiveId('');setManageArchiveDownloaded(false);}
-      await manageListArchives();
+      await refreshAuditViews();
     }catch(error){setManageMessage(error instanceof Error?error.message:'Could not delete archive');}
     finally{setManageBusy(false);}
   };
@@ -20367,8 +19683,7 @@ function SysAdminAuditLogs() {
       setManageArchiveId(j.archive_id);
       setManageMessage(String(j.count)+" logs archived. Use View Archives to download or unarchive.");
       setManageCount(null);
-      await loadAuditLogs();
-      await manageListArchives();
+      await refreshAuditViews();
     }catch(e){setManageMessage(e instanceof Error?e.message:"Archive failed");}
     finally{setManageBusy(false);}
   };  const manageDownload = async (format:'xlsx'|'pdf') => {
@@ -20394,12 +19709,31 @@ function SysAdminAuditLogs() {
   const [cleanupAge, setCleanupAge] = useState("today");
   const [manageSearch, setManageSearch] = useState("");
   const [manageSelectedIds, setManageSelectedIds] = useState<number[]>([]);
-  const manageVisibleRecords = logs.filter((log:any)=>{
+  const manageVisibleRecords = managedLogs.filter((log:any)=>{
     const q=manageSearch.trim().toLowerCase();
     return !q || [log.actor_name,log.actor_username,log.action,log.event_type,log.module,log.description,log.status].some(x=>String(x??"").toLowerCase().includes(q));
   }).slice(0,500);
+  const visibleArchiveKeys = new Set(manageArchiveFilteredV14.map(({key}) => key));
+  const allArchivedRecordsSelected = visibleArchiveKeys.size > 0 &&
+    [...visibleArchiveKeys].every(key => manageArchiveSelectedV20.includes(key));
+  const availableArchiveBatches = manageArchives.filter(archive => !archive.restored_at && archive.moved);
+  const selectedArchiveBatch = availableArchiveBatches.find(archive => archive.archive_id === manageArchiveDetailV14?.archive_id) ?? availableArchiveBatches[0];
+  const allManagedRecordsSelected = manageVisibleRecords.length > 0 &&
+    manageVisibleRecords.every((log:any) => manageSelectedIds.includes(Number(log.id)));
+  const toggleManagedSelection = () => {
+    if (manageShowArchives) {
+      setManageArchiveSelectedV20(previous => allArchivedRecordsSelected
+        ? previous.filter(key => !visibleArchiveKeys.has(key))
+        : [...new Set([...previous, ...visibleArchiveKeys])]);
+      return;
+    }
+    const ids = manageVisibleRecords.map((log:any) => Number(log.id)).filter(id => Number.isSafeInteger(id) && id > 0);
+    setManageSelectedIds(ids.every(id => manageSelectedIds.includes(id)) ? [] : ids);
+  };
+  const manageActionsDisabled = manageBusy || (manageShowArchives ? !selectedArchiveBatch || manageArchiveDetailLoadingV14 || manageArchiveDetailV14?.archive_id !== selectedArchiveBatch.archive_id : !manageSelectedIds.length);
+  const manageActionButtonClass = "inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff]";
   const manageDownloadSelected = () => {
-    const selected=logs.filter((log:any)=>manageSelectedIds.includes(Number(log.id)));
+    const selected=managedLogs.filter((log:any)=>manageSelectedIds.includes(Number(log.id)));
     if(!selected.length)return;
     const sheet=XLSX.utils.json_to_sheet(selected.map((log:any)=>({
       ID:log.id,Actor:log.actor_name??"",User:log.actor_username??"",Action:log.action??"",Event:log.event_type??"",Module:log.module??"",Description:log.description??"",Status:log.status??"",Date:log.created_at??""
@@ -20410,17 +19744,16 @@ function SysAdminAuditLogs() {
   // QRPASS_MANAGE_DELETE_UNIFORM_V191: delete checked log IDs, not an unrelated date range.
   const manageDeleteSelectedV191 = async () => {
     if(manageBusy || !manageSelectedIds.length) return;
-    const count=manageSelectedIds.length;
     if (!deleteLogsOpenV194) { setDeleteLogsOpenV194(true); return; }
     setManageBusy(true);setManageMessage("");
     try{
       const response=await qrpassManageLogsRequest("delete-ids","POST",
-        {ids:manageSelectedIds,confirmation:"DELETE SELECTED LOGS"} as any);
+        {ids:manageSelectedIds,confirmation:"DELETE SELECTED LOGS"});
       const data=await response.json();
       setManageMessage(String(data.deleted_count??0)+" selected logs deleted.");
       setManageSelectedIds([]);
       setDeleteLogsOpenV194(false);
-      await loadAuditLogs("","","");
+      await refreshAuditViews();
     }catch(e){setManageMessage(e instanceof Error?e.message:"Deleting logs failed.");}
     finally{setManageBusy(false);}
   };
@@ -20432,12 +19765,11 @@ function SysAdminAuditLogs() {
       const response = await qrpassManageLogsRequest(
         "archive-ids",
         "POST",
-        { ids: manageSelectedIds } as any
+        { ids: manageSelectedIds }
       );      const data=await response.json();
       setManageMessage(String(data.count??0)+" selected logs archived.");
       setManageSelectedIds([]);
-      await loadAuditLogs("","","");
-      await manageListArchives();
+      await refreshAuditViews();
     }catch(e){setManageMessage(e instanceof Error?e.message:"Selected log archive failed");}
     finally{setManageBusy(false);}
   };
@@ -20456,6 +19788,15 @@ function SysAdminAuditLogs() {
     if (cleanupAge === "custom") return !!manageStart && !!manageEnd && day >= manageStart && day <= manageEnd;
     return true;
   });
+
+  async function loadManagedLogs() {
+    const data = await getAuditLogs({ limit: 500 });
+    setManagedLogs(Array.isArray(data?.logs) ? data.logs : []);
+  }
+
+  async function refreshAuditViews() {
+    await Promise.all([loadAuditLogs(), loadManagedLogs(), manageListArchives()]);
+  }
 
   const [archiveBeforeCleanup, setArchiveBeforeCleanup] = useState(true);
 
@@ -20479,6 +19820,9 @@ function SysAdminAuditLogs() {
     customDate = dateFilter,
     silent = false
   ) {
+    if (silent && auditLoading.current) return;
+    const request = ++auditRequest.current;
+    auditLoading.current = true;
     try {
       if (!silent) {
         setLoading(true);
@@ -20492,6 +19836,7 @@ function SysAdminAuditLogs() {
         limit: 500,
       });
 
+      if (request !== auditRequest.current) return;
       setLogs(
         Array.isArray(data?.logs)
           ? data.logs
@@ -20512,6 +19857,7 @@ function SysAdminAuditLogs() {
           Number(data?.stats?.errors) || 0,
       });
     } catch (err) {
+      if (request !== auditRequest.current) return;
       console.error(
         "Failed to load audit logs:",
         err
@@ -20525,7 +19871,10 @@ function SysAdminAuditLogs() {
         );
       }
     } finally {
-      if (!silent) setLoading(false);
+      if (request === auditRequest.current) {
+        auditLoading.current = false;
+        if (!silent) setLoading(false);
+      }
     }
   }
 
@@ -20778,20 +20127,13 @@ function SysAdminAuditLogs() {
     <div className="space-y-5">
       <div className="flex flex-wrap justify-between items-center gap-3" data-qrpass-audit-heading-v42="true" data-qrpass-audit-header-tight-v40="true">
         <PageHeader title="Audit Logs" />
-        
+
       </div>
       {/* QRPASS_SYSTEMLOGS_WHITE_PORTAL_V23 */}
-      {manageLogsOpen && createPortal(
-        <div className="fixed inset-0 z-[150] flex items-center justify-center overflow-y-auto bg-black/65 p-4" style={{position:"fixed",inset:0,zIndex:2147483000,display:"flex",alignItems:"center",justifyContent:"center",padding:16,backgroundColor:"rgba(0,0,0,.65)",overflowY:"auto",isolation:"isolate"}} onMouseDown={e => {if(e.target===e.currentTarget&&!manageBusy)setManageLogsOpen(false)}}>
-          <div data-qrpass-manage-v31="true" data-qrpass-manage-v32="true" role="dialog" aria-modal="true" aria-label="Manage System Logs" className="w-full max-w-[900px] overflow-hidden rounded-2xl border border-[#cbd5e1] bg-white shadow-2xl" style={{position:"relative",width:"100%",maxWidth:900,maxHeight:"90vh",display:"flex",flexDirection:"column",overflow:"hidden",backgroundColor:"#fff",color:"#17336d",border:"1px solid #cbd5e1",borderRadius:16,boxShadow:"0 20px 60px rgba(0,0,0,.28)",margin:"auto"}}>
-            <div className="flex shrink-0 items-center justify-between gap-4 px-6 pt-5 pb-4" style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,backgroundColor:"#fff"}}>
-              <h3 className="text-xl font-bold" style={{color:"#142b54"}}>Manage Logs</h3>
-              <button type="button" disabled={manageBusy} onClick={()=>setManageLogsOpen(false)} className="rounded-xl border border-[#cbd5e1] bg-white px-4 py-2 text-sm font-medium hover:bg-[#eef2ff]"
-           data-qrpass-neutral-v169="true">Close</button>
-            </div>
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 pb-5" style={{display:"block",overflowY:"auto",minHeight:0,backgroundColor:"#fff",color:"#17336d",paddingTop:4}}>
+      {manageLogsOpen && (
+        <ManageLogsDialog busy={manageBusy} label="Manage System Logs" onClose={() => setManageLogsOpen(false)}>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <button type="button" disabled={manageBusy} onClick={() => {setManageShowArchives(v=>!v);if(!manageShowArchives)void manageListArchives();setManageMessage("");setManageSelectedIds([])}} className="h-11 shrink-0 rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium transition-colors !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none" 
+                <button type="button" disabled={manageBusy || manageArchiveDetailLoadingV14} onClick={() => {setManageShowArchives(v=>!v);if(!manageShowArchives)void manageListArchives();setManageMessage("");setManageSelectedIds([])}} className="h-11 shrink-0 rounded-xl sm:w-[156px] border border-[#cbd5e1] bg-white px-4 text-sm font-medium transition-colors !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -20837,70 +20179,95 @@ function SysAdminAuditLogs() {
   type="search"
   aria-label="Search managed logs"
   value={manageSearch}
-  onChange={(e) => setManageSearch(e.target.value)}
+  onChange={(e) => {setManageSearch(e.target.value);setManageArchiveDetailQueryV14(e.target.value);}}
   placeholder="Search records..."
   className="h-12 w-full min-w-0 rounded-xl border border-[#c7d2fe] !bg-white hover:!bg-[#eef2ff] focus:!bg-white pl-10 pr-4 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
 />                  </div>
               </div>
               {manageMessage && <div role="status" className="rounded-xl border border-[#cbd5e1] bg-[#f5f8ff] px-3 py-2 text-sm">{manageMessage}</div>}
-              <div className="overflow-hidden rounded-xl border border-[#cbd5e1]" style={{backgroundColor:"#ffffff",color:"#17336d",border:"1px solid #cbd5e1"}}>
-                <div className="max-h-[43vh] overflow-auto" style={{backgroundColor:"#ffffff",color:"#17336d"}}>
-                  <table className="w-full border-collapse text-left text-sm" style={{width:"100%",borderCollapse:"collapse",backgroundColor:"#fff",color:"#17336d"}}>
-                    <thead className="sticky top-0 z-10 bg-[#f8fafc] text-xs font-semibold text-[#64748b]" style={{backgroundColor:"#f8fafc",color:"#64748b"}}>
-                      <tr>
-                        <th className="border-b border-[#dbe3f0] px-3 py-3 w-[100px]">Select</th>
-                        <th className="border-b border-[#dbe3f0] px-3 py-3">Record</th>
-                        <th className="border-b border-[#dbe3f0] px-3 py-3">Status</th>
-                        <th className="border-b border-[#dbe3f0] px-3 py-3">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody style={{backgroundColor:"#ffffff",color:"#17336d"}}>
-                    {manageShowArchives ? (
-                      manageArchives.filter(a=>!a.restored_at && a.moved && (String(a.archive_id)+" "+String(a.created_at)+" "+String(a.count)).toLowerCase().includes(manageSearch.toLowerCase())).length ?
-                      manageArchives.filter(a=>!a.restored_at && a.moved && (String(a.archive_id)+" "+String(a.created_at)+" "+String(a.count)).toLowerCase().includes(manageSearch.toLowerCase())).map(a=>(
-                        <tr key={a.archive_id} className="border-b border-[#e4eaf2]" style={{backgroundColor:"#ffffff",color:"#17336d"}}>
-                          <td className="px-3 py-3 text-[#64748b]">Archive</td>
-                          <td className="px-3 py-3"><div className="font-medium">{a.count} logs</div><div className="mt-1 flex flex-wrap gap-1">
-                            <button type="button" disabled={manageBusy} onClick={()=>void manageDownloadById(a.archive_id,"xlsx")} className="rounded-lg border border-[#cbd5e1] bg-white px-2 py-1 text-xs hover:bg-[#eef2ff]"
-          >Download</button>
-                            <button type="button" disabled={manageBusy} onClick={()=>void manageUnarchive(a.archive_id)} className="rounded-lg border border-[#cbd5e1] bg-white px-2 py-1 text-xs hover:bg-[#eef2ff]"
-          >Restore</button>
-                            <button type="button" disabled={manageBusy} onClick={()=>void manageDeleteArchive(a.archive_id,a.count)} className="rounded-lg border border-red-200 bg-white px-2 py-1 text-xs text-red-700 hover:bg-red-50">Delete</button>
-                          </div></td>
-                          <td className="px-3 py-3">Archived</td>
-                          <td className="px-3 py-3 text-xs">{a.created_at?new Date(a.created_at).toLocaleDateString():"—"}</td>
+              <ManageLogsTable>
+                    {manageShowArchives && manageArchiveDetailLoadingV14 ? (
+                      <tr><td colSpan={4} className="p-6 text-center">Loading archived records...</td></tr>
+                    ) : manageShowArchives && manageArchiveDetailErrorV14 ? (
+                      <tr><td colSpan={4} role="alert" className="p-6 text-center text-red-700">{manageArchiveDetailErrorV14}</td></tr>
+                    ) : (manageShowArchives ? manageArchiveFilteredV14.length : manageVisibleRecords.length) ? (
+                      (manageShowArchives ? manageArchiveFilteredV14 : manageVisibleRecords.map((record, index) => ({
+                        record,
+                        key: String(record.id ?? index),
+                      }))).map(({record: log, key}) => {
+                        const id = Number(log.id);
+                        const checked = manageShowArchives ? manageArchiveSelectedV20.includes(key) : manageSelectedIds.includes(id);
+                        const toggle = () => {
+                          if (manageShowArchives) {
+                            setManageArchiveSelectedV20(previous => previous.includes(key) ? previous.filter(value => value !== key) : [...previous, key]);
+                          } else if (Number.isSafeInteger(id) && id > 0) {
+                            setManageSelectedIds(previous => previous.includes(id) ? previous.filter(value => value !== id) : [...previous, id]);
+                          }
+                        };
+                        const recordTitle = manageShowArchives
+                          ? log.actor_name ?? log.actor_username ?? "System event"
+                          : log.actor_name ?? log.action ?? log.event_type ?? "System event";
+                        return <tr key={key} className="cursor-pointer border-b border-[#e4eaf2] transition-colors hover:bg-[#f1f5ff]"
+                          onClick={toggle} style={{backgroundColor:checked?"#eef2ff":"#ffffff",color:"#17336d"}}>
+                          <td className="px-3 py-3">
+                            <input type="checkbox" aria-label={manageShowArchives ? "Select archived log " + key : "Select log " + id}
+                              checked={checked} onChange={toggle} onClick={event=>event.stopPropagation()} onMouseDown={event=>event.stopPropagation()}/>
+                          </td>
+                          <td className="px-3 py-3">
+                            <span className="block truncate font-medium" title={String(recordTitle)}>{String(recordTitle)}</span>
+                            <span className="block max-w-[380px] truncate text-xs text-[#64748b]" title={String(log.description??"")}>{String(log.description??log.action??"")}</span>
+                          </td>
+                          <td className="break-words px-3 py-3 capitalize">{String(log.status??"recorded")}</td>
+                          <td className="whitespace-nowrap px-3 py-3 text-xs">{log.created_at?new Date(log.created_at).toLocaleDateString(manageShowArchives ? "en-PH" : undefined):"—"}</td>
                         </tr>
-                      )) : <tr><td colSpan={4} className="p-6 text-center font-semibold">No archived logs found.</td></tr>
+                      })
                     ) : (
-                      manageVisibleRecords.length ? manageVisibleRecords.map((log:any,index:number)=>{
-                        const id=Number(log.id),checked=manageSelectedIds.includes(id);
-                        return <tr key={String(log.id??index)} className={`cursor-pointer border-b border-[#e4eaf2] transition-colors hover:bg-[#f1f5ff] ${checked?"bg-[#eef2ff]":""}`} onClick={()=>{if(Number.isSafeInteger(id)&&id>0)setManageSelectedIds(prev=>prev.includes(id)?prev.filter(v=>v!==id):[...prev,id])}} style={{backgroundColor:checked?"#eef2ff":"#ffffff",color:"#17336d"}}>
-                          <td className="px-3 py-3"><input type="checkbox" aria-label={`Select log ${id}`} checked={checked} onChange={()=>setManageSelectedIds(prev=>prev.includes(id)?prev.filter(v=>v!==id):[...prev,id])} onClick={e=>e.stopPropagation()} onMouseDown={e=>e.stopPropagation()}/></td>
-                          <td className="px-3 py-3"><span className="font-medium">{String(log.actor_name??log.action??log.event_type??"System event")}</span><span className="block max-w-[380px] truncate text-xs text-[#64748b]" title={String(log.description??"")}>{String(log.description??log.action??"")}</span></td>
-                          <td className="px-3 py-3 capitalize">{String(log.status??"recorded")}</td>
-                          <td className="whitespace-nowrap px-3 py-3 text-xs">{log.created_at?new Date(log.created_at).toLocaleDateString():"—"}</td>
-                        </tr>
-                      }) : <tr><td colSpan={4} className="p-6 text-center font-semibold">No matching logs found.</td></tr>
+                      <tr><td colSpan={4} className="p-6 text-center font-semibold">
+                        {!manageShowArchives ? "No matching logs found." : manageArchiveDetailV14 ? "No matching archived records." :
+                          availableArchiveBatches.length ? "Loading archived records..." : "No archived logs found."}
+                      </td></tr>
                     )}
-                    </tbody>
-                  </table>
+              </ManageLogsTable>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-[#64748b]">
+                  {manageShowArchives
+                    ? <>{manageArchiveSelectedV20.length} selected · {manageArchiveFilteredV14.length} of {manageArchiveDetailV14?.records.length ?? 0} archived records · Actions apply to the entire batch</>
+                    : <>{manageSelectedIds.length} selected · {manageVisibleRecords.length} shown (maximum 500 loaded)</>}
+                </p>
+                <div className="flex flex-wrap items-center justify-end gap-2 sm:shrink-0">
+                  <button type="button" disabled={manageBusy || !(manageShowArchives ? visibleArchiveKeys.size : manageVisibleRecords.length)}
+                    onClick={toggleManagedSelection} className={manageActionButtonClass}>
+                    {(manageShowArchives ? allArchivedRecordsSelected : allManagedRecordsSelected) ? "Deselect All" : "Select All"}
+                  </button>
+                  <button type="button" disabled={manageActionsDisabled}
+                    onClick={()=>{
+                      if (!manageShowArchives) manageDownloadSelected();
+                      else if (selectedArchiveBatch) void manageDownloadById(selectedArchiveBatch.archive_id, "xlsx");
+                    }} className={manageActionButtonClass + " disabled:opacity-50"}>Download</button>
+                  <button type="button" disabled={manageActionsDisabled}
+                    onClick={()=>{
+                      if (!manageShowArchives) void manageArchiveSelected();
+                      else if (selectedArchiveBatch) void manageUnarchive(selectedArchiveBatch.archive_id);
+                    }} className={manageActionButtonClass + " disabled:opacity-50"}>
+                    {manageShowArchives ? "Restore" : manageBusy ? "Processing..." : "Archive"}
+                  </button>
+                  <button type="button" disabled={manageActionsDisabled}
+                    onClick={()=>{
+                      if (!manageShowArchives) void manageDeleteSelectedV191();
+                      else if (selectedArchiveBatch) void manageDeleteArchive(selectedArchiveBatch.archive_id, selectedArchiveBatch.count);
+                    }} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-red-200 bg-white px-4 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50">Delete</button>
                 </div>
               </div>
-              {!manageShowArchives && <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs text-[#64748b]">{manageSelectedIds.length} selected · {manageVisibleRecords.length} shown (maximum 500 loaded)</p>
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <button type="button" disabled={manageBusy||!manageVisibleRecords.length} onClick={()=>{const ids=manageVisibleRecords.map((log:any)=>Number(log.id)).filter((n:number)=>Number.isSafeInteger(n)&&n>0);setManageSelectedIds(ids.every(id=>manageSelectedIds.includes(id))?[]:ids)}} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff]"
-          >{manageVisibleRecords.length>0 && manageVisibleRecords.every((log:any)=>manageSelectedIds.includes(Number(log.id)))?"Deselect All":"Select All"}</button>
-                  <button type="button" disabled={manageBusy||!manageSelectedIds.length} onClick={manageDownloadSelected} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50"
-          >Download</button>
-                  <button type="button" disabled={manageBusy||!manageSelectedIds.length} onClick={()=>void manageArchiveSelected()} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">{manageBusy?"Processing...":"Archive"}</button>
-                  <button type="button" disabled={manageBusy||!manageSelectedIds.length} onClick={()=>void manageDeleteSelectedV191()} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-red-200 bg-white px-4 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50">Delete</button>
-                </div>
-              </div>}
-            </div>
-          </div>
-        </div>
-      , document.body)}
+              {manageShowArchives && availableArchiveBatches.length > 1 && selectedArchiveBatch && (
+                <select aria-label="Select archive batch" className="h-10 max-w-[215px] rounded-lg border border-[#cbd5e1] bg-white px-2 text-xs"
+                  disabled={manageBusy || manageArchiveDetailLoadingV14} value={selectedArchiveBatch.archive_id} onChange={event=>void manageViewArchiveRecordsV14(event.target.value)}>
+                  {availableArchiveBatches.map(archive=><option key={archive.archive_id} value={archive.archive_id}>
+                    {archive.count} logs · {archive.created_at?new Date(archive.created_at).toLocaleDateString("en-PH"):archive.archive_id.slice(0,8)}
+                  </option>)}
+                </select>
+              )}
+        </ManageLogsDialog>
+      )}
       {deleteLogsOpenV194 && (
         <QrpassDeleteConfirmV194 title="Delete Selected Logs?"
           description={`Are you sure you want to permanently delete ${manageSelectedIds.length} selected audit log(s)? This action cannot be undone.`}
@@ -20945,10 +20312,22 @@ function SysAdminAuditLogs() {
             type="button"
             aria-label="Manage Logs"
             title="Manage Logs"
-            onClick={() => setManageLogsOpen(true)}
+            onClick={async () => {
+              setManageLogsOpen(true);
+              setManageSelectedIds([]);
+              setManageMessage("");
+              setManageBusy(true);
+              try {
+                await Promise.all([loadManagedLogs(), manageListArchives()]);
+              } catch (error) {
+                setManageMessage(error instanceof Error ? error.message : "Could not load managed logs.");
+              } finally {
+                setManageBusy(false);
+              }
+            }}
             data-qrpass-hover-uniform-v141="true"
             className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#cbd5e1] bg-white text-[#31539b] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
-          
+
   onMouseEnter={(e) => {
     const s = e.currentTarget.style;
     s.setProperty('background', '#eef2ff', 'important');
@@ -22492,7 +21871,6 @@ function SysAdminSecurityConfig() {
 // Data is returned by the role-restricted /security-reports endpoint.
 // =========================================================
 function SecurityItemRegistry() {
-  const openManageV147 = React.useContext(QRPassCSUManageContextV147);
   const [csuListSort, setCsuListSort] =
     useState<"newest" | "oldest">("newest");
   const [items, setItems] = useState<any[]>([]);
@@ -22574,7 +21952,7 @@ function SecurityItemRegistry() {
         <div className="col-span-2 lg:col-span-1"><StatCard label="Expired QR" value={loading ? "..." : String(periodItems.filter(item => itemStatus(item) === "Expired").length)} icon={<Clock size={20}/>} color="#d97706"/></div>
       </div>
       </StatisticalCardsSection>
-      <Card title="Approved Item Registry">
+      <Card title="Approved Item Registry" action={<CSUExportAction page={3} />}>
         <div className="flex min-w-0 flex-col gap-2 border-b border-border p-4 lg:flex-row lg:items-center">
 
           {/* SEARCH BAR */}
@@ -22621,46 +21999,6 @@ function SecurityItemRegistry() {
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
             </select>
-        {openManageV147 && (
-          <button type="button" title="Manage Logs" aria-label="Manage Logs"
-            onClick={openManageV147}
-            data-qrpass-hover-uniform-v141="true"
-            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] transition-colors hover:bg-[#eef2ff]"
-  onMouseEnter={(e) => {
-    const s = e.currentTarget.style;
-    s.setProperty('background', '#eef2ff', 'important');
-    s.setProperty('background-color', '#eef2ff', 'important');
-    s.setProperty('border-color', '#a8bde4', 'important');
-    s.setProperty('box-shadow', 'none', 'important');
-    s.setProperty('outline', 'none', 'important');
-  }}
-  onMouseLeave={(e) => {
-    const s = e.currentTarget.style;
-    s.setProperty('background', '#ffffff', 'important');
-    s.setProperty('background-color', '#ffffff', 'important');
-    s.setProperty('border-color', '#cbd5e1', 'important');
-    s.setProperty('box-shadow', 'none', 'important');
-    s.setProperty('outline', 'none', 'important');
-  }}
-  onFocus={(e) => {
-    const s = e.currentTarget.style;
-    s.setProperty('background', e.currentTarget.matches(':hover') ? '#eef2ff' : '#ffffff', 'important');
-    s.setProperty('border-color', e.currentTarget.matches(':hover') ? '#a8bde4' : '#cbd5e1', 'important');
-    s.setProperty('box-shadow', 'none', 'important');
-    s.setProperty('outline', 'none', 'important');
-  }}
-  onBlur={(e) => {
-    const s = e.currentTarget.style;
-    s.setProperty('background', '#ffffff', 'important');
-    s.setProperty('background-color', '#ffffff', 'important');
-    s.setProperty('border-color', '#cbd5e1', 'important');
-    s.setProperty('box-shadow', 'none', 'important');
-    s.setProperty('outline', 'none', 'important');
-  }}
->
-            <SlidersHorizontal size={18} strokeWidth={1.8}/>
-          </button>
-        )}
 
             <button
               type="button"
@@ -23087,8 +22425,8 @@ function QrpassPageManager({ module, onClose }: { module: 'items' | 'lost-found'
           <button type="button" onClick={onClose} className="rounded-lg border px-3 py-2" data-qrpass-neutral-v169="true">Close</button>
         </div>
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          
-          <button type="button" onClick={()=>{ setChosen([]); setView(v => v === 'active' ? 'archived' : 'active'); }} className="border rounded-lg px-3 py-2 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none" 
+
+          <button type="button" onClick={()=>{ setChosen([]); setView(v => v === 'active' ? 'archived' : 'active'); }} className="border rounded-lg px-3 py-2 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -23127,7 +22465,7 @@ function QrpassPageManager({ module, onClose }: { module: 'items' | 'lost-found'
 
           >{view === 'active' ? 'View Archives' : 'Back to Records'}</button>
           <input className="min-w-[160px] flex-1 border rounded-lg px-3 py-2" placeholder="Search records..." value={query} onChange={e=>setQuery(e.target.value)}/>
-          
+
         </div>
         {error && <p className="p-3 mb-3 rounded bg-red-100 text-red-800">{error}</p>}
         {message && <p className="p-3 mb-3 rounded bg-green-100 text-green-800">{message}</p>}
@@ -23163,12 +22501,12 @@ function QrpassPageManager({ module, onClose }: { module: 'items' | 'lost-found'
             className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50"
           >{filtered.length > 0 && filtered.every(r => chosen.includes(Number(r.id))) ? 'Deselect All' : 'Select All'}</button>
           <button type="button" onClick={download} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">Download</button>
-          
+
           {view==='active' ? <button type="button" disabled={busy || !chosen.length} onClick={()=>void change('archive')} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">Archive</button> :
             <button type="button" disabled={busy || !chosen.length} onClick={()=>void change('restore')} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">Restore</button>}
           {module!=='users' && <button type="button" disabled={busy || !chosen.length} onClick={()=>void change("delete")} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-red-200 bg-white px-4 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50">Delete</button>}
         </div>
-        
+
       </div>
     </div>
   );
@@ -23185,9 +22523,7 @@ const PAGES: Record<Role, React.ComponentType<{ onNavigate?: (index: number) => 
 
   security: [
     SecurityScanVerify,
-    SecurityRecentScanLogs,
     SecurityEntryExitLog,
-    SecurityItemRegistry,
     SecurityLostFound,
     SecurityReports,
   ],
@@ -23242,9 +22578,7 @@ const NAV: Record<
 
   security: [
     {icon: <ScanLine size={16}/>, label: "Scan & Verify"},
-    {icon: <Clock size={16}/>, label: "Recent Scan Logs"},
     {icon: <Map size={16}/>, label: "Entry / Exit Log"},
-    {icon: <Layers size={16}/>, label: "Registered Items"},
     {icon: <BookOpen size={16}/>, label: "Lost & Found"},
     {icon: <BarChart2 size={16}/>, label: "Reports"},
   ],
@@ -23426,118 +22760,15 @@ function QRPassRegistrationSelect({
   placeholder: string;
   onValueChange: (next: string) => void;
 }) {
-  const [open, setOpen] = React.useState(false);
-  const [openAbove, setOpenAbove] = React.useState(false);
-  const [activeIndex, setActiveIndex] = React.useState(0);
-  const rootRef = React.useRef<HTMLDivElement>(null);
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
-  React.useEffect(() => {
-    qrpassRegistrationFieldBackgroundV129(triggerRef.current, "idle");
-  }, []);
-  const listboxId = React.useId();
-
-  React.useEffect(() => {
-    if (!open) return;
-    function closeIfOutside(event: PointerEvent) {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener('pointerdown', closeIfOutside);
-    return () => document.removeEventListener('pointerdown', closeIfOutside);
-  }, [open]);
-
-  const showOptions = () => {
-    const rect = triggerRef.current?.getBoundingClientRect();
-    const panelHeight = Math.min(240, options.length * 40 + 8);
-    if (rect) {
-      setOpenAbove(window.innerHeight - rect.bottom < panelHeight + 12 && rect.top > window.innerHeight - rect.bottom);
-    }
-    const selected = options.indexOf(value);
-    setActiveIndex(selected >= 0 ? selected : 0);
-    setOpen(true);
-  };
-
-  const choose = (next: string) => {
-    onValueChange(next);
-    setOpen(false);
-    triggerRef.current?.focus();
-  };
-
-  const keyHandler = (event: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === 'Escape') {
-      if (open) { event.preventDefault(); setOpen(false); }
-      return;
-    }
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-      event.preventDefault();
-      if (!open) { showOptions(); return; }
-      setActiveIndex((index) => (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length);
-      return;
-    }
-    if (event.key === 'Home' || event.key === 'End') {
-      if (!open) return;
-      event.preventDefault();
-      setActiveIndex(event.key === 'Home' ? 0 : options.length - 1);
-      return;
-    }
-    if ((event.key === 'Enter' || event.key === ' ') && open) {
-      event.preventDefault();
-      choose(options[activeIndex]);
-    }
-  };
-
   return (
-    <div className="relative w-full" ref={rootRef}>
-      <button
-        ref={triggerRef}
-        type="button"
-        role="combobox"
-        aria-label={label}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={open ? listboxId : undefined}
-        aria-activedescendant={open ? `${listboxId}-${activeIndex}` : undefined}
-        onMouseEnter={(event) => {
-          if (document.activeElement !== event.currentTarget) qrpassRegistrationFieldBackgroundV129(event.currentTarget, "hover");
-        }}
-        onMouseLeave={(event) => qrpassRegistrationFieldBackgroundV129(event.currentTarget, "idle")}
-        onFocus={(event) => qrpassRegistrationFieldBackgroundV129(event.currentTarget, "idle")}
-        onClick={() => open ? setOpen(false) : showOptions()}
-        onKeyDown={keyHandler}
-        onBlur={(event) => {
-          qrpassRegistrationFieldBackgroundV129(event.currentTarget, event.currentTarget.matches(":hover") ? "hover" : "idle");
-          if (!rootRef.current?.contains(event.relatedTarget as Node)) setOpen(false);
-        }}
-        className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-[#c7d2fe] !bg-white hover:!bg-[#eef2ff] focus:!bg-white px-3 py-2 text-left text-sm text-[#17336d] shadow-sm transition-colors hover:border-[#8ba9eb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f5fd6]/30"
-      >
-        <span className={value ? 'truncate' : 'truncate text-[#667d9e]'}>{value || placeholder}</span>
-        <ChevronRight size={16} aria-hidden="true" className={`shrink-0 transition-transform ${open ? '-rotate-90' : 'rotate-90'}`} />
-      </button>
-      {open && (
-        <div
-          id={listboxId}
-          role="listbox"
-          aria-label={label}
-          className={`absolute left-0 right-0 z-[200] max-h-60 overflow-y-auto rounded-xl border border-[#c7d2fe] bg-[#f8faff] p-1 shadow-[0_12px_28px_rgba(24,52,108,0.18)] ${openAbove ? 'bottom-[calc(100%+6px)]' : 'top-[calc(100%+6px)]'}`}
-        >
-          {options.map((option, index) => (
-            <div
-              key={option}
-              id={`${listboxId}-${index}`}
-              role="option"
-              aria-selected={value === option}
-              onMouseEnter={() => setActiveIndex(index)}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => choose(option)}
-              className={`cursor-pointer select-none rounded-lg px-3 py-2.5 text-sm transition-colors ${value === option ? 'bg-[#1e448b] font-semibold text-white' : activeIndex === index ? 'bg-[#dce6ff] text-[#17336d]' : 'text-[#17336d] hover:bg-[#e5edff]'}`}
-            >
-              {option}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    <QRPassChoiceSelect
+      label={label}
+      value={value}
+      options={options.map(option => ({ value: option, label: option }))}
+      placeholder={placeholder}
+      onChange={onValueChange}
+      className="qrpass-registration-trigger"
+    />
   );
 }
 
@@ -23775,18 +23006,8 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
       return;
     }
 
-    if (/[0-9]/.test(name)) {
-      alert("Full Name must not contain numbers.");
-      return;
-    }
-    if (!/^[0-9]+$/.test(registrationUsername)) {
-      alert("Student ID No. must contain numbers only.");
-      return;
-    }
-    if (contactNumber && !/^[0-9]+$/.test(contactNumber)) {
-      alert("Contact Number must contain numbers only.");
-      return;
-    }
+    if (!isPersonName(name) || !isEmail(email) || fieldRules.id(registrationUsername) ||
+        (contactNumber && fieldRules.mobile(contactNumber))) return;
 
     if (
       registrationPassword !==
@@ -24284,7 +23505,7 @@ async function handleTwoFactorSubmit(
           width: 100% !important;
         }
       }
-    
+
       /* QRPASS_CREATE_ACCOUNT_POLISH_V34: visual polish scoped exclusively to the student registration card */
       .qrpass-auth-register-card > .bg-primary {
         padding: 18px 24px 17px !important;
@@ -24598,7 +23819,7 @@ async function handleTwoFactorSubmit(
                 );
               }}
               className="w-full text-xs text-muted-foreground disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-             
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -24776,11 +23997,16 @@ async function handleTwoFactorSubmit(
                                     : {}),
                                 }))}
                               />
-                            
+
                             ) : (
                               <div className="relative">
-                                <input
-                                  ref={(element) => qrpassRegistrationFieldBackgroundV129(element, "idle")}
+                                <ValidatedInput
+                                  aria-label={field.label}
+                                  rule={field.label === "Full Name" ? fieldRules.name
+                                    : field.label === "Student ID No." ? fieldRules.id
+                                    : field.label === "Contact Number" ? fieldRules.mobile
+                                    : field.type === "email" ? fieldRules.email : undefined}
+                                  inputRef={(element) => qrpassRegistrationFieldBackgroundV129(element, "idle")}
                                   onMouseEnter={(event) => {
                                     if (document.activeElement !== event.currentTarget) qrpassRegistrationFieldBackgroundV129(event.currentTarget, "hover");
                                   }}
@@ -24792,19 +24018,11 @@ async function handleTwoFactorSubmit(
                                     : field.type}
                                   inputMode={field.label === "Student ID No." || field.label === "Contact Number" ? "numeric" : undefined}
                                   autoComplete={field.label === "Full Name" ? "name" : field.label === "Contact Number" ? "tel" : field.type === "password" ? "new-password" : undefined}
-                                  pattern={field.label === "Student ID No." || field.label === "Contact Number" ? "[0-9]+" : undefined}
-                                  maxLength={field.label === "Student ID No." || field.label === "Contact Number" ? 20 : undefined}
+                                  pattern={field.label === "Student ID No." ? "[0-9]+" : undefined}
+                                  maxLength={field.label === "Contact Number" ? 11 : field.label === "Student ID No." ? 20 : undefined}
                                   placeholder={field.placeholder}
                                   value={regFields[field.label] ?? ""}
-                                  onChange={(e) => {
-                                    const raw = e.target.value;
-                                    const sanitized = field.label === "Full Name"
-                                      ? raw.replace(/[0-9]/g, "")
-                                      : (field.label === "Student ID No." || field.label === "Contact Number")
-                                        ? raw.replace(/[^0-9]/g, "")
-                                        : raw;
-                                    setRegFields((previous) => ({ ...previous, [field.label]: sanitized }));
-                                  }}
+                                  onChange={e => setRegFields(previous => ({ ...previous, [field.label]: e.target.value }))}
                                   required={field.label !== "Contact Number"}
                                   minLength={field.type === "password" ? 6 : undefined}
                                   className={"w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md !bg-white hover:!bg-[#eef2ff] focus:!bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15" + (field.type === "password" ? " pr-11" : "")}
@@ -24893,7 +24111,7 @@ async function handleTwoFactorSubmit(
                     )
                   }
                   className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-                 
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -24972,7 +24190,7 @@ async function handleTwoFactorSubmit(
               Forgot Password
             </h2>
 
-            
+
           </div>
 
           <form
@@ -24992,7 +24210,7 @@ async function handleTwoFactorSubmit(
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 />
 
-                <input
+                <ValidatedInput rule={fieldRules.email} aria-label="Email Address"
                   type="email"
                   value={forgotEmail}
                   onChange={(e) =>
@@ -25000,7 +24218,7 @@ async function handleTwoFactorSubmit(
                       e.target.value
                     )
                   }
-                  
+
                   ref={(el) => { /* QRPASS_FORGOT_EMAIL_FOCUS_OUTLINE_V136 */
                     if (!el) return;
                     const focus = document.activeElement === el;
@@ -25060,7 +24278,7 @@ async function handleTwoFactorSubmit(
                 switchMode("login")
               }
               className="w-full py-2 text-xs text-muted-foreground transition-colors !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-             
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -25476,7 +24694,7 @@ async function handleTwoFactorSubmit(
               switchMode("login")
             }
             className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-           
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -25780,7 +24998,7 @@ async function handleTwoFactorSubmit(
 `}</style>
 
 
-      
+
 
 
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-10 qrpass-login-body">
@@ -26055,8 +25273,16 @@ function Dashboard({
   role: Role;
   onLogout: () => void;
 }) {
-  const navItems = NAV[role];
-  const pages = PAGES[role];
+  // QRPASS_SYSADMIN_CLEAN_PAGES_V6: only select these System Administrator screens; never shift a page by removing only its menu item.
+  const sourceNavItems = NAV[role];
+  const sourcePages = PAGES[role];
+  // QRPASS_SYSADMIN_SETTINGS_LAST_V8: explicit order, use original indexes for BOTH arrays.
+  const sysadminVisibleOrder = ['User Accounts', 'Audit Logs', 'Reports', 'System Settings'];
+  const sysadminPageIndexes = role === 'sysadmin'
+    ? sysadminVisibleOrder.map(label => sourceNavItems.findIndex(item => item.label === label))
+    : [];
+  const navItems = role === 'sysadmin' ? sysadminPageIndexes.map(index => sourceNavItems[index]) : sourceNavItems;
+  const pages = role === 'sysadmin' ? sysadminPageIndexes.map(index => sourcePages[index]) : sourcePages;
   const [footerBrand, setFooterBrand] = useState(() => {
     try {
       const stored = localStorage.getItem("qrpass-footer-brand");
@@ -26089,7 +25315,6 @@ function Dashboard({
     return () => { mounted = false; window.removeEventListener("qrpass-settings-updated", refreshBrand); };
   }, []);
 
-  const [csuManagerOpenV147, setCsuManagerOpenV147] = useState(false);
   const [qrpassPageManageType, setQrpassPageManageType] = useState<'items'|'lost-found'|'users'|'choose'|null>(null);
   const [activeNav, setActiveNav] = useState<number>(() => {
     try {
@@ -26106,8 +25331,12 @@ function Dashboard({
         return 0;
       }
 
+      const savedLabel =
+        role === "security" && saved.label === "Recent Scan Logs"
+          ? "Entry / Exit Log"
+          : saved.label;
       const index = navItems.findIndex(
-        item => item.label === saved.label
+        item => item.label === savedLabel
       );
 
       return (index >= 0 && index < pages.length ? index : 0);
@@ -26143,34 +25372,6 @@ function Dashboard({
 
   const [sidebarOpen, setSidebarOpen] =
     useState(window.innerWidth >= 768);
-
-  // =========================================================
-  // DARK MODE
-  // =========================================================
-
-  const [darkMode, setDarkMode] =
-    useState(() => {
-      const savedTheme =
-        localStorage.getItem("qrpass-theme");
-
-      return savedTheme === "dark";
-    });
-
-  useEffect(() => {
-    const root = document.documentElement;
-
-    root.classList.toggle("dark", darkMode);
-
-    localStorage.setItem(
-      "qrpass-theme",
-      darkMode ? "dark" : "light"
-    );
-
-    // Dashboard-only dark mode: restore the normal light theme on logout.
-    return () => {
-      root.classList.remove("dark");
-    };
-  }, [darkMode]);
 
   // =========================================================
   // HEADER MENUS
@@ -26212,6 +25413,7 @@ function Dashboard({
   const [savingProfile, setSavingProfile] =
     useState(false);
 
+  const [showProfileErrors, setShowProfileErrors] = useState(false);
   const [profileMessage, setProfileMessage] =
     useState("");
 
@@ -26463,8 +25665,10 @@ const handleChangePassword = async () => {
 
 const handleSaveAccountProfile = async () => {
   try {
-    setSavingProfile(true);
+    setShowProfileErrors(true);
     setProfileMessage("");
+    if (!isPersonName(profileName) || (profileEmail && !isEmail(profileEmail))) return;
+    setSavingProfile(true);
 
     const data = await updateAccountProfile({
       name: profileName.trim(),
@@ -26505,6 +25709,35 @@ const handleSaveAccountProfile = async () => {
 
   const ActivePage =
     pages[activeNav] ?? pages[0];
+
+  // QRPASS_SYSADMIN_HIDE_SETTINGS_ICON_V9: scoped cosmetic cleanup only; never alters navigation or settings data.
+  useEffect(() => {
+    if (role !== 'sysadmin' || navItems[activeNav]?.label !== 'System Settings') return;
+
+    const main = document.querySelector('main');
+    if (!main) return;
+    const headings = Array.from(main.querySelectorAll('h1, h2, h3'));
+    const heading = headings.find(el => el.textContent?.trim() === 'System Settings');
+    if (!heading) return;
+
+    const titleRect = heading.getBoundingClientRect();
+    // Target ONLY the unlabeled square icon button immediately above this heading.
+    const candidate = Array.from(main.querySelectorAll('button')).find(btn => {
+      if (btn.textContent?.trim()) return false;
+      if (!btn.querySelector('svg')) return false;
+      const rect = btn.getBoundingClientRect();
+      return rect.width >= 24 && rect.width <= 64 &&
+        rect.height >= 24 && rect.height <= 64 &&
+        rect.top < titleRect.top &&
+        titleRect.top - rect.bottom >= -5 &&
+        titleRect.top - rect.bottom <= 40 &&
+        Math.abs(rect.left - titleRect.left) <= 45;
+    });
+    if (!candidate) return;
+    const previous = candidate.style.display;
+    candidate.style.display = 'none';
+    return () => { candidate.style.display = previous; };
+  }, [role, activeNav]);
 
   // =========================================================
   // RESPONSIVE SIDEBAR
@@ -27089,25 +26322,25 @@ const handleSaveAccountProfile = async () => {
     type: string | null | undefined
   ): number | null {
     const normalizedType = String(type ?? "").toLowerCase();
-  
+
     /*
     |--------------------------------------------------------------------------
     | STUDENT
     |--------------------------------------------------------------------------
     */
-  
+
     if (role === "student") {
       if (normalizedType === "item_approved") {
         return 1; // QR Codes
       }
-  
+
       if (
         normalizedType === "item_submitted" ||
         normalizedType.includes("permit")
       ) {
         return 2; // Permit Status
       }
-  
+
       if (
         normalizedType.includes("lost_found") ||
         normalizedType.includes("lost") ||
@@ -27115,16 +26348,16 @@ const handleSaveAccountProfile = async () => {
       ) {
         return 3; // Lost & Found
       }
-  
+
       return 0; // Register Item
     }
-  
+
     /*
     |--------------------------------------------------------------------------
     | PCO
     |--------------------------------------------------------------------------
     */
-  
+
     if (role === "pco") {
       if (
         normalizedType === "new_item_registration" ||
@@ -27133,7 +26366,7 @@ const handleSaveAccountProfile = async () => {
       ) {
         return 0; // Registration Requests
       }
-  
+
       if (
         normalizedType === "item_approved" ||
         normalizedType.includes("registry") ||
@@ -27141,16 +26374,16 @@ const handleSaveAccountProfile = async () => {
       ) {
         return 1; // Registered Items
       }
-  
+
       return 0;
     }
-  
+
     /*
     |--------------------------------------------------------------------------
     | CSU / SECURITY
     |--------------------------------------------------------------------------
     */
-  
+
     if (role === "security") {
       const destination = (label: string) => {
         const index = navItems.findIndex(
@@ -27168,12 +26401,9 @@ const handleSaveAccountProfile = async () => {
       if (normalizedType.includes("report"))
         return destination("Reports");
 
-      if (/registry|registered_item/.test(normalizedType))
-        return destination("Registered Items");
-
       return destination("Scan & Verify");
     }
-  
+
     /*
     |--------------------------------------------------------------------------
     | SYSTEM ADMINISTRATOR
@@ -27189,7 +26419,7 @@ const handleSaveAccountProfile = async () => {
     | 7 = System Settings
     |
     */
-  
+
     if (role === "sysadmin") {
       if (
         normalizedType.includes("user_account") ||
@@ -27198,18 +26428,18 @@ const handleSaveAccountProfile = async () => {
       ) {
         return 4; // User Accounts
       }
-  
+
       if (
         normalizedType.includes("security_config") ||
         normalizedType.includes("permission")
       ) {
         return 7; // System Settings (Security Config no longer appears in sidebar)
       }
-  
+
       if (normalizedType.includes("setting")) {
         return 7; // System Settings
       }
-  
+
       if (
         normalizedType.includes("incident") ||
         normalizedType.includes("audit") ||
@@ -27219,11 +26449,11 @@ const handleSaveAccountProfile = async () => {
       ) {
         return 5; // System Logs
       }
-  
+
       if (normalizedType.includes("report")) {
         return 3; // Reports & Analytics
       }
-  
+
       if (
         normalizedType.includes("lost_found") ||
         normalizedType.includes("lost") ||
@@ -27231,7 +26461,7 @@ const handleSaveAccountProfile = async () => {
       ) {
         return 2; // Lost & Found
       }
-  
+
       if (
         normalizedType.includes("item") ||
         normalizedType.includes("registration") ||
@@ -27239,10 +26469,10 @@ const handleSaveAccountProfile = async () => {
       ) {
         return 1; // Registered Items
       }
-  
+
       return 0; // Overview Dashboard
     }
-  
+
     return null;
   }
 
@@ -27342,9 +26572,7 @@ const handleSaveAccountProfile = async () => {
       className={`qrpass-dashboard-root h-screen overflow-hidden flex flex-col ${role === "student" || role === "security" || role === "pco" ? "qrpass-web-responsive" : ""} ${role === "security" || role === "sysadmin" ? "qrpass-unified-staff-search" : ""}`}
       style={{
         fontFamily: "Inter, sans-serif",
-        background: darkMode
-          ? "#000000"
-          : "linear-gradient(180deg, #f8fafc 0%, #f4f7fb 100%)",
+        background: "linear-gradient(180deg, #f8fafc 0%, #f4f7fb 100%)",
       }}
     >
       <style>{`
@@ -27493,7 +26721,7 @@ const handleSaveAccountProfile = async () => {
         }
 
 
-        
+
         /* QRPass role-based page subtitle removal */
 
         .qrpass-dashboard-root[data-qrpass-role="student"]
@@ -28240,7 +27468,7 @@ const handleSaveAccountProfile = async () => {
           height: auto !important;
           object-fit: contain !important;
         }
-      
+
 
         /* ==========================================================
            QRPASS LIGHTS OUT — X-inspired black surfaces + QRPass blue
@@ -28393,7 +27621,7 @@ const handleSaveAccountProfile = async () => {
           border-color: #2563eb !important;
           color: #ffffff !important;
         }
-        
+
         /* QRPASS_BLUE_BUTTON_WHITE_HOVER_V161: retain white text when hovering blue/primary buttons. */
         #root button.bg-primary:hover:not(:disabled),
         #root button[class*="bg-blue-"]:hover:not(:disabled),
@@ -28463,7 +27691,7 @@ const handleSaveAccountProfile = async () => {
 
         <div className="flex items-center gap-2 min-w-0">
           <img src="/qrpass-header-shield.png" alt="QRPass shield" className="h-9 w-9 shrink-0 object-contain" />
-          
+
         </div>
 
         <div className="flex-1" />
@@ -28473,40 +27701,6 @@ const handleSaveAccountProfile = async () => {
         ==================================================== */}
 
         <div className="flex items-center gap-1 sm:gap-2">
-
-          {/* =================================================
-              DARK MODE TOGGLE
-          ================================================== */}
-
-          <button
-            type="button"
-            onClick={() =>
-              setDarkMode(
-                (current) => !current
-              )
-            }
-            title={
-              darkMode
-                ? "Switch to Light Mode"
-                : "Switch to Dark Mode"
-            }
-            aria-label={
-              darkMode
-                ? "Switch to Light Mode"
-                : "Switch to Dark Mode"
-            }
-            className={`rounded-lg p-1.5 transition-all ${
-              darkMode
-                ? "bg-[#1d2a43] text-yellow-300 ring-1 ring-[#31445f] hover:bg-[#263753]"
-                : "text-[#1a3a7b] hover:text-[#2f5fd6] hover:bg-[#eef2fc]"
-            }`}
-          >
-            {darkMode ? (
-              <Sun size={18} />
-            ) : (
-              <Moon size={18} />
-            )}
-          </button>
 
           {/* =================================================
               NOTIFICATION BELL
@@ -29287,6 +28481,7 @@ const handleSaveAccountProfile = async () => {
                       type="button"
                       onClick={() => {
                         setAccountOpen(false);
+                        setShowProfileErrors(false);
                         setAccountSettingsOpen(true);
                       }}
                       className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-[#334155] hover:bg-[#eef2fc] hover:text-[#1a3a7b] transition-colors dark:text-slate-200 dark:hover:bg-[#172a45] dark:hover:text-blue-300"
@@ -29536,14 +28731,9 @@ const handleSaveAccountProfile = async () => {
   </button>
 )}
             <QRPassSysadminManageContext.Provider value={role === "sysadmin" ? () => setQrpassPageManageType(activeNav === 0 ? "items" : activeNav === 1 ? "lost-found"  : "choose") : null}>
-            <QRPassCSUManageContextV147.Provider value={role === "security" && activeNav < 5 ? () => setCsuManagerOpenV147(true) : null}>
               <QRPassPageSubtitleContext.Provider value={role === "sysadmin"}>
                 <ActivePage onNavigate={handleNavClick} />
               </QRPassPageSubtitleContext.Provider>
-            </QRPassCSUManageContextV147.Provider>
-            {role === "security" && csuManagerOpenV147 && activeNav < 5 && (
-              <QRPassCSUPageManagerV147 key={activeNav} page={activeNav} onClose={() => setCsuManagerOpenV147(false)} />
-            )}
             </QRPassSysadminManageContext.Provider>
             {qrpassPageManageType && qrpassPageManageType !== 'choose' && <QrpassPageManager key={qrpassPageManageType} module={qrpassPageManageType} onClose={() => setQrpassPageManageType(null)} />}
           </div>
@@ -29581,7 +28771,7 @@ const handleSaveAccountProfile = async () => {
             </h2>
           </div>
 
-         
+
         </div>
 
         <button
@@ -29702,7 +28892,7 @@ const handleSaveAccountProfile = async () => {
                 Full Name
               </label>
 
-              <input
+              <ValidatedInput rule={fieldRules.name} required showError={showProfileErrors} aria-label="Full Name"
                 type="text"
                 value={profileName}
                 onChange={(e) => {
@@ -29732,7 +28922,7 @@ const handleSaveAccountProfile = async () => {
                 Email Address
               </label>
 
-              <input
+              <ValidatedInput rule={fieldRules.email} showError={showProfileErrors} aria-label="Email Address"
                 type="email"
                 value={profileEmail}
                 onChange={(e) =>
@@ -29856,7 +29046,7 @@ const handleSaveAccountProfile = async () => {
             </h2>
           </div>
 
-          
+
         </div>
 
         <button
@@ -29931,7 +29121,7 @@ const handleSaveAccountProfile = async () => {
               style={{ backgroundColor: "#ffffff" }}
             />
 
-            
+
           </div>
 
           {/* CONFIRM PASSWORD */}
@@ -30004,7 +29194,7 @@ const handleSaveAccountProfile = async () => {
             }}
             disabled={changingPassword}
             className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#334155] transition-colors disabled:cursor-not-allowed disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
-           
+
             onMouseEnter={(e) => {
               const el=e.currentTarget;
               if(!el.dataset.qrpassV158Saved) {
@@ -30060,7 +29250,7 @@ const handleSaveAccountProfile = async () => {
   </div>
 )}
 
-  
+
     </div>
   );
 }
