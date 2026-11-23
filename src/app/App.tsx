@@ -1,3 +1,5 @@
+// QRPASS_TS_FIX_V211: React pointer handlers and Reports icon corrected.
+/* QRPASS_UNIFORM_BUTTONS_V157: Back/Cancel + primary blue buttons; JSX class updates only */
 import "./qrpass-sysadmin-report-dropdown-v4.css";
 import "./qrpass-pco-item-details-compact-v120.css";
 import "./qrpass-pco-item-details-no-inner-scroll-v121.css";
@@ -689,6 +691,7 @@ function RegistrationQuantityField({
           }}
         />
         <div className="mr-1.5 flex h-[34px] w-9 shrink-0 flex-col overflow-hidden rounded-md border border-[#c7d2fe] bg-white shadow-sm">
+          {/* QRPASS_BUTTON_HOVER_DIRECT_V158 */}
           <button
             type="button"
             onClick={increaseQuantity}
@@ -810,7 +813,7 @@ function QRPassInlineOtherSelect({
           title="Show choices"
           onClick={() => setChoicesOpen(open => !open)}
           className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg !border-0 !bg-transparent !shadow-none text-[#31539b] transition-[background-color,transform] duration-150 hover:!bg-[#e5edff] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]"
-        >
+          >
           <ChevronRight size={17} className={`transition-transform duration-150 ${choicesOpen ? "-rotate-90" : "rotate-90"}`} aria-hidden="true" />
         </button>
 
@@ -829,7 +832,7 @@ function QRPassInlineOtherSelect({
                 role="menuitem"
                 onClick={() => { onChange(option); setChoicesOpen(false); }}
                 className="min-h-[44px] w-full shrink-0 rounded-xl !border-0 !bg-[#f7f9ff] px-4 py-2.5 text-left text-sm font-medium !text-[#17336d] !shadow-none transition-colors duration-150 hover:!bg-[#dfe8ff] focus-visible:!bg-[#dfe8ff] focus-visible:outline-none active:!bg-[#d6e3ff]"
-              >
+          >
                 {option}
               </button>
             ))}
@@ -838,7 +841,7 @@ function QRPassInlineOtherSelect({
               role="menuitem"
               onClick={() => { setChoicesOpen(false); inputRef.current?.focus(); }}
               className="min-h-[44px] w-full shrink-0 rounded-xl !border-0 !bg-[#dfe8ff] px-4 py-2.5 text-left text-sm font-semibold !text-[#17336d] !shadow-none transition-colors duration-150 hover:!bg-[#d6e3ff] focus-visible:outline-none active:!bg-[#c8d8f4]"
-            >
+          >
               Others (Specify)
             </button>
           </div>
@@ -1154,7 +1157,7 @@ function QRPassComputerAccessoriesMultiSelectV117({
         aria-controls={open ? menuId : undefined}
         onClick={() => setOpen(previous => !previous)}
         className="qrpass-register-white-v132 qrpass-register-white-v133 flex min-h-[44px] w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-[#c7d2fe] !bg-white px-3 py-2.5 text-left text-sm text-[#17336d] outline-none transition-colors hover:!bg-[#eef2ff] focus:!bg-white focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
-      >
+          >
         <span className="min-w-0 flex-1 truncate">
           {entries.length ? entries.join(", ") : <span className="text-[#667d9e]">Select accessories</span>}
         </span>
@@ -1212,7 +1215,7 @@ function QRPassComputerAccessoriesMultiSelectV117({
               type="button"
               onClick={() => setOpen(false)}
               className="rounded-lg border border-[#c7d2fe] bg-[#244780] px-4 py-2 text-xs font-semibold text-white hover:bg-[#17336d]"
-            >
+          >
               Done
             </button>
           </div>
@@ -2531,16 +2534,53 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
               <button
                 type="button"
                 onClick={backToSelection}
-                className="text-xs px-4 py-2 border border-[#cfd8e6] rounded-md text-muted-foreground hover:bg-muted"
-              >
+                className="text-xs px-4 py-2 border border-[#cfd8e6] rounded-md text-muted-foreground !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+               
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
                 Cancel
               </button>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="text-xs bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 font-semibold disabled:opacity-50"
-              >
+                className="text-xs bg-primary text-white px-4 py-2 rounded-md font-semibold disabled:opacity-50 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                 {submitting
                   ? "Submitting..."
                   : "Submit for Approval"}
@@ -2714,7 +2754,7 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
                     )
                   }
                   className="group flex w-full min-w-0 items-center gap-3 px-3 py-3.5 text-left transition-colors hover:bg-[#eef2fc]/10 sm:gap-4 sm:px-5"
-                >
+          >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#d6dde8] bg-white text-[#1a3a7b]">
                     {category.icon}
                   </div>
@@ -2797,7 +2837,8 @@ function StudentPageManagerV141({
       <div role="dialog" aria-modal="true" aria-label={title} className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#385785] bg-white p-4 text-[#17336d] shadow-2xl sm:p-5">
         <div className="mb-5 flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold">{title}</h2>
-          <button type="button" onClick={onClose} className="rounded-xl border border-[#c7d2fe] bg-white px-4 py-2 text-sm font-medium hover:bg-[#eef2ff]">Close</button>
+          <button type="button" onClick={onClose} className="rounded-xl border border-[#c7d2fe] bg-white px-4 py-2 text-sm font-medium hover:bg-[#eef2ff]"
+           data-qrpass-neutral-v169="true">Close</button>
         </div>
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <button type="button" disabled title="Student archive API is not available" className="shrink-0 rounded-xl border border-[#c7d2fe] bg-white px-4 py-2.5 text-sm opacity-55">View Archives</button>
@@ -2815,7 +2856,8 @@ function StudentPageManagerV141({
                       <p className="truncate text-sm font-semibold">{item.item_name || `Record #${id}`}</p>
                       <p className="truncate text-xs text-[#64748b]">{String(item.status ?? 'â€”')} Â· {String(item.serial_number ?? 'No serial number')}</p>
                     </div>
-                    <button type="button" onClick={()=>onView(item)} className="shrink-0 rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium hover:bg-[#eef2ff]">View</button>
+                    <button type="button" onClick={()=>onView(item)} className="shrink-0 rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium hover:bg-[#eef2ff]"
+          >View</button>
                   </div>
                 );
               })}
@@ -2824,8 +2866,10 @@ function StudentPageManagerV141({
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="mr-auto text-xs text-[#64748b]">{selectedIds.length} selected Â· {filtered.length} shown</span>
-          <button type="button" disabled={!visibleIds.length} onClick={()=>setSelectedIds(current=>allSelected?current.filter(id=>!visibleIds.includes(id)):Array.from(new Set([...current,...visibleIds])))} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50">{allSelected?'Deselect All':'Select All'}</button>
-          <button type="button" disabled={!filtered.length} onClick={download} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium hover:bg-[#eef2ff] disabled:opacity-50">Download</button>
+          <button type="button" disabled={!visibleIds.length} onClick={()=>setSelectedIds(current=>allSelected?current.filter(id=>!visibleIds.includes(id)):Array.from(new Set([...current,...visibleIds])))} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50"
+          >{allSelected?'Deselect All':'Select All'}</button>
+          <button type="button" disabled={!filtered.length} onClick={download} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium hover:bg-[#eef2ff] disabled:opacity-50"
+          >Download</button>
           <button type="button" disabled title="Archive requires an authorized Student API" className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm opacity-50">Archive</button>
           <button type="button" disabled title="Bulk permanent deletion is not supported for Student records" className="rounded-xl border border-red-200 bg-white px-3 py-2 text-sm text-red-600 opacity-50">Delete</button>
         </div>
@@ -3162,11 +3206,12 @@ function StudentMyQRCodes() {
           title="Manage QR Codes"
           onClick={() => setQrManageOpenV139(true)}
           className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
-        >
+          >
           <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
         </button>
         <button type="button" onClick={loadMyItems} disabled={loading}
-          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg md:!hidden"> <RefreshCw size={13} className="shrink-0" />
+          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg md:!hidden"
+          > <RefreshCw size={13} className="shrink-0" />
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
@@ -3191,7 +3236,8 @@ function StudentMyQRCodes() {
                 <h3 className="font-bold text-[#17336d]">Manage QR Codes</h3>
                 <p className="text-xs text-[#64748b]">Review your registered QR codes</p>
               </div>
-              <button type="button" aria-label="Close Manage QR Codes" onClick={() => setQrManageOpenV139(false)} className="rounded-lg border border-[#c7d2fe] bg-white p-2 text-[#17336d] hover:bg-[#eef2ff]"><X size={18} /></button>
+              <button type="button" aria-label="Close Manage QR Codes" onClick={() => setQrManageOpenV139(false)} className="rounded-lg border border-[#c7d2fe] bg-white p-2 text-[#17336d] hover:bg-[#eef2ff]"
+          ><X size={18} /></button>
             </div>
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
               {visibleQrItems.length === 0 ? (
@@ -3202,7 +3248,8 @@ function StudentMyQRCodes() {
                     <p className="truncate text-sm font-semibold text-[#17336d]">{item.item_name || "Unnamed Item"}</p>
                     <p className="text-xs text-[#64748b]">#{item.id} Â· {item.serial_number || "No serial number"}</p>
                   </div>
-                  <button type="button" onClick={() => { setQrManageOpenV139(false); setQrModalItem(item); }} className="shrink-0 rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff]">View</button>
+                  <button type="button" onClick={() => { setQrManageOpenV139(false); setQrModalItem(item); }} className="shrink-0 rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff]"
+          >View</button>
                 </div>
               ))}
             </div>
@@ -3314,7 +3361,7 @@ function StudentMyQRCodes() {
                         setQrModalItem(item)
                       }
                       className="inline-flex items-center gap-1.5 rounded-md border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-[#eef2fc]"
-                    >
+          >
                       <Eye size={13} />
                       View QR
                     </button>
@@ -3328,8 +3375,8 @@ function StudentMyQRCodes() {
                         downloadingQrId ===
                         item.id
                       }
-                      className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
-                    >
+                      className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                       <Download size={13} />
 
                       {downloadingQrId ===
@@ -3381,7 +3428,7 @@ function StudentMyQRCodes() {
                   setQrModalItem(null)
                 }
                 className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:bg-[#eef2fc] hover:text-primary"
-              >
+          >
                 <X size={18} />
               </button>
             </div>
@@ -3425,7 +3472,7 @@ function StudentMyQRCodes() {
                   setQrModalItem(null)
                 }
                 className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold text-muted-foreground hover:bg-white"
-              >
+               data-qrpass-neutral-v169="true">
                 Close
               </button>
 
@@ -3440,8 +3487,8 @@ function StudentMyQRCodes() {
                   downloadingQrId ===
                   qrModalItem.id
                 }
-                className="inline-flex items-center gap-1.5 bg-primary text-white px-4 py-2 rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50"
-              >
+                className="inline-flex items-center gap-1.5 bg-primary text-white px-4 py-2 rounded-md text-xs font-semibold disabled:opacity-50 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                 <Download size={14} />
 
                 {downloadingQrId ===
@@ -3877,7 +3924,8 @@ function StudentPermitStatus() {
           </button>
         </div>
         <button type="button" onClick={loadItems} disabled={loading}
-          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg md:!hidden"> <RefreshCw size={13} className="shrink-0" />
+          className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg md:!hidden"
+          > <RefreshCw size={13} className="shrink-0" />
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
@@ -3905,7 +3953,8 @@ function StudentPermitStatus() {
                 <h3 className="font-bold text-[#17336d]">Manage Permits</h3>
                 <p className="text-xs text-[#64748b]">Review your permit requests and their status</p>
               </div>
-              <button type="button" aria-label="Close Manage Permits" onClick={() => setPermitManageOpenV139(false)} className="rounded-lg border border-[#c7d2fe] bg-white p-2 text-[#17336d] hover:bg-[#eef2ff]"><X size={18} /></button>
+              <button type="button" aria-label="Close Manage Permits" onClick={() => setPermitManageOpenV139(false)} className="rounded-lg border border-[#c7d2fe] bg-white p-2 text-[#17336d] hover:bg-[#eef2ff]"
+          ><X size={18} /></button>
             </div>
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
               {visibleItems.length === 0 ? (
@@ -3916,7 +3965,8 @@ function StudentPermitStatus() {
                     <p className="truncate text-sm font-semibold text-[#17336d]">{item.item_name || "Unnamed Item"}</p>
                     <p className="text-xs text-[#64748b]">#{item.id} Â· {permitDisplayStatus(item)}</p>
                   </div>
-                  <button type="button" onClick={() => { setPermitManageOpenV139(false); setSelectedItem(item); }} className="shrink-0 rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff]">View</button>
+                  <button type="button" onClick={() => { setPermitManageOpenV139(false); setSelectedItem(item); }} className="shrink-0 rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff]"
+          >View</button>
                 </div>
               ))}
             </div>
@@ -4162,7 +4212,7 @@ function StudentPermitStatus() {
                                 )
                               }
                               className="inline-flex items-center gap-1.5 rounded-md border border-[#cfd8e6] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#1a3a7b] hover:bg-[#eef2fc] transition-colors whitespace-nowrap"
-                            >
+          >
                               <Eye
                                 size={
                                   13
@@ -4275,7 +4325,7 @@ function StudentPermitStatus() {
                 }
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-[#eef2fc] hover:text-foreground"
                 title="Close"
-              >
+           data-qrpass-neutral-v169="true">
                 <X
                   size={
                     17
@@ -4407,7 +4457,7 @@ function StudentPermitStatus() {
                   )
                 }
                 className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#334155] hover:bg-[#eef2fc]"
-              >
+           data-qrpass-neutral-v169="true">
                 Close
               </button>
             </div>
@@ -4973,8 +5023,41 @@ function StudentLostAndFound() {
             title="Manage Logs"
             aria-label="Manage Logs"
             onClick={() => setStudentManageLogsOpenV136(true)}
+            data-qrpass-hover-uniform-v141="true"
             className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] !bg-white text-[#17336d] transition-colors hover:!bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
-          >
+          
+  onMouseEnter={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#eef2ff', 'important');
+    s.setProperty('background-color', '#eef2ff', 'important');
+    s.setProperty('border-color', '#a8bde4', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onMouseLeave={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#ffffff', 'important');
+    s.setProperty('background-color', '#ffffff', 'important');
+    s.setProperty('border-color', '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onFocus={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', e.currentTarget.matches(':hover') ? '#eef2ff' : '#ffffff', 'important');
+    s.setProperty('border-color', e.currentTarget.matches(':hover') ? '#a8bde4' : '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onBlur={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#ffffff', 'important');
+    s.setProperty('background-color', '#ffffff', 'important');
+    s.setProperty('border-color', '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+>
             <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
           </button>
 
@@ -4983,7 +5066,7 @@ function StudentLostAndFound() {
           onClick={() => { void loadItems(); }}
           disabled={loading}
           className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg md:!hidden"
-        > <RefreshCw size={13} className="shrink-0" />
+          > <RefreshCw size={13} className="shrink-0" />
           {loading
             ? "Refreshing..."
             : "Refresh"}
@@ -5003,6 +5086,7 @@ function StudentLostAndFound() {
             role="dialog"
             aria-modal="true"
             aria-label="Manage Logs"
+            data-qrpass-hover-uniform-v141="true" onMouseEnter={(e) => e.currentTarget.style.setProperty("background-color", "#eef2ff", "important")} onMouseLeave={(e) => e.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
             className="flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-2xl"
           >
             <div className="flex shrink-0 items-center justify-between border-b border-[#dce3ee] p-4">
@@ -5014,8 +5098,9 @@ function StudentLostAndFound() {
                 type="button"
                 aria-label="Close Manage Logs"
                 onClick={() => setStudentManageLogsOpenV136(false)}
-                className="rounded-lg border border-[#c7d2fe] bg-white p-2 text-[#17336d] hover:bg-[#eef2ff]"
-              ><X size={18} /></button>
+                data-qrpass-hover-uniform-v141="true" onMouseEnter={(e) => e.currentTarget.style.setProperty("background-color", "#eef2ff", "important")} onMouseLeave={(e) => e.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+            className="rounded-lg border border-[#c7d2fe] bg-white p-2 text-[#17336d] hover:bg-[#eef2ff]"
+               data-qrpass-neutral-v169="true"><X size={18} /></button>
             </div>
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
               {visibleItems.length === 0 ? (
@@ -5033,7 +5118,7 @@ function StudentLostAndFound() {
                       setSelectedItem(entry);
                     }}
                     className="shrink-0 rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff]"
-                  >View</button>
+          >View</button>
                 </div>
               ))}
             </div>
@@ -5177,8 +5262,8 @@ function StudentLostAndFound() {
                                 )
                               )
                             }
-                            className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
+                            className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                             {claimingId ===
                             Number(
                               item.id
@@ -5603,7 +5688,7 @@ function StudentNotifications() {
               markingAll ||
               unreadCount === 0
             }
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
           >
             {markingAll
               ? "Updating..."
@@ -6225,8 +6310,8 @@ function SecurityScanVerify() {
             <button
               onClick={doScan}
               disabled={verifying}
-              className="h-12 w-full shrink-0 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 sm:w-auto"
-            >
+              className="h-12 w-full shrink-0 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:opacity-50 sm:w-auto transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
               {verifying
                 ? "Verifying..."
                 : "Verify"}
@@ -6301,7 +6386,7 @@ function SecurityScanVerify() {
             resumeCamera();
           }}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#dce3ee] text-[#64748b] hover:bg-[#f1f5f9] disabled:opacity-50"
-        >
+          >
           <X size={18} />
         </button>
       </div>
@@ -6481,16 +6566,53 @@ function SecurityScanVerify() {
                     resumeCamera();
                   }}
                   disabled={savingIncident}
-                  className="h-11 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
-                >
+                  className="h-11 rounded-xl border border-border bg-card px-4 text-xs font-semibold text-foreground disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+                 
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
                   Cancel
                 </button>
 
                 <button
                   type="submit"
                   disabled={savingIncident}
-                  className="h-11 w-full shrink-0 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 sm:w-auto"
-                >
+                  className="h-11 w-full shrink-0 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:opacity-50 sm:w-auto transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                   {savingIncident
                     ? "Saving Flagged Item..."
                     : "Flag Item"}
@@ -6676,8 +6798,8 @@ function SecurityScanVerify() {
                       handleLog("IN")
                     }
                     disabled={logging || verifying}
-                    className="h-10 w-full rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:w-auto"
-                  >
+                    className="h-10 w-full rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white transition-colors disabled:opacity-50 sm:w-auto transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                     {logging
                       ? "Saving..."
                       : "IN"}
@@ -7044,7 +7166,8 @@ function QRPassCSUPageManagerV147({ page, onClose }: { page: number; onClose: ()
       <div role="dialog" aria-modal="true" aria-label={title} className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#385785] bg-white p-4 text-[#172b54] shadow-2xl sm:p-5">
         <div className="mb-5 flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold">{title}</h2>
-          <button type="button" onClick={onClose} className="rounded-xl border border-[#c7d2fe] bg-white px-4 py-2 text-sm hover:bg-[#eef2ff]">Close</button>
+          <button type="button" onClick={onClose} className="rounded-xl border border-[#c7d2fe] bg-white px-4 py-2 text-sm hover:bg-[#eef2ff]"
+           data-qrpass-neutral-v169="true">Close</button>
         </div>
         <div className="mb-3 flex items-center gap-2">
           <button disabled type="button" title="CSU archive endpoint not available" className="shrink-0 rounded-xl border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm opacity-50">View Archives</button>
@@ -7071,8 +7194,10 @@ function QRPassCSUPageManagerV147({ page, onClose }: { page: number; onClose: ()
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="mr-auto text-xs text-[#64748b]">{selected.length} selected Â· {filtered.length} shown</span>
-          <button type="button" disabled={loading||!ids.length} onClick={()=>setSelected(v=>allSelected?v.filter(id=>!ids.includes(id)):Array.from(new Set([...v,...ids])))} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50">{allSelected?"Deselect All":"Select All"}</button>
-          <button type="button" onClick={download} disabled={loading||!filtered.length} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50">Download</button>
+          <button type="button" disabled={loading||!ids.length} onClick={()=>setSelected(v=>allSelected?v.filter(id=>!ids.includes(id)):Array.from(new Set([...v,...ids])))} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50"
+          >{allSelected?"Deselect All":"Select All"}</button>
+          <button type="button" onClick={download} disabled={loading||!filtered.length} className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50"
+          >Download</button>
           <button type="button" disabled title="Requires CSU-authorized archive endpoint" className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm opacity-50">Archive</button>
           <button type="button" disabled title="Bulk deletion is unavailable for CSU audit history" className="rounded-xl border border-red-200 bg-white px-3 py-2 text-sm text-red-600 opacity-50">Delete</button>
         </div>
@@ -7119,7 +7244,40 @@ function CSURecordToolbar({
         {openManageV147 && (
           <button type="button" title="Manage Logs" aria-label="Manage Logs"
             onClick={openManageV147}
-            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] transition-colors hover:bg-[#eef2ff]">
+            data-qrpass-hover-uniform-v141="true"
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] transition-colors hover:bg-[#eef2ff]"
+  onMouseEnter={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#eef2ff', 'important');
+    s.setProperty('background-color', '#eef2ff', 'important');
+    s.setProperty('border-color', '#a8bde4', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onMouseLeave={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#ffffff', 'important');
+    s.setProperty('background-color', '#ffffff', 'important');
+    s.setProperty('border-color', '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onFocus={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', e.currentTarget.matches(':hover') ? '#eef2ff' : '#ffffff', 'important');
+    s.setProperty('border-color', e.currentTarget.matches(':hover') ? '#a8bde4' : '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onBlur={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#ffffff', 'important');
+    s.setProperty('background-color', '#ffffff', 'important');
+    s.setProperty('border-color', '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+>
             <SlidersHorizontal size={18} strokeWidth={1.8}/>
           </button>
         )}
@@ -8610,7 +8768,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                       setSelectedIncident(null)
                     }
                     className="rounded-md border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-[#35506f] dark:bg-[#172a45] dark:text-slate-200 dark:hover:bg-[#1d3556]"
-                  >
+           data-qrpass-neutral-v169="true">
                     Close
                   </button>
 
@@ -8855,8 +9013,45 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                   setResolutionError("");
                   setResolutionDetails("");
                 }}
-                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-              >
+                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+               
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
                 Cancel
               </button>
 
@@ -11116,7 +11311,7 @@ function SecurityLostFound() {
                                   })
                                 }
                                 className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium text-primary transition hover:bg-[#eef2fc]"
-                              >
+          >
                                 View Full Image
                               </button>
                             </div>
@@ -11142,7 +11337,7 @@ function SecurityLostFound() {
                             openEditReport(item)
                           }
                           className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-sm font-medium text-primary hover:bg-[#eef2fc]"
-                        >
+          >
                           Edit Report
                         </button>
 
@@ -11227,7 +11422,7 @@ function SecurityLostFound() {
                 setError("");
               }}
               className="inline-flex h-10 items-center justify-center rounded-xl border border-[#cfd8e6] bg-white px-4 text-xs font-semibold text-primary hover:bg-[#eef2fc]"
-            >
+          >
               Change Category
             </button>
           </div>
@@ -11410,8 +11605,8 @@ function SecurityLostFound() {
                     setCameraError("");
                     setCameraOpen(true);
                   }}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-                >
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                   <Camera size={16} />
                   Use Camera
                 </button>
@@ -11470,8 +11665,45 @@ function SecurityLostFound() {
                       <button
                         type="button"
                         onClick={closeCamera}
-                        className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
-                      >
+                        className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+                       
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
                         Cancel
                       </button>
 
@@ -11479,8 +11711,8 @@ function SecurityLostFound() {
                         type="button"
                         onClick={captureCameraPhoto}
                         disabled={Boolean(cameraError)}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                         <Camera size={16} />
                         Capture Photo
                       </button>
@@ -11549,16 +11781,53 @@ function SecurityLostFound() {
                   setError("");
                   setSuccess("");
                 }}
-                className="rounded-lg border border-[#cfd8e6] bg-background px-5 py-2 text-sm font-medium hover:bg-muted"
-              >
+                className="rounded-lg border border-[#cfd8e6] bg-background px-5 py-2 text-sm font-medium !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+               
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
                 Cancel
               </button>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-              >
+                className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                 {submitting
                   ? "Saving..."
                   : reportMode === "found"
@@ -11583,7 +11852,7 @@ function SecurityLostFound() {
                       type="button"
                       onClick={() => chooseReportCategory(category.id)}
                       className="group flex w-full min-w-0 items-center gap-3 px-3 py-3.5 text-left transition-colors hover:bg-[#eef2fc]/10 sm:gap-4 sm:px-5"
-                    >
+          >
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#d6dde8] bg-white text-[#1a3a7b]">
                         {category.icon}
                       </div>
@@ -11818,16 +12087,53 @@ function SecurityLostFound() {
                     setEditError("");
                   }}
                   disabled={editSubmitting}
-                  className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
-                >
+                  className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+                 
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
                   Cancel
                 </button>
 
                 <button
                   type="submit"
                   disabled={editSubmitting}
-                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                >
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                   {editSubmitting
                     ? "Saving Changes..."
                     : "Save Changes"}
@@ -11863,7 +12169,7 @@ function SecurityLostFound() {
                 className="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white"
                 aria-label="Close full image"
                 title="Close"
-              >
+               data-qrpass-neutral-v169="true">
                 <X size={20} />
               </button>
             </div>
@@ -11963,8 +12269,45 @@ function SecurityLostFound() {
                     setError("");
                   }}
                   disabled={recoveringId !== null}
-                  className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
-                >
+                  className="rounded-lg border border-[#cfd8e6] bg-background px-4 py-2 text-sm font-medium disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+                 
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
                   Cancel
                 </button>
 
@@ -12043,7 +12386,8 @@ function QRPassPCOManageV158({
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-bold">{title}</h2>
           <button type="button" onClick={onClose}
-            className="rounded-xl border border-[#c7d2fe] bg-white px-4 py-2 text-sm hover:bg-[#eef2ff]">Close</button>
+            className="rounded-xl border border-[#c7d2fe] bg-white px-4 py-2 text-sm hover:bg-[#eef2ff]"
+           data-qrpass-neutral-v169="true">Close</button>
         </div>
         <div className="mb-3 flex gap-2">
           <button type="button" disabled title="No PCO archive endpoint is connected"
@@ -12066,7 +12410,8 @@ function QRPassPCOManageV158({
               </div>
               <button type="button"
                 onClick={()=>{if(onView){onView(item);onClose();} else setDetailV157(item);}}
-                className="rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff]">View</button>
+                className="rounded-lg border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff]"
+          >View</button>
             </div>;
           })}</div>}
         </div>
@@ -12074,9 +12419,11 @@ function QRPassPCOManageV158({
           <span className="mr-auto text-xs text-[#64748b]">{selectedV157.length} selected Â· {visibleV157.length} shown</span>
           <button type="button" disabled={!visibleIdsV157.length}
             onClick={()=>setSelectedV157(v=>allV157?v.filter(id=>!visibleIdsV157.includes(id)):Array.from(new Set([...v,...visibleIdsV157])))}
-            className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50">{allV157?"Deselect All":"Select All"}</button>
+            className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50"
+          >{allV157?"Deselect All":"Select All"}</button>
           <button type="button" disabled={!visibleV157.length} onClick={exportV157}
-            className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50">Download</button>
+            className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50"
+          >Download</button>
           <button type="button" disabled title="PCO archive endpoint not verified"
             className="rounded-xl border border-[#c7d2fe] bg-white px-3 py-2 text-sm opacity-50">Archive</button>
           <button type="button" disabled title="Bulk permanent deletion not authorized"
@@ -12087,7 +12434,7 @@ function QRPassPCOManageV158({
           <div className="max-h-[75vh] w-full max-w-xl overflow-auto rounded-xl bg-white p-5 text-[#17336d] shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-bold">Record Details</h3>
-              <button type="button" onClick={()=>setDetailV157(null)} className="rounded-lg border border-[#c7d2fe] px-3 py-2">Close</button>
+              <button type="button" onClick={()=>setDetailV157(null)} className="rounded-lg border border-[#c7d2fe] px-3 py-2" data-qrpass-neutral-v169="true">Close</button>
             </div>
             {Object.entries(detailV157).filter(([k,v])=>typeof v!=="object" && !k.startsWith("__")).slice(0,30).map(([k,v])=>
               <p key={k} className="border-b border-[#edf2ff] py-1 text-sm"><strong>{k}:</strong> {String(v??"")}</p>)}
@@ -12199,7 +12546,7 @@ function PCOResponsiveToolbar({
           onClick={onRefresh}
           disabled={loading}
           className="w-full rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50 lg:w-auto inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-        >
+          >
           <RefreshCw size={13} className="shrink-0" />
           {loading ? "Refreshing..." : "Refresh"}
         </button>
@@ -12449,7 +12796,7 @@ function PCOPermitRequests() {
                   type="button"
                   onClick={() => setViewingItemV96(item)}
                   className="inline-flex w-full items-center justify-center rounded-md border border-[#cfd8e6] bg-white px-4 py-2.5 text-sm font-semibold text-[#244780] transition hover:bg-[#eef4ff]"
-                >
+          >
                   View
                 </button>
               </div>
@@ -12548,7 +12895,7 @@ function PCOPermitRequests() {
                         type="button"
                         onClick={() => setViewingItemV96(item)}
                         className="inline-flex items-center justify-center rounded-md border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-[#244780] transition hover:bg-[#eef4ff]"
-                      >
+          >
                         View
                       </button>
                     </td>
@@ -12574,7 +12921,7 @@ function PCOPermitRequests() {
                 type="button"
                 onClick={() => setViewingItemV96(null)}
                 className="rounded-md border border-[#d9e2ef] bg-white px-3 py-1.5 text-sm font-medium text-[#244780] transition hover:bg-[#eef4ff]"
-              >
+           data-qrpass-neutral-v169="true">
                 Close
               </button>
             </div>
@@ -12666,15 +13013,15 @@ function PCOPermitRequests() {
                   type="button"
                   onClick={() => setViewingItemV96(null)}
                   className="inline-flex items-center justify-center rounded-md border border-[#d9e2ef] bg-white px-4 py-2.5 text-sm font-semibold text-[#244780] transition hover:bg-[#eef4ff]"
-                >
+           data-qrpass-neutral-v169="true">
                   Close
                 </button>
                 <button
                   type="button"
                   onClick={() => handleApprove(viewingItemV96)}
                   disabled={approvingId === viewingItemV96.id}
-                  className="inline-flex items-center justify-center gap-1 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-                >
+                  className="inline-flex items-center justify-center gap-1 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition disabled:opacity-50 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                   <CheckCircle size={14} />
                   {approvingId === viewingItemV96.id ? "Approving..." : "Approve & Issue QR"}
                 </button>
@@ -12800,7 +13147,35 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
             aria-label="Manage Items"
             title="Manage Items"
             onClick={openSysadminManageV116}
-            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#cbd5e1] bg-white text-[#31539b] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
+            
+            data-qrpass-manage-items-hover-v149="true"
+            onMouseEnter={(e) => {
+              const s = e.currentTarget.style;
+              s.setProperty('background-color', '#eef2ff', 'important');
+              s.setProperty('border-color', '#a8bde4', 'important');
+              s.setProperty('box-shadow', 'none', 'important');
+              s.setProperty('outline', 'none', 'important');
+            }}
+            onMouseLeave={(e) => {
+              const s = e.currentTarget.style;
+              s.setProperty('background-color', '#ffffff', 'important');
+              s.setProperty('border-color', '#cbd5e1', 'important');
+              s.setProperty('box-shadow', 'none', 'important');
+              s.setProperty('outline', 'none', 'important');
+            }}
+            onFocus={(e) => {
+              const s = e.currentTarget.style;
+              s.setProperty('box-shadow', 'none', 'important');
+              s.setProperty('outline', 'none', 'important');
+            }}
+            onBlur={(e) => {
+              const s = e.currentTarget.style;
+              s.setProperty('background-color', '#ffffff', 'important');
+              s.setProperty('border-color', '#cbd5e1', 'important');
+              s.setProperty('box-shadow', 'none', 'important');
+              s.setProperty('outline', 'none', 'important');
+            }}
+className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#cbd5e1] bg-white text-[#31539b] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
           >
             <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
           </button>
@@ -12928,7 +13303,35 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
 
           <button type="button" title="Manage Items" aria-label="Manage Items"
               onClick={()=>setManageOpenV158(true)}
-              className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] hover:bg-[#eef2ff] !hidden md:!inline-flex">
+              
+            data-qrpass-manage-items-hover-v149="true"
+            onMouseEnter={(e) => {
+              const s = e.currentTarget.style;
+              s.setProperty('background-color', '#eef2ff', 'important');
+              s.setProperty('border-color', '#a8bde4', 'important');
+              s.setProperty('box-shadow', 'none', 'important');
+              s.setProperty('outline', 'none', 'important');
+            }}
+            onMouseLeave={(e) => {
+              const s = e.currentTarget.style;
+              s.setProperty('background-color', '#ffffff', 'important');
+              s.setProperty('border-color', '#cbd5e1', 'important');
+              s.setProperty('box-shadow', 'none', 'important');
+              s.setProperty('outline', 'none', 'important');
+            }}
+            onFocus={(e) => {
+              const s = e.currentTarget.style;
+              s.setProperty('box-shadow', 'none', 'important');
+              s.setProperty('outline', 'none', 'important');
+            }}
+            onBlur={(e) => {
+              const s = e.currentTarget.style;
+              s.setProperty('background-color', '#ffffff', 'important');
+              s.setProperty('border-color', '#cbd5e1', 'important');
+              s.setProperty('box-shadow', 'none', 'important');
+              s.setProperty('outline', 'none', 'important');
+            }}
+className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] hover:bg-[#eef2ff] !hidden md:!inline-flex">
               <SlidersHorizontal size={18} strokeWidth={1.8}/>
             </button>
   
@@ -12939,7 +13342,7 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
   onClick={loadItems}
   disabled={loading}
   className="!inline-flex md:!hidden !w-auto !min-w-[115px] h-11 shrink-0 flex-nowrap items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-[#c7d2fe] !bg-white px-4 py-2 text-sm font-semibold text-[#17336d] hover:!bg-[#eef2ff] disabled:opacity-50"
->
+          >
   <RefreshCw size={16} className="shrink-0" />
   <span className="!inline whitespace-nowrap">
     {loading ? "Refreshing..." : "Refresh"}
@@ -13108,7 +13511,7 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
                           setSelectedItem(item)
                         }
                         className="inline-flex items-center gap-1.5 rounded-md border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-[#eef2fc]"
-                      >
+          >
                         <Eye size={13} />
                         View
                       </button>
@@ -13153,7 +13556,7 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
                                         setSelectedItem(null)
                                       }
                                       className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-[#eef2fc] hover:text-primary"
-                                    >
+          >
                                       <X size={18} />
                                     </button>
                                   </div>
@@ -13462,8 +13865,8 @@ function PCOItemRegistry({ adminView = false }: { adminView?: boolean } = {}) {
                                       onClick={() =>
                                         setSelectedItem(null)
                                       }
-                                      className="rounded-md bg-primary px-4 py-2 text-xs font-semibold text-white hover:opacity-90"
-                                    >
+                                      className="rounded-md bg-primary px-4 py-2 text-xs font-semibold text-white transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+           data-qrpass-neutral-v169="true">
                                       Close
                                     </button>
                                   </div>
@@ -13913,7 +14316,8 @@ function PCONotifications() {
         <div className="flex w-full min-w-0 flex-wrap items-center gap-2 md:w-auto">
           <button type="button" title="Manage Notifications" aria-label="Manage Notifications"
             onClick={()=>setManageOpenV158(true)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] hover:bg-[#eef2ff] !hidden md:!inline-flex">
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] hover:bg-[#eef2ff] !hidden md:!inline-flex"
+          >
             <SlidersHorizontal size={18} strokeWidth={1.8}/>
           </button>
   
@@ -13924,7 +14328,7 @@ function PCONotifications() {
   onClick={() => loadNotifications(true)}
   disabled={loading}
   className="!inline-flex md:!hidden !w-auto !min-w-[115px] h-11 shrink-0 flex-nowrap items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-[#c7d2fe] !bg-white px-4 py-2 text-sm font-semibold text-[#17336d] hover:!bg-[#eef2ff] disabled:opacity-50"
->
+          >
   <RefreshCw size={16} className="shrink-0" />
   <span className="!inline whitespace-nowrap">
     {loading ? "Refreshing..." : "Refresh"}
@@ -13938,7 +14342,7 @@ function PCONotifications() {
               markingAll ||
               unreadCount === 0
             }
-            className="px-3 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+            className="px-3 py-2 bg-primary text-white rounded-md text-xs font-semibold disabled:opacity-50 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
           >
             {markingAll
               ? "Marking..."
@@ -14454,7 +14858,8 @@ function AdminRecords({ embedded = false, selectedType = "All", sharedPeriod = "
           <p className="text-xs text-muted-foreground">{filteredRecords.length} matching transactions. CSV includes the active date and search filters.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={loadRecords} disabled={loading} className="rounded-lg border border-[#cfd8e6] px-3 py-2 text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"> <RefreshCw size={13} className="shrink-0" />{loading ? "Refreshing..." : "Refresh"}</button>
+          <button type="button" onClick={loadRecords} disabled={loading} className="rounded-lg border border-[#cfd8e6] px-3 py-2 text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
+          > <RefreshCw size={13} className="shrink-0" />{loading ? "Refreshing..." : "Refresh"}</button>
         </div>
       </div>}
       {error && embedded && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
@@ -14996,11 +15401,44 @@ function SysAdminLostFound() {
               title="Manage Reports"
               onClick={openSysadminLostFoundManagerV117}
               className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#cbd5e1] bg-white text-[#31539b] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
-            >
+            
+  onMouseEnter={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#eef2ff', 'important');
+    s.setProperty('background-color', '#eef2ff', 'important');
+    s.setProperty('border-color', '#a8bde4', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onMouseLeave={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#ffffff', 'important');
+    s.setProperty('background-color', '#ffffff', 'important');
+    s.setProperty('border-color', '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onFocus={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', e.currentTarget.matches(':hover') ? '#eef2ff' : '#ffffff', 'important');
+    s.setProperty('border-color', e.currentTarget.matches(':hover') ? '#a8bde4' : '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onBlur={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#ffffff', 'important');
+    s.setProperty('background-color', '#ffffff', 'important');
+    s.setProperty('border-color', '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+>
               <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
             </button>
           )}
-          <button type="button" data-qrpass-refresh-toolbar="v1" onClick={() => { void loadItems(); }} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff]" aria-label="Refresh records"><RefreshCw size={15} />Refresh</button>
+          <button type="button" data-qrpass-refresh-toolbar="v1" onClick={() => { void loadItems(); }} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff]" aria-label="Refresh records"
+          ><RefreshCw size={15} />Refresh</button>
 
         </div>
         <div className="p-4 border-b border-[#cfd8e6] flex flex-wrap items-center gap-2">
@@ -15013,7 +15451,7 @@ function SysAdminLostFound() {
               {(["Item / Category","Report Type","Reported By","Location","Status",tab==="recovered"?"Claimant":"Date","Details"]).map(h=><th key={h} className="text-left px-4 py-3 font-semibold">{h}</th>)}
             </tr></thead>
             <tbody className="divide-y divide-slate-100">
-              {loading ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">Loading records...</td></tr> : filtered.length===0 ? <tr><td colSpan={7} className="py-12 text-center text-slate-500"><div className="qrpass-empty-state-v3"><BookOpen size={26} aria-hidden="true" /><strong>No {tab === "all" ? "reports" : tab + " reports"} match the selected filters.</strong></div></td></tr> : filtered.map(item => (
+              {loading ? <tr><td colSpan={7} className="py-12 text-center text-slate-500">Loading records...</td></tr> : filtered.length===0 ? <tr><td colSpan={7} className="py-12 text-center text-slate-500"><div className="qrpass-empty-state-v3"><BookOpen size={26} aria-hidden="true" /><strong>{/* QRPASS_LOST_FOUND_EMPTY_V201 */}No Lost & Found Records Yet</strong></div></td></tr> : filtered.map(item => (
                 <tr key={item.id} className="hover:bg-blue-50/40">
                   <td className="px-4 py-3"><p className="font-semibold text-slate-800">{item.item_name ?? "Unnamed Item"}</p><p className="text-xs text-slate-500">{item.category ?? "Other"}</p></td>
                   <td className="px-4 py-3 capitalize">{item.report_type ?? "—"}</td>
@@ -15044,7 +15482,8 @@ function SysAdminLostFound() {
           </div>
           {selectedItem.description && <div><p className="text-xs font-semibold text-slate-600">Description</p><p className="whitespace-pre-wrap text-sm mt-1">{selectedItem.description}</p></div>}
           {selectedItem.photo_url && <img src={selectedItem.photo_url} alt="Reported item" className="max-h-52 rounded-lg border object-contain" />}
-          <div className="text-right"><button type="button" onClick={()=>setSelectedItem(null)} className="px-4 py-2 rounded-lg bg-[#17336d] text-white text-sm">Close</button></div>
+          <div className="text-right"><button type="button" onClick={()=>setSelectedItem(null)} className="px-4 py-2 rounded-lg bg-[#17336d] text-white text-sm transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+           data-qrpass-neutral-v169="true">Close</button></div>
         </div>
       </div>}
     </div>
@@ -15072,6 +15511,7 @@ function QrpassRoleReportManagerV16({ role, category, onClose }: { role: QrpassR
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
   const [message, setMessage] = React.useState("");
+  const [deleteReportsOpenV194, setDeleteReportsOpenV194] = React.useState(false); // QRPASS_FLOATING_DELETE_YES_NO_V194
   const module = kind === "registration" ? "items" : kind === "lostfound" ? "lost-found" : null;
   // Back-end page management does not yet expose role-filtered archive/restore
   // for Students/CSU, or archive endpoints for Scan/Incident records.
@@ -15134,6 +15574,27 @@ function QrpassRoleReportManagerV16({ role, category, onClose }: { role: QrpassR
     XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(records), "Records");
     XLSX.writeFile(book, `QRPass-${role}-${kind}-${view}.xlsx`);
   }
+  // QRPASS_MANAGE_DELETE_UNIFORM_V191 — confirmation before destructive backend action.
+  const deleteChosenV191 = async () => {
+    if(!canArchive || !module || !chosen.length || busy)return;
+    if (!deleteReportsOpenV194) { setDeleteReportsOpenV194(true); return; }
+    setBusy(true);setError("");setMessage("");
+    try{
+      const token=localStorage.getItem("token");
+      const response=await fetch(`http://localhost:8000/api/sysadmin/page-manage/${module}`, {
+        method:"POST",
+        headers:{Accept:"application/json",Authorization:`Bearer ${token ?? ""}`,"Content-Type":"application/json"},
+        body:JSON.stringify({action:"delete",ids:chosen.map(Number),confirmation:"DELETE"})
+      });
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(data.message||`HTTP ${response.status}`);
+      setMessage(`${data.affected??0} report record(s) deleted.`);
+      setDeleteReportsOpenV194(false);
+      await read();
+      window.dispatchEvent(new CustomEvent("qrpass-page-records-changed",{detail:{module}}));
+    }catch(e){setError(e instanceof Error?e.message:"Delete failed.");}
+    finally{setBusy(false);}
+  };
   async function change(action: "archive" | "restore") {
     if (!canArchive || !module || !chosen.length) return;
     setBusy(true); setError(""); setMessage("");
@@ -15153,10 +15614,48 @@ function QrpassRoleReportManagerV16({ role, category, onClose }: { role: QrpassR
   }
   return <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/60 p-3" data-qrpass-manage-v31="true" data-qrpass-manage-v32="true" role="dialog" aria-modal="true" aria-label="Manage role reports">
     <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-[#c7d2fe] bg-white p-6 text-slate-900 shadow-2xl dark:bg-[#0d1830] dark:text-white">
-      <div className="mb-5 flex items-center justify-between gap-3"><h2 className="text-lg font-bold">Manage {role === "student" ? "Student" : role === "security" ? "CSU" : role === "pco" ? "PCO" : "System Administrator"} Reports</h2><button type="button" onClick={onClose} className="rounded-xl border px-4 py-2 hover:bg-[#eef2ff] dark:hover:text-[#17336d]">Close</button></div>
+      <div className="mb-5 flex items-center justify-between gap-3"><h2 className="text-lg font-bold">Manage {role === "student" ? "Student" : role === "security" ? "CSU" : role === "pco" ? "PCO" : "System Administrator"} Reports</h2><button type="button" onClick={onClose} className="rounded-xl border px-4 py-2 hover:bg-[#eef2ff] dark:hover:text-[#17336d]"
+           data-qrpass-neutral-v169="true">Close</button></div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
 
-        <button type="button" disabled={!canArchive || busy} title={canArchive ? "View archived records for this report" : "Archives unavailable: role-specific backend support required"} className="shrink-0 rounded-xl border border-[#cbd5e1] bg-white px-3 py-2 text-[#17336d] transition-colors hover:bg-[#eef2ff] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#1e2d4b] dark:text-white" onClick={() => { if (canArchive) setView(v => v === "active" ? "archived" : "active"); }}>{view === "active" ? "View Archives" : "Back to Records"}</button>
+        <button type="button" disabled={!canArchive || busy} title={canArchive ? "View archived records for this report" : "Archives unavailable: role-specific backend support required"} className="shrink-0 rounded-xl border border-[#cbd5e1] bg-white px-3 py-2 text-[#17336d] transition-colors disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#1e2d4b] dark:text-white !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none" onClick={() => { if (canArchive) setView(v => v === "active" ? "archived" : "active"); }} 
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+          >{view === "active" ? "View Archives" : "Back to Records"}</button>
         <input aria-label="Search report records" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search records..." className="min-w-[160px] flex-1 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 py-2 text-[#17336d] transition-colors hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#93b4ef] dark:text-[#17336d]" />
       </div>
       {error && <p className="mb-3 rounded-lg bg-red-100 p-3 text-sm text-red-800">{error}</p>}
@@ -15170,12 +15669,261 @@ function QrpassRoleReportManagerV16({ role, category, onClose }: { role: QrpassR
           </tr>;
         })}</tbody></table>}
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-2"><span className="mr-auto text-xs text-slate-500 dark:text-slate-300">{chosen.length} selected · {filtered.length} shown</span><button type="button" onClick={() => setChosen(allSelected ? [] : filtered.map((r:any,i:number)=>String(r.id ?? `${kind}-${i}`)))} className="rounded-xl border px-3 py-2 hover:bg-[#eef2ff] dark:hover:text-[#17336d]">{allSelected ? "Deselect All" : "Select All"}</button><button type="button" onClick={exportExcel} disabled={!filtered.length} className="rounded-xl border px-3 py-2 hover:bg-[#eef2ff] dark:hover:text-[#17336d]">Download</button>{canArchive && <button type="button" disabled={busy || !chosen.length} onClick={() => void change(view === "active" ? "archive" : "restore")} className="rounded-xl border px-3 py-2 hover:bg-[#eef2ff] disabled:opacity-50 dark:hover:text-[#17336d]">{view === "active" ? "Archive" : "Restore"}</button>}</div>
+      <div className="mt-4 flex flex-wrap items-center gap-2"><span className="mr-auto text-xs text-slate-500 dark:text-slate-300">{chosen.length} selected · {filtered.length} shown</span><button type="button" onClick={() => setChosen(allSelected ? [] : filtered.map((r:any,i:number)=>String(r.id ?? `${kind}-${i}`)))} className="rounded-xl border px-3 py-2 hover:bg-[#eef2ff] dark:hover:text-[#17336d]"
+          >{allSelected ? "Deselect All" : "Select All"}</button><button type="button" onClick={exportExcel} disabled={!filtered.length} className="rounded-xl border px-3 py-2 hover:bg-[#eef2ff] dark:hover:text-[#17336d]"
+          >Download</button>{canArchive && <button type="button" disabled={busy || !chosen.length} onClick={() => void change(view === "active" ? "archive" : "restore")} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">{view === "active" ? "Archive" : "Restore"}</button>}
+      <button type="button" disabled={!canArchive || busy || !chosen.length}
+        title={!canArchive ? "Delete unavailable: this report has no supported deletion API" : "Permanently delete selected reports"}
+        onClick={() => void deleteChosenV191()}
+        className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-red-200 bg-white px-4 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50">Delete</button></div>
     </div>
+    {deleteReportsOpenV194 && (
+      <QrpassDeleteConfirmV194 title="Delete Selected Reports?"
+        description={`Are you sure you want to permanently delete ${chosen.length} selected report record(s)? This action cannot be undone.`}
+        loading={busy} cancel={() => setDeleteReportsOpenV194(false)}
+        confirm={() => { void deleteChosenV191(); }} />
+    )}
   </div>;
 }
 
-function AdminAnalytics() {
+
+/* QRPASS_SYSADMIN_STANDALONE_LIVE_V216
+   Direct consolidated Sysadmin analytics; automatic 5-second polling.
+   Uses existing QRPass endpoints, no fake/synthetic rows.
+*/
+type QRPassLiveRowV216 = {
+  id: string; type: "Registered Item"|"QR Scan Activity"|"Security Incident"|"Lost & Found";
+  name: string; owner: string; status: string; date: string; details: string;
+};
+function QRPassSysadminLiveReportsV216() {
+  const [rows, setRows] = React.useState<QRPassLiveRowV216[]>([]);
+  const [query, setQuery] = React.useState("");
+  const [sort, setSort] = React.useState<"newest"|"oldest">("newest");
+  const [loading, setLoading] = React.useState(true);
+  const [syncing, setSyncing] = React.useState(false);
+  const [lastSynced, setLastSynced] = React.useState<Date | null>(null);
+  const [errors, setErrors] = React.useState<string[]>([]);
+  const [selected, setSelected] = React.useState<QRPassLiveRowV216 | null>(null);
+  const aliveRef = React.useRef(true);
+  const busyRef = React.useRef(false);
+  const rowsRef = React.useRef<QRPassLiveRowV216[]>([]);
+  const str = (x:any) => x == null || x === "" ? "—" : String(x);
+  const arrays = (response:any, keys:string[]) => {
+    if(Array.isArray(response)) return response;
+    for(const key of keys) if(Array.isArray(response?.[key])) return response[key];
+    if(Array.isArray(response?.data)) return response.data;
+    for(const key of keys) if(Array.isArray(response?.data?.[key])) return response.data[key];
+    return [] as any[];
+  };
+  const read = React.useCallback(async (quiet:boolean=false) => {
+    if(busyRef.current) return;
+    busyRef.current=true;
+    if(!quiet) setLoading(true);
+    else setSyncing(true);
+    try {
+      const results=await Promise.allSettled([
+        getAllItems(),getScanLogs(),getSecurityIncidents(),getLostFoundItems()
+      ]);
+      if(!aliveRef.current) return;
+      const fail:string[]=[];
+      const sources=results.map((r,i)=>{
+        if(r.status==="fulfilled")return r.value;
+        fail.push(["Registered Items","QR Scans","Security Incidents","Lost & Found"][i]+": "+String(r.reason?.message??r.reason));
+        return null;
+      });
+      const prepared:QRPassLiveRowV216[]=[];
+      const add=(type:QRPassLiveRowV216["type"],item:any,i:number) => {
+        const date=str(item.scanned_at??item.reported_at??item.registered_at??item.created_at);
+        const name=str(item.item_name??item.item?.item_name??item.title??item.incident_type??item.action??item.qr_code??item.description??("Record #"+(item.id??i+1)));
+        prepared.push({
+          id:type+"-"+str(item.id??i),
+          type,name,
+          owner:str(item.user?.name??item.owner?.name??item.reporter?.name??item.finder?.name??item.scanner?.name??item.lost_by?.name),
+          status:str(item.status??item.result??item.direction??"Recorded"),
+          date,details:JSON.stringify(item,null,2)
+        });
+      };
+      const configs=[
+        {type:"Registered Item" as const,items:arrays(sources[0],["items","records"])},
+        {type:"QR Scan Activity" as const,items:arrays(sources[1],["logs","scans","records"])},
+        {type:"Security Incident" as const,items:arrays(sources[2],["incidents","records"])},
+        {type:"Lost & Found" as const,items:arrays(sources[3],["items","lost_found_items","records"])}
+      ];
+      configs.forEach((c,i)=>{
+        // Preserve rows from a temporarily unavailable source rather than
+        // incorrectly displaying zero records during an API outage.
+        if(results[i].status==="rejected"){
+          prepared.push(...rowsRef.current.filter(r=>r.type===c.type));
+        } else {
+          c.items.forEach((item:any,j:number)=>add(c.type,item,j));
+        }
+      });
+      rowsRef.current=prepared;
+      setRows(prepared);
+      setErrors(fail);
+      setLastSynced(new Date());
+    } finally {
+      busyRef.current=false;
+      if(aliveRef.current){setLoading(false);setSyncing(false);}
+    }
+  },[]);
+  React.useEffect(()=>{
+    aliveRef.current=true;
+    void read();
+    const interval=window.setInterval(()=>{
+      if(document.visibilityState==="visible")void read(true);
+    },5000);
+    const visibility=()=>{if(document.visibilityState==="visible")void read(true);};
+    const onRecord=()=>void read(true);
+    document.addEventListener("visibilitychange",visibility);
+    window.addEventListener("qrpass-page-records-changed",onRecord);
+    return ()=>{
+      aliveRef.current=false;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange",visibility);
+      window.removeEventListener("qrpass-page-records-changed",onRecord);
+    };
+  },[read]);
+  const filtered=React.useMemo(()=>{
+    const needle=query.trim().toLowerCase();
+    const subset=rows.filter(r=>!needle||[r.name,r.owner,r.status,r.type,r.id].join(" ").toLowerCase().includes(needle));
+    return subset.sort((a,b)=>{
+      const delta=(new Date(b.date).getTime()||0)-(new Date(a.date).getTime()||0);
+      return sort==="newest"?delta:-delta;
+    });
+  },[rows,query,sort]);
+  const totals=React.useMemo(()=>({
+    registrations:rows.filter(r=>r.type==="Registered Item").length,
+    scans:rows.filter(r=>r.type==="QR Scan Activity").length,
+    incidents:rows.filter(r=>r.type==="Security Incident").length,
+    found:rows.filter(r=>r.type==="Lost & Found").length
+  }),[rows]);
+  const days=React.useMemo(()=>{
+    const now=new Date();
+    const seven=Array.from({length:7},(_,i)=>{
+      const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-6+i);
+      return {date:d.toDateString(),label:d.toLocaleDateString("en-PH",{weekday:"short"}),registrations:0,scans:0};
+    });
+    rows.forEach(r=>{
+      const d=new Date(r.date);
+      if(Number.isNaN(d.getTime()))return;
+      const day=seven.find(x=>x.date===d.toDateString());
+      if(day){
+        if(r.type==="Registered Item")day.registrations++;
+        if(r.type==="QR Scan Activity")day.scans++;
+      }
+    });
+    return seven;
+  },[rows]);
+  const maxValue=Math.max(1,...days.flatMap(d=>[d.registrations,d.scans]));
+  const line=(kind:"registrations"|"scans")=>days.map((d,i)=>
+    `${35+i*73},${125-104*d[kind]/maxValue}`).join(" ");
+  function downloadExcel(){
+    if(!filtered.length)return;
+    const wb=XLSX.utils.book_new();
+    const sheet=XLSX.utils.json_to_sheet(filtered.map(r=>({
+      "Record ID":r.id,"Source":r.type,"Record / Item":r.name,
+      "Owner / Person":r.owner,"Status":r.status,"Created At":r.date
+    })));
+    XLSX.utils.book_append_sheet(wb,sheet,"System Records");
+    XLSX.writeFile(wb,`QRPass-System-Records-${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
+  return (
+    <div className="w-full min-w-0 max-w-full space-y-5" data-qrpass-sysadmin-live-v216="true">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <PageHeader title="Reports & Analytics" subtitle="Campus-wide system monitoring and reports."/>
+        <span className="inline-flex items-center gap-2 rounded-full border border-[#c9d8ef] bg-white px-3 py-2 text-xs text-[#17336d] dark:border-[#3b587c] dark:bg-[#152743] dark:text-[#deebff]">
+          <span className="h-2 w-2 rounded-full bg-green-500"/>
+          Auto-sync · 5 sec{syncing?" · Syncing…":""}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {([
+          {name:"Registered Items",value:totals.registrations,icon:<Package size={20}/>},
+          {name:"QR Scans",value:totals.scans,icon:<ScanLine size={20}/>},
+          {name:"Security Incidents",value:totals.incidents,icon:<AlertTriangle size={20}/>},
+          {name:"Lost & Found",value:totals.found,icon:<Search size={20}/>}
+        ]).map(c=><div key={c.name} className="min-w-0 rounded-2xl border border-[#dce3ee] bg-white p-4 shadow-sm dark:border-[#365172] dark:bg-[#101e34]">
+          <span className="text-[#2d5799] dark:text-[#a2c4ff]">{c.icon}</span>
+          <p className="mt-2 text-xs font-semibold text-[#64748b] dark:text-[#b4c6e0]">{c.name}</p>
+          <p className="mt-1 text-2xl font-bold text-[#17336d] dark:text-white">{loading&&!rows.length?"…":c.value.toLocaleString("en-PH")}</p>
+        </div>)}
+      </div>
+      <section className="min-w-0 rounded-2xl border border-[#dce3ee] bg-white p-4 shadow-sm dark:border-[#365172] dark:bg-[#101e34]">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div><h3 className="text-sm font-bold text-[#17336d] dark:text-white">System Activity Overview</h3>
+          <p className="mt-1 text-xs text-[#64748b] dark:text-[#b4c6e0]">Registered items and QR scans · last 7 days</p></div>
+          <div className="flex gap-3 text-xs text-[#64748b] dark:text-[#b4c6e0]"><span>● Registrations</span><span>● QR Scans</span></div>
+        </div>
+        <div className="mt-4 w-full overflow-x-auto">
+          <svg viewBox="0 0 510 165" className="h-auto min-w-[330px] w-full" role="img" aria-label="Seven-day item registrations and QR scan trends">
+            {[20,72,125].map(y=><line key={y} x1="35" x2="473" y1={y} y2={y} stroke="#cbd5e1" strokeDasharray="4 5"/>)}
+            <polyline points={line("registrations")} fill="none" stroke="#416fe1" strokeWidth="3"/>
+            <polyline points={line("scans")} fill="none" stroke="#15936c" strokeWidth="3"/>
+            {days.map((d,i)=><g key={d.date}>
+              <circle cx={35+i*73} cy={125-104*d.registrations/maxValue} r="3" fill="#416fe1"><title>{d.label+": "+d.registrations+" registrations"}</title></circle>
+              <circle cx={35+i*73} cy={125-104*d.scans/maxValue} r="3" fill="#15936c"><title>{d.label+": "+d.scans+" scans"}</title></circle>
+              <text x={35+i*73} y="151" textAnchor="middle" fill="#8293a9" fontSize="11">{d.label}</text>
+            </g>)}
+          </svg>
+        </div>
+      </section>
+      <section className="min-w-0 overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-sm dark:border-[#365172] dark:bg-[#101e34]">
+        <div className="flex flex-col gap-3 border-b border-[#dce3ee] p-4 sm:flex-row sm:items-center dark:border-[#365172]">
+          <div className="relative min-w-0 flex-1">
+            <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#60769d]"/>
+            <input type="search" aria-label="Search system records" placeholder="Search record, ID, owner, status..." value={query}
+              onChange={e=>setQuery(e.target.value)}
+              className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-white pl-11 pr-4 text-sm text-[#17336d] outline-none hover:bg-[#eef2ff] focus:border-[#789df2] focus:bg-white dark:border-[#466386] dark:bg-[#172941] dark:text-white dark:hover:bg-[#243d60]"/>
+          </div>
+          <select aria-label="Sort system records" value={sort} onChange={e=>setSort(e.target.value as "newest"|"oldest")}
+            className="h-12 rounded-xl border border-[#c7d2fe] bg-white px-4 text-sm font-medium text-[#17336d] dark:border-[#466386] dark:bg-[#172941] dark:text-white">
+            <option value="newest">Newest first</option><option value="oldest">Oldest first</option>
+          </select>
+          <button type="button" onClick={()=>void read(true)} disabled={syncing}
+            className="h-12 rounded-xl border border-[#c7d2fe] bg-white px-4 text-sm font-semibold text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50 dark:border-[#466386] dark:bg-[#172941] dark:text-white dark:hover:bg-[#243d60]">Refresh</button>
+          <button type="button" onClick={downloadExcel} disabled={!filtered.length}
+            className="h-12 rounded-xl border border-[#244b91] bg-[#244b91] px-4 text-sm font-semibold text-white hover:bg-[#244b91] hover:text-white hover:ring-4 hover:ring-[#dce8ff] disabled:opacity-50">
+            <span className="inline-flex items-center gap-2"><Download size={16}/> Download Excel</span>
+          </button>
+        </div>
+        {errors.length>0&&<p role="alert" className="mx-4 mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">Some records could not sync: {errors.join("; ")}</p>}
+        <div className="w-full overflow-x-auto">
+          <table className="min-w-[760px] w-full text-left text-sm">
+            <thead className="border-b border-[#dce3ee] bg-[#f8fafc] text-[#64748b] dark:border-[#365172] dark:bg-[#1c2e49] dark:text-[#b4c6e0]">
+              <tr>{["Record / Item","Source","Owner / Person","Status","Date","Actions"].map(h=><th key={h} className="px-4 py-3 font-semibold">{h}</th>)}</tr>
+            </thead>
+            <tbody className="divide-y divide-[#e5ebf4] dark:divide-[#304966]">
+              {loading&&!rows.length?<tr><td colSpan={6} className="p-10 text-center text-[#64748b] dark:text-[#b4c6e0]">Loading records...</td></tr>:
+              filtered.length===0?<tr><td colSpan={6} className="p-10 text-center font-semibold text-[#17336d] dark:text-white">No system records found.</td></tr>:
+              filtered.map(r=><tr key={r.id} className="text-[#334155] hover:bg-[#f3f7ff] dark:text-[#e2ecfb] dark:hover:bg-[#213957]">
+                <td className="px-4 py-3 font-semibold">{r.name}</td><td className="px-4 py-3">{r.type}</td>
+                <td className="px-4 py-3">{r.owner}</td><td className="px-4 py-3">{r.status}</td>
+                <td className="px-4 py-3 whitespace-nowrap">{r.date==="—"?"—":new Date(r.date).toLocaleString("en-PH")}</td>
+                <td className="px-4 py-3"><button type="button" onClick={()=>setSelected(r)} className="rounded-lg border border-[#d1def4] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] hover:bg-[#eef2ff] dark:border-[#52729b] dark:bg-[#1a3254] dark:text-white">View</button></td>
+              </tr>)}
+            </tbody>
+          </table>
+        </div>
+        <div className="border-t border-[#e5ebf4] px-4 py-3 text-xs text-[#64748b] dark:border-[#304966] dark:text-[#b4c6e0]">
+          Showing {filtered.length} of {rows.length} records
+          {lastSynced?" · Last checked "+lastSynced.toLocaleTimeString("en-PH"):""}
+        </div>
+      </section>
+      {selected&&<div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 p-3" onClick={()=>setSelected(null)}>
+        <div role="dialog" aria-modal="true" aria-label="Record details" className="w-full max-w-xl max-h-[85dvh] overflow-y-auto rounded-2xl border border-[#c9d8ec] bg-white p-5 text-[#17336d] shadow-2xl dark:border-[#415f83] dark:bg-[#101e34] dark:text-white" onClick={e=>e.stopPropagation()}>
+          <div className="flex items-center justify-between gap-3"><h3 className="font-bold">Record Details</h3><button type="button" aria-label="Close" onClick={()=>setSelected(null)}><X size={20}/></button></div>
+          <p className="mt-3 text-sm font-medium">{selected.name} · {selected.type}</p>
+          <pre className="mt-3 whitespace-pre-wrap break-words rounded-xl bg-[#f3f6fc] p-3 text-xs text-[#334155] dark:bg-[#1a2b46] dark:text-[#dce6f5]">{selected.details}</pre>
+          <button type="button" onClick={()=>setSelected(null)} className="mt-3 rounded-xl border px-4 py-2 text-sm font-semibold">Close</button>
+        </div>
+      </div>}
+    </div>
+  );
+}
+function AdminAnalytics() { return <QRPassSysadminLiveReportsV216 />; }
+
+function AdminAnalyticsLegacyV216() {
   const [reportRole, setReportRole] = useState<"student" | "security" | "pco" | "sysadmin" | null>(null);
   const [roleReportManagerOpenV16, setRoleReportManagerOpenV16] = React.useState(false);
   const [showDownloadableReports, setShowDownloadableReports] = useState(true);
@@ -15294,9 +16042,12 @@ function AdminAnalytics() {
     ? reportData.recent_registrations : [];
 
   // Expose every status actually present in this reporting dataset, not just approved/pending.
-  const registrationStatuses = Array.from(new Set(recentRegistrations.map((item: any) =>
-    String(item.status ?? "Unknown").trim().toLowerCase() || "unknown"
-  ))).sort((a, b) => {
+  const registrationStatuses = Array.from(new Set([
+    "approved", "pending", "rejected", "flagged",
+    ...recentRegistrations.map((item: any) =>
+      String(item.status ?? "Unknown").trim().toLowerCase() || "unknown"
+    )
+  ])).sort((a, b) => {
     const priority: Record<string, number> = { approved: 0, pending: 1, rejected: 2, flagged: 3 };
     return (priority[a] ?? 99) - (priority[b] ?? 99) || a.localeCompare(b);
   });
@@ -16428,14 +17179,19 @@ async function downloadGateEntryExitPDF() {
   </div>
             {/* QRPASS_ANALYTICS_DROPDOWN_V1: Category or status before Newest first */}
           {(reportRole === "security" || reportRole === "sysadmin") ? (
-            <select aria-label="Filter analytics category" value={recentCategory} onChange={e=>setRecentCategory(e.target.value as typeof recentCategory)} className="h-12 min-w-[170px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#6485c2] dark:bg-[#19345f] dark:text-white">
-              {downloadOptions.map(option => <option key={option.kind} value={option.kind}>{option.label.replace(/ Report$/, "")}</option>)}
-            </select>
+            <QRPassReportsChoiceDropdownV210
+              label="Filter analytics category"
+              value={recentCategory}
+              options={downloadOptions.map(option => ({value:option.kind,label:option.label.replace(/ Report$/, "")}))}
+              onChange={(value) => setRecentCategory(value as typeof recentCategory)}
+            />
           ) : (
-            <select aria-label="Filter analytics record status" value={registrationStatusFilter} onChange={e=>setRegistrationStatusFilter(e.target.value)} className="h-12 min-w-[170px] max-w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 text-sm font-medium text-[#17336d] outline-none focus:border-[#5278e7] dark:border-[#6485c2] dark:bg-[#19345f] dark:text-white">
-              <option value="all">All Records</option>
-              {registrationStatuses.map(status => <option key={status} value={status}>{status.charAt(0).toUpperCase()+status.slice(1)}</option>)}
-            </select>
+            <QRPassReportsChoiceDropdownV210
+              label="Filter analytics record status"
+              value={registrationStatusFilter}
+              options={[{value:"all",label:"All Records"},...registrationStatuses.map(status => ({value:status,label:status.charAt(0).toUpperCase()+status.slice(1)}))]}
+              onChange={setRegistrationStatusFilter}
+            />
           )}
 <select aria-label="Sort reports" value={reportSort} onChange={e => setReportSort(e.target.value as 'newest' | 'oldest')} className="h-12 w-full rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-4 text-sm font-medium text-[#17336d] outline-none sm:w-[150px] focus:border-[#2f5fd6]">
     <option value="newest">Newest first</option>
@@ -16448,7 +17204,39 @@ async function downloadGateEntryExitPDF() {
               title="Manage Reports"
               onClick={() => setRoleReportManagerOpenV16(true)}
               className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#cbd5e1] bg-white text-[#31539b] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
-            >
+            
+  onMouseEnter={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#eef2ff', 'important');
+    s.setProperty('background-color', '#eef2ff', 'important');
+    s.setProperty('border-color', '#a8bde4', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onMouseLeave={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#ffffff', 'important');
+    s.setProperty('background-color', '#ffffff', 'important');
+    s.setProperty('border-color', '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onFocus={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', e.currentTarget.matches(':hover') ? '#eef2ff' : '#ffffff', 'important');
+    s.setProperty('border-color', e.currentTarget.matches(':hover') ? '#a8bde4' : '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onBlur={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#ffffff', 'important');
+    s.setProperty('background-color', '#ffffff', 'important');
+    s.setProperty('border-color', '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+>
               <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
             </button>
           )}
@@ -16456,7 +17244,7 @@ async function downloadGateEntryExitPDF() {
           <button
           onClick={loadReports}
           disabled={loading} className="px-3 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-        > <RefreshCw size={13} className="shrink-0" />
+          > <RefreshCw size={13} className="shrink-0" />
           {loading
             ? "Refreshing..."
             : "Refresh Reports"}
@@ -16508,7 +17296,7 @@ return (
                   setAnalyticsTab(role.id === "security" ? "incidents" : role.id === "sysadmin" ? "charts" : "registrations");
                 }}
                 className="flex w-full min-h-[68px] items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-[#f5f8ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2f5fd6] sm:px-5"
-              >
+          >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#dce3ee] bg-[#eef2fc] text-[#17336d]">{role.icon}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold text-[#17336d]">{role.label}</span>
@@ -16529,8 +17317,45 @@ return (
                         setRecentCategory("registration");
                         setRegistrationStatusFilter("all");
                       }}
-                      className="inline-flex items-center gap-2 rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-sm font-semibold text-[#17336d] hover:bg-[#f2f5fc]"
-                    >
+                      className="inline-flex items-center gap-2 rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-sm font-semibold text-[#17336d] !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+                     
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
                       <ChevronRight size={15} className="rotate-180"/> Back
                     </button>
         </div>
@@ -16542,6 +17367,11 @@ return (
         <QrpassRoleReportManagerV16 key={`${reportRole}-${recentCategory}`} role={reportRole} category={recentCategory} onClose={() => {setRoleReportManagerOpenV16(false); void loadReports();}} />
       )}
       {reportRole && <>
+      {/* QRPASS_REPORT_OPTIONS_ALWAYS_VISIBLE_V213: report filters always visible with zero records. */}
+      <div data-qrpass-report-toolbar-always-v213="true"
+           className="relative z-30 mb-4 overflow-visible rounded-xl border border-[#dce3ee] bg-white dark:border-[#3a5176] dark:bg-[#111e33]">
+        {renderRecentToolbar()}
+      </div>
 
       {/* ERROR */}
       {error && (
@@ -16595,7 +17425,7 @@ return (
             <h3 className="text-sm font-semibold text-[#17336d]">{recentCategory === "entryexit" ? "Recent Gate Entry / Exit Activity" : "Recent QR Scan Activity"}</h3>
             <p className="mt-1 text-xs text-muted-foreground">Actual verification and entry/exit events from the scan logs, not registration records.</p>
           </div>
-          {renderRecentToolbar()}
+          {/* Toolbar displayed once above, regardless of record count */}
           <div className="overflow-x-auto">
             <table className="w-full min-w-[850px]">
               <thead className="bg-[#fafbfc]"><tr>
@@ -16635,7 +17465,7 @@ return (
               These are campus-wide records: the current API does not mark items as specifically assigned to PCO.
             </p>
           </div>
-          {renderRecentToolbar()}
+          {/* Toolbar displayed once above, regardless of record count */}
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px]">
@@ -16663,7 +17493,7 @@ return (
       {(reportRole === "security" || reportRole === "sysadmin") && recentCategory === "incidents" && (
         <div className="overflow-hidden rounded-xl border border-[#dce3ee] bg-white shadow-sm">
           <div className="px-4 py-3"><h3 className="text-sm font-semibold text-[#17336d]">Recent Security Incidents</h3></div>
-          {renderRecentToolbar()}
+          {/* Toolbar displayed once above, regardless of record count */}
           <div className="overflow-x-auto"><table className="w-full min-w-[700px]">
             <thead className="bg-[#fafbfc]"><tr>{["Date", "Item / Incident", "Gate / Location", "Status", "Description"].map(h => <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>)}</tr></thead>
             <tbody className="divide-y divide-border">
@@ -16684,7 +17514,7 @@ return (
       {(reportRole === "security" || reportRole === "sysadmin") && recentCategory === "lostfound" && (
         <div className="overflow-hidden rounded-xl border border-[#dce3ee] bg-white shadow-sm">
           <div className="px-4 py-3"><h3 className="text-sm font-semibold text-[#17336d]">Recent Lost & Found Records</h3></div>
-          {renderRecentToolbar()}
+          {/* Toolbar displayed once above, regardless of record count */}
           <div className="overflow-x-auto"><table className="w-full min-w-[700px]">
             <thead className="bg-[#fafbfc]"><tr>{["Date", "Item", "Type", "Location", "Status"].map(h => <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>)}</tr></thead>
             <tbody className="divide-y divide-border">
@@ -16708,7 +17538,7 @@ return (
             <h3 className="text-sm font-semibold text-[#17336d]">{reportRole === "student" ? "Recent Student Item Registrations" : "Recent Campus-wide Item Registrations"}</h3>
             <p className="mt-1 text-xs text-muted-foreground">{reportRole === "student" ? "Student-owned registrations where the API identifies owner role; owner role missing from records is not assumed to be non-student." : "All recent item registration records across campus."}</p>
           </div>
-          {renderRecentToolbar()}
+          {/* Toolbar displayed once above, regardless of record count */}
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[850px]">
@@ -16813,7 +17643,15 @@ function SysAdminUserAccounts() {
   const [revokingUserId, setRevokingUserId] = useState<number | null>(null);
   /* QRPASS_REVOKE_YES_NO_V118 */
   const [pendingRevokeUserV118, setPendingRevokeUserV118] = useState<any | null>(null);
-  const [revokeReasonV91, setRevokeReasonV91] = useState(""); // QRPASS_PERMANENT_ACCESS_V91
+  const [pendingDisableUserV183, setPendingDisableUserV183] = useState<any | null>(null);
+  const [pendingEnableUserV195,setPendingEnableUserV195] = useState<any | null>(null);
+  const [enablingV195,setEnablingV195] = useState(false);
+  const [enableErrorV195,setEnableErrorV195] = useState("");
+  const [disableErrorV183, setDisableErrorV183] = useState("");
+  const [disablingV183, setDisablingV183] = useState(false);
+
+  const [revokeReasonV91, setRevokeReasonV91] = useState("");
+  const [revokeSuccessV181, setRevokeSuccessV181] = useState(false); // QRPASS_REVOKE_PURGE_NOTIFY_V181 // QRPASS_PERMANENT_ACCESS_V91
 
   const [showAddUser, setShowAddUser] =
     useState(false);
@@ -17261,7 +18099,8 @@ function SysAdminUserAccounts() {
     setError(''); setSuccess('');
     try {
       const result = await revokeUserAccessV91(uid, reason);
-      setSuccess(result.message ?? 'Access revoked permanently. User and records retained.');
+      setSuccess("");
+      setRevokeSuccessV181(true);
       setPendingRevokeUserV118(null); setRevokeReasonV91('');
       await loadUsers();
     } catch (e) { setError(e instanceof Error ? e.message : 'Failed to revoke access.'); }
@@ -17287,12 +18126,17 @@ function SysAdminUserAccounts() {
         ? "disable"
         : "enable";
 
-    const confirmed =
-      window.confirm(
-        `Are you sure you want to ${action} the account of ${user.name}?`
-      );
+    // QRPASS_DISABLE_FLOATING_CONFIRM_V183: Disable confirmation is a QRPass modal, not a browser popup.
+    if (newStatus === "inactive") {
+      setDisableErrorV183("");
+      setPendingDisableUserV183(user);
+      return;
+    }
 
-    if (!confirmed) {
+    // QRPASS_ENABLE_FLOATING_CONFIRM_V195: Enable uses a custom confirmation dialog.
+    if(newStatus === "approved") {
+      setEnableErrorV195("");
+      setPendingEnableUserV195(user);
       return;
     }
 
@@ -17327,6 +18171,49 @@ function SysAdminUserAccounts() {
       );
     } finally {
       setUpdatingId(null);
+    }
+  }
+
+
+  // QRPASS_DISABLE_FLOATING_CONFIRM_V183: confirm disable with backend before closing.
+  async function confirmDisableV183() {
+    const user=pendingDisableUserV183;
+    const id=Number(user?.id);
+    if(!Number.isSafeInteger(id)||id<=0||disablingV183)return;
+    setDisablingV183(true);
+    setDisableErrorV183("");
+    setError("");
+    setSuccess("");
+    try {
+      const result=await updateUserStatus(id,"inactive");
+      await loadUsers();
+      setPendingDisableUserV183(null);
+      setSuccess(result.message ?? "User account disabled successfully.");
+    } catch(err) {
+      setDisableErrorV183(err instanceof Error ? err.message : "Failed to disable user account.");
+    } finally {
+      setDisablingV183(false);
+    }
+  }
+
+
+  async function confirmEnableV195() {
+    const user=pendingEnableUserV195;
+    const id=Number(user?.id);
+    if(!Number.isSafeInteger(id)||id<=0||enablingV195)return;
+    setEnablingV195(true);
+    setEnableErrorV195("");
+    setError("");
+    setSuccess("");
+    try{
+      const result=await updateUserStatus(id,"approved");
+      await loadUsers();
+      setPendingEnableUserV195(null);
+      setSuccess(result.message ?? "User account enabled successfully.");
+    }catch(err){
+      setEnableErrorV195(err instanceof Error ? err.message : "Failed to enable account.");
+    }finally{
+      setEnablingV195(false);
     }
   }
 
@@ -17393,17 +18280,29 @@ function SysAdminUserAccounts() {
         </div>
       )}
 
+      {/* QRPASS_USER_ACCOUNTS_DROPDOWN_SIZE_V175: shared Add/Edit dropdown dimensions only */}
+      <style>{`
+        html body #root#root#root#root#root#root#root#root#root#root select[data-qrpass-user-select-v175="true"] {
+          height: 56px !important;
+          min-height: 56px !important;
+          max-height: 56px !important;
+          box-sizing: border-box !important;
+        }
+      `}</style>
       {/* ADD USER FORM */}
+      {/* QRPASS_ADD_USER_SELECT_WHITE_ON_OPEN_V156 */}
       {showAddUser && (
-        <Card title="Add New User Account">
+        <div data-qrpass-add-user-floating="QRPASS_ADD_USER_FLOAT_V149" className="fixed inset-0 z-[260] overflow-y-auto bg-[#0f172a]/50 px-3 py-5 sm:p-8 items-center justify-center flex" role="presentation">
+          <div role="dialog" aria-modal="true" aria-label="Add New User Account" className="mx-auto w-full max-w-4xl rounded-2xl bg-white shadow-2xl">
+            <Card title="Add New User Account">
           <form
             onSubmit={handleAddUser}
             className="p-4 space-y-4"
-           data-qrpass-add-user-form-v52="true" data-qrpass-add-user-white-v55="true">
+           data-qrpass-add-user-uniform-v140="QRPASS_ADD_USER_RESTORE_UNIFORM_V140" data-qrpass-add-user-form-v52="true" data-qrpass-add-user-white-v55="true">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold mb-1">
-                  Full Name *
+                  Full Name
                 </label>
                 {/* QRPASS_ADD_USER_FULL_NAME_RESTORED_V52 */}
                 <input
@@ -17421,7 +18320,7 @@ function SysAdminUserAccounts() {
 
               <div>
                 <label className="block text-xs font-semibold mb-1">
-                  Email Address *
+                  Email Address
                 </label>
 
                 <input
@@ -17444,11 +18343,11 @@ function SysAdminUserAccounts() {
 
               <div>
                 <label className="block text-xs font-semibold mb-1">
-                  Username / ID *
+                  ID NUMBER
                 </label>
 
                 <input
-                  type="text"
+                  type="text" pattern="[0-9]*" inputMode="numeric"
                   value={
                     newUser.username
                   }
@@ -17457,11 +18356,11 @@ function SysAdminUserAccounts() {
                       (current) => ({
                         ...current,
                         username:
-                          e.target.value,
+                          e.target.value.replace(/[^0-9]/g, ""),
                       })
                     )
                   }
-                  placeholder="e.g. 26-1234"
+                  placeholder="e.g. 261234"
                   required
                   className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
                  data-qrpass-add-user-field-v55="username"
@@ -17470,11 +18369,11 @@ function SysAdminUserAccounts() {
 
               <div>
                 <label className="block text-xs font-semibold mb-1">
-                  Role *
+                  Role
                 </label>
 
-                <span data-qrpass-account-role-v54="add" className="qrpass-account-role-wrap-v54">
-<select
+                <span data-qrpass-account-role-v54="add" className="qrpass-account-role-wrap-v54 w-full">
+<select data-qrpass-user-select-v175="true"
                   value={newUser.role}
                   onChange={(e) =>
                     setNewUser(
@@ -17485,8 +18384,18 @@ function SysAdminUserAccounts() {
                       })
                     )
                   }
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
-                >
+                  className="h-[58px] min-h-[58px] w-full box-border rounded-xl border border-[#cbd5e1] bg-white px-4 pr-10 text-sm text-[#17336d] outline-none transition-colors hover:bg-[#eef2ff] focus:border-[#5278e7]"
+                
+                      style={{ backgroundColor: "#ffffff", height: 58, minHeight: 58 }}
+                    
+                      onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.setProperty('background-color', '#eef2ff', 'important'); }}
+                    
+                      onMouseLeave={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
+                    
+                      onFocus={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
+                    
+                      onBlur={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
+                    >
                   <option value="student">
                     Student
                   </option>
@@ -17512,13 +18421,32 @@ function SysAdminUserAccounts() {
               {newUser.role === "student" && (
                 <>
                   <div>
-                    <label className="mb-1 block text-xs font-semibold">Year Level *</label>
-                    <select aria-label="Student Year Level" required value={newUser.year_level}
+                    <label className="mb-1 block text-xs font-semibold">Year Level</label>
+                    <select data-qrpass-user-select-v175="true" ref={(element) => {
+                      if (element) {
+                        element.style.setProperty('background', '#ffffff', 'important');
+                        element.style.setProperty('background-color', '#ffffff', 'important');
+                      }
+                    }} aria-label="Student Year Level" required value={newUser.year_level}
+                      
+                      
+                      
+                      
                       onChange={(e) => {
                         const value = e.target.value;
                         setNewUser((current) => ({ ...current, year_level: value, college: value === "Senior High School" ? "" : current.college }));
                       }}
-                      className="w-full rounded-xl border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#17336d] outline-none focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20">
+                      className="h-[58px] min-h-[58px] w-full box-border rounded-xl border border-[#cbd5e1] bg-white px-4 pr-10 text-sm text-[#17336d] outline-none transition-colors hover:bg-[#eef2ff] focus:border-[#5278e7]"
+                      style={{ backgroundColor: "#ffffff", height: 58, minHeight: 58 }}
+                    
+                      onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.setProperty('background-color', '#eef2ff', 'important'); }}
+                    
+                      onMouseLeave={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
+                    
+                      onFocus={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
+                    
+                      onBlur={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
+                    >
                       <option value="">Select year level</option>
                       {['Senior High School', '1st Year', '2nd Year', '3rd Year', '4th Year'].map(level => (
                         <option key={level} value={level}>{level}</option>
@@ -17527,10 +18455,29 @@ function SysAdminUserAccounts() {
                   </div>
                   {newUser.year_level !== "Senior High School" && (
                     <div>
-                      <label className="mb-1 block text-xs font-semibold">Department *</label>
-                      <select aria-label="Student Department" required value={newUser.college}
+                      <label className="mb-1 block text-xs font-semibold">Department</label>
+                      <select data-qrpass-user-select-v175="true" ref={(element) => {
+                      if (element) {
+                        element.style.setProperty('background', '#ffffff', 'important');
+                        element.style.setProperty('background-color', '#ffffff', 'important');
+                      }
+                    }} aria-label="Student Department" required value={newUser.college}
+                      
+                      
+                      
+                      
                         onChange={(e) => setNewUser((current) => ({ ...current, college: e.target.value }))}
-                        className="w-full rounded-xl border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#17336d] outline-none focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20">
+                        className="h-[58px] min-h-[58px] w-full box-border rounded-xl border border-[#cbd5e1] bg-white px-4 pr-10 text-sm text-[#17336d] outline-none transition-colors hover:bg-[#eef2ff] focus:border-[#5278e7]"
+                      style={{ backgroundColor: "#ffffff", height: 58, minHeight: 58 }}
+                    
+                      onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.setProperty('background-color', '#eef2ff', 'important'); }}
+                    
+                      onMouseLeave={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
+                    
+                      onFocus={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
+                    
+                      onBlur={(e) => { e.currentTarget.style.setProperty('background-color', '#ffffff', 'important'); }}
+                    >
                         <option value="">Select department</option>
                         {QRPassStudentAcademicDepartmentsV105.map((department) => (
                   <option key={department} value={department}>{department}</option>
@@ -17543,7 +18490,7 @@ function SysAdminUserAccounts() {
 
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold mb-1">
-                  Temporary Password *
+                  Password
                 </label>
 
                 <input
@@ -17567,11 +18514,7 @@ function SysAdminUserAccounts() {
                  data-qrpass-add-user-field-v55="password"
                 />
 
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  The user can use this
-                  password when logging
-                  into QRpass.
-                </p>
+                
               </div>
             </div>
 
@@ -17598,8 +18541,45 @@ function SysAdminUserAccounts() {
                 disabled={
                   creatingUser
                 }
-                className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
-              >
+                className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+               
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
                 Cancel
               </button>
 
@@ -17608,8 +18588,8 @@ function SysAdminUserAccounts() {
                 disabled={
                   creatingUser
                 }
-                className="px-4 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50"
-              >
+                className="px-4 py-2 bg-primary text-white rounded-md text-xs font-semibold disabled:opacity-50 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                 {creatingUser
                   ? "Creating..."
                   : "Create User Account"}
@@ -17617,11 +18597,23 @@ function SysAdminUserAccounts() {
             </div>
           </form>
         </Card>
+          </div>
+        </div>
       )}
 
       {/* EDIT USER FORM */}
       {editUser && (
-        <Card title="Edit User Account">
+        <div
+          data-qrpass-floating-edit-user-v152="true"
+          className="fixed inset-0 z-[350] flex items-center justify-center overflow-y-auto bg-[#0f172a]/50 p-3 sm:p-6"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !savingEdit) handleCancelEdit();
+          }}
+        >
+          <div className="my-auto max-h-[calc(100dvh-24px)] w-full max-w-[900px] overflow-y-auto rounded-2xl bg-white shadow-2xl sm:max-h-[calc(100dvh-48px)]" role="dialog" aria-modal="true" aria-label="Edit User Account">
+            {/* QRPASS_FLOATING_EDIT_USER_V152 */}
+            <Card title="Edit User Account">
           <form
             onSubmit={handleSaveEdit}
             className="p-4 space-y-4"
@@ -17630,7 +18622,7 @@ function SysAdminUserAccounts() {
               {/* EDIT NAME */}
               <div>
                 <label className="block text-xs font-semibold mb-1">
-                  Full Name *
+                  Full Name
                 </label>
 
                 <input
@@ -17644,14 +18636,36 @@ function SysAdminUserAccounts() {
                     })
                   }
                   required
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                 
+                onMouseEnter={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#eef2ff','important');
+                  s.setProperty('border-color','#a8bde4','important');
+                }}
+                onMouseLeave={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#ffffff','important');
+                  s.setProperty('border-color','#cbd5e1','important');
+                }}
+                onFocus={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('border-color','#5278e7','important');
+                  s.setProperty('box-shadow','0 0 0 2px rgba(82,120,231,.12)','important');
+                }}
+                onBlur={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#ffffff','important');
+                  s.setProperty('border-color','#cbd5e1','important');
+                  s.setProperty('box-shadow','none','important');
+                }}
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none !bg-white hover:!bg-[#eef2ff] border-[#cbd5e1] transition-colors"
                 />
               </div>
 
               {/* EDIT EMAIL */}
               <div>
                 <label className="block text-xs font-semibold mb-1">
-                  Email Address *
+                  Email Address
                 </label>
 
                 <input
@@ -17665,18 +18679,40 @@ function SysAdminUserAccounts() {
                     })
                   }
                   required
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                 
+                onMouseEnter={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#eef2ff','important');
+                  s.setProperty('border-color','#a8bde4','important');
+                }}
+                onMouseLeave={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#ffffff','important');
+                  s.setProperty('border-color','#cbd5e1','important');
+                }}
+                onFocus={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('border-color','#5278e7','important');
+                  s.setProperty('box-shadow','0 0 0 2px rgba(82,120,231,.12)','important');
+                }}
+                onBlur={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#ffffff','important');
+                  s.setProperty('border-color','#cbd5e1','important');
+                  s.setProperty('box-shadow','none','important');
+                }}
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none !bg-white hover:!bg-[#eef2ff] border-[#cbd5e1] transition-colors"
                 />
               </div>
 
               {/* EDIT USERNAME */}
               <div>
                 <label className="block text-xs font-semibold mb-1">
-                  Username / ID *
+                  ID NUMBER
                 </label>
 
                 <input
-                  type="text"
+                  type="text" pattern="[0-9]*" inputMode="numeric"
                   value={
                     editUser.username
                   }
@@ -17684,22 +18720,44 @@ function SysAdminUserAccounts() {
                     setEditUser({
                       ...editUser,
                       username:
-                        e.target.value,
+                        e.target.value.replace(/[^0-9]/g, ""),
                     })
                   }
                   required
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                 
+                onMouseEnter={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#eef2ff','important');
+                  s.setProperty('border-color','#a8bde4','important');
+                }}
+                onMouseLeave={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#ffffff','important');
+                  s.setProperty('border-color','#cbd5e1','important');
+                }}
+                onFocus={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('border-color','#5278e7','important');
+                  s.setProperty('box-shadow','0 0 0 2px rgba(82,120,231,.12)','important');
+                }}
+                onBlur={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#ffffff','important');
+                  s.setProperty('border-color','#cbd5e1','important');
+                  s.setProperty('box-shadow','none','important');
+                }}
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none !bg-white hover:!bg-[#eef2ff] border-[#cbd5e1] transition-colors"
                 />
               </div>
 
               {/* EDIT ROLE */}
               <div>
                 <label className="block text-xs font-semibold mb-1">
-                  Role *
+                  Role
                 </label>
 
                 <span data-qrpass-account-role-v54="edit" className="qrpass-account-role-wrap-v54">
-<select
+<select data-qrpass-user-select-v175="true"
                   value={editUser.role}
                   onChange={(e) =>
                     setEditUser({
@@ -17708,7 +18766,29 @@ function SysAdminUserAccounts() {
                         e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                 
+                onMouseEnter={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#eef2ff','important');
+                  s.setProperty('border-color','#a8bde4','important');
+                }}
+                onMouseLeave={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#ffffff','important');
+                  s.setProperty('border-color','#cbd5e1','important');
+                }}
+                onFocus={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('border-color','#5278e7','important');
+                  s.setProperty('box-shadow','0 0 0 2px rgba(82,120,231,.12)','important');
+                }}
+                onBlur={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#ffffff','important');
+                  s.setProperty('border-color','#cbd5e1','important');
+                  s.setProperty('box-shadow','none','important');
+                }}
+                className="w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none !bg-white hover:!bg-[#eef2ff] border-[#cbd5e1] transition-colors"
                 >
                   <option value="student">
                     Student
@@ -17735,13 +18815,35 @@ function SysAdminUserAccounts() {
               {editUser.role === "student" && (
                 <>
                   <div>
-                    <label className="mb-1 block text-xs font-semibold">Year Level *</label>
-                    <select aria-label="Student Year Level" required value={editUser.year_level}
+                    <label className="mb-1 block text-xs font-semibold">Year Level</label>
+                    <select data-qrpass-user-select-v175="true" aria-label="Student Year Level" required value={editUser.year_level}
                       onChange={(e) => {
                         const value = e.target.value;
                         setEditUser({ ...editUser, year_level: value, college: value === "Senior High School" ? "" : editUser.college });
                       }}
-                      className="w-full rounded-xl border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#17336d] outline-none focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20">
+                     
+                onMouseEnter={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#eef2ff','important');
+                  s.setProperty('border-color','#a8bde4','important');
+                }}
+                onMouseLeave={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#ffffff','important');
+                  s.setProperty('border-color','#cbd5e1','important');
+                }}
+                onFocus={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('border-color','#5278e7','important');
+                  s.setProperty('box-shadow','0 0 0 2px rgba(82,120,231,.12)','important');
+                }}
+                onBlur={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#ffffff','important');
+                  s.setProperty('border-color','#cbd5e1','important');
+                  s.setProperty('box-shadow','none','important');
+                }}
+                className="w-full rounded-xl border border-[#cfd8e6]  px-3 py-2.5 text-sm text-[#17336d] outline-none !bg-white hover:!bg-[#eef2ff] border-[#cbd5e1] transition-colors">
                       <option value="">Select year level</option>
                       {['Senior High School', '1st Year', '2nd Year', '3rd Year', '4th Year'].map(level => (
                         <option key={level} value={level}>{level}</option>
@@ -17750,10 +18852,32 @@ function SysAdminUserAccounts() {
                   </div>
                   {editUser.year_level !== "Senior High School" && (
                     <div>
-                      <label className="mb-1 block text-xs font-semibold">Department *</label>
-                      <select aria-label="Student Department" required value={editUser.college}
+                      <label className="mb-1 block text-xs font-semibold">Department</label>
+                      <select data-qrpass-user-select-v175="true" aria-label="Student Department" required value={editUser.college}
                         onChange={(e) => setEditUser({ ...editUser, college: e.target.value })}
-                        className="w-full rounded-xl border border-[#cfd8e6] bg-white px-3 py-2.5 text-sm text-[#17336d] outline-none focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20">
+                       
+                onMouseEnter={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#eef2ff','important');
+                  s.setProperty('border-color','#a8bde4','important');
+                }}
+                onMouseLeave={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#ffffff','important');
+                  s.setProperty('border-color','#cbd5e1','important');
+                }}
+                onFocus={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('border-color','#5278e7','important');
+                  s.setProperty('box-shadow','0 0 0 2px rgba(82,120,231,.12)','important');
+                }}
+                onBlur={(event) => {
+                  const s=event.currentTarget.style;
+                  s.setProperty('background-color','#ffffff','important');
+                  s.setProperty('border-color','#cbd5e1','important');
+                  s.setProperty('box-shadow','none','important');
+                }}
+                className="w-full rounded-xl border border-[#cfd8e6]  px-3 py-2.5 text-sm text-[#17336d] outline-none !bg-white hover:!bg-[#eef2ff] border-[#cbd5e1] transition-colors">
                         <option value="">Select department</option>
                         {QRPassStudentAcademicDepartmentsV105.map((department) => (
                   <option key={department} value={department}>{department}</option>
@@ -17765,11 +18889,7 @@ function SysAdminUserAccounts() {
               )}
             </div>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-md px-3 py-2 text-xs text-amber-700">
-              Changing the role changes
-              which QRpass modules this
-              account is allowed to use.
-            </div>
+            {/* Role-change warning removed: QRPASS_EDIT_USER_WHITE_HOVER_V151 */}
 
             <div className="flex justify-end gap-2">
               <button
@@ -17778,26 +18898,63 @@ function SysAdminUserAccounts() {
                   handleCancelEdit
                 }
                 disabled={savingEdit}
-                className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold hover:bg-muted disabled:opacity-50"
-              >
+                className="px-4 py-2 border border-[#cfd8e6] rounded-md text-xs font-semibold disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+               
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
                 Cancel
               </button>
 
               <button
                 type="submit"
                 disabled={savingEdit}
-                className="px-4 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:opacity-90 disabled:opacity-50"
-              >
+                className="px-4 py-2 bg-primary rounded-md text-xs font-semibold disabled:opacity-50 !text-white disabled:!text-white transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                 {savingEdit
                   ? "Saving..."
                   : "Save Changes"}
               </button>
             </div>
           </form>
-        </Card>
-      )}
-
-      {/* Standalone Reporting Period selector removed from staff page. */}
+            </Card>
+          </div>
+        </div>
+      )}{/* Standalone Reporting Period selector removed from staff page. */}
 
 
       {/* USER LIST */}
@@ -17828,7 +18985,9 @@ function SysAdminUserAccounts() {
           </select>
 <svg className="qrpass-users-dd-chevron-v53" aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
 </span>
-          <div data-qrpass-users-toolbar-v49="true" className="qrpass-users-toolbar-actions-v49 inline-flex shrink-0 items-center gap-3">
+          {/* QRPASS_USER_TOOLBAR_HOVER_V142 */}
+{/* QRPASS_MANAGE_BUTTONS_V145 */}
+<div data-qrpass-users-toolbar-v49="true" className="qrpass-users-toolbar-actions-v49 inline-flex shrink-0 items-center gap-3">
 <button type="button"
             onClick={() => {
               setShowAddUser(
@@ -17839,6 +18998,39 @@ function SysAdminUserAccounts() {
               setError("");
               setSuccess("");
             }}
+            data-qrpass-hover-uniform-v141="true"  
+            onMouseEnter={(e) => {
+              const s = e.currentTarget.style;
+              s.setProperty("background", "#eef2ff", "important");
+              s.setProperty("background-color", "#eef2ff", "important");
+              s.setProperty("border-color", "#a8bde4", "important");
+              s.setProperty("box-shadow", "none", "important");
+              s.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const s = e.currentTarget.style;
+              const focused = document.activeElement === e.currentTarget;
+              s.setProperty("background", "#ffffff", "important");
+              s.setProperty("background-color", "#ffffff", "important");
+              s.setProperty("border-color", focused ? "#a8bde4" : "#cbd5e1", "important");
+              s.setProperty("box-shadow", "none", "important");
+              s.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              const s = e.currentTarget.style;
+              s.setProperty("box-shadow", "none", "important");
+              s.setProperty("outline", "none", "important");
+              s.setProperty("border-color", "#a8bde4", "important");
+            }}
+            onBlur={(e) => {
+              const s = e.currentTarget.style;
+              s.setProperty("background", "#ffffff", "important");
+              s.setProperty("background-color", "#ffffff", "important");
+              s.setProperty("border-color", "#cbd5e1", "important");
+              s.setProperty("box-shadow", "none", "important");
+              s.setProperty("outline", "none", "important");
+            }}
+
             className="qrpass-users-add-v49 inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold"
           >
             <Plus size={14} />
@@ -17847,20 +19039,11 @@ function SysAdminUserAccounts() {
               ? "Close Form"
               : "Add User"}
           </button>
-<button type="button"
-            data-qrpass-users-manage-icon-v49="true"
-            aria-label="Manage Users"
-            title="Manage Users"
-            className="qrpass-users-manage-v49 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
-            onClick={() => {
-              const existing = document.querySelector<HTMLButtonElement>('.qrpass-admin-page > button.qrpass-manage-logs-shortcut-v3.qrpass-page-manage-v1');
-              if (existing && existing.isConnected) existing.click();
-              else setError('Manage Users button was not found. Refresh the page and try again.');
-            }}
-          ><SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" /></button>
+
           </div>
           <button type="button" onClick={loadUsers} disabled={loading}
-            className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff] disabled:opacity-50">
+            className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff] disabled:opacity-50"
+          >
             <RefreshCw size={15} className={loading ? "animate-spin" : ""}/> Refresh
           </button>
         </div>
@@ -17991,7 +19174,8 @@ function SysAdminUserAccounts() {
                         <td className="py-3 px-3">
                           <div className="flex flex-wrap items-center gap-2">
                             <button type="button" data-qrpass-user-action-v92="edit" onClick={() => handleStartEdit(user)}
-                              className="rounded-lg border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] transition-colors hover:bg-[#eef2fc]">
+                              className="rounded-lg border border-[#cfd8e6] bg-white px-3 py-1.5 text-xs font-semibold text-[#17336d] transition-colors hover:bg-[#eef2fc]"
+          >
                               Edit
                             </button>
                             <button type="button" data-qrpass-user-action-v92={user?.qrpass_revoked_at ? "revoked" : isActive ? "disable" : "enable"} onClick={() => handleToggleStatus(user)} disabled={isUpdating || isRevoked}
@@ -18033,6 +19217,148 @@ function SysAdminUserAccounts() {
           )}
       </Card>
 
+      {/* QRPASS_REVOKE_PURGE_NOTIFY_V181: floating success after confirmed backend response */}
+      {revokeSuccessV181 && (
+        <div className="fixed inset-0 z-[350] flex items-center justify-center bg-[#0f172a]/45 p-4" role="presentation">
+          <div role="alertdialog" aria-modal="true" aria-label="Revoke Successfully" className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-700 text-2xl">✓</div>
+            <h3 className="text-lg font-bold text-[#17336d]">Revoke Successfully</h3>
+            <p className="mt-2 text-sm text-slate-600">The account has been removed. Its ID and email are blocked, and CSU and PCO have been notified.</p>
+            <button type="button" onClick={() => setRevokeSuccessV181(false)}
+              className="mt-5 rounded-xl bg-[#17336d] px-6 py-2.5 text-sm font-semibold text-white">OK</button>
+          </div>
+        </div>
+      )}
+      
+      {/* QRPASS_DISABLE_FLOATING_CONFIRM_V183: Disable User confirmation only. Revoke modal remains untouched. */}
+      
+      {/* QRPASS_ENABLE_FLOATING_CONFIRM_V195: floating enable confirmation matching Disable */}
+      
+      {/* QRPASS_YES_ENABLE_HOVER_V198: Only the Yes, Enable button, including hover and focus. */}
+      <style>{`
+        html body button[data-qrpass-enable-v198="true"],
+        html body button[data-qrpass-enable-v198="true"]:hover,
+        html body button[data-qrpass-enable-v198="true"]:focus,
+        html body button[data-qrpass-enable-v198="true"]:active {
+          background: linear-gradient(180deg,#31579f,#1c356b) !important;
+          background-color: #244b91 !important;
+          background-image: linear-gradient(180deg,#31579f,#1c356b) !important;
+          color: #fff !important;
+          -webkit-text-fill-color: #fff !important;
+          opacity: 1 !important;
+          border-color: #244b91 !important;
+          filter: none !important;
+          transform: none !important;
+          transition: none !important;
+        }
+        html body button[data-qrpass-enable-v198="true"]:hover,
+        html body button[data-qrpass-enable-v198="true"]:focus-visible {
+          box-shadow: 0 0 0 3px #dce8ff !important;
+          outline: 1px solid #9dbaf3 !important;
+          outline-offset: 2px !important;
+        }
+        html body button[data-qrpass-enable-v198="true"] * {
+          color: #fff !important;
+          -webkit-text-fill-color: #fff !important;
+        }
+      `}</style>
+      {pendingEnableUserV195 && (
+        <div className="fixed inset-0 z-[335] flex items-center justify-center bg-[#0f172a]/50 p-4"
+          role="presentation"
+          onMouseDown={e=>{
+            if(e.target===e.currentTarget&&!enablingV195){
+              setPendingEnableUserV195(null);setEnableErrorV195("");
+            }
+          }}>
+          <div role="alertdialog" aria-modal="true" aria-labelledby="qrpass-enable-title-v195"
+            aria-describedby="qrpass-enable-description-v195"
+            className="w-full max-w-[410px] rounded-2xl border border-[#dce3ee] bg-white px-6 py-7 text-center shadow-2xl">
+            <h3 id="qrpass-enable-title-v195" className="text-xl font-bold text-[#17336d]">
+              Enable Account?
+            </h3>
+            <p id="qrpass-enable-description-v195" className="mt-3 text-sm leading-6 text-[#64748b]">
+              Are you sure you want to enable the account of{" "}
+              <strong className="font-semibold text-[#17336d]">{String(pendingEnableUserV195?.name||"this user")}</strong>?
+              {" "}This user will be allowed to log in again.
+            </p>
+            {enableErrorV195 && (
+              <p role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-left text-xs text-red-700">{enableErrorV195}</p>
+            )}
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <button type="button" disabled={enablingV195}
+                onClick={()=>{setPendingEnableUserV195(null);setEnableErrorV195("");}}
+                className="inline-flex h-11 min-w-[108px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-semibold text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">
+                No
+              </button>
+              <button type="button" disabled={enablingV195}
+                data-qrpass-enable-v198="true" onClick={()=>void confirmEnableV195()}
+                className="inline-flex h-11 min-w-[128px] items-center justify-center rounded-xl bg-[#244b91] px-4 text-sm font-semibold text-white disabled:opacity-50">
+                {enablingV195?"Enabling...":"Yes, Enable"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {pendingDisableUserV183 && (
+        <div
+          className="fixed inset-0 z-[330] flex items-center justify-center bg-[#0f172a]/50 p-4"
+          role="presentation"
+          onMouseDown={(event) => {
+            if(event.target===event.currentTarget && !disablingV183){
+              setPendingDisableUserV183(null);
+              setDisableErrorV183("");
+            }
+          }}
+        >
+          <div role="alertdialog" aria-modal="true"
+            aria-labelledby="qrpass-disable-title-v183"
+            aria-describedby="qrpass-disable-desc-v183"
+            className="w-full max-w-[410px] rounded-2xl border border-[#dce3ee] bg-white p-6 text-center shadow-2xl">
+            <h3 id="qrpass-disable-title-v183" className="text-lg font-bold text-[#17336d]">
+              Disable Account?
+            </h3>
+            
+            {/* QRPASS_DISABLE_DESCRIPTION_UP_V186: reminder 10px below title, 20px before buttons */}
+            <div
+              id="qrpass-disable-desc-v183"
+              className="mx-auto max-w-[340px] text-center"
+              style={{
+                display: 'block',
+                visibility: 'visible',
+                opacity: 1,
+                color: '#475569',
+                fontSize: '14px',
+                lineHeight: '24px',
+                marginTop: '10px',
+                marginBottom: '20px',
+                padding: '0 4px',
+              }}
+            >
+              Are you sure you want to disable the account of{' '}
+              <strong style={{ color: '#17336d', fontWeight: 600 }}>
+                {String(pendingDisableUserV183?.name || 'this user')}
+              </strong>?
+              {' '}This user will not be able to log in until the account is enabled again.
+            </div>
+            {disableErrorV183 && (
+              <p role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-left text-xs text-red-700">{disableErrorV183}</p>
+            )}
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <button type="button" disabled={disablingV183}
+                onClick={() => {setPendingDisableUserV183(null);setDisableErrorV183("");}}
+                className="min-w-[100px] rounded-xl border border-[#cbd5e1] bg-white px-5 py-2.5 text-sm font-semibold text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">
+                No
+              </button>
+              <button type="button" disabled={disablingV183}
+                onClick={() => {void confirmDisableV183();}}
+                className="min-w-[125px] rounded-xl border border-[#17336d] bg-[#17336d] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                {disablingV183 ? "Disabling..." : "Yes, Disable"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* QRPASS_REVOKE_WHITE_CENTERED_V119 */}
       {pendingRevokeUserV118 && (
         <div
@@ -18070,21 +19396,21 @@ function SysAdminUserAccounts() {
                 width: "100%",
               }}
             >
-              Permanently revoke QRPass access? The user will be signed out and cannot log in again, but their account, permits and history will remain.
+              Permanently revoke this account, block its ID and email, remove linked operational records and notify CSU/PCO? This action cannot be undone.
             </div>
             <label htmlFor="qrpass-revoke-reason-v91" className="mt-5 block text-left text-xs font-semibold text-[#17336d]">Reason for revocation (required)</label>
             <textarea id="qrpass-revoke-reason-v91" rows={3} maxLength={500} value={revokeReasonV91}
               onChange={(e) => setRevokeReasonV91(e.target.value)}
               placeholder="e.g. Access terminated after leaving university"
               className="mt-2 w-full rounded-xl border border-[#cbd5e1] bg-white p-3 text-sm text-[#17336d] focus:border-[#5278e7]" />
-            <p className="mt-1 text-left text-[11px] text-[#64748b]">At least 5 characters. Saved to audit logs. No user data deleted.</p>
+            <p className="mt-1 text-left text-[11px] text-[#64748b]">At least 5 characters. This permanently deletes related operational records.</p>
             {error && <p role="alert" className="mt-3 text-left text-xs text-red-700">{error}</p>}
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => setPendingRevokeUserV118(null)}
                 className="min-w-[90px] rounded-xl border border-[#cbd5e1] bg-white px-4 py-2.5 text-sm font-semibold text-[#17336d] transition-colors hover:bg-[#eef2ff]"
-              >
+          >
                 No
               </button>
               <button
@@ -18199,7 +19525,7 @@ function QRPassNumberStepper({
           disabled={safeValue >= max}
           onClick={() => setClamped(safeValue + 1)}
           className="flex h-1/2 items-center justify-center border-b border-[#c7d2fe] text-[#17336d] transition-colors hover:bg-[#eef2ff] disabled:cursor-not-allowed disabled:opacity-35"
-        >
+          >
           <span aria-hidden="true" className="inline-flex items-center justify-center"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m6 15 6-6 6 6" /></svg></span>
         </button>
 
@@ -18210,7 +19536,7 @@ function QRPassNumberStepper({
           disabled={safeValue <= min}
           onClick={() => setClamped(safeValue - 1)}
           className="flex h-1/2 items-center justify-center text-[#17336d] transition-colors hover:bg-[#eef2ff] disabled:cursor-not-allowed disabled:opacity-35"
-        >
+          >
           <span aria-hidden="true" className="inline-flex items-center justify-center"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg></span>
         </button>
       </div>
@@ -18218,6 +19544,67 @@ function QRPassNumberStepper({
   );
 }
 
+
+
+/* QRPASS_REPORTS_VISIBLE_DROPDOWN_V210: custom Reports & Analytics dropdown, no native popup clipping. */
+function QRPassReportsChoiceDropdownV210({
+  label, value, options, onChange
+}: {
+  label: string;
+  value: string;
+  options: {value: string; label: string}[];
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  React.useEffect(() => {
+    if (!open) return;
+    const onOutside = (event: MouseEvent | TouchEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onOutside);
+    document.addEventListener("touchstart", onOutside);
+    document.addEventListener("keydown", onEscape);
+    return () => {
+      document.removeEventListener("mousedown", onOutside);
+      document.removeEventListener("touchstart", onOutside);
+      document.removeEventListener("keydown", onEscape);
+    };
+  }, [open]);
+  const selected = options.find(item => item.value === value);
+  return (
+    <div ref={rootRef} className="relative z-[50] min-w-0 w-full sm:w-auto sm:min-w-[185px]">
+      <button type="button" aria-label={label} aria-haspopup="listbox"
+        aria-expanded={open} onClick={() => setOpen(v => !v)}
+        className={`flex h-12 w-full min-w-0 items-center justify-between gap-3 rounded-xl border px-3 text-left text-sm font-medium shadow-sm transition-colors
+          ${open ? "border-[#7b9fff] ring-2 ring-[#dce8ff]" : "border-[#c7d2fe]"}
+          bg-white text-[#17336d] hover:bg-[#eef2ff] hover:text-[#17336d]
+          dark:border-[#597ab8] dark:bg-[#152b4d] dark:text-[#edf4ff] dark:hover:bg-[#203b63]`}>
+        <span className="min-w-0 truncate">{selected?.label ?? options[0]?.label ?? "Select"}</span>
+        <ChevronRight size={16} className={`shrink-0 rotate-90 transition-transform ${open ? "-rotate-90" : ""}`} />
+      </button>
+      {open && (
+        <div role="listbox" aria-label={label}
+          className="absolute left-0 right-0 top-[calc(100%+6px)] z-[999] min-w-[220px] overflow-y-auto rounded-2xl border border-[#c7d2fe] bg-white p-2 shadow-xl dark:border-[#405b86] dark:bg-[#101f38]"
+          style={{maxHeight:"min(60vh, 350px)"}}>
+          {options.map(option => (
+            <button key={option.value} type="button" role="option"
+              aria-selected={option.value===value}
+              onClick={() => {onChange(option.value);setOpen(false);}}
+              className={`mb-1 block w-full rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors last:mb-0
+                ${option.value===value ? "bg-[#dce6ff] text-[#17336d] dark:bg-[#244574] dark:text-white" :
+                "bg-[#f7f9ff] text-[#17336d] hover:bg-[#e7edff] dark:bg-[#152b4d] dark:text-[#edf4ff] dark:hover:bg-[#254772]"}`}>
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function SysAdminSettings() {
   // QRPASS_INPUT_ONLY_V2
@@ -18231,6 +19618,31 @@ function SysAdminSettings() {
     qr_code_validity_months: 6,
     two_factor_enabled: false,
   });
+  // QRPASS_2FA_RENDER_STATE_V190: enforce state colors after React renders (no hover JS, no observer).
+  React.useLayoutEffect(() => {
+    const field = document.querySelector<HTMLElement>('[data-qrpass-two-factor-aligned="v12"]');
+    const surface = field?.querySelector<HTMLElement>(':scope > div');
+    const toggle = field?.querySelector<HTMLButtonElement>('button[aria-label="Toggle two-factor authentication"]');
+    if (!field || !surface || !toggle) return;
+    const put = (el: HTMLElement, prop: string, val: string) => el.style.setProperty(prop, val, 'important');
+    for (const prop of ['background', 'background-color']) put(surface, prop, '#ffffff');
+    put(surface, 'background-image', 'none');
+    put(surface, 'box-shadow', 'none');
+    put(surface, 'outline', 'none');
+    put(surface, 'transition', 'none');
+    const on = Boolean(settings.two_factor_enabled);
+    const color = on ? '#244b91' : '#d1d5db';
+    for (const prop of ['background', 'background-color']) put(toggle, prop, color);
+    put(toggle, 'background-image', 'none');
+    put(toggle, 'border-color', on ? '#244b91' : '#c5cad2');
+    put(toggle, 'box-shadow', 'none');
+    put(toggle, 'outline', 'none');
+    put(toggle, 'filter', 'none');
+    put(toggle, 'transform', 'none');
+    put(toggle, 'transition', 'none');
+    toggle.setAttribute('aria-checked', String(on));
+  }, [settings.two_factor_enabled]);
+
 
   // QRPASS_SETTINGS_STRICT_V1
   const onlyLettersAndSpaces = (value: string) => value.replace(/[^A-Za-z ]/g, "").replace(/ {2,}/g, " ");
@@ -18274,6 +19686,7 @@ function SysAdminSettings() {
   const [savingPolicy, setSavingPolicy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
 
   useEffect(() => {
     loadSettings();
@@ -18371,7 +19784,7 @@ function SysAdminSettings() {
       document.title = String(data?.settings?.system_name || settings.system_name).trim() || "QRpass";
       window.dispatchEvent(new Event("qrpass-settings-updated"));
       setSuccess(
-        "General settings saved. System name, page title and footer branding updated."
+        "General settings saved successfully."
       );
     } catch (err) {
       console.error(
@@ -18422,7 +19835,7 @@ function SysAdminSettings() {
       }
 
       setSuccess(
-        "Security policy saved successfully."
+        "QR and security policy saved successfully."
       );
     } catch (err) {
       console.error(
@@ -18444,6 +19857,45 @@ function SysAdminSettings() {
 
   return (
     <div className="space-y-5 qrpass-sysadmin-settings-v31">
+      {/* QRPASS_SYSADMIN_BLUE_ACTION_HOVER_V209: Same Change Password blue/white hover for Sysadmin save/report buttons. */}
+      <style>{`
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72:hover:not(:disabled),
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71:hover:not(:disabled),
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72:focus-visible,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71:focus-visible {
+          background: linear-gradient(180deg, #31589f 0%, #203e7b 100%) !important;
+          background-color: #244b91 !important;
+          background-image: linear-gradient(180deg, #31589f 0%, #203e7b 100%) !important;
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+          border: 1px solid #31589f !important;
+          border-radius: 12px !important;
+          opacity: 1 !important;
+          filter: none !important;
+          text-shadow: none !important;
+          transition: box-shadow .16s ease, border-color .16s ease !important;
+        }
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72:hover:not(:disabled),
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71:hover:not(:disabled),
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72:focus-visible,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71:focus-visible {
+          box-shadow: 0 0 0 4px #dce8ff !important;
+          border-color: #6e99ea !important;
+        }
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72 svg,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71 svg {
+          stroke: #ffffff !important;
+          color: #ffffff !important;
+        }
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72:disabled,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71:disabled {
+          opacity: .55 !important;
+          cursor: not-allowed !important;
+        }
+      `}</style>
+
       <PageHeader
         title="System Settings"
         subtitle="Configure QRpass portal settings and security policies."
@@ -18455,8 +19907,11 @@ function SysAdminSettings() {
         </div>
       )}
 
+      {/* QRPASS_SETTINGS_CENTERED_BANNER_V200: centered inline success banner. */}
       {success && (
-        <div className="p-3 border border-green-200 bg-green-50 rounded-md text-sm text-green-700">
+        <div role="status" aria-live="polite"
+          className="rounded-md border border-green-200 bg-green-50 p-3 text-center text-sm font-medium text-green-700"
+          style={{textAlign:"center"}}>
           {success}
         </div>
       )}
@@ -18617,11 +20072,60 @@ function SysAdminSettings() {
               <QRPassNumberStepper label="QR Code Validity (months)" value={settings.qr_code_validity_months} min={1} max={60} onChange={(value) => setSettings((prev) => ({ ...prev, qr_code_validity_months: value }))} />
             </div>
 
-            <div data-qrpass-two-factor-aligned="v12">
+            {/* QRPASS_2FA_TOGGLE_V188: scoped directly to existing System Settings 2FA switch */}
+              <style>{`
+                html body #root [data-qrpass-two-factor-aligned="v12"] > div {
+                  background: #ffffff !important;
+                  background-color: #ffffff !important;
+                  box-shadow: none !important;
+                  transition: none !important;
+                }
+                html body #root [data-qrpass-two-factor-aligned="v12"] > div:hover,
+                html body #root [data-qrpass-two-factor-aligned="v12"] > div:focus-within {
+                  background: #ffffff !important;
+                  background-color: #ffffff !important;
+                  box-shadow: none !important;
+                }
+                html body #root button[data-qrpass-2fa-v188="disabled"],
+                html body #root button[data-qrpass-2fa-v188="disabled"]:is(:hover,:focus,:active) {
+                  background: #d1d5db !important;
+                  background-color: #d1d5db !important;
+                  background-image: none !important;
+                  border: 1px solid #c5cad2 !important;
+                  box-shadow: none !important;
+                  outline: none !important;
+                  filter: none !important;
+                  transform: none !important;
+                  opacity: 1 !important;
+                  transition: none !important;
+                }
+                html body #root button[data-qrpass-2fa-v188="enabled"],
+                html body #root button[data-qrpass-2fa-v188="enabled"]:is(:hover,:focus,:active) {
+                  background: #244b91 !important;
+                  background-color: #244b91 !important;
+                  background-image: none !important;
+                  border: 1px solid #244b91 !important;
+                  box-shadow: none !important;
+                  outline: none !important;
+                  filter: none !important;
+                  transform: none !important;
+                  opacity: 1 !important;
+                  transition: none !important;
+                }
+                html body #root button[data-qrpass-2fa-v188] > div {
+                  background-color: #ffffff !important;
+                  box-shadow: 0 1px 2px rgba(15,23,42,.16) !important;
+                }
+                html body #root button[data-qrpass-2fa-v188]:focus-visible {
+                  outline: 2px solid #6991de !important;
+                  outline-offset: 3px !important;
+                }
+              `}</style>
+              <div data-qrpass-two-factor-aligned="v12">
               <label className="block text-xs font-semibold text-foreground mb-1">
                 Enable Two-Factor Auth
               </label>
-              <div className="flex h-12 min-h-12 w-full min-w-0 items-center justify-between rounded-xl border border-[#cbd5e1] bg-white px-4 transition-colors hover:bg-[#eef2ff] focus-within:!bg-white focus-within:border-[#6b90c7] focus-within:ring-2 focus-within:ring-[#5278e7]/15">
+              <div className="flex h-12 min-h-12 w-full min-w-0 items-center justify-between rounded-xl border border-[#cbd5e1] bg-white px-4 transition-colors focus-within:!bg-white focus-within:border-[#6b90c7] ">
                 <span className="text-sm font-normal text-[#17336d]">
                   {settings.two_factor_enabled ? "Enabled" : "Disabled"}
                 </span>
@@ -18639,6 +20143,7 @@ function SysAdminSettings() {
                       ? "bg-primary"
                       : "bg-gray-300"
                   }`}
+                  data-qrpass-2fa-v188={settings.two_factor_enabled ? "enabled" : "disabled"}
                   aria-label="Toggle two-factor authentication"
                 >
                   <div
@@ -18672,6 +20177,105 @@ function SysAdminSettings() {
   );
 }
 
+// QRPASS_FLOATING_DELETE_YES_NO_V194: QRPass native floating delete confirmation
+function QrpassDeleteConfirmV194({ title, description, loading, cancel, confirm }: {
+  title: string; description: string; loading: boolean; cancel: () => void; confirm: () => void;
+}) {
+  return createPortal(
+    <div className="fixed inset-0 z-[2147483400] flex items-center justify-center bg-[#0f172a]/55 p-4" role="presentation"
+      onMouseDown={e => { if(e.target === e.currentTarget && !loading) cancel(); }}>
+      <div role="alertdialog" aria-modal="true" aria-labelledby="qrpass-delete-title-v194" aria-describedby="qrpass-delete-desc-v194"
+        className="w-full max-w-[480px] rounded-2xl border border-[#dce3ee] bg-white px-7 py-8 text-center shadow-2xl">
+        <h3 id="qrpass-delete-title-v194" className="text-xl font-bold text-[#17336d]">{title}</h3>
+        <p id="qrpass-delete-desc-v194" className="mt-4 text-sm leading-7 text-[#64748b]">{description}</p>
+        <div className="mt-7 flex flex-wrap justify-center gap-3">
+          <button type="button" disabled={loading} onClick={cancel}
+            className="inline-flex h-12 min-w-[116px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-5 text-sm font-semibold text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">No</button>
+          <button type="button" disabled={loading} onClick={confirm}
+            className="inline-flex h-12 min-w-[116px] items-center justify-center rounded-xl bg-[#244b91] px-5 text-sm font-semibold !text-white hover:bg-[#244b91] disabled:opacity-50">{loading ? 'Deleting...' : 'Yes'}</button>
+        </div>
+      </div>
+    </div>, document.body
+  );
+}
+
+
+// QRPASS_ALL_MANAGE_DELETE_FLOATING_V196
+// Promise-based floating dialog: no browser window.confirm, no DOM observers.
+function qrpassFloatingDeleteConfirmV196(message: string, title = "Delete Selected Records?"): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.setAttribute("role", "presentation");
+    Object.assign(overlay.style, {
+      position:"fixed", inset:"0", zIndex:"2147483600", background:"rgba(15,23,42,.55)",
+      display:"flex", alignItems:"center", justifyContent:"center", padding:"16px"
+    });
+    const card = document.createElement("div");
+    card.setAttribute("role","alertdialog");
+    card.setAttribute("aria-modal","true");
+    card.setAttribute("aria-labelledby","qrpass-delete-title-v196");
+    card.setAttribute("aria-describedby","qrpass-delete-desc-v196");
+    Object.assign(card.style, {
+      width:"100%",maxWidth:"480px",borderRadius:"22px",background:"#fff",
+      color:"#17336d",padding:"30px 28px 28px",boxShadow:"0 24px 70px rgba(0,0,0,.25)",
+      border:"1px solid #dce3ee",boxSizing:"border-box",textAlign:"center"
+    });
+    const heading = document.createElement("h3");
+    heading.id="qrpass-delete-title-v196";
+    heading.textContent=title;
+    Object.assign(heading.style,{margin:"0",fontSize:"20px",fontWeight:"700",lineHeight:"28px"});
+    const description=document.createElement("p");
+    description.id="qrpass-delete-desc-v196";
+    description.textContent=message;
+    Object.assign(description.style,{
+      margin:"16px 0 0",fontSize:"14px",color:"#64748b",lineHeight:"24px"
+    });
+    const footer=document.createElement("div");
+    Object.assign(footer.style,{
+      display:"flex",gap:"12px",alignItems:"center",justifyContent:"center",
+      marginTop:"28px",flexWrap:"wrap"
+    });
+    const no=document.createElement("button");
+    no.type="button";no.textContent="No";
+    const yes=document.createElement("button");
+    yes.type="button";yes.textContent="Yes";
+    for(const button of [no,yes])Object.assign(button.style,{
+      minWidth:"108px",height:"46px",padding:"0 20px",borderRadius:"12px",
+      fontSize:"14px",fontWeight:"600",cursor:"pointer",fontFamily:"inherit"
+    });
+    Object.assign(no.style,{background:"#fff",color:"#17336d",border:"1px solid #cbd5e1"});
+    Object.assign(yes.style,{background:"#244b91",color:"#fff",border:"1px solid #244b91"});
+    no.addEventListener("mouseenter",()=>no.style.background="#eef2ff");
+    no.addEventListener("mouseleave",()=>no.style.background="#fff");
+    const prior=document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    let finished=false;
+    const close=(answer:boolean)=>{
+      if(finished)return;
+      finished=true;
+      document.removeEventListener("keydown",onKeyDown,true);
+      overlay.remove();
+      prior?.focus();
+      resolve(answer);
+    };
+    const onKeyDown=(e:KeyboardEvent)=>{
+      if(e.key==="Escape"){e.preventDefault();close(false);}
+      if(e.key==="Tab"){
+        if(e.shiftKey&&document.activeElement===no){e.preventDefault();yes.focus();}
+        else if(!e.shiftKey&&document.activeElement===yes){e.preventDefault();no.focus();}
+      }
+    };
+    no.addEventListener("click",()=>close(false));
+    yes.addEventListener("click",()=>close(true));
+    overlay.addEventListener("mousedown",e=>{if(e.target===overlay)close(false);});
+    footer.append(no,yes);
+    card.append(heading,description,footer);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    document.addEventListener("keydown",onKeyDown,true);
+    no.focus();
+  });
+}
+
 function SysAdminAuditLogs() {
   const [logs, setLogs] = useState<any[]>([]);
 
@@ -18697,6 +20301,7 @@ function SysAdminAuditLogs() {
   /* QRPass Manage Logs functional v1 */
   const [manageMessage, setManageMessage] = useState("");
   const [manageBusy, setManageBusy] = useState(false);
+  const [deleteLogsOpenV194, setDeleteLogsOpenV194] = React.useState(false); // QRPASS_FLOATING_DELETE_YES_NO_V194
   const [manageCount, setManageCount] = useState<number | null>(null);
   const [manageArchiveId, setManageArchiveId] = useState("");
   const [manageArchiveDownloaded, setManageArchiveDownloaded] = useState(false);
@@ -18718,7 +20323,7 @@ function SysAdminAuditLogs() {
   // QRPass Archive Deletion v5: independently delete an archive from storage, not from active audit logs.
   const manageDeleteArchive = async (archiveId:string, count:number) => {
     if(manageBusy)return;
-    if(!window.confirm('Permanently delete this archive of '+count+' logs? Archived copy cannot be restored after deletion. Active logs are unaffected.'))return;
+    if(!await qrpassFloatingDeleteConfirmV196('Permanently delete this archive of '+count+' logs? Archived copy cannot be restored after deletion. Active logs are unaffected.'))return;
     setManageBusy(true);setManageMessage('');
     try {
       const response=await qrpassManageLogsRequest('delete-archive','POST',{archive_id:archiveId,confirmation:'DELETE ARCHIVE'});
@@ -18802,6 +20407,24 @@ function SysAdminAuditLogs() {
     const workbook=XLSX.utils.book_new();XLSX.utils.book_append_sheet(workbook,sheet,"System Logs");
     XLSX.writeFile(workbook,"QRPass-Selected-System-Logs-"+new Date().toISOString().slice(0,10)+".xlsx");
   };
+  // QRPASS_MANAGE_DELETE_UNIFORM_V191: delete checked log IDs, not an unrelated date range.
+  const manageDeleteSelectedV191 = async () => {
+    if(manageBusy || !manageSelectedIds.length) return;
+    const count=manageSelectedIds.length;
+    if (!deleteLogsOpenV194) { setDeleteLogsOpenV194(true); return; }
+    setManageBusy(true);setManageMessage("");
+    try{
+      const response=await qrpassManageLogsRequest("delete-ids","POST",
+        {ids:manageSelectedIds,confirmation:"DELETE SELECTED LOGS"} as any);
+      const data=await response.json();
+      setManageMessage(String(data.deleted_count??0)+" selected logs deleted.");
+      setManageSelectedIds([]);
+      setDeleteLogsOpenV194(false);
+      await loadAuditLogs("","","");
+    }catch(e){setManageMessage(e instanceof Error?e.message:"Deleting logs failed.");}
+    finally{setManageBusy(false);}
+  };
+
   const manageArchiveSelected = async () => {
     if(manageBusy||!manageSelectedIds.length)return;
     setManageBusy(true);setManageMessage("");
@@ -19163,11 +20786,49 @@ function SysAdminAuditLogs() {
           <div data-qrpass-manage-v31="true" data-qrpass-manage-v32="true" role="dialog" aria-modal="true" aria-label="Manage System Logs" className="w-full max-w-[900px] overflow-hidden rounded-2xl border border-[#cbd5e1] bg-white shadow-2xl" style={{position:"relative",width:"100%",maxWidth:900,maxHeight:"90vh",display:"flex",flexDirection:"column",overflow:"hidden",backgroundColor:"#fff",color:"#17336d",border:"1px solid #cbd5e1",borderRadius:16,boxShadow:"0 20px 60px rgba(0,0,0,.28)",margin:"auto"}}>
             <div className="flex shrink-0 items-center justify-between gap-4 px-6 pt-5 pb-4" style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,backgroundColor:"#fff"}}>
               <h3 className="text-xl font-bold" style={{color:"#142b54"}}>Manage Logs</h3>
-              <button type="button" disabled={manageBusy} onClick={()=>setManageLogsOpen(false)} className="rounded-xl border border-[#cbd5e1] bg-white px-4 py-2 text-sm font-medium hover:bg-[#eef2ff]">Close</button>
+              <button type="button" disabled={manageBusy} onClick={()=>setManageLogsOpen(false)} className="rounded-xl border border-[#cbd5e1] bg-white px-4 py-2 text-sm font-medium hover:bg-[#eef2ff]"
+           data-qrpass-neutral-v169="true">Close</button>
             </div>
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 pb-5" style={{display:"block",overflowY:"auto",minHeight:0,backgroundColor:"#fff",color:"#17336d",paddingTop:4}}>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <button type="button" disabled={manageBusy} onClick={() => {setManageShowArchives(v=>!v);if(!manageShowArchives)void manageListArchives();setManageMessage("");setManageSelectedIds([])}} className="h-11 shrink-0 rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium transition-colors hover:bg-[#eef2ff]">
+                <button type="button" disabled={manageBusy} onClick={() => {setManageShowArchives(v=>!v);if(!manageShowArchives)void manageListArchives();setManageMessage("");setManageSelectedIds([])}} className="h-11 shrink-0 rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium transition-colors !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none" 
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+          >
                   {manageShowArchives?"Back to Records":"View Archives"}
                 </button>
                 <div className="relative min-w-0 flex-1">
@@ -19200,8 +20861,10 @@ function SysAdminAuditLogs() {
                         <tr key={a.archive_id} className="border-b border-[#e4eaf2]" style={{backgroundColor:"#ffffff",color:"#17336d"}}>
                           <td className="px-3 py-3 text-[#64748b]">Archive</td>
                           <td className="px-3 py-3"><div className="font-medium">{a.count} logs</div><div className="mt-1 flex flex-wrap gap-1">
-                            <button type="button" disabled={manageBusy} onClick={()=>void manageDownloadById(a.archive_id,"xlsx")} className="rounded-lg border border-[#cbd5e1] bg-white px-2 py-1 text-xs hover:bg-[#eef2ff]">Download</button>
-                            <button type="button" disabled={manageBusy} onClick={()=>void manageUnarchive(a.archive_id)} className="rounded-lg border border-[#cbd5e1] bg-white px-2 py-1 text-xs hover:bg-[#eef2ff]">Restore</button>
+                            <button type="button" disabled={manageBusy} onClick={()=>void manageDownloadById(a.archive_id,"xlsx")} className="rounded-lg border border-[#cbd5e1] bg-white px-2 py-1 text-xs hover:bg-[#eef2ff]"
+          >Download</button>
+                            <button type="button" disabled={manageBusy} onClick={()=>void manageUnarchive(a.archive_id)} className="rounded-lg border border-[#cbd5e1] bg-white px-2 py-1 text-xs hover:bg-[#eef2ff]"
+          >Restore</button>
                             <button type="button" disabled={manageBusy} onClick={()=>void manageDeleteArchive(a.archive_id,a.count)} className="rounded-lg border border-red-200 bg-white px-2 py-1 text-xs text-red-700 hover:bg-red-50">Delete</button>
                           </div></td>
                           <td className="px-3 py-3">Archived</td>
@@ -19226,15 +20889,24 @@ function SysAdminAuditLogs() {
               {!manageShowArchives && <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs text-[#64748b]">{manageSelectedIds.length} selected · {manageVisibleRecords.length} shown (maximum 500 loaded)</p>
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  <button type="button" disabled={manageBusy||!manageVisibleRecords.length} onClick={()=>{const ids=manageVisibleRecords.map((log:any)=>Number(log.id)).filter((n:number)=>Number.isSafeInteger(n)&&n>0);setManageSelectedIds(ids.every(id=>manageSelectedIds.includes(id))?[]:ids)}} className="rounded-xl border border-[#cbd5e1] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff]">{manageVisibleRecords.length>0 && manageVisibleRecords.every((log:any)=>manageSelectedIds.includes(Number(log.id)))?"Deselect All":"Select All"}</button>
-                  <button type="button" disabled={manageBusy||!manageSelectedIds.length} onClick={manageDownloadSelected} className="rounded-xl border border-[#cbd5e1] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50">Download</button>
-                  <button type="button" disabled={manageBusy||!manageSelectedIds.length} onClick={()=>void manageArchiveSelected()} className="rounded-xl border border-[#cbd5e1] bg-white px-3 py-2 text-sm hover:bg-[#eef2ff] disabled:opacity-50">{manageBusy?"Processing...":"Archive"}</button>
+                  <button type="button" disabled={manageBusy||!manageVisibleRecords.length} onClick={()=>{const ids=manageVisibleRecords.map((log:any)=>Number(log.id)).filter((n:number)=>Number.isSafeInteger(n)&&n>0);setManageSelectedIds(ids.every(id=>manageSelectedIds.includes(id))?[]:ids)}} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff]"
+          >{manageVisibleRecords.length>0 && manageVisibleRecords.every((log:any)=>manageSelectedIds.includes(Number(log.id)))?"Deselect All":"Select All"}</button>
+                  <button type="button" disabled={manageBusy||!manageSelectedIds.length} onClick={manageDownloadSelected} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50"
+          >Download</button>
+                  <button type="button" disabled={manageBusy||!manageSelectedIds.length} onClick={()=>void manageArchiveSelected()} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">{manageBusy?"Processing...":"Archive"}</button>
+                  <button type="button" disabled={manageBusy||!manageSelectedIds.length} onClick={()=>void manageDeleteSelectedV191()} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-red-200 bg-white px-4 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50">Delete</button>
                 </div>
               </div>}
             </div>
           </div>
         </div>
       , document.body)}
+      {deleteLogsOpenV194 && (
+        <QrpassDeleteConfirmV194 title="Delete Selected Logs?"
+          description={`Are you sure you want to permanently delete ${manageSelectedIds.length} selected audit log(s)? This action cannot be undone.`}
+          loading={manageBusy} cancel={() => setDeleteLogsOpenV194(false)}
+          confirm={() => { void manageDeleteSelectedV191(); }} />
+      )}
       {error && (
         <div className="p-3 border border-red-200 bg-red-50 rounded-md text-sm text-red-700">
           {error}
@@ -19274,11 +20946,45 @@ function SysAdminAuditLogs() {
             aria-label="Manage Logs"
             title="Manage Logs"
             onClick={() => setManageLogsOpen(true)}
+            data-qrpass-hover-uniform-v141="true"
             className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#cbd5e1] bg-white text-[#31539b] transition-colors hover:bg-[#eef2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5278e7]/20"
-          >
+          
+  onMouseEnter={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#eef2ff', 'important');
+    s.setProperty('background-color', '#eef2ff', 'important');
+    s.setProperty('border-color', '#a8bde4', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onMouseLeave={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#ffffff', 'important');
+    s.setProperty('background-color', '#ffffff', 'important');
+    s.setProperty('border-color', '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onFocus={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', e.currentTarget.matches(':hover') ? '#eef2ff' : '#ffffff', 'important');
+    s.setProperty('border-color', e.currentTarget.matches(':hover') ? '#a8bde4' : '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onBlur={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#ffffff', 'important');
+    s.setProperty('background-color', '#ffffff', 'important');
+    s.setProperty('border-color', '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+>
             <SlidersHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
           </button>
-<button type="button" data-qrpass-refresh-toolbar="v1" onClick={() => loadAuditLogs()} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff]" aria-label="Refresh records"><RefreshCw size={15} />Refresh</button>
+<button type="button" data-qrpass-refresh-toolbar="v1" onClick={() => loadAuditLogs()} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-[#17336d] hover:bg-[#edf2ff]" aria-label="Refresh records"
+          ><RefreshCw size={15} />Refresh</button>
       </div>
 
       {/* QRPASS_AUDIT_GAP_V35_EMPTY_SPACER_REMOVED: no extra layout element */}
@@ -19802,7 +21508,8 @@ function SysAdminActiveSessions() {
           <option value="oldest">Oldest first</option>
         </select>
         <button type="button" onClick={loadSessions} disabled={loading}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50"
+          >
           <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> Refresh
         </button>
       </div>
@@ -20917,7 +22624,40 @@ function SecurityItemRegistry() {
         {openManageV147 && (
           <button type="button" title="Manage Logs" aria-label="Manage Logs"
             onClick={openManageV147}
-            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] transition-colors hover:bg-[#eef2ff]">
+            data-qrpass-hover-uniform-v141="true"
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#c7d2fe] bg-white text-[#17336d] transition-colors hover:bg-[#eef2ff]"
+  onMouseEnter={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#eef2ff', 'important');
+    s.setProperty('background-color', '#eef2ff', 'important');
+    s.setProperty('border-color', '#a8bde4', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onMouseLeave={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#ffffff', 'important');
+    s.setProperty('background-color', '#ffffff', 'important');
+    s.setProperty('border-color', '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onFocus={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', e.currentTarget.matches(':hover') ? '#eef2ff' : '#ffffff', 'important');
+    s.setProperty('border-color', e.currentTarget.matches(':hover') ? '#a8bde4' : '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+  onBlur={(e) => {
+    const s = e.currentTarget.style;
+    s.setProperty('background', '#ffffff', 'important');
+    s.setProperty('background-color', '#ffffff', 'important');
+    s.setProperty('border-color', '#cbd5e1', 'important');
+    s.setProperty('box-shadow', 'none', 'important');
+    s.setProperty('outline', 'none', 'important');
+  }}
+>
             <SlidersHorizontal size={18} strokeWidth={1.8}/>
           </button>
         )}
@@ -21136,6 +22876,45 @@ function SysAdminDownloadableReports() {
 
   return (
     <div id="qrpass-sysadmin-reports-v4" className="space-y-4">
+      {/* QRPASS_SYSADMIN_BLUE_ACTION_HOVER_V209_REPORTS: Same Change Password blue/white hover for Sysadmin save/report buttons. */}
+      <style>{`
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72:hover:not(:disabled),
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71:hover:not(:disabled),
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72:focus-visible,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71:focus-visible {
+          background: linear-gradient(180deg, #31589f 0%, #203e7b 100%) !important;
+          background-color: #244b91 !important;
+          background-image: linear-gradient(180deg, #31589f 0%, #203e7b 100%) !important;
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+          border: 1px solid #31589f !important;
+          border-radius: 12px !important;
+          opacity: 1 !important;
+          filter: none !important;
+          text-shadow: none !important;
+          transition: box-shadow .16s ease, border-color .16s ease !important;
+        }
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72:hover:not(:disabled),
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71:hover:not(:disabled),
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72:focus-visible,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71:focus-visible {
+          box-shadow: 0 0 0 4px #dce8ff !important;
+          border-color: #6e99ea !important;
+        }
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72 svg,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71 svg {
+          stroke: #ffffff !important;
+          color: #ffffff !important;
+        }
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-settings-save-registration-v72:disabled,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] button.qrpass-report-download-registration-v71:disabled {
+          opacity: .55 !important;
+          cursor: not-allowed !important;
+        }
+      `}</style>
+
       <PageHeader title="Downloadable Reports" subtitle="Generate and export official QRPass system reports." />
       <div className="overflow-hidden rounded-2xl border border-[#dce3ee] bg-white shadow-sm">
         <div className="border-b border-[#e6ebf2] px-5 py-4 sm:px-6">
@@ -21269,10 +23048,13 @@ function QrpassPageManager({ module, onClose }: { module: 'items' | 'lost-found'
   const label = (r: any) => String(r.item_name || r.name || r.title || r.email || `Record #${r.id}`);
   async function change(action: string) {
     if (chosen.length === 0) { setError('Select at least one record.'); return; }
-    if (action === 'delete' && confirmAction !== 'DELETE') { setError('Type DELETE to confirm permanent deletion.'); return; }
+    if (action === 'delete' && !(await qrpassFloatingDeleteConfirmV196(
+        "Are you sure you want to permanently delete " + chosen.length + " selected record(s)? This action cannot be undone.",
+        "Delete Selected Reports?"
+      ))) return;
     setBusy(true); setError(''); setMessage('');
     try {
-      const data = await request(base, { method:'POST', body:JSON.stringify({action, ids:chosen, confirmation:confirmAction}) });
+      const data = await request(base, { method:'POST', body:JSON.stringify({action, ids:chosen, confirmation: action === "delete" ? "DELETE" : confirmAction}) });
       setMessage(`${data.affected ?? 0} record(s) updated.`);
       setConfirmAction('');
       await reload();
@@ -21302,11 +23084,48 @@ function QrpassPageManager({ module, onClose }: { module: 'items' | 'lost-found'
       <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-[#385785] bg-white p-4 text-slate-900 shadow-2xl dark:bg-[#0d1830] dark:text-white sm:p-6">
         <div className="flex items-center justify-between gap-3 mb-5">
           <h2 className="text-xl font-bold">{titles[module]}</h2>
-          <button type="button" onClick={onClose} className="rounded-lg border px-3 py-2">Close</button>
+          <button type="button" onClick={onClose} className="rounded-lg border px-3 py-2" data-qrpass-neutral-v169="true">Close</button>
         </div>
         <div className="flex flex-wrap items-center gap-2 mb-4">
           
-          <button type="button" onClick={()=>{ setChosen([]); setView(v => v === 'active' ? 'archived' : 'active'); }} className="border rounded-lg px-3 py-2">{view === 'active' ? 'View Archives' : 'Back to Records'}</button>
+          <button type="button" onClick={()=>{ setChosen([]); setView(v => v === 'active' ? 'archived' : 'active'); }} className="border rounded-lg px-3 py-2 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none" 
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+          >{view === 'active' ? 'View Archives' : 'Back to Records'}</button>
           <input className="min-w-[160px] flex-1 border rounded-lg px-3 py-2" placeholder="Search records..." value={query} onChange={e=>setQuery(e.target.value)}/>
           
         </div>
@@ -21341,21 +23160,15 @@ function QrpassPageManager({ module, onClose }: { module: 'items' | 'lost-found'
                 ? ids.filter(id => !visibleIds.includes(id))
                 : Array.from(new Set([...ids, ...visibleIds])));
             }}
-            className="border rounded-lg px-3 py-2 disabled:opacity-50"
+            className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50"
           >{filtered.length > 0 && filtered.every(r => chosen.includes(Number(r.id))) ? 'Deselect All' : 'Select All'}</button>
-          <button type="button" onClick={download} className="border rounded-lg px-3 py-2">Download</button>
+          <button type="button" onClick={download} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">Download</button>
           
-          {view==='active' ? <button type="button" disabled={busy || !chosen.length} onClick={()=>void change('archive')} className="border rounded-lg px-3 py-2">Archive</button> :
-            <button type="button" disabled={busy || !chosen.length} onClick={()=>void change('restore')} className="border rounded-lg px-3 py-2">Restore</button>}
-          {module!=='users' && <button type="button" disabled={busy || !chosen.length} onClick={()=>setConfirmAction('pending')} className="border border-red-500 text-red-500 rounded-lg px-3 py-2">Delete</button>}
+          {view==='active' ? <button type="button" disabled={busy || !chosen.length} onClick={()=>void change('archive')} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">Archive</button> :
+            <button type="button" disabled={busy || !chosen.length} onClick={()=>void change('restore')} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-4 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">Restore</button>}
+          {module!=='users' && <button type="button" disabled={busy || !chosen.length} onClick={()=>void change("delete")} className="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-red-200 bg-white px-4 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50">Delete</button>}
         </div>
-        {confirmAction && module!=='users' && <div className="mt-4 border border-red-400 rounded-xl p-4">
-          <p className="font-semibold">Permanently delete {chosen.length} selected record(s)? This cannot be undone.</p>
-          <p className="text-xs mt-1 mb-3">Type DELETE to confirm. Existing relationships may prevent deletion.</p>
-          <input className="border rounded-lg px-3 py-2 mr-2" value={confirmAction==='pending'?'':confirmAction} onChange={e=>setConfirmAction(e.target.value)} placeholder="Type DELETE" />
-          <button type="button" disabled={busy || confirmAction!=='DELETE'} onClick={()=>void change('delete')} className="border border-red-500 rounded-lg px-3 py-2">Confirm Delete</button>
-          <button type="button" onClick={()=>setConfirmAction('')} className="border rounded-lg px-3 py-2 ml-2">Cancel</button>
-        </div>}
+        
       </div>
     </div>
   );
@@ -21586,6 +23399,19 @@ type LoginMode =
   | "reset"
   | "reset-done";
 
+// QRPASS_CREATE_ACCOUNT_INPUT_COLORS_V129
+function qrpassRegistrationFieldBackgroundV129(
+  element: HTMLInputElement | HTMLButtonElement | null,
+  state: "idle" | "hover"
+) {
+  if (!element) return;
+  element.style.setProperty(
+    "background-color",
+    state === "hover" ? "#eef2ff" : "#ffffff",
+    "important"
+  );
+}
+
 // QRPass rounded student registration dropdowns — UI only
 function QRPassRegistrationSelect({
   label,
@@ -21605,6 +23431,9 @@ function QRPassRegistrationSelect({
   const [activeIndex, setActiveIndex] = React.useState(0);
   const rootRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
+  React.useEffect(() => {
+    qrpassRegistrationFieldBackgroundV129(triggerRef.current, "idle");
+  }, []);
   const listboxId = React.useId();
 
   React.useEffect(() => {
@@ -21669,12 +23498,18 @@ function QRPassRegistrationSelect({
         aria-expanded={open}
         aria-controls={open ? listboxId : undefined}
         aria-activedescendant={open ? `${listboxId}-${activeIndex}` : undefined}
+        onMouseEnter={(event) => {
+          if (document.activeElement !== event.currentTarget) qrpassRegistrationFieldBackgroundV129(event.currentTarget, "hover");
+        }}
+        onMouseLeave={(event) => qrpassRegistrationFieldBackgroundV129(event.currentTarget, "idle")}
+        onFocus={(event) => qrpassRegistrationFieldBackgroundV129(event.currentTarget, "idle")}
         onClick={() => open ? setOpen(false) : showOptions()}
         onKeyDown={keyHandler}
         onBlur={(event) => {
+          qrpassRegistrationFieldBackgroundV129(event.currentTarget, event.currentTarget.matches(":hover") ? "hover" : "idle");
           if (!rootRef.current?.contains(event.relatedTarget as Node)) setOpen(false);
         }}
-        className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-[#c7d2fe] bg-[#eef2ff] px-3 py-2 text-left text-sm text-[#17336d] shadow-sm transition-colors hover:border-[#8ba9eb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f5fd6]/30"
+        className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-[#c7d2fe] !bg-white hover:!bg-[#eef2ff] focus:!bg-white px-3 py-2 text-left text-sm text-[#17336d] shadow-sm transition-colors hover:border-[#8ba9eb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f5fd6]/30"
       >
         <span className={value ? 'truncate' : 'truncate text-[#667d9e]'}>{value || placeholder}</span>
         <ChevronRight size={16} aria-hidden="true" className={`shrink-0 transition-transform ${open ? '-rotate-90' : 'rotate-90'}`} />
@@ -21740,6 +23575,7 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
   const [regSubmitted, setRegSubmitted] = useState(false);
+  const [registrationErrorV182, setRegistrationErrorV182] = useState(""); // QRPASS_REVOKED_ID_MESSAGES_V182
 
   // Forgot password state
   const [forgotEmail, setForgotEmail] = useState("");
@@ -21900,6 +23736,7 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
     e: React.FormEvent
   ) {
     e.preventDefault();
+    setRegistrationErrorV182("");
 
     if (regRole !== "student") {
       return;
@@ -21975,11 +23812,7 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
 
       setRegSubmitted(true);
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Registration failed."
-      );
+      setRegistrationErrorV182(error instanceof Error ? error.message : "Registration failed.");
     }
   }
 
@@ -22733,8 +24566,8 @@ async function handleTwoFactorSubmit(
                 twoFactorCode.length !==
                   6
               }
-              className="w-full bg-primary text-white py-2.5 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+              className="w-full bg-primary text-white py-2.5 rounded-md text-sm font-semibold transition-opacity disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
               {isVerifyingTwoFactor
                 ? "Verifying..."
                 : "Verify & Sign In"}
@@ -22764,8 +24597,45 @@ async function handleTwoFactorSubmit(
                   "login"
                 );
               }}
-              className="w-full text-xs text-muted-foreground hover:text-primary hover:underline disabled:opacity-50"
-            >
+              className="w-full text-xs text-muted-foreground disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+             
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
               Back to Sign In
             </button>
           </form>
@@ -22789,6 +24659,59 @@ async function handleTwoFactorSubmit(
         }}
       >
         {AuthThemeStyles}
+        {/* QRPASS_REGISTER_MATCH_SEARCH_HOVER_V134 — scoped to Create Account only, no external CSS */}
+        <style>{`
+          /* Same white/default and pale-blue/hover as the search field reference. */
+          #root .qrpass-auth-page .qrpass-auth-register-card input:not([type="checkbox"]):not([type="radio"]),
+          #root .qrpass-auth-page .qrpass-auth-register-card button[role="combobox"] {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+            outline: none !important;
+            transition: background-color 150ms ease, border-color 150ms ease !important;
+          }
+          #root .qrpass-auth-page .qrpass-auth-register-card input:not([type="checkbox"]):not([type="radio"]):hover,
+          #root .qrpass-auth-page .qrpass-auth-register-card button[role="combobox"]:hover {
+            background: #eef2ff !important;
+            background-color: #eef2ff !important;
+            border-color: #a8bde4 !important;
+            box-shadow: none !important;
+            outline: none !important;
+          }
+          #root .qrpass-auth-page .qrpass-auth-register-card input:not([type="checkbox"]):not([type="radio"]):focus,
+          #root .qrpass-auth-page .qrpass-auth-register-card input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+          #root .qrpass-auth-page .qrpass-auth-register-card button[role="combobox"]:focus,
+          #root .qrpass-auth-page .qrpass-auth-register-card button[role="combobox"]:focus-visible {
+            background: #eef2ff !important;
+            background-color: #eef2ff !important;
+            border-color: #a8bde4 !important;
+            box-shadow: none !important;
+            outline: none !important;
+          }
+          /* Selected dropdown list options retain their readable active state. */
+        `}</style>
+
+        {/* QRPASS_REGISTRATION_OUTLINE_REFERENCE_V133 — scoped to Create Account only, no new CSS files */}
+        <style>{`
+          #root .qrpass-auth-register-card input,
+          #root .qrpass-auth-register-card button[role="combobox"] {
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+            background-color: #ffffff !important;
+          }
+          #root .qrpass-auth-register-card input:hover,
+          #root .qrpass-auth-register-card button[role="combobox"]:hover {
+            border-color: #b8c9df !important;
+            background-color: #eaf3ff !important;
+          }
+          #root .qrpass-auth-register-card input:focus,
+          #root .qrpass-auth-register-card button[role="combobox"]:focus-visible {
+            border-color: #93b4ed !important;
+            box-shadow: 0 0 0 2px rgba(147, 180, 237, .12) !important;
+          }
+        `}</style>
+
 
 
         <div className="flex-1 flex flex-col items-center px-4 py-8 qrpass-auth-content qrpass-auth-register-content">
@@ -22811,6 +24734,12 @@ async function handleTwoFactorSubmit(
             {!regSubmitted ? (
               <div className="p-5">
 
+
+                {registrationErrorV182 && (
+                  <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-relaxed text-red-700">
+                    {registrationErrorV182}
+                  </div>
+                )}
                 {/* REGISTRATION FORM */}
                 {regRole === "student" && (
                   <form
@@ -22851,6 +24780,13 @@ async function handleTwoFactorSubmit(
                             ) : (
                               <div className="relative">
                                 <input
+                                  ref={(element) => qrpassRegistrationFieldBackgroundV129(element, "idle")}
+                                  onMouseEnter={(event) => {
+                                    if (document.activeElement !== event.currentTarget) qrpassRegistrationFieldBackgroundV129(event.currentTarget, "hover");
+                                  }}
+                                  onMouseLeave={(event) => qrpassRegistrationFieldBackgroundV129(event.currentTarget, "idle")}
+                                  onFocus={(event) => qrpassRegistrationFieldBackgroundV129(event.currentTarget, "idle")}
+                                  onBlur={(event) => qrpassRegistrationFieldBackgroundV129(event.currentTarget, event.currentTarget.matches(":hover") ? "hover" : "idle")}
                                   type={field.type === "password"
                                     ? ((field.label === "Password" ? showRegPassword : showRegConfirmPassword) ? "text" : "password")
                                     : field.type}
@@ -22871,7 +24807,7 @@ async function handleTwoFactorSubmit(
                                   }}
                                   required={field.label !== "Contact Number"}
                                   minLength={field.type === "password" ? 6 : undefined}
-                                  className={"w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15" + (field.type === "password" ? " pr-11" : "")}
+                                  className={"w-full px-3 py-2 text-sm border border-[#cfd8e6] rounded-md !bg-white hover:!bg-[#eef2ff] focus:!bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15" + (field.type === "password" ? " pr-11" : "")}
                                 />
                                 {field.type === "password" && (
                                   <button
@@ -22903,15 +24839,16 @@ async function handleTwoFactorSubmit(
                             "login"
                           )
                         }
-                        className="text-xs px-4 py-2 border border-[#cfd8e6] rounded-md text-muted-foreground hover:bg-muted transition-colors"
-                      >
+                        data-qrpass-hover-uniform-v141="true" onMouseEnter={(e) => e.currentTarget.style.setProperty("background-color", "#eef2ff", "important")} onMouseLeave={(e) => e.currentTarget.style.setProperty("background-color", "#ffffff", "important")}
+            className="text-xs px-4 py-2 border border-[#cfd8e6] rounded-md text-muted-foreground transition-colors !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+                       data-qrpass-neutral-v169="true">
                         ← Back to Login
                       </button>
 
-                      <button
+                      <button data-qrpass-blue-v173="register-submit"
                         type="submit"
-                        className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90 transition-opacity"
-                      >
+                        className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold transition-opacity transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                         Submit Registration
                       </button>
                     </div>
@@ -22955,8 +24892,45 @@ async function handleTwoFactorSubmit(
                       "login"
                     )
                   }
-                  className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90"
-                >
+                  className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+                 
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
                   ← Back to Login
                 </button>
               </div>
@@ -23026,6 +25000,40 @@ async function handleTwoFactorSubmit(
                       e.target.value
                     )
                   }
+                  
+                  ref={(el) => { /* QRPASS_FORGOT_EMAIL_FOCUS_OUTLINE_V136 */
+                    if (!el) return;
+                    const focus = document.activeElement === el;
+                    const hover = el.matches(':hover');
+                    el.style.setProperty('background-color', focus ? '#FFFFFF' : hover ? '#EEF2FF' : '#FFFFFF', 'important');
+                    el.style.setProperty('border-color', focus ? '#6289FF' : hover ? '#9DB7F1' : '#CBD5E1', 'important');
+                    el.style.setProperty('box-shadow', focus ? '0 0 0 4px rgba(98, 137, 255, 0.16)' : 'none', 'important');
+                    el.style.setProperty('outline', 'none', 'important');
+                  }}
+                  onMouseEnter={(e) => {
+                    if (document.activeElement === e.currentTarget) return;
+                    e.currentTarget.style.setProperty('background-color', '#EEF2FF', 'important');
+                    e.currentTarget.style.setProperty('border-color', '#9DB7F1', 'important');
+                    e.currentTarget.style.setProperty('box-shadow', 'none', 'important');
+                  }}
+                  onMouseLeave={(e) => {
+                    const focused = document.activeElement === e.currentTarget;
+                    e.currentTarget.style.setProperty('background-color', '#FFFFFF', 'important');
+                    e.currentTarget.style.setProperty('border-color', focused ? '#6289FF' : '#CBD5E1', 'important');
+                    e.currentTarget.style.setProperty('box-shadow', focused ? '0 0 0 4px rgba(98, 137, 255, 0.16)' : 'none', 'important');
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.setProperty('background-color', '#FFFFFF', 'important');
+                    e.currentTarget.style.setProperty('border-color', '#6289FF', 'important');
+                    e.currentTarget.style.setProperty('box-shadow', '0 0 0 4px rgba(98, 137, 255, 0.16)', 'important');
+                    e.currentTarget.style.setProperty('outline', 'none', 'important');
+                  }}
+                  onBlur={(e) => {
+                    const hovering = e.currentTarget.matches(':hover');
+                    e.currentTarget.style.setProperty('background-color', hovering ? '#EEF2FF' : '#FFFFFF', 'important');
+                    e.currentTarget.style.setProperty('border-color', hovering ? '#9DB7F1' : '#CBD5E1', 'important');
+                    e.currentTarget.style.setProperty('box-shadow', 'none', 'important');
+                  }}
                   placeholder="Enter your registered email"
                   required
                   className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[#cfd8e6] text-sm bg-[#fafbfc] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 focus:border-primary transition-colors"
@@ -23042,7 +25050,7 @@ async function handleTwoFactorSubmit(
                   "#1a3a7b",
                 color: "#fff",
               }}
-            >
+          >
               Send Verification Code
             </button>
 
@@ -23051,8 +25059,45 @@ async function handleTwoFactorSubmit(
               onClick={() =>
                 switchMode("login")
               }
-              className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
+              className="w-full py-2 text-xs text-muted-foreground transition-colors !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+             
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
               ← Back to Login
             </button>
           </form>
@@ -23205,7 +25250,7 @@ async function handleTwoFactorSubmit(
                   "#1a3a7b",
                 color: "#fff",
               }}
-            >
+          >
               Verify Code
             </button>
 
@@ -23382,7 +25427,7 @@ async function handleTwoFactorSubmit(
                   "#1a3a7b",
                 color: "#fff",
               }}
-            >
+          >
               Change Password
             </button>
           </form>
@@ -23430,8 +25475,45 @@ async function handleTwoFactorSubmit(
             onClick={() =>
               switchMode("login")
             }
-            className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold hover:opacity-90"
-          >
+            className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+           
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
             Back to Login
           </button>
         </div>
@@ -23770,11 +25852,11 @@ async function handleTwoFactorSubmit(
                   />
 
                   <input
-                    type="text"
+                    type="text" pattern="[0-9]*" inputMode="numeric"
                     value={username}
                     onChange={(e) => {
                       setUsername(
-                        e.target.value
+                        e.target.value.replace(/[^0-9]/g, "")
                       );
 
                       if (loginError) {
@@ -23915,11 +25997,11 @@ async function handleTwoFactorSubmit(
               )}
 
               {/* LOGIN BUTTON */}
-              <button
+              <button data-qrpass-blue-v173="login-submit"
                 type="submit"
                 disabled={isLoggingIn}
-                className="flex h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#214a96] to-[#123873] text-[15px] font-bold text-white shadow-[0_8px_18px_rgba(26,58,123,0.22)] transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_10px_22px_rgba(26,58,123,0.28)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
-              >
+                className="flex h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#214a96] to-[#123873] text-[15px] font-bold text-white shadow-[0_8px_18px_rgba(26,58,123,0.22)] transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_10px_22px_rgba(26,58,123,0.28)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
                 {isLoggingIn ? (
                   <>
                     <RefreshCw
@@ -25266,6 +27348,150 @@ const handleSaveAccountProfile = async () => {
       }}
     >
       <style>{`
+        /* QRPASS_SYSADMIN_DARK_RESPONSIVE_V208
+           Dark mode: System Administrator ONLY. No changes to light theme.
+           Mobile: keep tables scrollable, forms and dialogs readable.
+           Do not override badges/status colors or primary colored buttons.
+        */
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] {
+          color: #e7edf7;
+          background: #080f1d !important;
+          color-scheme: dark;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main {
+          background: #080f1d !important;
+          color: #e7edf7 !important;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main
+        :is(.bg-white, .bg-\[\#ffffff\], .bg-\[\#fbfcfe\], .bg-\[\#f8fafc\],
+            .bg-\[\#f9fafb\], .bg-slate-50, .bg-gray-50) {
+          background-color: #111e33 !important;
+          color: #e7edf7;
+          border-color: #30435e;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main
+        :is(.text-\[\#111827\], .text-\[\#17336d\], .text-\[\#1a3a7b\],
+            .text-slate-900,.text-slate-800,.text-gray-900,.text-gray-800) {
+          color: #e7edf7 !important;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main
+        :is(.text-\[\#64748b\],.text-\[\#475569\],.text-slate-500,
+            .text-slate-600,.text-gray-500) {
+          color: #afc0db !important;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main
+        :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+            textarea,select) {
+          background-color: #14243d !important;
+          color: #f0f5ff !important;
+          border-color: #3b5175 !important;
+          -webkit-text-fill-color: #f0f5ff !important;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main
+        :is(input,textarea)::placeholder {
+          color: #9fb1cc !important;
+          -webkit-text-fill-color: #9fb1cc !important;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main
+        :is(input:not([type="checkbox"]):not([type="radio"]),textarea,select):hover:not(:disabled) {
+          background-color: #1b3152 !important;
+          border-color: #6687bf !important;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main
+        :is(input,textarea,select):focus-visible {
+          border-color: #8dafff !important;
+          outline: 2px solid rgba(141,175,255,.28) !important;
+          outline-offset: 1px;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main
+        :is(table,thead,tbody,tr,th,td) {
+          border-color: #30435e !important;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main thead {
+          background-color: #1a2a44 !important;
+          color: #d4e3fc !important;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main tbody tr:hover {
+          background-color: #1c3354 !important;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main
+        button:is([class*="bg-white"],[class*="bg-[#ffffff]"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-[#17336d]"]):not([class*="bg-[#244b91]"]) {
+          background-color: #182b49 !important;
+          color: #e7edf7 !important;
+          border-color: #466287 !important;
+        }
+        .dark .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main
+        button:is([class*="bg-white"],[class*="bg-[#ffffff]"]):hover:not(:disabled) {
+          background-color: #244367 !important;
+        }
+        /* System management popups render outside the main content area. */
+        .dark [data-qrpass-manage-v31="true"] > div,
+        .dark [data-qrpass-manage-v32="true"] > div {
+          background-color: #101d32 !important;
+          color: #e7edf7 !important;
+          border-color: #3a5176 !important;
+        }
+        .dark [data-qrpass-manage-v31="true"] :is(table,thead,tbody,tr,td,th) {
+          border-color: #334c70 !important;
+        }
+        .dark [data-qrpass-manage-v31="true"] :is(input:not([type="checkbox"]),textarea,select) {
+          background-color: #14243d !important;
+          color: #eef4ff !important;
+          border-color: #3c567e !important;
+        }
+        .dark [data-qrpass-manage-v31="true"] :is(input,textarea)::placeholder {
+          color: #a5b7d3 !important;
+        }
+        .dark [data-qrpass-manage-v31="true"] :is(tr:hover) {
+          background-color: #213859 !important;
+          color: #f2f6ff !important;
+        }
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main,
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-admin-page {
+          min-width: 0;
+          max-width: 100%;
+          overflow-wrap: break-word;
+        }
+        .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main
+        :is(.overflow-x-auto, .overflow-auto) {
+          max-width: 100%;
+          overscroll-behavior-x: contain;
+          -webkit-overflow-scrolling: touch;
+        }
+        @media (max-width: 767px) {
+          .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main {
+            padding: 12px !important;
+          }
+          .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-admin-page {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+          .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-admin-page
+          :is(.grid, .flex) > * {
+            min-width: 0;
+          }
+          .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-admin-page
+          :is(input,select,textarea) {
+            max-width: 100%;
+            font-size: 16px;
+          }
+          [data-qrpass-manage-v31="true"] > div {
+            width: min(100%, 96vw) !important;
+            max-height: min(92dvh, 900px) !important;
+            padding: 12px !important;
+          }
+          [data-qrpass-manage-v31="true"] .overflow-auto {
+            overflow-x: auto !important;
+          }
+          [data-qrpass-manage-v31="true"] table {
+            min-width: 550px;
+          }
+          .qrpass-dashboard-root[data-qrpass-role="sysadmin"] .qrpass-main
+          :is(button,input,select) {
+            min-height: 38px;
+          }
+        }
+
 
         
         /* QRPass role-based page subtitle removal */
@@ -26167,6 +28393,27 @@ const handleSaveAccountProfile = async () => {
           border-color: #2563eb !important;
           color: #ffffff !important;
         }
+        
+        /* QRPASS_BLUE_BUTTON_WHITE_HOVER_V161: retain white text when hovering blue/primary buttons. */
+        #root button.bg-primary:hover:not(:disabled),
+        #root button[class*="bg-blue-"]:hover:not(:disabled),
+        #root button[class*="from-blue-"]:hover:not(:disabled),
+        #root button[class*="bg-gradient-to-"]:hover:not(:disabled),
+        #root button[class*="bg-gradient-linear-"]:hover:not(:disabled),
+        #root button[class*="bg-[#1a3a7b]"]:hover:not(:disabled),
+        #root button[class*="bg-[#2f5fd6]"]:hover:not(:disabled),
+        #root button[class*="bg-[#1e448b]"]:hover:not(:disabled),
+        #root button[class*="text-white"][class*="bg-"]:hover:not(:disabled) {
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+        }
+        #root button.bg-primary:hover:not(:disabled) :is(span, strong, b),
+        #root button[class*="bg-blue-"]:hover:not(:disabled) :is(span, strong, b),
+        #root button[class*="from-blue-"]:hover:not(:disabled) :is(span, strong, b),
+        #root button[class*="text-white"][class*="bg-"]:hover:not(:disabled) :is(span, strong, b) {
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+        }
         html.dark button.bg-primary:hover {
           background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%) !important;
         }
@@ -26206,7 +28453,7 @@ const handleSaveAccountProfile = async () => {
             )
           }
           className="text-[#1a3a7b] hover:text-[#2f5fd6] hover:bg-[#eef2fc] rounded-md transition-colors p-1"
-        >
+          >
           {sidebarOpen ? (
             <X size={18} />
           ) : (
@@ -26273,7 +28520,7 @@ const handleSaveAccountProfile = async () => {
               }
               title="Notifications"
               className="relative text-[#1a3a7b] hover:text-[#2f5fd6] hover:bg-[#eef2fc] rounded-lg transition-all p-1.5"
-            >
+          >
               <Bell size={18} />
 
               {unreadNotificationCount >
@@ -26287,7 +28534,61 @@ const handleSaveAccountProfile = async () => {
               )}
             </button>
 
-            {/* NOTIFICATION DROPDOWN */}
+            {/* QRPASS_NOTIFICATION_UNREAD_REFRESH_V203: directly scoped to Notifications panel; no external CSS. */}
+            <style>{`
+              html body button[data-qrpass-notification-refresh-v203="true"],
+              html body button[data-qrpass-notification-refresh-v203="true"]:is(:hover,:focus,:active) {
+                background: linear-gradient(180deg,#31579f,#1c356b) !important;
+                background-image: linear-gradient(180deg,#31579f,#1c356b) !important;
+                background-color: #244b91 !important;
+                color: #fff !important;
+                -webkit-text-fill-color: #fff !important;
+                border: 1px solid #244b91 !important;
+                border-radius: 12px !important;
+                padding: 9px 14px !important;
+                opacity: 1 !important;
+                filter: none !important;
+                transform: none !important;
+                transition: none !important;
+              }
+              html body button[data-qrpass-notification-refresh-v203="true"]:is(:hover,:focus-visible) {
+                outline: 1px solid #9dbaf3 !important;
+                outline-offset: 2px !important;
+                box-shadow: 0 0 0 3px #dce8ff !important;
+              }
+              html body button[data-qrpass-notification-refresh-v203="true"] svg {
+                color: #fff !important;
+                stroke: #fff !important;
+              }
+            `}</style>
+            {/* QRPASS_NOTIFICATION_FILTERS_MARKALL_V204: only the four notification controls, no external CSS. */}
+            <style>{`
+              html body button[data-qrpass-notification-hover-v204] {
+                background-color: #ffffff !important;
+                background-image: none !important;
+                color: #17336d !important;
+                border: 1px solid #c7d2e5 !important;
+                box-shadow: none !important;
+                transition: background-color 100ms ease, border-color 100ms ease !important;
+                filter: none !important;
+                opacity: 1 !important;
+              }
+              html body button[data-qrpass-notification-hover-v204]:hover {
+                background-color: #eef2ff !important;
+                background-image: none !important;
+                color: #17336d !important;
+                border-color: #9fb8ef !important;
+                box-shadow: none !important;
+                filter: none !important;
+              }
+              html body button[data-qrpass-notification-hover-v204]:focus-visible {
+                outline: 2px solid #9fb8ef !important;
+                outline-offset: 2px !important;
+              }
+            `}</style>
+            {/* QRPASS_NOTIFICATIONS_DIRECT_BUTTONS_V205: direct JSX hover handling only; no CSS file. */}
+{/* QRPASS_ALL_ROLES_NOTIFICATION_BELL_V206: shared notification bell buttons, all roles. */}
+{/* NOTIFICATION DROPDOWN */}
 
             {notificationOpen && (
               <div
@@ -26314,14 +28615,64 @@ const handleSaveAccountProfile = async () => {
                     </div>
 
                     {unreadNotificationCount > 0 && (
-                      <button
+                      <button data-qrpass-notification-allroles-v206="mark-all" ref={(el) => {
+                if (!el) return;
+                el.style.setProperty("background-color", "#ffffff", "important");
+                el.style.setProperty("background-image", "none", "important");
+                el.style.setProperty("color", "#17336d", "important");
+                el.style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                el.style.setProperty("border-color", "#c7d2e5", "important");
+                el.querySelectorAll("p").forEach((child) => {
+                  (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                  (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                });
+              }} onPointerEnter={(e) => {
+                e.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+                e.currentTarget.style.setProperty("background-image", "none", "important");
+                e.currentTarget.style.setProperty("border-color", "#9fb8ef", "important");
+                e.currentTarget.style.setProperty("color", "#17336d", "important");
+                e.currentTarget.style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                e.currentTarget.querySelectorAll("p").forEach((child) => {
+                  (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                  (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                });
+              }} onPointerLeave={(e) => {
+                e.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+                e.currentTarget.style.setProperty("background-image", "none", "important");
+                e.currentTarget.style.setProperty("border-color", "#c7d2e5", "important");
+                e.currentTarget.style.setProperty("color", "#17336d", "important");
+                e.currentTarget.style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                e.currentTarget.querySelectorAll("p").forEach((child) => {
+                  (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                  (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                });
+              }}  data-qrpass-notification-hover-v204="mark-all"
                         type="button"
                         onClick={handleHeaderMarkAllRead}
                         disabled={
                           markingAllNotifications
                         }
-                        className="whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-semibold text-[#1a3a7b] transition-colors hover:bg-[#eef2fc] disabled:opacity-50 dark:text-blue-300 dark:hover:bg-blue-500/10"
-                      >
+                        className="whitespace-nowrap rounded-lg border border-[#c7d2e5] bg-white px-3 py-2 text-[11px] font-semibold !text-[#17336d] transition-none hover:!bg-[#eef2ff] hover:!text-[#17336d] disabled:opacity-50"
+                        style={{ backgroundColor: "#ffffff", backgroundImage: "none", color: "#17336d", WebkitTextFillColor: "#17336d" }}
+                      onMouseEnter={(e) => {
+                          e.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+                          e.currentTarget.style.setProperty("background-image", "none", "important");
+                          e.currentTarget.style.setProperty("color", "#17336d", "important");
+                          e.currentTarget.querySelectorAll("p").forEach((child) => {
+                            (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                            (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                          });
+                        }}
+                      onMouseLeave={(e) => {
+                          e.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+                          e.currentTarget.style.setProperty("background-image", "none", "important");
+                          e.currentTarget.style.setProperty("color", "#17336d", "important");
+                          e.currentTarget.querySelectorAll("p").forEach((child) => {
+                            (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                            (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                          });
+                        }}
+          >
                         {markingAllNotifications
                           ? "Saving..."
                           : "Mark all as read"}
@@ -26333,31 +28684,71 @@ const handleSaveAccountProfile = async () => {
                   <div className="mt-3 grid grid-cols-3 gap-2">
 
                     {/* ALL */}
-                    <button
+                    <button data-qrpass-notification-allroles-v206="all" ref={(el) => {
+                if (!el) return;
+                el.style.setProperty("background-color", "#ffffff", "important");
+                el.style.setProperty("background-image", "none", "important");
+                el.style.setProperty("color", "#17336d", "important");
+                el.style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                el.style.setProperty("border-color", "#c7d2e5", "important");
+                el.querySelectorAll("p").forEach((child) => {
+                  (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                  (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                });
+              }} onPointerEnter={(e) => {
+                e.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+                e.currentTarget.style.setProperty("background-image", "none", "important");
+                e.currentTarget.style.setProperty("border-color", "#9fb8ef", "important");
+                e.currentTarget.style.setProperty("color", "#17336d", "important");
+                e.currentTarget.style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                e.currentTarget.querySelectorAll("p").forEach((child) => {
+                  (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                  (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                });
+              }} onPointerLeave={(e) => {
+                e.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+                e.currentTarget.style.setProperty("background-image", "none", "important");
+                e.currentTarget.style.setProperty("border-color", "#c7d2e5", "important");
+                e.currentTarget.style.setProperty("color", "#17336d", "important");
+                e.currentTarget.style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                e.currentTarget.querySelectorAll("p").forEach((child) => {
+                  (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                  (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                });
+              }}  data-qrpass-notification-hover-v204="all"
                       type="button"
                       onClick={() =>
                         setNotificationFilter(
                           "all"
                         )
                       }
-                      className={`rounded-lg border px-3 py-2 text-left transition-all ${
-                        notificationFilter ===
-                        "all"
-                          ? "border-[#2f5fd6] bg-[#eef2fc] shadow-sm dark:border-blue-400/40 dark:bg-blue-500/15"
-                          : "border-[#dce3ee] bg-white hover:border-[#c7d2e5] hover:bg-[#f6f8fb] dark:border-[#29415f] dark:bg-[#101f36] dark:hover:border-[#355575] dark:hover:bg-[#172a45]"
-                      }`}
+                      className="rounded-lg border border-[#c7d2e5] bg-white px-3 py-2 text-left text-[#17336d] shadow-none transition-none hover:!bg-[#eef2ff] hover:!text-[#17336d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#9fb8ef]"
+                      style={{ backgroundColor: "#ffffff", backgroundImage: "none", color: "#17336d", WebkitTextFillColor: "#17336d" }}
+                      onMouseEnter={(e) => {
+                          e.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+                          e.currentTarget.style.setProperty("background-image", "none", "important");
+                          e.currentTarget.style.setProperty("color", "#17336d", "important");
+                          e.currentTarget.querySelectorAll("p").forEach((child) => {
+                            (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                            (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                          });
+                        }}
+                      onMouseLeave={(e) => {
+                          e.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+                          e.currentTarget.style.setProperty("background-image", "none", "important");
+                          e.currentTarget.style.setProperty("color", "#17336d", "important");
+                          e.currentTarget.querySelectorAll("p").forEach((child) => {
+                            (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                            (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                          });
+                        }}
                     >
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748b] dark:text-slate-400">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide !text-[#17336d]">
                         All
                       </p>
 
                       <p
-                        className={`mt-0.5 text-sm font-bold ${
-                          notificationFilter ===
-                          "all"
-                            ? "text-[#1a3a7b] dark:text-blue-300"
-                            : "text-[#111827] dark:text-slate-100"
-                        }`}
+                        className="mt-0.5 text-sm font-bold !text-[#17336d]"
                       >
                         {
                           headerNotifications.length
@@ -26367,31 +28758,71 @@ const handleSaveAccountProfile = async () => {
 
 
                     {/* UNREAD */}
-                    <button
+                    <button data-qrpass-notification-allroles-v206="unread" ref={(el) => {
+                if (!el) return;
+                el.style.setProperty("background-color", "#ffffff", "important");
+                el.style.setProperty("background-image", "none", "important");
+                el.style.setProperty("color", "#17336d", "important");
+                el.style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                el.style.setProperty("border-color", "#c7d2e5", "important");
+                el.querySelectorAll("p").forEach((child) => {
+                  (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                  (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                });
+              }} onPointerEnter={(e) => {
+                e.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+                e.currentTarget.style.setProperty("background-image", "none", "important");
+                e.currentTarget.style.setProperty("border-color", "#9fb8ef", "important");
+                e.currentTarget.style.setProperty("color", "#17336d", "important");
+                e.currentTarget.style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                e.currentTarget.querySelectorAll("p").forEach((child) => {
+                  (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                  (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                });
+              }} onPointerLeave={(e) => {
+                e.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+                e.currentTarget.style.setProperty("background-image", "none", "important");
+                e.currentTarget.style.setProperty("border-color", "#c7d2e5", "important");
+                e.currentTarget.style.setProperty("color", "#17336d", "important");
+                e.currentTarget.style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                e.currentTarget.querySelectorAll("p").forEach((child) => {
+                  (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                  (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                });
+              }}  data-qrpass-notification-hover-v204="unread"
                       type="button"
                       onClick={() =>
                         setNotificationFilter(
                           "unread"
                         )
                       }
-                      className={`rounded-lg border px-3 py-2 text-left transition-all ${
-                        notificationFilter ===
-                        "unread"
-                          ? "border-[#2f5fd6] bg-[#eef2fc] shadow-sm dark:border-blue-400/40 dark:bg-blue-500/15"
-                          : "border-[#dce3ee] bg-white hover:border-[#c7d2e5] hover:bg-[#f6f8fb] dark:border-[#29415f] dark:bg-[#101f36] dark:hover:border-[#355575] dark:hover:bg-[#172a45]"
-                      }`}
+                      className="rounded-lg border border-[#c7d2e5] bg-white px-3 py-2 text-left text-[#17336d] shadow-none transition-none hover:!bg-[#eef2ff] hover:!text-[#17336d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#9fb8ef]"
+                      style={{ backgroundColor: "#ffffff", backgroundImage: "none", color: "#17336d", WebkitTextFillColor: "#17336d" }}
+                      onMouseEnter={(e) => {
+                          e.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+                          e.currentTarget.style.setProperty("background-image", "none", "important");
+                          e.currentTarget.style.setProperty("color", "#17336d", "important");
+                          e.currentTarget.querySelectorAll("p").forEach((child) => {
+                            (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                            (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                          });
+                        }}
+                      onMouseLeave={(e) => {
+                          e.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+                          e.currentTarget.style.setProperty("background-image", "none", "important");
+                          e.currentTarget.style.setProperty("color", "#17336d", "important");
+                          e.currentTarget.querySelectorAll("p").forEach((child) => {
+                            (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                            (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                          });
+                        }}
                     >
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748b] dark:text-slate-400">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide !text-[#17336d]">
                         Unread
                       </p>
 
                       <p
-                        className={`mt-0.5 text-sm font-bold ${
-                          notificationFilter ===
-                          "unread"
-                            ? "text-[#1a3a7b] dark:text-blue-300"
-                            : "text-[#111827] dark:text-slate-100"
-                        }`}
+                        className="mt-0.5 text-sm font-bold !text-[#17336d]"
                       >
                         {
                           unreadNotificationCount
@@ -26401,31 +28832,71 @@ const handleSaveAccountProfile = async () => {
 
 
                     {/* READ */}
-                    <button
+                    <button data-qrpass-notification-allroles-v206="read" ref={(el) => {
+                if (!el) return;
+                el.style.setProperty("background-color", "#ffffff", "important");
+                el.style.setProperty("background-image", "none", "important");
+                el.style.setProperty("color", "#17336d", "important");
+                el.style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                el.style.setProperty("border-color", "#c7d2e5", "important");
+                el.querySelectorAll("p").forEach((child) => {
+                  (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                  (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                });
+              }} onPointerEnter={(e) => {
+                e.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+                e.currentTarget.style.setProperty("background-image", "none", "important");
+                e.currentTarget.style.setProperty("border-color", "#9fb8ef", "important");
+                e.currentTarget.style.setProperty("color", "#17336d", "important");
+                e.currentTarget.style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                e.currentTarget.querySelectorAll("p").forEach((child) => {
+                  (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                  (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                });
+              }} onPointerLeave={(e) => {
+                e.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+                e.currentTarget.style.setProperty("background-image", "none", "important");
+                e.currentTarget.style.setProperty("border-color", "#c7d2e5", "important");
+                e.currentTarget.style.setProperty("color", "#17336d", "important");
+                e.currentTarget.style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                e.currentTarget.querySelectorAll("p").forEach((child) => {
+                  (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                  (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                });
+              }}  data-qrpass-notification-hover-v204="read"
                       type="button"
                       onClick={() =>
                         setNotificationFilter(
                           "read"
                         )
                       }
-                      className={`rounded-lg border px-3 py-2 text-left transition-all ${
-                        notificationFilter ===
-                        "read"
-                          ? "border-[#2f5fd6] bg-[#eef2fc] shadow-sm dark:border-blue-400/40 dark:bg-blue-500/15"
-                          : "border-[#dce3ee] bg-white hover:border-[#c7d2e5] hover:bg-[#f6f8fb] dark:border-[#29415f] dark:bg-[#101f36] dark:hover:border-[#355575] dark:hover:bg-[#172a45]"
-                      }`}
+                      className="rounded-lg border border-[#c7d2e5] bg-white px-3 py-2 text-left text-[#17336d] shadow-none transition-none hover:!bg-[#eef2ff] hover:!text-[#17336d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#9fb8ef]"
+                      style={{ backgroundColor: "#ffffff", backgroundImage: "none", color: "#17336d", WebkitTextFillColor: "#17336d" }}
+                      onMouseEnter={(e) => {
+                          e.currentTarget.style.setProperty("background-color", "#eef2ff", "important");
+                          e.currentTarget.style.setProperty("background-image", "none", "important");
+                          e.currentTarget.style.setProperty("color", "#17336d", "important");
+                          e.currentTarget.querySelectorAll("p").forEach((child) => {
+                            (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                            (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                          });
+                        }}
+                      onMouseLeave={(e) => {
+                          e.currentTarget.style.setProperty("background-color", "#ffffff", "important");
+                          e.currentTarget.style.setProperty("background-image", "none", "important");
+                          e.currentTarget.style.setProperty("color", "#17336d", "important");
+                          e.currentTarget.querySelectorAll("p").forEach((child) => {
+                            (child as HTMLElement).style.setProperty("color", "#17336d", "important");
+                            (child as HTMLElement).style.setProperty("-webkit-text-fill-color", "#17336d", "important");
+                          });
+                        }}
                     >
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748b] dark:text-slate-400">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide !text-[#17336d]">
                         Read
                       </p>
 
                       <p
-                        className={`mt-0.5 text-sm font-bold ${
-                          notificationFilter ===
-                          "read"
-                            ? "text-[#1a3a7b] dark:text-blue-300"
-                            : "text-[#111827] dark:text-slate-100"
-                        }`}
+                        className="mt-0.5 text-sm font-bold !text-[#17336d]"
                       >
                         {
                           readNotificationCount
@@ -26520,7 +28991,7 @@ const handleSaveAccountProfile = async () => {
                             className={`cursor-pointer rounded-xl border p-3 transition-all hover:-translate-y-[1px] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#2f5fd6]/25 ${
                               notification.is_read
                                 ? "border-[#e5eaf2] bg-white hover:bg-[#fbfcfe] dark:border-[#29415f] dark:bg-[#13243c] dark:hover:bg-[#172a45]"
-                                : `${style.card} shadow-sm`
+                                : "border-[#dce3ee] bg-white hover:bg-[#eef2ff] dark:border-[#29415f] dark:bg-[#13243c] dark:hover:bg-[#172a45] shadow-sm"
                             }`}
                           >
                             <div className="flex gap-3">
@@ -26655,7 +29126,7 @@ const handleSaveAccountProfile = async () => {
                     </span>
                   </span>
 
-                  <button
+                  <button data-qrpass-notification-refresh-v203="true"
                     type="button"
                     onClick={() =>
                       loadHeaderNotifications(
@@ -26666,7 +29137,7 @@ const handleSaveAccountProfile = async () => {
                       notificationsLoading
                     }
                     className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-semibold text-[#1a3a7b] transition-colors hover:bg-[#eef2fc] disabled:opacity-50 dark:text-blue-300 dark:hover:bg-blue-500/10 inline-flex items-center justify-center gap-1.5 !border-0 !bg-transparent !shadow-none !text-[#17336d] !px-2 !py-1 hover:!bg-[#edf2ff] rounded-lg"
-                  >
+          >
                     <RefreshCw
                       size={11}
                       className={
@@ -26697,7 +29168,7 @@ const handleSaveAccountProfile = async () => {
               }
               title="Account"
               className="flex items-center gap-1.5 px-1.5 py-1 rounded-lg hover:bg-[#eef2fc] transition-all"
-            >
+          >
               <div
                   className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
                   style={{
@@ -26819,7 +29290,7 @@ const handleSaveAccountProfile = async () => {
                         setAccountSettingsOpen(true);
                       }}
                       className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-[#334155] hover:bg-[#eef2fc] hover:text-[#1a3a7b] transition-colors dark:text-slate-200 dark:hover:bg-[#172a45] dark:hover:text-blue-300"
-                    >
+          >
                       <div className="flex items-center gap-2">
                         <Settings size={15} />
                         <span>Account Settings</span>
@@ -26837,7 +29308,7 @@ const handleSaveAccountProfile = async () => {
                     type="button"
                     onClick={onLogout}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[#334155] hover:bg-[#eef2fc] hover:text-[#1a3a7b] transition-colors dark:text-slate-200 dark:hover:bg-[#172a45] dark:hover:text-blue-300"
-                  >
+          >
                     <LogOut size={15} />
 
                     Log Out
@@ -27110,9 +29581,7 @@ const handleSaveAccountProfile = async () => {
             </h2>
           </div>
 
-          <p className="text-xs text-[#64748b] mt-1">
-            Manage your profile and account security.
-          </p>
+         
         </div>
 
         <button
@@ -27122,7 +29591,7 @@ const handleSaveAccountProfile = async () => {
           }
           className="w-8 h-8 rounded-lg flex items-center justify-center text-[#64748b] hover:text-[#111827] hover:bg-[#eef2fc] transition-colors"
           title="Close"
-        >
+           data-qrpass-neutral-v169="true">
           <X size={17} />
         </button>
       </div>
@@ -27213,6 +29682,8 @@ const handleSaveAccountProfile = async () => {
         </div>
 
         {/* ACCOUNT INFORMATION */}
+        {/* QRPASS_PROFILE_FAST_HOVER_V165 */}
+        {/* QRPASS_PROFILE_WHITE_HOVER_V160 */}
         <div className="mt-3 sm:mt-5">
           <div className="flex items-center gap-2 mb-4">
             <User
@@ -27239,7 +29710,7 @@ const handleSaveAccountProfile = async () => {
                   setProfileMessage("");
                 }}
                 placeholder="Enter your full name"
-                className="w-full px-3 py-2.5 text-sm border border-[#cfd8e6] rounded-lg bg-[#fbfcfe] text-[#111827] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                className="w-full px-3 py-2.5 text-sm border border-[#cfd8e6] rounded-lg text-[#111827] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 !bg-white hover:!bg-[#eef2ff] !transition-none"
               />
             </div>
 
@@ -27252,7 +29723,7 @@ const handleSaveAccountProfile = async () => {
                 type="text"
                 value={currentUser?.username ?? ""}
                 readOnly
-                className="w-full px-3 py-2.5 text-sm border border-[#cfd8e6] rounded-lg bg-[#f3f5f9] text-[#64748b]"
+                className="w-full px-3 py-2.5 text-sm border border-[#cfd8e6] rounded-lg text-[#64748b] !bg-white hover:!bg-[#eef2ff] !transition-none"
               />
             </div>
 
@@ -27268,7 +29739,7 @@ const handleSaveAccountProfile = async () => {
                   setProfileEmail(e.target.value)
                 }
                 placeholder="Enter your email address"
-                className="w-full px-3 py-2.5 text-sm border border-[#cfd8e6] rounded-lg bg-[#fbfcfe] text-[#111827] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15"
+                className="w-full px-3 py-2.5 text-sm border border-[#cfd8e6] rounded-lg text-[#111827] focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 !bg-white hover:!bg-[#eef2ff] !transition-none"
               />
             </div>
           </div>
@@ -27293,7 +29764,7 @@ const handleSaveAccountProfile = async () => {
               </div>
             </div>
 
-            <button
+            <button data-qrpass-blue-v173="account-trigger"
             type="button"
             onClick={() => setChangePasswordOpen(true)}
             className="w-full sm:w-auto min-h-10 border border-[#cfd8e6] bg-white text-[#1a3a7b] text-xs font-semibold px-3 py-2 rounded-lg hover:bg-[#eef2fc] transition-colors"
@@ -27319,7 +29790,7 @@ const handleSaveAccountProfile = async () => {
         setAccountSettingsOpen(false)
       }
       className="px-4 py-2 text-xs font-semibold border border-[#cfd8e6] rounded-lg bg-white text-[#334155] hover:bg-[#eef2fc] transition-colors"
-    >
+           data-qrpass-neutral-v169="true">
       Close
     </button>
 
@@ -27330,8 +29801,8 @@ const handleSaveAccountProfile = async () => {
         savingProfile ||
         !profileName.trim()
       }
-      className="bg-primary text-white px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-    >
+      className="bg-primary text-white px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+          >
       {savingProfile
         ? "Saving..."
         : "Save Changes"}
@@ -27348,10 +29819,10 @@ const handleSaveAccountProfile = async () => {
 
 {changePasswordOpen && (
   <div
-    className="fixed inset-0 z-[300] flex items-center justify-center p-4"
+    className="fixed inset-0 z-[300] flex items-center justify-center overflow-y-auto p-3 sm:p-4"
+    data-qrpass-password-modal-fast-v167="true"
     style={{
       background: "rgba(15, 23, 42, 0.55)",
-      backdropFilter: "blur(4px)",
     }}
     onMouseDown={(e) => {
       if (e.target === e.currentTarget) {
@@ -27364,12 +29835,13 @@ const handleSaveAccountProfile = async () => {
     }}
   >
     <div
-      className="w-full max-w-md overflow-hidden rounded-2xl border border-[#dce3ee] bg-white"
+      className="my-auto w-full max-w-md overflow-hidden rounded-2xl border border-[#dce3ee] bg-white"
       style={{
         boxShadow:
           "0 24px 70px rgba(16, 26, 51, 0.25)",
       }}
     >
+      {/* QRPASS_SHARED_CHANGE_PASSWORD_V170 — shared across logged-in accounts; login recovery untouched */}
       {/* CHANGE PASSWORD HEADER */}
       <div className="flex items-center justify-between border-b border-[#e5eaf2] bg-[#fbfcfe] px-5 py-4">
         <div>
@@ -27384,9 +29856,7 @@ const handleSaveAccountProfile = async () => {
             </h2>
           </div>
 
-          <p className="mt-1 text-xs text-[#64748b]">
-            Enter your current password and choose a new one.
-          </p>
+          
         </div>
 
         <button
@@ -27401,7 +29871,7 @@ const handleSaveAccountProfile = async () => {
           disabled={changingPassword}
           className="flex h-8 w-8 items-center justify-center rounded-lg text-[#64748b] transition-colors hover:bg-[#eef2fc] hover:text-[#111827] disabled:cursor-not-allowed disabled:opacity-50"
           title="Close"
-        >
+           data-qrpass-neutral-v169="true">
           <X size={17} />
         </button>
       </div>
@@ -27413,6 +29883,13 @@ const handleSaveAccountProfile = async () => {
         }}
       >
         <div className="space-y-4 p-5">
+          {/* QRPASS_CHANGE_PASSWORD_INPUT_HOVER_V164 */}
+          {/* QRPASS_PASSWORD_WHITE_FAST_BLUE_V166: scoped, immediate CSS inside App.tsx */}
+          <style>{`
+            html body #root#root input[data-qrpass-password-v166="true"] { background: #ffffff !important; background-color: #ffffff !important; transition: none !important; }
+            html body #root#root input[data-qrpass-password-v166="true"]:hover:not(:focus) { background: #eef2ff !important; background-color: #eef2ff !important; }
+            html body #root#root input[data-qrpass-password-v166="true"]:focus { background: #ffffff !important; background-color: #ffffff !important; }
+          `}</style>
           {/* CURRENT PASSWORD */}
           <div>
             <label className="mb-1.5 block text-[11px] font-semibold text-[#64748b]">
@@ -27428,7 +29905,9 @@ const handleSaveAccountProfile = async () => {
               }}
               autoComplete="current-password"
               placeholder="Enter your current password"
-              className="w-full rounded-lg border border-[#cfd8e6] bg-[#fbfcfe] px-3 py-2.5 text-sm text-[#111827] focus:border-[#2f5fd6] focus:outline-none focus:ring-2 focus:ring-[#2f5fd6]/15"
+              className="w-full rounded-lg border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none hover:bg-[#eef2ff] focus:border-[#6d91e8] focus:bg-white focus:ring-2 focus:ring-[#6d91e8]/15"
+              data-qrpass-password-v166="true"
+              style={{ backgroundColor: "#ffffff" }}
             />
           </div>
 
@@ -27447,12 +29926,12 @@ const handleSaveAccountProfile = async () => {
               }}
               autoComplete="new-password"
               placeholder="At least 8 characters"
-              className="w-full rounded-lg border border-[#cfd8e6] bg-[#fbfcfe] px-3 py-2.5 text-sm text-[#111827] focus:border-[#2f5fd6] focus:outline-none focus:ring-2 focus:ring-[#2f5fd6]/15"
+              className="w-full rounded-lg border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none hover:bg-[#eef2ff] focus:border-[#6d91e8] focus:bg-white focus:ring-2 focus:ring-[#6d91e8]/15"
+              data-qrpass-password-v166="true"
+              style={{ backgroundColor: "#ffffff" }}
             />
 
-            <p className="mt-1 text-[10px] text-[#94a3b8]">
-              Use at least 8 characters.
-            </p>
+            
           </div>
 
           {/* CONFIRM PASSWORD */}
@@ -27470,7 +29949,9 @@ const handleSaveAccountProfile = async () => {
               }}
               autoComplete="new-password"
               placeholder="Re-enter your new password"
-              className="w-full rounded-lg border border-[#cfd8e6] bg-[#fbfcfe] px-3 py-2.5 text-sm text-[#111827] focus:border-[#2f5fd6] focus:outline-none focus:ring-2 focus:ring-[#2f5fd6]/15"
+              className="w-full rounded-lg border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none hover:bg-[#eef2ff] focus:border-[#6d91e8] focus:bg-white focus:ring-2 focus:ring-[#6d91e8]/15"
+              data-qrpass-password-v166="true"
+              style={{ backgroundColor: "#ffffff" }}
             />
           </div>
 
@@ -27481,6 +29962,35 @@ const handleSaveAccountProfile = async () => {
           )}
         </div>
 
+        {/* QRPASS_CHANGE_PASSWORD_MODAL_SPEED_V167 */}
+        <style>{`
+          [data-qrpass-password-modal-fast-v167="true"] { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+          [data-qrpass-password-modal-fast-v167="true"] button { transition: none !important; animation: none !important; }
+          [data-qrpass-password-modal-fast-v167="true"] button[type="submit"] { color: #ffffff !important; background: linear-gradient(180deg, #31579f, #1c356b) !important; box-shadow: none !important; }
+          [data-qrpass-password-modal-fast-v167="true"] button[type="submit"]:hover:not(:disabled) { color: #ffffff !important; background: linear-gradient(180deg, #31579f, #1c356b) !important; box-shadow: 0 0 0 3px #dce8ff !important; }
+        `}</style>
+        {/* QRPASS_CHANGE_PASSWORD_BLUE_V168: disabled is still disabled; appearance matches Save Changes */}
+        <style>{`
+          html body #root#root#root button.qrpass-change-password-primary-v168,
+          html body #root#root#root button.qrpass-change-password-primary-v168:is(:hover,:focus,:active,:disabled) {
+            background: linear-gradient(180deg,#31579f 0%,#1c356b 100%) !important;
+            background-color: #244681 !important;
+            background-image: linear-gradient(180deg,#31579f 0%,#1c356b 100%) !important;
+            color: #ffffff !important;
+            opacity: 1 !important;
+            filter: none !important;
+            transition: none !important;
+            text-shadow: none !important;
+          }
+          html body #root#root#root button.qrpass-change-password-primary-v168:is(:hover,:focus-visible) {
+            box-shadow: 0 0 0 3px rgba(82,120,231,.24) !important;
+            outline: 1px solid #aac1ef !important;
+            outline-offset: 2px !important;
+          }
+          html body #root#root#root button.qrpass-change-password-primary-v168:disabled {
+            cursor: not-allowed !important;
+          }
+        `}</style>
         {/* CHANGE PASSWORD FOOTER */}
         <div className="flex items-center justify-end gap-2 border-t border-[#e5eaf2] bg-[#fbfcfe] px-5 py-3">
           <button
@@ -27493,15 +30003,52 @@ const handleSaveAccountProfile = async () => {
               setPasswordMessage("");
             }}
             disabled={changingPassword}
-            className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#334155] transition-colors hover:bg-[#eef2fc] disabled:cursor-not-allowed disabled:opacity-50"
-          >
+            className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-xs font-semibold text-[#334155] transition-colors disabled:cursor-not-allowed disabled:opacity-50 !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
+           
+            onMouseEnter={(e) => {
+              const el=e.currentTarget;
+              if(!el.dataset.qrpassV158Saved) {
+                el.dataset.qrpassV158Saved=el.style.cssText || " ";
+              }
+              el.style.setProperty("background", "#eef2ff", "important");
+              el.style.setProperty("background-color", "#eef2ff", "important");
+              el.style.setProperty("background-image", "none", "important");
+              el.style.setProperty("color", "#17336d", "important");
+              el.style.setProperty("border-color", "#a8bde4", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onMouseLeave={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty("box-shadow", "none", "important");
+              e.currentTarget.style.setProperty("outline", "none", "important");
+            }}
+            onBlur={(e) => {
+              const el=e.currentTarget;
+              if(el.dataset.qrpassV158Saved) {
+                el.style.cssText=el.dataset.qrpassV158Saved===" " ? "" : el.dataset.qrpassV158Saved;
+                delete el.dataset.qrpassV158Saved;
+              }
+              el.style.setProperty("box-shadow", "none", "important");
+              el.style.setProperty("outline", "none", "important");
+            }}
+
+           data-qrpass-neutral-v169="true">
             Cancel
           </button>
 
-          <button
+          <button data-qrpass-blue-v173="account-submit"
             type="submit"
             disabled={changingPassword}
-            className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-100 transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none qrpass-change-password-primary-v168"
           >
             {changingPassword
               ? "Changing..."
@@ -27520,7 +30067,203 @@ const handleSaveAccountProfile = async () => {
 
 
 // ── App root ──────────────────────────────────────────────────────────────────
+// QRPASS_DIGITS_ONLY_ID_V178: input sanitization and guards are scoped to ID NUMBER fields.
 export default function App() {
+
+  // QRPASS_ROLE_ONLY_SIZE_V176: Role dropdown (shows Student) size only, in Add/Edit User.
+  React.useEffect(() => {
+    const id = 'qrpass-role-only-size-v176';
+    if (document.getElementById(id)) return;
+    const style = document.createElement('style');
+    style.id = id;
+    style.textContent = `
+      html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page [data-qrpass-account-role-v54="add"] > select,
+      html body #root .qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page.qrpass-admin-page [data-qrpass-account-role-v54="edit"] > select {
+        height: 54px !important;
+        min-height: 54px !important;
+        max-height: 54px !important;
+        box-sizing: border-box !important;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, []);
+
+
+  // QRPASS_AUTH_ACCOUNT_BLUE_V173: one-time CSS-only styling, no observers or mouse-event handlers.
+  React.useEffect(() => {
+    const id='qrpass-auth-account-blue-v173';
+    if(document.getElementById(id))return;
+    const style=document.createElement('style');
+    style.id=id;
+    style.textContent=`
+      html body #root button[data-qrpass-blue-v173],
+      html body #root button[data-qrpass-blue-v173]:is(:hover,:focus,:active,:disabled) {
+        background: linear-gradient(180deg,#31579f 0%,#1c356b 100%) !important;
+        background-image: linear-gradient(180deg,#31579f 0%,#1c356b 100%) !important;
+        background-color: #25477f !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+        transition: none !important;
+        animation: none !important;
+      }
+      html body #root button[data-qrpass-blue-v173] :is(span,svg) { color:#ffffff !important; }
+      html body #root button[data-qrpass-blue-v173]:is(:hover,:focus-visible) {
+        box-shadow: 0 0 0 3px #dce8ff !important;
+        outline: 1px solid #9dbaf3 !important;
+        outline-offset: 2px !important;
+      }
+      html body #root button[data-qrpass-blue-v173]:disabled { cursor:not-allowed !important; }
+    `;
+    document.head.appendChild(style);
+    return ()=>style.remove();
+  }, []);
+
+
+  // QRPASS_NEUTRAL_BUTTON_HOVER_V169: component-scoped installation of lightweight neutral-button CSS.
+  // No MutationObserver, JS hover handlers or timers (avoids hover lag).
+  React.useEffect(() => {
+    const id = "qrpass-neutral-buttons-v169";
+    if (document.getElementById(id)) return;
+    const element = document.createElement("style");
+    element.id = id;
+    element.textContent = `
+      html body #root button[data-qrpass-neutral-v169="true"]:not(:disabled) {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        background-image: none !important;
+        color: #17336d !important;
+        border: 1px solid #a8bde4 !important;
+        box-shadow: none !important;
+        outline: none !important;
+        filter: none !important;
+        transform: none !important;
+        transition: none !important;
+      }
+      html body #root button[data-qrpass-neutral-v169="true"]:not(:disabled):is(:hover,:focus,:active) {
+        background: #eef2ff !important;
+        background-color: #eef2ff !important;
+        background-image: none !important;
+        color: #17336d !important;
+        border-color: #9bb5ec !important;
+        box-shadow: none !important;
+        outline: none !important;
+        filter: none !important;
+        transform: none !important;
+        transition: none !important;
+      }
+      /* Keyboard navigation remains visible, but avoids the doubled ring. */
+      html body #root button[data-qrpass-neutral-v169="true"]:focus-visible {
+        outline: 2px solid #6d91e8 !important;
+        outline-offset: 2px !important;
+      }
+    `;
+    document.head.appendChild(element);
+    return () => element.remove();
+  }, []);
+
+
+  // QRPASS_BLUE_BUTTON_HOVER_OPTIMIZED_V166
+  // Delegation runs only on actual pointer entry, not on every React DOM update.
+  useEffect(() => {
+    const id = 'qrpass-blue-save-settings-hover-v166';
+    const sheet=document.createElement('style');sheet.id=id;
+    sheet.textContent=`
+      html body #root#root button[data-qrpass-blue-action-v166="true"]:hover:not(:disabled),
+      html body #root#root button[data-qrpass-blue-action-v166="true"]:focus-visible:not(:disabled) {
+        background: linear-gradient(180deg,#31579f 0%,#1c356b 100%) !important;
+        background-color:#244681 !important;
+        background-image:linear-gradient(180deg,#31579f 0%,#1c356b 100%) !important;
+        color:#ffffff !important;border:1px solid #a9c5f7 !important;
+        box-shadow:0 0 0 3px #dce8ff !important;outline:none !important;
+        opacity:1 !important;transform:none !important;filter:none !important;
+        transition:none !important;animation:none !important;
+      }
+      html body #root#root button[data-qrpass-blue-action-v166="true"]:is(:hover,:focus-visible) * {color:#ffffff !important;}
+    `;
+    document.head.appendChild(sheet);
+    const onHover=(event:PointerEvent)=>{
+      const node=event.target;
+      if(!(node instanceof Element))return;
+      const b=node.closest('button') as HTMLButtonElement|null;
+      if(b?.closest('[data-qrpass-password-modal-fast-v167="true"]'))return; // v167: skip expensive computedStyle in this modal
+      if(!b||b.dataset.qrpassBlueActionV166==='true'||b.disabled)return;
+      const cls=typeof b.className==='string'?b.className:'';
+      const label=(b.textContent||'')+' '+(b.getAttribute('aria-label')||'');
+      if(/(?:delete|revoke|remove|disable|logout|cancel|back)/i.test(label)||/(?:red-|rose-|danger)/i.test(cls))return;
+      const filled=/(?:^|\s)(?:bg-primary|bg-blue-[5-9]00|bg-indigo-[5-9]00|bg-\[#(?:1a3a7b|17336d|1e448b|2f5fd6|234a91|244681)\])(?=\s|$)/i.test(cls);
+      const style=window.getComputedStyle(b);
+      const m=style.backgroundColor.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      const blue=m&&(+m[3] > +m[1]*1.15)&&(+m[3] > +m[2]*1.10)&&(+m[1]<125)&&(+m[2]<155);
+      if(filled || (blue && /rgb\(255,\s*255,\s*255\)/.test(style.color)))b.dataset.qrpassBlueActionV166='true';
+    };
+    document.addEventListener('pointerover',onHover,{passive:true});
+    return ()=>{document.removeEventListener('pointerover',onHover);sheet.remove()};
+  }, []);
+
+
+  // QRPASS_BLUE_BUTTON_NO_EFFECTS_V162: visual-only; leave click handlers and button disabled logic intact.
+  useEffect(() => {
+    const cssId = "qrpass-blue-buttons-no-effects-v162";
+    if (document.getElementById(cssId)) return;
+    const sheet = document.createElement("style");
+    sheet.id = cssId;
+    sheet.textContent = `
+      /* Blue filled ACTION buttons only; excludes Cancel, outlined controls,
+         red destructive actions, navbar icon-only controls and disabled semantics. */
+      html body #root button:is(
+        .bg-primary,
+        [class~="bg-blue-500"],
+        [class~="bg-blue-600"],
+        [class~="bg-blue-700"],
+        [class~="bg-blue-800"],
+        [class~="bg-indigo-600"],
+        [class~="bg-indigo-700"],
+        [class~="bg-[#1a3a7b]"],
+        [class~="bg-[#17336d]"],
+        [class~="bg-[#1e448b]"],
+        [class~="bg-[#2f5fd6]"],
+        [class~="bg-[#234a91]"]
+      ):not([class*="red-"]):not([class*="rose-"]):not([class*="danger"]):not(:disabled),
+      html body #root button:is(
+        .bg-primary,
+        [class~="bg-blue-500"],
+        [class~="bg-blue-600"],
+        [class~="bg-blue-700"],
+        [class~="bg-blue-800"],
+        [class~="bg-indigo-600"],
+        [class~="bg-indigo-700"],
+        [class~="bg-[#1a3a7b]"],
+        [class~="bg-[#17336d]"],
+        [class~="bg-[#1e448b]"],
+        [class~="bg-[#2f5fd6]"],
+        [class~="bg-[#234a91]"]
+      ):not([class*="red-"]):not([class*="rose-"]):not([class*="danger"]):not(:disabled):is(:hover,:active,:focus) {
+        background: #1a3a7b !important;
+        background-color: #1a3a7b !important;
+        background-image: none !important;
+        color: #ffffff !important;
+        opacity: 1 !important;
+        box-shadow: none !important;
+        filter: none !important;
+        transform: none !important;
+        transition: none !important;
+        animation: none !important;
+      }
+      /* Preserve visible keyboard navigation without hover/glow. */
+      html body #root button.bg-primary:focus-visible {
+        outline: 2px solid #93c5fd !important;
+        outline-offset: 2px !important;
+      }
+    `;
+    document.head.appendChild(sheet);
+    return () => sheet.remove();
+  }, []);
+
+
   useEffect(() => {
     const updateTitle = () => {
       try {
@@ -27909,7 +30652,7 @@ export default function App() {
               setView("checking");
               setRestoreAttempt(value => value + 1);
             }}
-            className="mt-5 w-full rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white"
+            className="mt-5 w-full rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
           >
             Retry Connection
           </button>
