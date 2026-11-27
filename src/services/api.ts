@@ -168,8 +168,8 @@ export async function register(
 
   yearLevel: string,
 
-  contactNumber: string
-
+  contactNumber: string,
+  verificationCode?: string // QRPASS_GMAIL_VERIFICATION_V1
 ) {
 
   const response = await fetch(`${API_URL}/register`, {
@@ -198,6 +198,7 @@ export async function register(
       college,
       year_level: yearLevel,
       contact_number: contactNumber,
+      verification_code: verificationCode,
 
     }),
 

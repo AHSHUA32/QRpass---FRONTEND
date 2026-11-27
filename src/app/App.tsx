@@ -1,3 +1,7 @@
+import "./qrpass-pco-csu-quantity-reference.js";
+import "./qrpassPcoArrows.js";
+import "./qrpassSysadminArrows.js";
+/* QRPASS_CSU_RECORDS_LABEL_V1 */
 // QRPASS_TS_FIX_V211: React pointer handlers and Reports icon corrected.
 /* QRPASS_UNIFORM_BUTTONS_V157: Back/Cancel + primary blue buttons; JSX class updates only */
 import "./qrpass-sysadmin-report-dropdown-v4.css";
@@ -592,8 +596,11 @@ function RegistrationQuantityField({
     );
   }
 
+  /* QRPASS_QUANTITY_BORDERLESS_V2 */
+  /* QRPASS_QUANTITY_REFERENCE_V3 */
   return (
     <div>
+      
       <label className="block text-xs font-semibold text-foreground mb-1.5">
         Quantity
       </label>
@@ -626,7 +633,7 @@ function RegistrationQuantityField({
         }
       }}
       className="flex h-[42px] w-full items-center overflow-hidden rounded-lg border border-[#c7d2fe] !bg-white hover:!bg-[#eef2ff] focus-within:!bg-white transition-colors focus-within:border-[#2f5fd6] focus-within:ring-2 focus-within:ring-[#2f5fd6]/15">
-        <input required
+        <input data-qrpass-quantity-input="true" required
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
@@ -655,6 +662,11 @@ function RegistrationQuantityField({
           ref={(element) => {
             element?.setCustomValidity(quantityError);
             if (element) {
+              for (const prop of ["border", "border-left", "border-right", "box-shadow", "outline"]) element.style.setProperty(prop, "none", "important");
+              element.style.setProperty("border-radius", "0", "important");
+              element.style.setProperty("background-image", "none", "important");
+            }
+            if (element) {
               element.style.setProperty("background", "#ffffff", "important");
               element.style.setProperty("background-color", "#ffffff", "important");
             }
@@ -674,34 +686,34 @@ function RegistrationQuantityField({
             event.currentTarget.style.setProperty("background-color", "#ffffff", "important");
           }}
         />
-        <div className="mr-1.5 flex h-[34px] w-9 shrink-0 flex-col overflow-hidden rounded-md border border-[#c7d2fe] bg-white shadow-sm">
+        <div data-qrpass-quantity-arrows="true" className="mr-2 flex h-[34px] w-9 shrink-0 flex-col overflow-hidden rounded-lg" ref={element => { if (element) { element.style.setProperty("border", "1px solid #cbd5e1", "important"); element.style.setProperty("box-shadow", "none", "important"); element.style.setProperty("background", "#f8fafc", "important"); } }}>
           {/* QRPASS_BUTTON_HOVER_DIRECT_V158 */}
           <button
             type="button"
             onClick={increaseQuantity}
-            className="flex h-1/2 items-center justify-center border-b border-[#dce3ee] text-[#1a3a7b] transition-colors hover:bg-[#e6edff] active:bg-[#d6e3ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2f5fd6]"
+            ref={element => { if (element) { element.style.setProperty("border", "none", "important"); element.style.setProperty("border-bottom", "1px solid #dce3ee", "important"); element.style.setProperty("box-shadow", "none", "important"); element.style.setProperty("border-radius", "0", "important"); } }}
+            className="flex h-1/2 items-center justify-center border-[#dce3ee] text-[#1a3a7b] transition-colors hover:bg-[#e6edff] active:bg-[#d6e3ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2f5fd6]"
             aria-label="Increase quantity"
             title="Increase quantity"
           >
-            <span className="text-[12px] font-bold leading-none">▲</span>
+            <svg data-qrpass-quantity-chevron="true" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, pointerEvents: "none" }}><path d="M7 14l5-5 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
           <button
             type="button"
             onClick={decreaseQuantity}
+            ref={element => { if (element) { element.style.setProperty("border", "none", "important"); element.style.setProperty("border-bottom", "none", "important"); element.style.setProperty("box-shadow", "none", "important"); element.style.setProperty("border-radius", "0", "important"); } }}
             disabled={currentValue <= 1}
             className="flex h-1/2 items-center justify-center text-[#1a3a7b] transition-colors hover:bg-[#e6edff] active:bg-[#d6e3ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2f5fd6] disabled:cursor-not-allowed disabled:opacity-35"
             aria-label="Decrease quantity"
             title="Decrease quantity"
           >
-            <span className="text-[12px] font-bold leading-none">▼</span>
+            <svg data-qrpass-quantity-chevron="true" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, pointerEvents: "none" }}><path d="M7 10l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>
       </div>
 
       {quantityTouched && quantityError && <p id={quantityErrorId} className="mt-1 text-xs text-red-600" aria-live="polite">{quantityError}</p>}
-      <p className="mt-1 text-[11px] text-muted-foreground">
-        Numbers only. Minimum quantity is 1.
-      </p>
+      
     </div>
   );
 }
@@ -735,7 +747,7 @@ function RegistrationChoice({
 
   return (
     <div className="min-w-0">
-      <QRPassChoiceSelect
+      <QRPassChoiceSelect studentDownward
         label={label}
         errorId={custom ? undefined : errorId}
         value={custom ? "__OTHER__" : value}
@@ -877,7 +889,7 @@ function QRPassComputerAccessoriesMultiSelectV117({
       </button>
       </DropdownPopover.Trigger>
       <DropdownPopover.Portal>
-        <DropdownPopover.Content
+        <DropdownPopover.Content avoidCollisions={false} side="bottom"
           aria-label="Choose accessories included"
           className="qrpass-select-menu qrpass-accessories-overlay"
           sideOffset={4}
@@ -937,6 +949,58 @@ function QRPassComputerAccessoriesMultiSelectV117({
       </DropdownPopover.Root>
     </div>
   );
+}
+
+/* QRPASS_COMPUTER_VALIDATION_V1 */
+function qrpassComputerInputError(field: string, raw: string): string {
+  const value = String(raw ?? '').trim();
+  if (!value || value === '__OTHER__') return '';
+  if (field === 'Color') return /^[\p{L}][\p{L}\s-]*$/u.test(value) ? '' : 'Color must contain letters, spaces or hyphens only.';
+  if (field === 'Serial Number') return /^[\p{L}\p{N}][\p{L}\p{N}\s./-]*$/u.test(value) ? '' : 'Serial Number may contain letters, numbers, spaces, dots, hyphens and slashes only.';
+  if (!/^[\p{L}\p{N}\s.,:/'’()+&-]+$/u.test(value) || !/[\p{L}\p{N}]/u.test(value)) return field + ' contains unsupported characters.';
+  if (field === 'Purpose' && !/\p{L}/u.test(value)) return 'Purpose / Reason for Bringing must contain meaningful text, not only numbers or symbols.';
+  return '';
+}
+
+/* QRPASS_COMPUTER_REALTIME_V2 */
+function qrpassComputerCleanV2(field: string, value: string, custom = false): string {
+  if (value === '__OTHER__') return value;
+  const clean = field === 'color' ? value.replace(/[^\p{L}\p{M} -]/gu, '') : field === 'serial_number' ? value.replace(/[^\p{L}\p{N} ./-]/gu, '') : value.replace(/[^\p{L}\p{M}\p{N} .,:/'’()+&-]/gu, '');
+  return custom && !clean ? '__OTHER__' : clean;
+}
+
+/* QRPASS_SPORTS_REALTIME_V1 */
+function qrpassSportsClean(field: string, value: string, custom = false): string {
+  if (value === '__OTHER__') return value;
+  const clean = field === 'purpose' ? value.replace(/[^\p{L}\p{M} .,:/'’()-]/gu, '') : qrpassComputerCleanV2(field, value, false);
+  return custom && !clean ? '__OTHER__' : clean;
+}
+function qrpassSportsError(label: string, value: string): string {
+  if (value === '__OTHER__') return 'Please specify ' + label + ' or clear the optional selection.';
+  if (!value.trim()) return '';
+  if (['Equipment Type','Item Name','Brand','Brand / Model','Purpose','Color'].includes(label) && !/\p{L}/u.test(value)) return label + ' must contain meaningful text.';
+  if (label === 'Purpose' && /\p{N}/u.test(value)) return 'Purpose must not contain numbers.';
+  return qrpassComputerInputError(label,value);
+}
+
+/* QRPASS_SPORTS_DEPENDENT_BRANDS_V1 */
+function qrpassSportsBrandsV1(item: string): string[] {
+  switch(item.trim().toLowerCase()) {
+    case 'basketball': return ['Spalding','Wilson','Molten','Nike'];
+    case 'volleyball': return ['Mikasa','Molten','Wilson','Tachikara'];
+    case 'soccer ball': return ['Adidas','Nike','Puma','Select'];
+    case 'badminton racket': return ['Yonex','Victor','Li-Ning','Carlton'];
+    case 'speak takraw ball': case 'sepak takraw ball': return ['Marathon','Mikasa'];
+    case 'boxing gloves': return ['Everlast','Venum','Twins Special','Fairtex'];
+    default: return [];
+  }
+}
+
+/* QRPASS_ALL_DEPENDENT_BRANDS_V1 */
+function qrpassItemBrandsV1(item: string): string[] {
+  const brands: Record<string, string[]> = {"laptop":["Acer","ASUS","Lenovo","HP"],"desktop computer":["Dell","HP","Lenovo","ASUS"],"smart tv":["Samsung","LG","Sony","TCL"],"projector":["Epson","BenQ","Acer","ViewSonic"],"digital camera":["Canon","Nikon","Sony","Fujifilm"],"drone":["DJI","Autel Robotics","Parrot","Holy Stone"],"professional video camera":["Sony","Canon","Panasonic","Blackmagic Design"],"3d printer":["Creality","Prusa","Bambu Lab","Anycubic"],"graphics tablet":["Wacom","Huion","XP-Pen","Xencelabs"],"monitor":["Samsung","LG","Dell","ASUS"],"mobile phone":["Samsung","Apple","Xiaomi","OPPO"],"tablet":["Apple","Samsung","Lenovo","Huawei"],"audio equipment":["JBL","Sony","Bose","Sennheiser"],"acoustic guitar":["Yamaha","Fender","Taylor","Martin"],"electric guitar":["Fender","Gibson","Ibanez","ESP"],"bass guitar":["Ibanez","Fender","Yamaha","Music Man"],"piano":["Yamaha","Casio","Roland","Kawai"],"drum set":["Pearl","Tama","Yamaha","Ludwig"],"snare drum":["Pearl","Tama","Ludwig","Yamaha"],"violin":["Yamaha","Suzuki","Stentor","Cremona"],"ukelele":["Kala","Lanikai","Cordoba","Mahalo"],"ukulele":["Kala","Lanikai","Cordoba","Mahalo"],"flute":["Yamaha","Pearl","Gemeinhardt","Jupiter"],"backpack":["JanSport","Hawk","Herschel","Nike"],"wallet":["Secosana","Fossil","Herschel","Bellroy"],"eyeglasses":["Ray-Ban","Oakley","OWNDAYS","JINS"],"umbrella":["Fibrella","Totes","Knirps","Fulton"],"tumbler":["Aquaflask","Hydro Flask","Stanley","Thermos"],"notebook":["Moleskine","Muji","Campus","National Book Store"]};
+  const key = item.trim().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(brands, key) ? brands[key] : [];
 }
 
 function StudentRegisterItem() {
@@ -1144,9 +1208,27 @@ function StudentRegisterItem() {
     key: keyof RegistrationForm,
     value: string
   ) {
+    if (selectedGroup === "sports") {
+      if (["equipment_type", "brand", "brand_model", "item_name"].includes(key)) value = qrpassSportsClean(key, value, true);
+      else if (key === "purpose") value = qrpassSportsClean(key, value);
+    }
+    if (selectedGroup === "computer") {
+      const custom = !["serial_number", "purpose", "accessories_included"].includes(key);
+      value = qrpassComputerCleanV2(key, value, custom);
+    }
+    if (selectedGroup === "musical") {
+      const custom = !["serial_number", "purpose", "accessories_included", "model_no", "size"].includes(key);
+      value = qrpassComputerCleanV2(key, value, custom);
+    }
+    if (selectedGroup === "highvalue") {
+      const custom = !["serial_number", "purpose", "accessories_included", "lens_attachment"].includes(key);
+      value = qrpassComputerCleanV2(key, value, custom);
+    }
     setForm((current) => ({
       ...current,
       [key]: value,
+      ...(key === "item_name" && current.item_name !== value && (selectedGroup === "computer" || selectedGroup === "highvalue" || selectedGroup === "mobile" || selectedGroup === "musical") ? { brand_model: "", brand: "" } : {}),
+      ...(selectedGroup === "sports" && key === "equipment_type" && current.equipment_type !== value ? { brand: "" } : {}),
     }));
   }
 
@@ -1246,7 +1328,11 @@ function StudentRegisterItem() {
     if (selectedGroup === "other") {
       required.push(
         [
-          "Item/s with Complete Description",
+          "Item Name",
+          form.item_name,
+        ],
+        [
+          "Full Description",
           form.complete_description,
         ],
         ["Quantity", form.quantity]
@@ -1399,7 +1485,7 @@ function StudentRegisterItem() {
 
     if (selectedGroup === "other") {
       itemName =
-        form.complete_description.trim();
+        form.item_name.trim();
 
       itemType =
         "Other Equipment";
@@ -1480,6 +1566,50 @@ function StudentRegisterItem() {
     e: React.FormEvent
   ) {
     e.preventDefault();
+    if (selectedGroup === "sports") {
+      const fields: [string,string][] = [["Equipment Type", form.equipment_type], ["Item Name", form.item_name], ["Brand", form.brand], ["Brand", form.brand_model], ["Purpose", form.purpose]];
+      const problem = fields.map(([label,value]) => qrpassSportsError(label,value)).find(Boolean);
+      if (problem) { alert(problem); return; }
+    }
+    /* QRPASS_MUSICAL_REALTIME_V1 */
+    if (selectedGroup === "musical") {
+      const fields: [string, string][] = [
+        ["Item Name", form.item_name], ["Brand", form.brand],
+        ["Model No.", form.model_no], ["Serial Number", form.serial_number],
+        ["Purpose", form.purpose], ["Accessories Included", form.accessories_included],
+        ["Material / Body", form.material_body], ["Size", form.size],
+      ];
+      const problem = fields.map(([label, value]) => qrpassComputerInputError(label, value)).find(Boolean);
+      if (problem) { alert(problem); return; }
+      if (form.material_body === "__OTHER__" || form.brand === "__OTHER__" || form.item_name === "__OTHER__") {
+        alert("Please specify the selected equipment specifications."); return;
+      }
+    }
+
+    /* QRPASS_HIGHVALUE_REALTIME_V1 */
+    if (selectedGroup === "highvalue") {
+      const fields: [string, string][] = [
+        ["Item Name", form.item_name], ["Brand & Model", form.brand_model],
+        ["Serial Number", form.serial_number], ["Color", form.color],
+        ["Purpose", form.purpose], ["Accessories Included", form.accessories_included],
+        ["Unit Type", form.unit_type], ["Power Source / Cable", form.power_source],
+        ["Lens / Attachment Included", form.lens_attachment],
+      ];
+      const problem = fields.map(([label, value]) => qrpassComputerInputError(label, value)).find(Boolean);
+      if (problem) { alert(problem); return; }
+      if (form.unit_type === "__OTHER__" || form.power_source === "__OTHER__") {
+        alert("Please specify the selected equipment specifications."); return;
+      }
+    }
+
+    if (selectedGroup === "computer") {
+      const fields: [string, string][] = [
+        ['Item Name', form.item_name], ['Brand', form.brand_model], ['Serial Number', form.serial_number], ['Color', form.color], ['Purpose', form.purpose], ['Accessories', form.accessories_included], ['Computer / Laptop Type', form.computer_type], ['Processor', form.processor], ['Motherboard', form.motherboard], ['Memory / RAM', form.memory], ['Hard Drive / Storage', form.hard_drive], ['Monitor', form.monitor], ['Casing', form.casing], ['CD / DVD ROM', form.cd_dvd_rom], ['Operating System', form.operating_system],
+      ];
+      const problem = fields.map(([label, value]) => qrpassComputerInputError(label, value)).find(Boolean);
+      if (problem) { alert(problem); return; }
+    }
+
 
     if (!selectedGroup) {
       return;
@@ -1577,7 +1707,7 @@ options={["Laptop"]}
       value
     )
   }
-options={["Acer", "ASUS", "Dell", "HP", "Lenovo", "Apple", "MSI"]}
+options={qrpassItemBrandsV1(form.item_name)}
 />
 
                   <RegistrationField
@@ -1619,10 +1749,20 @@ options={["Acer", "ASUS", "Dell", "HP", "Lenovo", "Apple", "MSI"]}
   placeholder="e.g. Academic use, thesis documentation"
 />
 
-                  <QRPassComputerAccessoriesMultiSelectV117
-  value={form.accessories_included}
-  onChange={(next) => updateField("accessories_included", next)}
-/>
+                   {/* QRPASS_COMPUTER_ACCESSORIES_TEXTBOX_V1 */}
+                  <div className="min-w-0">
+                    <label htmlFor="qrpass-computer-accessories-text" className="block text-xs font-semibold text-foreground mb-1.5">
+                      Accessories Included <span className="text-[11px] font-normal text-muted-foreground">(Optional)</span>
+                    </label>
+                    <input
+                      id="qrpass-computer-accessories-text"
+                      type="text"
+                      value={form.accessories_included}
+                      onChange={event => updateField("accessories_included", event.target.value.replace(/[^\p{L}\p{M}\p{N} .,:/'’()+&-]/gu, ""))}
+                      placeholder="e.g. Charger, mouse, laptop bag"
+                      className="w-full min-h-[44px] rounded-lg border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm text-[#17336d] outline-none transition-colors hover:bg-[#eef2ff] focus:bg-white focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
+                    />
+                  </div>
                 </div>
 
                 <div className="mt-5 rounded-xl overflow-hidden border border-blue-200">
@@ -1798,7 +1938,7 @@ options={["Desktop Computer", "Smart TV", "Projector", "Digital Camera", "Drone"
       value
     )
   }
-options={["Samsung", "LG", "Sony", "ASUS", "Acer", "Lenovo", "HP", "Dell", "Canon", "Nikon", "Epson", "BenQ", "DJI", "Apple"]}
+options={qrpassItemBrandsV1(form.item_name)}
 />
 
                   <RegistrationField
@@ -1915,7 +2055,7 @@ options={["AC Power Cable", "DC Power Adapter", "USB Cable", "USB-C Cable", "HDM
             {selectedGroup ===
               "mobile" && (
               <div className="grid md:grid-cols-2 gap-4">
-                <RegistrationField
+                <RegistrationDropdown
   label="Item Name"
   field="item_name"
   value={form.item_name}
@@ -1925,10 +2065,10 @@ options={["AC Power Cable", "DC Power Adapter", "USB Cable", "USB-C Cable", "HDM
       value
     )
   }
-  placeholder="e.g. Mobile Phone"
+  options={["Mobile Phone", "Tablet", "Audio Equipment"]}
 />
 
-                <RegistrationField
+                <RegistrationDropdown
   label="Brand & Model"
   field="brand_model"
   value={form.brand_model}
@@ -1938,7 +2078,7 @@ options={["AC Power Cable", "DC Power Adapter", "USB Cable", "USB-C Cable", "HDM
       value
     )
   }
-  placeholder="e.g. Samsung Galaxy A54"
+  options={qrpassItemBrandsV1(form.item_name)}
 />
 
                 <RegistrationField
@@ -2027,7 +2167,7 @@ options={["AC Power Cable", "DC Power Adapter", "USB Cable", "USB-C Cable", "HDM
       value
     )
   }
-options={["Acoustic Guitar", "Electric Guitar", "Bass Guitar", "Keyboard", "Drum Set", "Snare Drum", "Violin", "Ukelele", "Flute"]}
+options={["Acoustic Guitar", "Electric Guitar", "Bass Guitar", "Piano", "Drum Set", "Snare Drum", "Violin", "Ukelele", "Flute"]}
 />
 
                 <RegistrationDropdown
@@ -2040,7 +2180,7 @@ options={["Acoustic Guitar", "Electric Guitar", "Bass Guitar", "Keyboard", "Drum
       value
     )
   }
-options={["Fender", "Casio", "Roland", "Gibson", "Ibanez", "Korg", "Pearl", "Suzuki"]}
+options={qrpassItemBrandsV1(form.item_name)}
 />
 
                 <RegistrationField
@@ -2154,7 +2294,7 @@ options={["Basketball", "Volleyball", "Soccer Ball", "Badminton Racket", "Speak 
     )
   }
   optional
-options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "Puma"]}
+options={qrpassSportsBrandsV1(form.equipment_type)}
 />
 
                 <RegistrationQuantityField
@@ -2190,17 +2330,30 @@ options={["Mikasa", "Spalding", "Wilson", "Molten", "Adidas", "Nike", "Yonex", "
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <RegistrationField
-  label="Item/s with Complete Description"
-  field="complete_description"
-  value={form.complete_description}
+  label="Item Name"
+  field="item_name"
+  value={form.item_name}
   onChange={(field, value) =>
     updateField(
       field as keyof RegistrationForm,
       value
     )
   }
-  placeholder="e.g. 2x extension cords, 1x megaphone"
+  placeholder="e.g. Extension cord, megaphone"
 />
+                </div>
+                {/* QRPASS_OTHER_FULL_DESCRIPTION_V2 */}
+                <div className="md:col-span-2">
+                  <label htmlFor="qrpass-other-full-description" className="block text-xs font-semibold text-foreground mb-1.5">Full Description</label>
+                  <textarea
+                    id="qrpass-other-full-description"
+                    value={form.complete_description}
+                    onChange={(e) => updateField("complete_description", e.target.value)}
+                    placeholder="Describe the item, including its brand, color, size, and other identifying details."
+                    rows={4}
+                    required
+                    className="w-full px-3 py-2.5 text-sm border border-[#c7d2fe] rounded-lg !bg-white hover:!bg-[#eef2ff] focus:!bg-white focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 resize-y"
+                  />
                 </div>
 
                 <RegistrationQuantityField
@@ -3281,12 +3434,10 @@ function StudentPermitStatus() {
     }
 
     const confirmed =
-      window.confirm(
-        displayStatus ===
-          "Pending"
-          ? `Delete the pending request for "${item.item_name}"? This cannot be undone.`
-          : `Delete the expired permit for "${item.item_name}"? This cannot be undone.`
-      );
+      await qrpassFloatingDeleteConfirmV196(
+        `Are you sure you want to permanently delete ${displayStatus === "Pending" ? "the pending request" : "the expired permit"} for "${item.item_name}"? This action cannot be undone.`,
+        "Delete Selected Log?"
+      ) /* QRPASS_STUDENT_PERMIT_FLOATING_DELETE_V1 */;
 
     if (!confirmed) {
       return;
@@ -4272,8 +4423,9 @@ function StudentLostAndFound() {
   }, []);
 
   async function handleClaim(id: number) {
-    const confirmed = window.confirm(
-      "Submit a claim request? Your claim will remain PENDING until CSU verifies your ownership at the Security office."
+    const confirmed = await qrpassFloatingDeleteConfirmV196(
+      "Submit a claim request? Your claim will remain PENDING until CSU verifies your ownership at the Security office.",
+      "Submit Claim Request?"
     );
 
     if (!confirmed) {
@@ -4685,19 +4837,19 @@ function StudentLostAndFound() {
             className="h-12 min-w-[175px] flex-1 rounded-xl border border-[#bfceff] bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff]  focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0 w-full sm:w-auto"
           >
             <option value="all">
-              All Reports ({items.length})
+              All Reports
             </option>
             <option value="found">
-              Found ({foundCount})
+              Found
             </option>
             <option value="lost">
-              Lost ({lostCount})
+              Lost
             </option>
             <option value="pending">
-              Pending ({pendingCount})
+              Pending
             </option>
             <option value="recovered">
-              Recovered ({recoveredCount})
+              Recovered
             </option>
           </select>
 
@@ -4824,6 +4976,7 @@ function StudentLostAndFound() {
       {/* FILTERS */}
 
 
+      {!loading && <p data-qrpass-record-counter="student" className="text-left text-sm text-[#64748b]" aria-live="polite">Showing <strong className="font-semibold text-[#17336d]">{visibleItems.length} of {items.length} records</strong></p>}
       {loading && (
         <div className="rounded-xl border border-border bg-card p-10 text-center">
           <p className="text-sm text-muted-foreground">
@@ -4942,8 +5095,21 @@ function StudentLostAndFound() {
                       </p>
 
                       <div className="mt-4">
-                        {isFound ? (
-                          <button
+                        {/* QRPASS_FOUND_VIEW_DETAILS_V1 */}
+<div className="flex flex-col gap-2">
+<button
+                            type="button"
+                            onClick={() =>
+                              setSelectedItem(
+                                item
+                              )
+                            }
+                            className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
+                          >
+                            View Details
+                          </button>
+{isFound && (
+<button
                             type="button"
                             disabled={
                               claimingId ===
@@ -4967,19 +5133,8 @@ function StudentLostAndFound() {
                               ? "Submitting..."
                               : "Claim Item"}
                           </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSelectedItem(
-                                item
-                              )
-                            }
-                            className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
-                          >
-                            View Details
-                          </button>
-                        )}
+)}
+</div>
                       </div>
                     </div>
                   </div>
@@ -6317,11 +6472,11 @@ function SecurityScanVerify() {
 
       {/* VERIFIED ITEM */}
       {scanResult && (
-        <div className="w-full min-w-0 rounded-xl border border-emerald-300 bg-card p-4 shadow-sm sm:p-6">
+        createPortal(<div data-qrpass-verified-floating-v3="true" style={{position:"fixed",inset:0,zIndex:2147482000,display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"rgba(15,23,42,.55)"}}><div role="dialog" aria-modal="true" aria-label="Verified item details" style={{width:"100%",maxWidth:1000,maxHeight:"90dvh",overflowY:"auto",background:"white",borderRadius:20,padding:24,boxShadow:"0 24px 70px rgba(0,0,0,.25)",border:"1px solid #86efac",boxSizing:"border-box"}}><div className="mb-4 flex justify-end"><button type="button" disabled={logging || verifying} onClick={() => { setScanResult(null); setInput(""); resumeCamera(); }} className="rounded-xl border border-[#cbd5e1] bg-white px-4 py-2 text-sm font-medium text-[#17336d] hover:bg-[#eef2ff]">Close</button></div>
           <div className="flex min-w-0 flex-col items-center gap-4 sm:flex-row sm:items-start">
             <QRCodeDisplay
               value={scanResult.qr_code}
-              size={90}
+              size={120}
             />
 
             <div className="w-full min-w-0 flex-1">
@@ -6450,40 +6605,31 @@ function SecurityScanVerify() {
               </div>
 
               {/* ENTRY / EXIT */}
-              <div className="mt-5 pt-4 border-t border-[#cfd8e6]">
-                <p className="text-xs font-semibold text-foreground mb-2">
-                  Entry / Exit Log
-                </p>
-
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                  <button
+              <div className="mt-5 border-t border-[#dbe4f0] pt-4 text-center"><p className="mb-3 text-sm font-semibold text-[#17336d]">Entry / Exit Records</p><div className="flex justify-center flex-wrap gap-3"><button
                     onClick={() =>
                       handleLog("IN")
                     }
                     disabled={logging || verifying}
-                    className="h-10 w-full rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white transition-colors disabled:opacity-50 sm:w-auto transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
+                    className="h-12 w-[116px] rounded-xl border border-[#193671] !bg-[#193671] !text-white text-sm font-semibold hover:!bg-[#244b91] disabled:opacity-50"
           >
                     {logging
                       ? "Saving..."
                       : "IN"}
                   </button>
-
-                  <button
+<button
                     onClick={() =>
                       handleLog("OUT")
                     }
                     disabled={logging || verifying}
-                    className="h-10 w-full rounded-xl bg-slate-500 px-5 text-xs font-semibold text-white transition-colors hover:bg-slate-600 disabled:opacity-50 sm:w-auto"
+                    className="h-12 w-[116px] rounded-xl border border-[#193671] !bg-[#193671] !text-white text-sm font-semibold hover:!bg-[#244b91] disabled:opacity-50"
                   >
                     {logging
                       ? "Saving..."
                       : "OUT"}
-                  </button>
-                </div>
-              </div>
+                  </button></div></div>
             </div>
           </div>
-        </div>
+        </div></div>,document.body)
       )}
 
 
@@ -6543,7 +6689,7 @@ function csuPeriodName(period: CSUDatePeriod, start = "", end = "") {
 }
 
 // Shared date selector for CSU statistic cards. Filters records by their creation date.
-function CSUStatsPeriodFilter({
+function CSUStatsPeriodFilter(/* QRPASS_CSU_DROPDOWN_DOWNWARD_V1 */ {
   value, onChange, start, onStartChange, end, onEndChange, description,
 }: {
   value: CSUDatePeriod;
@@ -7530,7 +7676,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
     <div className="w-full min-w-0 space-y-5 sm:space-y-6">
       {/* HEADER */}
       <h1 className="text-2xl font-bold text-foreground">
-        Entry / Exit Log
+        Entry / Exit Records
       </h1>
 
       {/* SUMMARY */}
@@ -7571,8 +7717,9 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
         onRefresh={loadData} loading={loading}
         manageAction={entryExitTab !== "flagged" && (
           <OperationalManageLogs
-            key={entryExitTab === "resolved" ? "resolved-incidents" : "scans"}
+            key={entryExitTab /* QRPASS_CSU_MANAGE_V1 */}
             module={entryExitTab === "resolved" ? "resolved-incidents" : "scans"}
+            direction={entryExitTab === "entry" ? "IN" : entryExitTab === "exit" ? "OUT" : undefined}
             onChange={loadData}
           />
         )}
@@ -8809,10 +8956,10 @@ function SecurityReports() {
 type CSUChoice = { value: string; label: string; disabled?: boolean };
 type CSUChoiceGroup = { label?: string; options: CSUChoice[] };
 
-function QRPassChoiceSelect({
+function QRPassChoiceSelect({ csuDownward = false, studentDownward = false,
   label, value, onChange, options = [], groups = [], placeholder, required,
   onCloseAutoFocus, className = "", errorId,
-}: {
+}: { csuDownward?: boolean; studentDownward?: boolean;
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -8851,7 +8998,7 @@ function QRPassChoiceSelect({
         </CSUSelect.Icon>
       </CSUSelect.Trigger>
       <CSUSelect.Portal>
-        <CSUSelect.Content
+        <CSUSelect.Content avoidCollisions={csuDownward ? false : (!studentDownward)}
           aria-label={label}
           className="csu-form-menu qrpass-select-menu"
           position="popper"
@@ -8876,9 +9023,10 @@ function QRPassChoiceSelect({
   );
 }
 
-function CSUItemChoice({
+/* QRPASS_CSU_BRANDS_NO_CLEAR_V2 */
+function CSUItemChoice(/* QRPASS_CSU_DROPDOWN_DOWNWARD_V1 */ { hideClearSelection = false,
   label, value, options, onChange, placeholder, specifyPlaceholder, required, maxLength,
-}: {
+}: { hideClearSelection?: boolean;
   label: string;
   value: string;
   options: string[];
@@ -8896,11 +9044,11 @@ function CSUItemChoice({
 
   return (
     <div className="csu-form-item-choice">
-      <QRPassChoiceSelect
+      <QRPassChoiceSelect csuDownward
         label={label}
         value={isCustom ? otherValue : value}
         options={[
-          ...(!required ? [{ value: "__CLEAR__", label: "Clear selection" }] : []),
+          ...(!required && !hideClearSelection ? [{ value: "__CLEAR__", label: "Clear selection" }] : []),
           ...options.map(option => ({ value: option, label: option })),
           { value: otherValue, label: "Others (Specify)" },
         ]}
@@ -8959,7 +9107,7 @@ function isCompleteCSULocation(value: string) {
   );
 }
 
-function CSULocationPicker({
+function CSULocationPicker(/* QRPASS_CSU_DROPDOWN_DOWNWARD_V1 */ {
   label,
   value,
   onChange,
@@ -8987,7 +9135,7 @@ function CSULocationPicker({
     onSelect: (value: string) => void, groups: CSUChoiceGroup[],
   ) {
     return (
-      <QRPassChoiceSelect
+      <QRPassChoiceSelect csuDownward
         label={`${label} ${field}`}
         value={selected}
         onChange={onSelect}
@@ -9041,7 +9189,13 @@ function SecurityLostFound() {
     useState<"newest" | "oldest">("newest");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  /* QRPASS_CSU_LF_FLOAT_ERRORS_V1 */
+  const [floatingLfError, setFloatingLfError] = useState("");
+  const [error, setErrorStateLf] = useState("");
+  const setError = React.useCallback((message: string) => {
+    setErrorStateLf(message);
+    if (message) setFloatingLfError(message);
+  }, []);
   const [success, setSuccess] = useState("");
   const [search, setSearch] = useState("");
 
@@ -9051,8 +9205,11 @@ function SecurityLostFound() {
   const [editSubmitting, setEditSubmitting] =
     useState(false);
 
-  const [editError, setEditError] =
-    useState("");
+  const [editError, setEditErrorStateLf] = useState("");
+  const setEditError = React.useCallback((message: string) => {
+    setEditErrorStateLf(message);
+    if (message) setFloatingLfError(message);
+  }, []);
 
   const [deletingId, setDeletingId] =
     useState<number | null>(null);
@@ -9152,7 +9309,7 @@ function SecurityLostFound() {
     computer: ["Laptop"],
     highvalue: ["Desktop Computer", "Smart TV", "Projector", "Digital Camera", "Drone", "Professional Video Camera", "3D Printer", "Graphics Tablet", "Monitor"],
     mobile: ["Mobile Phone", "Tablet", "Audio Equipment"],
-    musical: ["Acoustic Guitar", "Electric Guitar", "Bass Guitar", "Keyboard", "Drum Set", "Snare Drum", "Violin", "Ukelele", "Flute"],
+    musical: ["Acoustic Guitar", "Electric Guitar", "Bass Guitar", "Piano", "Drum Set", "Snare Drum", "Violin", "Ukelele", "Flute"],
     sports: ["Basketball", "Volleyball", "Soccer Ball", "Badminton Racket", "Speak Takraw Ball", "Boxing Gloves"],
     other: ["Backpack", "Wallet", "School ID", "Keys", "Eyeglasses", "Umbrella", "Tumbler", "Notebook"],
   };
@@ -9170,7 +9327,7 @@ function SecurityLostFound() {
   // These fields are common to every category; the report's category was selected above.
   function renderStudentStyleReportFields() {
     const categoryNames = selectedReportGroup ? suggestions[selectedReportGroup] : [];
-    const categoryBrands = selectedReportGroup ? brandSuggestions[selectedReportGroup] : [];
+    const categoryBrands = selectedReportGroup === "sports" ? qrpassSportsBrandsV1(form.item_name).slice(0, 4) : qrpassItemBrandsV1(form.item_name).slice(0, 4);
 
     return (
       <div className="space-y-4">
@@ -9184,7 +9341,7 @@ function SecurityLostFound() {
               label="Item Name"
               value={form.item_name}
               options={categoryNames}
-              onChange={value => setForm(current => ({...current, item_name: value}))}
+              onChange={value => setForm(current => ({...current, item_name: selectedReportGroup === "sports" ? qrpassSportsClean("item_name", value, value !== "") : (selectedReportGroup === "computer" || selectedReportGroup === "highvalue" || selectedReportGroup === "musical") ? qrpassComputerCleanV2("item_name", value, value !== "") : value, ...(current.item_name !== value ? { brand_model: "" } : {})}))}
               placeholder="Item Name"
               specifyPlaceholder="Specify item name"
               maxLength={255}
@@ -9194,11 +9351,11 @@ function SecurityLostFound() {
 
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">Brand / Model (if known)</label>
-            <CSUItemChoice
+            <CSUItemChoice hideClearSelection
               label="Brand / Model"
               value={form.brand_model}
               options={categoryBrands}
-              onChange={value => setForm(current => ({...current, brand_model: value}))}
+              onChange={value => setForm(current => ({...current, brand_model: selectedReportGroup === "sports" ? qrpassSportsClean("brand_model", value, value !== "") : (selectedReportGroup === "computer" || selectedReportGroup === "highvalue" || selectedReportGroup === "musical") ? qrpassComputerCleanV2("brand_model", value, value !== "") : value}))}
               placeholder="Brand / Model (optional)"
               specifyPlaceholder="Specify brand and model (optional)"
               maxLength={255}
@@ -9211,7 +9368,7 @@ function SecurityLostFound() {
               label="Item Color"
               value={form.color}
               options={COMMON_ITEM_COLORS}
-              onChange={value => setForm(current => ({...current, color: value}))}
+              onChange={value => setForm(current => ({...current, color: selectedReportGroup === "sports" ? qrpassSportsClean("color", value, value !== "") : (selectedReportGroup === "computer" || selectedReportGroup === "highvalue" || selectedReportGroup === "musical") ? qrpassComputerCleanV2("color", value, value !== "") : value}))}
               placeholder="Color (optional)"
               specifyPlaceholder="Specify item color (optional)"
               maxLength={100}
@@ -9222,7 +9379,7 @@ function SecurityLostFound() {
             <label className="mb-1 block text-xs font-medium text-foreground">Serial / Identification No. (optional)</label>
             <input
               value={itemSpecs.serial_number ?? ""}
-              onChange={e => setItemSpecs(current => ({...current, serial_number: e.target.value}))}
+              onChange={e => setItemSpecs(current => ({...current, serial_number: selectedReportGroup === "sports" ? qrpassSportsClean("serial_number", e.target.value, false) : (selectedReportGroup === "computer" || selectedReportGroup === "highvalue" || selectedReportGroup === "musical") ? qrpassComputerCleanV2("serial_number", e.target.value) : e.target.value}))}
               maxLength={255}
               placeholder="Enter only if available"
               className="w-full rounded-lg border border-[#cfd8e6] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
@@ -9263,8 +9420,11 @@ function SecurityLostFound() {
   const [cameraOpen, setCameraOpen] =
     useState(false);
 
-  const [cameraError, setCameraError] =
-    useState("");
+  const [cameraError, setCameraErrorStateLf] = useState("");
+  const setCameraError = React.useCallback((message: string) => {
+    setCameraErrorStateLf(message);
+    if (message) setFloatingLfError(message);
+  }, []);
 
   const videoRef =
     useRef<HTMLVideoElement | null>(null);
@@ -9627,6 +9787,35 @@ function SecurityLostFound() {
     e: React.FormEvent
   ) {
     e.preventDefault();
+    if (selectedReportGroup === "sports") {
+      const fields: [string,string][] = [["Item Name",form.item_name],["Brand / Model",form.brand_model],["Color",form.color],["Serial Number",itemSpecs.serial_number ?? ""]];
+      const problem = fields.map(([label,value]) => qrpassSportsError(label,value)).find(Boolean);
+      if (problem) { setError(problem); return; }
+    }
+    if (selectedReportGroup === "musical") {
+      const fields: [string, string][] = [["Item Name", form.item_name], ["Brand / Model", form.brand_model], ["Color", form.color], ["Serial Number", itemSpecs.serial_number ?? ""]];
+      const problem = fields.map(([label, value]) => qrpassComputerInputError(label, value)).find(Boolean);
+      if (problem) { setError(problem); return; }
+      if (form.color === "__OTHER__" || form.brand_model === "__OTHER__") {
+        setError("Please specify the selected color or brand/model, or clear the optional selection."); return;
+      }
+    }
+
+    if (selectedReportGroup === "highvalue") {
+      const fields: [string, string][] = [["Item Name", form.item_name], ["Brand / Model", form.brand_model], ["Color", form.color], ["Serial Number", itemSpecs.serial_number ?? ""]];
+      const problem = fields.map(([label, value]) => qrpassComputerInputError(label, value)).find(Boolean);
+      if (problem) { setError(problem); return; }
+      if (form.color === "__OTHER__" || form.brand_model === "__OTHER__") {
+        setError("Please specify the selected color or brand/model, or clear the optional selection."); return;
+      }
+    }
+
+    if (selectedReportGroup === "computer") {
+      const fields: [string, string][] = [['Item Name', form.item_name], ['Brand / Model', form.brand_model], ['Color', form.color], ['Serial Number', itemSpecs.serial_number ?? '']];
+      const problem = fields.map(([label, value]) => qrpassComputerInputError(label, value)).find(Boolean);
+      if (problem) { setError(problem); return; }
+    }
+
 
     setError("");
     setSuccess("");
@@ -9823,8 +10012,9 @@ function SecurityLostFound() {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Delete Report #${itemId} (${item?.item_name || "Lost & Found item"})?\n\nThis permanently deletes the report and its uploaded photo. This action cannot be undone.`
+    const confirmed = await qrpassFloatingDeleteConfirmV196(
+      `Delete Report #${itemId} (${item?.item_name || "Lost & Found item"})?\n\nThis permanently deletes the report and its uploaded photo. This action cannot be undone.`,
+      "Delete Report?"
     );
 
     if (!confirmed) {
@@ -10359,11 +10549,15 @@ function SecurityLostFound() {
         subtitle="Manage found and lost item reports in one registry, credit finders, identify owners, and process recoveries."
       />
 
-      {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
+      {error && null /* Main errors are displayed in the floating notification. */}
+      {floatingLfError && createPortal(
+        <div role="presentation" style={{position:"fixed",inset:0,zIndex:2147483600,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(15,23,42,.48)",padding:16}}>
+          <div role="alertdialog" aria-modal="true" aria-label="Lost and Found error" aria-describedby="qrpass-csu-lf-error-message" style={{width:"100%",maxWidth:540,maxHeight:"90vh",overflowY:"auto",background:"white",border:"1px solid #dbe3ef",borderRadius:20,padding:32,textAlign:"center",boxShadow:"0 20px 55px rgba(15,23,42,.25)"}}>
+            <h3 style={{fontSize:22,fontWeight:700,color:"#17336d"}}>{/camera|permission/i.test(floatingLfError) ? "Camera Unavailable" : /date|time/i.test(floatingLfError) ? "Invalid Date or Time" : /required|please|complete|select|choose/i.test(floatingLfError) ? "Check Your Details" : /network|fetch|connection/i.test(floatingLfError) ? "Connection Error" : "Unable to Complete Request"}</h3>
+            <p id="qrpass-csu-lf-error-message" style={{margin:"20px 0 28px",color:"#64748b",lineHeight:1.7,overflowWrap:"anywhere",whiteSpace:"pre-wrap"}}>{floatingLfError}</p>
+            <button type="button" autoFocus onClick={() => setFloatingLfError("")} onKeyDown={event => { if(event.key === "Escape") { event.stopPropagation(); setFloatingLfError(""); } }} className="rounded-xl bg-[#24478d] px-8 py-3 font-semibold !text-white hover:bg-[#193671]" style={{minWidth:130}}>OK</button>
+          </div>
+        </div>, document.body)} 
 
       {success && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
@@ -10545,7 +10739,7 @@ function SecurityLostFound() {
             onRefresh={loadItems} loading={loading}
             placeholder="Search report, item, owner/finder, claimant..."
             filter={
-              <QRPassChoiceSelect
+              <QRPassChoiceSelect csuDownward
                 label="Filter Lost and Found reports"
                 value={lostFoundFilter}
                 onChange={value => setLostFoundFilter(value as typeof lostFoundFilter)}
@@ -10565,7 +10759,7 @@ function SecurityLostFound() {
               />
             }
             sortControl={
-              <QRPassChoiceSelect
+              <QRPassChoiceSelect csuDownward
                 label="Sort records"
                 value={csuListSort}
                 onChange={value => setCsuListSort(value as typeof csuListSort)}
@@ -11004,7 +11198,7 @@ function SecurityLostFound() {
                 Report Type *
               </label>
 
-              <QRPassChoiceSelect
+              <QRPassChoiceSelect csuDownward
                 label="Report Type"
                 value={reportMode}
                 onChange={choice => {
@@ -11345,12 +11539,9 @@ function SecurityLostFound() {
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
-                onClick={() => {
-                  clearForm();
-                  setTab("registry");
-                  setError("");
-                  setSuccess("");
-                }}
+                onClick={() => { /* QRPASS_CSU_CANCEL_FUNCTION_ONLY_V2 */ setSelectedReportGroup(null);
+                setError("");
+              }}
                 className="rounded-lg border border-[#cfd8e6] bg-background px-5 py-2 text-sm font-medium !bg-white !text-[#17336d] !border-[#cbd5e1] transition-colors hover:!bg-[#eef2ff] hover:!border-[#a8bde4] hover:!text-[#17336d] focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!outline-none"
 
             onMouseEnter={(e) => {
@@ -11550,7 +11741,7 @@ function SecurityLostFound() {
                   <label className="mb-1 block text-xs font-medium text-foreground">
                     Category
                   </label>
-                  <QRPassChoiceSelect
+                  <QRPassChoiceSelect csuDownward
                     label="Category"
                     value={editForm.category}
                     onChange={choice => updateEditField("category", choice === "__CLEAR__" ? "" : choice)}
@@ -12058,6 +12249,9 @@ function PCOPermitRequests() {
   const [pending, setPending] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState<number | null>(null);
+  // QRPASS_PCO_APPROVAL_FLOATING_V1
+  const approvalLock = React.useRef(false);
+  const [approvalNotice, setApprovalNotice] = useState("");
   const [error, setError] = useState("");
   const [viewingItemV96, setViewingItemV96] = useState<any | null>(null);
 
@@ -12096,25 +12290,38 @@ function PCOPermitRequests() {
   }, []);
 
   async function handleApprove(item: any) {
+    if (!item || approvalLock.current) return;
+    approvalLock.current = true;
+    setApprovalNotice("");
     try {
+      const confirmed = await qrpassFloatingDeleteConfirmV196(
+        "Are you sure you want to approve this item and issue its QR code?",
+        "Approve Item?"
+      );
+      if (!confirmed) return;
       setApprovingId(item.id);
-
-      await approveItem(item.id);
-
-      alert("Item approved and QR code issued successfully!");
-
-      setPending((prev) =>
-        prev.filter((p) => p.id !== item.id)
-      );
-
-    } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to approve item."
-      );
+      try {
+        await approveItem(item.id);
+        setPending(prev => prev.filter(p => p.id !== item.id));
+        setViewingItemV96(null);
+        setApprovalNotice("Item approved and QR code issued successfully!");
+        await loadPendingItems();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to approve item.";
+        if (/already been approved|already approved/i.test(message)) {
+          setPending(prev => prev.filter(p => p.id !== item.id));
+          setViewingItemV96(null);
+          setApprovalNotice("This item has already been approved.");
+          await loadPendingItems();
+        } else {
+          setViewingItemV96(null);
+          await loadPendingItems();
+          setError(message);
+        }
+      }
     } finally {
       setApprovingId(null);
+      approvalLock.current = false;
     }
   }
 
@@ -12164,6 +12371,9 @@ function PCOPermitRequests() {
         subtitle="Review and approve student item registration requests. Approval triggers QR code generation."
         />
 
+      {approvalNotice && (
+        <div role="status" className="rounded-xl border border-[#cbd5e1] bg-[#f5f8ff] px-4 py-3 text-sm text-[#17336d]">{approvalNotice}</div>
+      )}
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
@@ -12185,7 +12395,7 @@ function PCOPermitRequests() {
         sort={requestSort}
         onSortChange={(value) => setRequestSort(value as "newest" | "oldest")}
         onRefresh={loadPendingItems}
-        manageAction={<OperationalManageLogs module="requests" onChange={loadPendingItems} />}
+
         mobileRefreshOnly
         loading={loading}
         placeholder="Search student, item, category, serial number..."
@@ -13261,14 +13471,14 @@ className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl
 /* QRPASS_PCO_REPORTS_SYSADMIN_LAYOUT_V160 */
 /* QRPASS_PCO_REPORTS_WHITE_DROPDOWNS_V161 */
 function PCOReports() {
-  type PCOReportKey = "monthly" | "issuance" | "approval" | "registry";
+  // QRPASS_PCO_COMBINED_REPORTS_V1
+  type PCOReportKey = "monthly" | "issuance" | "approval";
   type PCOPeriod = "day" | "week" | "month";
   type PCOFormat = "pdf" | "xlsx";
   const reportOptions: { key: PCOReportKey; name: string }[] = [
-    { key: "monthly", name: "Monthly Item Registration Summary" },
+    { key: "monthly", name: "Item Registration Summary" },
     { key: "issuance", name: "QR Code Issuance Log" },
     { key: "approval", name: "Approval History with Timestamps" },
-    { key: "registry", name: "Registered Items Export" },
   ];
   const [report, setReport] = useState<PCOReportKey>("monthly");
   const [period, setPeriod] = useState<PCOPeriod>("day");
@@ -13319,7 +13529,6 @@ function PCOReports() {
         const status = String(item.status ?? "").toLowerCase();
         if (report === "issuance" && !(status === "approved" && item.qr_code)) return false;
         if (report === "approval" && status !== "approved") return false;
-        if (report === "registry" && (status !== "approved" || item.is_flagged)) return false;
         const dateValue = stamp(item);
         if (!dateValue) return false;
         const date = new Date(dateValue);
@@ -17021,6 +17230,7 @@ function SysAdminUserAccounts() {
 
   const [creatingUser, setCreatingUser] =
     useState(false);
+  const [addUserFloatingError, setAddUserFloatingError] = useState(""); // QRPASS_ADD_USER_FLOATING_ERROR_V1
 
   const [savingEdit, setSavingEdit] =
     useState(false);
@@ -17255,7 +17465,7 @@ function SysAdminUserAccounts() {
   ) {
     event.preventDefault();
 
-    setError("");
+    setAddUserFloatingError("");
     setSuccess("");
 
     if (
@@ -17264,22 +17474,24 @@ function SysAdminUserAccounts() {
       !newUser.username.trim() ||
       !newUser.password.trim()
     ) {
-      setError(
+      setAddUserFloatingError(
         "Please complete all required fields."
       );
 
       return;
     }
 
-    if (!isPersonName(newUser.name) || !isEmail(newUser.email) || fieldRules.id(newUser.username)) return;
+    if (!isPersonName(newUser.name)) { setAddUserFloatingError("Please enter a valid full name."); return; }
+    if (!isEmail(newUser.email)) { setAddUserFloatingError("Please enter a valid email address."); return; }
+    if (fieldRules.id(newUser.username)) { setAddUserFloatingError(String(fieldRules.id(newUser.username) || "Please enter a valid user ID.")); return; }
 
     if (newUser.role === 'student' && (!newUser.year_level || (newUser.year_level !== 'Senior High School' && !newUser.college))) {
-      setError('Please select the student year level and department (department is not required for Senior High School).');
+      setAddUserFloatingError('Please select the student year level and department (department is not required for Senior High School).');
       return;
     }
 
     if (newUser.password.length < 6) {
-      setError(
+      setAddUserFloatingError(
         "Password must contain at least 6 characters."
       );
 
@@ -17333,7 +17545,7 @@ function SysAdminUserAccounts() {
         err
       );
 
-      setError(
+      setAddUserFloatingError(
         err instanceof Error
           ? err.message
           : "Failed to create user account."
@@ -17677,8 +17889,24 @@ function SysAdminUserAccounts() {
             <Card title="Add New User Account">
           <form
             onSubmit={handleAddUser}
+            onInvalidCapture={(event) => {
+              event.preventDefault();
+              const field = event.target as HTMLInputElement | HTMLSelectElement;
+              const name = field.getAttribute("aria-label") || field.getAttribute("placeholder") || field.name;
+              const message = (name ? name + ": " : "") + (field.validationMessage || "Please complete the required fields.");
+              setAddUserFloatingError(previous => previous || message);
+            }}
             className="p-4 space-y-4"
            data-qrpass-add-user-uniform-v140="QRPASS_ADD_USER_RESTORE_UNIFORM_V140" data-qrpass-add-user-form-v52="true" data-qrpass-add-user-white-v55="true">
+            {addUserFloatingError && createPortal(
+              <div className="fixed inset-0 z-[2147483600] flex items-center justify-center bg-slate-900/55 p-4" role="presentation">
+                <div role="alertdialog" aria-modal="true" aria-labelledby="qrpass-add-user-error-title" aria-describedby="qrpass-add-user-error-message" className="w-full max-w-[540px] rounded-[22px] border border-[#dce3ee] bg-white p-8 text-center shadow-2xl" onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); setAddUserFloatingError(""); } }}>
+                  <h3 id="qrpass-add-user-error-title" className="text-xl font-bold text-[#17336d]">Unable to Create User</h3>
+                  <p id="qrpass-add-user-error-message" className="mt-5 whitespace-pre-wrap break-words text-sm leading-7 text-[#64748b]">{addUserFloatingError}</p>
+                  <button type="button" autoFocus onClick={() => setAddUserFloatingError("")} className="mt-7 h-[52px] min-w-[130px] rounded-[16px] bg-[#24478d] px-6 font-semibold !text-white hover:bg-[#193671]">OK</button>
+                </div>
+              </div>, document.body)}
+
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold mb-1">
@@ -19446,6 +19674,165 @@ function SysAdminSettings() {
 }
 
 // QRPASS_FLOATING_DELETE_YES_NO_V194: QRPass native floating delete confirmation
+/* QRPASS_FLOATING_ALERT_V201 */
+function qrpassShowFloatingAlertV201(message: string, explicitTitle?: string) {
+  if (typeof document === "undefined") return;
+
+  const body = document.body;
+  if (!body) return;
+
+  const existing = document.querySelector('[data-qrpass-floating-alert-v201="true"]');
+  if (existing) {
+    existing.remove();
+  }
+
+  const text = String(message ?? "").trim() || "Notification";
+  const title = explicitTitle || (
+    /(success|successfully|approved|verified|issued|logged in|logged out)/i.test(text)
+      ? "Success"
+      : /(fail|failed|error|invalid|unable|denied|missing|already|not found|cannot)/i.test(text)
+        ? "Notice"
+        : "Notification"
+  );
+
+  const overlay = document.createElement("div");
+  overlay.setAttribute("data-qrpass-floating-alert-v201", "true");
+  overlay.setAttribute("role", "presentation");
+  Object.assign(overlay.style, {
+    position: "fixed",
+    inset: "0",
+    zIndex: "2147483600",
+    background: "rgba(15, 23, 42, 0.30)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "16px",
+  });
+
+  const card = document.createElement("div");
+  card.setAttribute("role", "alertdialog");
+  card.setAttribute("aria-modal", "true");
+  card.setAttribute("aria-labelledby", "qrpass-floating-alert-title-v201");
+  card.setAttribute("aria-describedby", "qrpass-floating-alert-desc-v201");
+  Object.assign(card.style, {
+    width: "100%",
+    maxWidth: "480px",
+    borderRadius: "24px",
+    background: "#ffffff",
+    border: "1px solid #dbe3f0",
+    boxShadow: "0 24px 70px rgba(15, 23, 42, 0.26)",
+    padding: "28px 28px 24px",
+    boxSizing: "border-box",
+    color: "#17336d",
+    textAlign: "center",
+  });
+
+  const heading = document.createElement("h3");
+  heading.id = "qrpass-floating-alert-title-v201";
+  heading.textContent = title;
+  Object.assign(heading.style, {
+    margin: "0",
+    fontSize: "20px",
+    lineHeight: "28px",
+    fontWeight: "700",
+    color: "#17336d",
+  });
+
+  const description = document.createElement("p");
+  description.id = "qrpass-floating-alert-desc-v201";
+  description.textContent = text;
+  Object.assign(description.style, {
+    margin: "18px 0 0",
+    fontSize: "15px",
+    lineHeight: "26px",
+    color: "#475569",
+    whiteSpace: "pre-wrap",
+  });
+
+  const footer = document.createElement("div");
+  Object.assign(footer.style, {
+    display: "flex",
+    justifyContent: "center",
+    marginTop: "26px",
+  });
+
+  const ok = document.createElement("button");
+  ok.type = "button";
+  ok.textContent = "OK";
+  Object.assign(ok.style, {
+    minWidth: "120px",
+    height: "50px",
+    padding: "0 24px",
+    borderRadius: "18px",
+    border: "1px solid #244b91",
+    background: "#244b91",
+    color: "#ffffff",
+    fontSize: "15px",
+    fontWeight: "700",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  });
+  ok.addEventListener("mouseenter", () => { ok.style.background = "#1f407b"; });
+  ok.addEventListener("mouseleave", () => { ok.style.background = "#244b91"; });
+
+  const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  let closed = false;
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    document.removeEventListener("keydown", onKeyDown, true);
+    overlay.remove();
+    previousFocus?.focus();
+  };
+
+  const onKeyDown = (event) => {
+    if (event.key === "Escape" || event.key === "Enter") {
+      event.preventDefault();
+      close();
+    }
+  };
+
+  document.addEventListener("keydown", onKeyDown, true);
+  ok.addEventListener("click", close);
+  overlay.addEventListener("mousedown", (event) => {
+    if (event.target === overlay) close();
+  });
+
+  footer.appendChild(ok);
+  card.append(heading, description, footer);
+  overlay.appendChild(card);
+  body.appendChild(overlay);
+  window.setTimeout(() => ok.focus(), 0);
+}
+
+function qrpassInstallFloatingAlertV201() {
+  if (typeof window === "undefined") return;
+
+  const floatingWindow = window as Window & typeof globalThis & {
+    __qrpassFloatingAlertV201Installed?: boolean;
+    __qrpassNativeAlertV201?: (message?: unknown) => void;
+  };
+
+  if (floatingWindow.__qrpassFloatingAlertV201Installed) {
+    return;
+  }
+
+  floatingWindow.__qrpassNativeAlertV201 = window.alert.bind(window);
+  floatingWindow.__qrpassFloatingAlertV201Installed = true;
+
+  window.alert = (message?: unknown) => {
+    try {
+      qrpassShowFloatingAlertV201(String(message ?? ""));
+    } catch (error) {
+      floatingWindow.__qrpassNativeAlertV201?.(String(message ?? ""));
+    }
+  };
+}
+
+if (typeof window !== "undefined") {
+  qrpassInstallFloatingAlertV201();
+}
+
 function QrpassDeleteConfirmV194({ title, description, loading, cancel, confirm }: {
   title: string; description: string; loading: boolean; cancel: () => void; confirm: () => void;
 }) {
@@ -19545,6 +19932,27 @@ function qrpassFloatingDeleteConfirmV196(message: string, title = "Delete Select
 }
 
 function SysAdminAuditLogs() {
+  // QRPASS_AUDIT_UNLIMITED_COUNT_V1: traverse all cursor pages, retaining the existing local filters.
+  async function qrpassReadAllAuditV1(params: NonNullable<Parameters<typeof getAuditLogs>[0]>) {
+    const rows = new globalThis.Map<string, any>();
+    const seen = new Set<string>();
+    let cursor: string | undefined;
+    let first: Awaited<ReturnType<typeof getAuditLogs>> | undefined;
+    do {
+      const page = await getAuditLogs({ ...params, limit: 100, cursor });
+      if (!Array.isArray(page?.logs) || !page?.pagination || !("next_cursor" in page.pagination)) {
+        throw new Error("Audit API cursor pagination is missing. Update the backend before loading all logs.");
+      }
+      if (!first) first = page;
+      for (const row of page.logs) rows.set(String(row.id), row);
+      const next = page.pagination.next_cursor;
+      if (next !== null && next !== undefined && (typeof next !== "string" || seen.has(next))) throw new Error("Audit pagination returned an invalid or repeated cursor.");
+      cursor = next || undefined;
+      if (cursor) seen.add(cursor);
+    } while (cursor);
+    return { ...first, logs: Array.from(rows.values()) };
+  }
+
   const [logs, setLogs] = useState<any[]>([]);
   const [managedLogs, setManagedLogs] = useState<any[]>([]);
   const auditRequest = useRef(0);
@@ -19630,7 +20038,7 @@ function SysAdminAuditLogs() {
   };
   const manageUnarchive = async (archiveId:string) => {
     if(manageBusy)return;
-    if(!window.confirm("Restore every record in this archive batch to Audit Activity Records?"))return;
+    if(!(await qrpassFloatingDeleteConfirmV196("Are you sure you want to restore every record in this archive batch to Audit Activity Records?", "Restore Archived Logs?")))return;
     setManageBusy(true);setManageMessage("");
     try {const r=await qrpassManageLogsRequest("unarchive","POST",{archive_id:archiveId});const j=await r.json();setManageMessage(String(j.restored_count)+" logs restored.");await refreshAuditViews();}
     catch(e){setManageMessage(e instanceof Error?e.message:"Unarchive failed");}
@@ -19790,7 +20198,7 @@ function SysAdminAuditLogs() {
   });
 
   async function loadManagedLogs() {
-    const data = await getAuditLogs({ limit: 500 });
+    const data = await qrpassReadAllAuditV1({ view: "manage" });
     setManagedLogs(Array.isArray(data?.logs) ? data.logs : []);
   }
 
@@ -19829,12 +20237,7 @@ function SysAdminAuditLogs() {
         setError("");
       }
 
-      const data = await getAuditLogs({
-        search: customSearch || undefined,
-        status: customStatus || undefined,
-        date: customDate || undefined,
-        limit: 500,
-      });
+      const data = await qrpassReadAllAuditV1({ view: "activity", search: customSearch || undefined, status: customStatus || undefined, date: customDate || undefined });
 
       if (request !== auditRequest.current) return;
       setLogs(
@@ -20232,7 +20635,7 @@ function SysAdminAuditLogs() {
                 <p className="text-xs text-[#64748b]">
                   {manageShowArchives
                     ? <>{manageArchiveSelectedV20.length} selected · {manageArchiveFilteredV14.length} of {manageArchiveDetailV14?.records.length ?? 0} archived records · Actions apply to the entire batch</>
-                    : <>{manageSelectedIds.length} selected · {manageVisibleRecords.length} shown (maximum 500 loaded)</>}
+                    : <>{manageSelectedIds.length} selected · {manageVisibleRecords.length} shown</>}
                 </p>
                 <div className="flex flex-wrap items-center justify-end gap-2 sm:shrink-0">
                   <button type="button" disabled={manageBusy || !(manageShowArchives ? visibleArchiveKeys.size : manageVisibleRecords.length)}
@@ -20372,13 +20775,9 @@ function SysAdminAuditLogs() {
         : <>
 
 
-<Card
+{!loading && <p data-qrpass-record-counter="audit" className="text-left text-sm text-[#64748b]" aria-live="polite">Showing <strong className="font-semibold text-[#17336d]">{visibleAuditLogs.length} of {logs.length} records</strong></p>}
+      <Card
         title="Audit Activity Records"
-        action={
-          <span className="rounded-full bg-[#eef2fc] px-2.5 py-1 text-[10px] font-bold text-[#1a3a7b]" data-qrpass-audit-matching="QRPASS_AUDIT_MATCHING_BADGE_V33">
-            {visibleAuditLogs.length} matching
-          </span>
-        }
       >
 
         {loading ? (
@@ -22578,7 +22977,7 @@ const NAV: Record<
 
   security: [
     {icon: <ScanLine size={16}/>, label: "Scan & Verify"},
-    {icon: <Map size={16}/>, label: "Entry / Exit Log"},
+    {icon: <Map size={16}/>, label: "Entry / Exit Records"},
     {icon: <BookOpen size={16}/>, label: "Lost & Found"},
     {icon: <BarChart2 size={16}/>, label: "Reports"},
   ],
@@ -22761,7 +23160,7 @@ function QRPassRegistrationSelect({
   onValueChange: (next: string) => void;
 }) {
   return (
-    <QRPassChoiceSelect
+    <QRPassChoiceSelect studentDownward
       label={label}
       value={value}
       options={options.map(option => ({ value: option, label: option }))}
@@ -22806,6 +23205,22 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
   const [regSubmitted, setRegSubmitted] = useState(false);
+  // QRPASS_FORGOT_PROCESSING_V1
+  const [forgotSendingV1, setForgotSendingV1] = React.useState(false);
+  const forgotSendingRefV1 = React.useRef(false);
+  const [gmailCode, setGmailCode] = useState(""); // QRPASS_GMAIL_VERIFICATION_V1
+  const [gmailSent, setGmailSent] = useState(false);
+  const [gmailBusy, setGmailBusy] = useState(false); // QRPASS_GMAIL_RESEND_20S_V1
+  const [gmailResendUntil, setGmailResendUntil] = useState(0);
+  const [gmailClock, setGmailClock] = useState(Date.now());
+  const [gmailResendNotice, setGmailResendNotice] = useState("");
+  const gmailResendSeconds = Math.max(0, Math.ceil((gmailResendUntil - gmailClock) / 1000));
+  const gmailSubmitLock = React.useRef(false);
+  React.useEffect(() => {
+    if (!gmailSent) return;
+    const timer = window.setInterval(() => setGmailClock(Date.now()), 250);
+    return () => window.clearInterval(timer);
+  }, [gmailSent]);
   const [registrationErrorV182, setRegistrationErrorV182] = useState(""); // QRPASS_REVOKED_ID_MESSAGES_V182
 
   // Forgot password state
@@ -22963,10 +23378,10 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
   // REGISTRATION
   // ==========================================================================
 
-  async function handleRegister(
-    e: React.FormEvent
-  ) {
+  async function handleRegister(e: React.FormEvent, resend = false) {
     e.preventDefault();
+    if (gmailBusy || gmailSubmitLock.current) return;
+    if (resend && (!gmailSent || Date.now() < gmailResendUntil)) return;
     setRegistrationErrorV182("");
 
     if (regRole !== "student") {
@@ -23019,22 +23434,29 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
       return;
     }
 
+    if (!/^[^@\s]+@gmail\.com$/i.test(email)) {
+      setRegistrationErrorV182("Use an existing Gmail address ending in @gmail.com."); return;
+    }
+    if (gmailSent && !resend && !/^\d{6}$/.test(gmailCode)) {
+      setRegistrationErrorV182("Enter the six-digit verification code."); return;
+    }
+    setGmailResendNotice("");
+    gmailSubmitLock.current = true;
+    setGmailBusy(true);
+    if (resend) { setGmailClock(Date.now()); setGmailResendUntil(Date.now() + 20000); }
     try {
-      await register(
-        name,
-        email,
-        registrationUsername,
-        registrationPassword,
-        "student",
-        college,
-        yearLevel,
-        contactNumber
-      );
-
-      setRegSubmitted(true);
+      const result = await register(name, email, registrationUsername, registrationPassword, "student", college, yearLevel, contactNumber, gmailSent && !resend ? gmailCode : undefined);
+      if (result.verification_required === true) {
+        setGmailClock(Date.now());
+        setGmailResendUntil(Date.now() + 20000);
+        setGmailSent(true); setGmailCode("");
+        setGmailResendNotice(resend ? "A new verification code has been sent. Check your Gmail inbox or Spam." : "");
+        return;
+      }
+      setGmailSent(false); setGmailCode(""); setRegSubmitted(true);
     } catch (error) {
       setRegistrationErrorV182(error instanceof Error ? error.message : "Registration failed.");
-    }
+    } finally { gmailSubmitLock.current = false; setGmailBusy(false); }
   }
 
   // ==========================================================================
@@ -23046,7 +23468,10 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
 ) {
   e.preventDefault();
 
-  try {
+  if (forgotSendingRefV1.current) return;
+    forgotSendingRefV1.current = true;
+    setForgotSendingV1(true);
+    try {
     await requestPasswordReset(
       forgotEmail.trim()
     );
@@ -23069,6 +23494,9 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
         ? error.message
         : "Unable to send verification code."
     );
+  } finally {
+    forgotSendingRefV1.current = false;
+    setForgotSendingV1(false);
   }
 }
 
@@ -24049,7 +24477,30 @@ async function handleTwoFactorSubmit(
                     </div>
 
 
-                    <div className="flex gap-3 mt-5 justify-end">
+                    {/* QRPASS_GMAIL_FLOATING_V1 */}
+{gmailSent && createPortal(
+  <div role="presentation" style={{position:"fixed",inset:0,zIndex:2147483500,display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"rgba(15,23,42,.55)"}}>
+    <section role="dialog" aria-modal="true" aria-labelledby="qrpass-gmail-floating-title" className="w-full max-w-[540px] max-h-[90dvh] overflow-y-auto rounded-2xl border border-[#dbe3ef] bg-white p-6 shadow-2xl sm:p-8">
+      <h2 id="qrpass-gmail-floating-title" className="text-center text-xl font-bold text-[#17336d]">Verify your Gmail</h2>
+      <p className="mt-4 text-center text-sm leading-6 text-[#64748b]">Enter the six-digit code sent to your Gmail. It expires after 10 minutes. Check Spam if needed.</p>
+      {registrationErrorV182 && <p role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{registrationErrorV182}</p>}
+      <label htmlFor="qrpass-gmail-floating-code" className="mt-5 block text-sm font-semibold text-[#17336d]">Verification Code</label>
+      <input id="qrpass-gmail-floating-code" aria-label="Gmail verification code" autoFocus inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={gmailCode} disabled={gmailBusy} onChange={e=>setGmailCode(e.target.value.replace(/\D/g,""))} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();if(!gmailBusy && gmailCode.length===6) void handleRegister(e);}}} className="mt-2 h-12 w-full rounded-xl border border-[#cbd5e1] bg-white px-3 text-center text-lg tracking-[0.4em] text-[#17336d] outline-none focus:border-[#5278e7]" />
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        <button type="button" disabled={gmailBusy} onClick={()=>{setGmailSent(false);setGmailCode("");setRegistrationErrorV182("");}} className="min-h-[48px] rounded-xl border border-[#cbd5e1] bg-white px-5 text-sm font-semibold text-[#17336d] hover:bg-[#eef2ff] disabled:opacity-50">Change details</button>
+        <button type="button" disabled={gmailBusy || gmailCode.length!==6} onClick={e=>{void handleRegister(e);}} className="min-h-[48px] rounded-xl bg-[#193671] px-5 text-sm font-semibold !text-white hover:bg-[#24478d] disabled:opacity-50">{gmailBusy ? "Verifying..." : "Verify & Create Account"}</button>
+      </div>
+      <div className="mt-5 text-center space-y-2">
+        <p className="text-xs text-[#64748b]">Didn't receive the code?</p>
+        <button type="button" disabled={gmailBusy || gmailResendSeconds > 0} onClick={e=>{void handleRegister(e, true);}} className="min-h-[40px] rounded-xl border border-[#cbd5e1] bg-white px-5 text-sm font-semibold text-[#17336d] hover:bg-[#eef2ff] disabled:cursor-not-allowed disabled:opacity-50">
+          {gmailBusy ? "Please wait..." : gmailResendSeconds > 0 ? "Resend Code (" + gmailResendSeconds + "s)" : "Resend Code"}
+        </button>
+        {gmailResendNotice && <p role="status" className="text-xs text-green-700">{gmailResendNotice}</p>}
+      </div>
+    </section>
+  </div>, document.body
+)}
+                    <div className={gmailSent ? "hidden" : "flex gap-3 mt-5 justify-end"}>
                       <button
                         type="button"
                         onClick={() =>
@@ -24064,10 +24515,10 @@ async function handleTwoFactorSubmit(
                       </button>
 
                       <button data-qrpass-blue-v173="register-submit"
-                        type="submit"
+                        type="submit" disabled={gmailBusy}
                         className="text-xs bg-primary text-white px-5 py-2 rounded-md font-semibold transition-opacity transition-colors hover:!bg-[#eef2ff] hover:!text-[#17336d] hover:!border-[#a8bde4] focus-visible:!ring-0 focus-visible:!shadow-none"
           >
-                        Submit Registration
+                        {gmailBusy ? "Processing..." : gmailSent ? "Verify & Create Account" : "Submit Registration"}
                       </button>
                     </div>
                   </form>
@@ -24219,7 +24670,7 @@ async function handleTwoFactorSubmit(
                     )
                   }
 
-                  ref={(el) => { /* QRPASS_FORGOT_EMAIL_FOCUS_OUTLINE_V136 */
+                  inputRef={(el) => { /* QRPASS_FORGOT_EMAIL_FOCUS_OUTLINE_V136 */
                     if (!el) return;
                     const focus = document.activeElement === el;
                     const hover = el.matches(':hover');
@@ -24260,7 +24711,7 @@ async function handleTwoFactorSubmit(
             </div>
 
 
-            <button
+            <button disabled={forgotSendingV1} aria-busy={forgotSendingV1}
               type="submit"
               className="w-full py-2.5 rounded-md font-semibold text-sm"
               style={{
@@ -24269,7 +24720,9 @@ async function handleTwoFactorSubmit(
                 color: "#fff",
               }}
           >
-              Send Verification Code
+              {forgotSendingV1 ? (
+                <span className="inline-flex items-center justify-center gap-2" role="status"><span aria-hidden="true" className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />Processing...</span>
+              ) : "Send Verification Code"}
             </button>
 
             <button
@@ -25332,8 +25785,8 @@ function Dashboard({
       }
 
       const savedLabel =
-        role === "security" && saved.label === "Recent Scan Logs"
-          ? "Entry / Exit Log"
+        role === "security" && ["Recent Scan Logs", "Entry / Exit Log"].includes(saved.label)
+          ? "Entry / Exit Records"
           : saved.label;
       const index = navItems.findIndex(
         item => item.label === savedLabel
@@ -26396,7 +26849,7 @@ const handleSaveAccountProfile = async () => {
         return destination("Lost & Found");
 
       if (/entry|exit/.test(normalizedType))
-        return destination("Entry / Exit Log");
+        return destination("Entry / Exit Records");
 
       if (normalizedType.includes("report"))
         return destination("Reports");
@@ -28395,8 +28848,12 @@ const handleSaveAccountProfile = async () => {
 
             {accountOpen && (
               <div
-                  className="fixed left-3 right-3 top-14 z-[100] w-auto overflow-hidden rounded-xl border border-[#dce3ee] bg-white text-foreground sm:absolute sm:left-auto sm:right-0 sm:top-10 sm:w-72 dark:border-[#29415f] dark:bg-[#0f1d35] dark:text-slate-100"
+                  data-qrpass-account-fixed-v1="true"
+                  className="z-[100] rounded-xl border border-[#dce3ee] bg-white text-foreground dark:border-[#29415f] dark:bg-[#0f1d35] dark:text-slate-100"
                   style={{
+                    position: "fixed", top: "56px", right: "12px", left: "auto", bottom: "auto",
+                    width: "288px", maxWidth: "calc(100vw - 24px)", maxHeight: "calc(100dvh - 68px)",
+                    overflowX: "hidden", overflowY: "auto", transform: "none", margin: 0,
                     boxShadow: "0 16px 40px rgba(16, 26, 51, 0.16)",
                   }}
                 >

@@ -201,3 +201,36 @@
   overscroll-behavior: contain;
   padding: 8px;
 }
+
+/* QRPASS_SYSADMIN_SMOOTH_ARROWS_V1 */
+@layer qrpass-select {
+ #root [data-qrpass-role="sysadmin"] select[data-qrpass-smooth-arrow="true"] { background-image: none !important; }
+ #root [data-qrpass-role="sysadmin"] .qrpass-select-chevron { transition: transform 180ms ease !important; transform-origin: center; }
+ #root [data-qrpass-role="sysadmin"] .qrpass-select-trigger:is([aria-expanded="true"],[data-state="open"]) > .qrpass-select-chevron { transform: rotate(180deg) !important; }
+}
+.qrpass-sysadmin-arrow-v1 { position: fixed; width:16px; height:16px; place-items:center; pointer-events:none; z-index: 100; color:#31539b; }
+.qrpass-sysadmin-arrow-v1 svg { display:block; transform:rotate(0deg); transform-origin:center; transition:transform 180ms ease; }
+.qrpass-sysadmin-arrow-v1[data-open="true"] svg { transform:rotate(180deg); }
+@media(prefers-reduced-motion:reduce){.qrpass-sysadmin-arrow-v1 svg {transition:none;} #root [data-qrpass-role="sysadmin"] .qrpass-select-chevron {transition:none !important;}}
+
+/* QRPASS_SYSADMIN_SMOOTH_ARROWS_V2 */
+@layer qrpass-select {
+[data-qrpass-role="sysadmin"] select[data-qrpass-arrow-v2] {appearance:none!important;background-image:none!important;}
+[data-qrpass-role="sysadmin"] .qrpass-select-chevron {transform-origin:center!important;transition:transform 180ms ease!important;}
+[data-qrpass-role="sysadmin"] .qrpass-select-trigger:is([aria-expanded="true"],[data-state="open"]) .qrpass-select-chevron {transform:rotate(180deg)!important;}
+}
+.qrpass-sysadmin-arrow-v2 {position:fixed;display:grid;place-items:center;width:16px;height:16px;pointer-events:none;z-index:2147482999;color:#31539b;}
+.qrpass-sysadmin-arrow-v2 svg {display:block;transform:rotate(0deg);transform-origin:center;transition:transform 180ms ease;}
+.qrpass-sysadmin-arrow-v2[data-open="true"] svg {transform:rotate(180deg);}
+@media(prefers-reduced-motion:reduce){.qrpass-sysadmin-arrow-v2 svg{transition:none;}}
+
+/* QRPASS_PCO_SMOOTH_ARROWS_V2 */
+@layer qrpass-select {
+[data-qrpass-role="pco"] select[data-qrpass-pco-arrow-v2] {appearance:none!important;background-image:none!important;}
+[data-qrpass-role="pco"] .qrpass-select-chevron {transform-origin:center!important;transition:transform 180ms ease!important;}
+[data-qrpass-role="pco"] .qrpass-select-trigger:is([aria-expanded="true"],[data-state="open"]) .qrpass-select-chevron {transform:rotate(180deg)!important;}
+}
+.qrpass-pco-arrow-v2 {position:fixed;display:grid;place-items:center;width:16px;height:16px;pointer-events:none;z-index:2147482999;color:#31539b;}
+.qrpass-pco-arrow-v2 svg {display:block;transform:rotate(0deg);transform-origin:center;transition:transform 180ms ease;}
+.qrpass-pco-arrow-v2[data-open="true"] svg {transform:rotate(180deg);}
+@media(prefers-reduced-motion:reduce){.qrpass-pco-arrow-v2 svg{transition:none;}}
