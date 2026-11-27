@@ -4731,7 +4731,7 @@ function StudentLostAndFound() {
     ) {
       return (
         <span className="rounded-full bg-green-100 px-3 py-1 text-[11px] font-semibold text-green-700 dark:bg-green-950/40 dark:text-green-300">
-          Claimed
+          Already Claimed
         </span>
       );
     }
@@ -5108,6 +5108,8 @@ function StudentLostAndFound() {
                           >
                             View Details
                           </button>
+
+
 {isFound && (
 <button
                             type="button"
@@ -5264,7 +5266,7 @@ function StudentLostAndFound() {
 
               <div>
                 <p className="text-xs text-muted-foreground">
-                  Date / Time
+                  {/* QRPASS_STUDENT_LF_EVENT_DATE_LABEL_V1 */}{getReportType(selectedItem) === "lost" ? "Lost / Last Seen Date / Time" : "Found Date / Time"}
                 </p>
                 <p className="mt-1 font-medium text-foreground">
                   {formatDate(
@@ -5285,6 +5287,19 @@ function StudentLostAndFound() {
                 </p>
               </div>
 
+              {/* QRPASS_STUDENT_CLAIMANT_DETAILS_V3 */}
+              {getStatus(selectedItem).trim().toLowerCase() === "claimed" && (
+                <>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Claimant Name</p>
+                    <p className="mt-1 font-medium text-foreground">{selectedItem.claimant?.name || "Not available"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Claimed Date / Time</p>
+                    <p className="mt-1 font-medium text-foreground">{formatDate(selectedItem.claimed_at)}</p>
+                  </div>
+                </>
+              )}
               {selectedItem.description && (
                 <div className="sm:col-span-2">
                   <p className="text-xs text-muted-foreground">
@@ -6213,7 +6228,7 @@ function SecurityScanVerify() {
                 {/* ITEM NAME */}
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-gray-800 mb-1">
-                    Item Name *
+                    Item Name
                   </label>
 
                   <ValidatedInput rule={fieldRules.nonBlank} aria-label="Item Name"
@@ -6234,7 +6249,7 @@ function SecurityScanVerify() {
                 {/* OWNER NAME */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-800 mb-1">
-                    Owner Name *
+                    Owner Name
                   </label>
 
                   <ValidatedInput rule={fieldRules.name} aria-label="Owner Name"
@@ -6255,7 +6270,7 @@ function SecurityScanVerify() {
                 {/* OWNER ID */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-800 mb-1">
-                    Owner Student ID *
+                    Owner Student ID
                   </label>
 
                   <ValidatedInput rule={fieldRules.id} aria-label="Owner ID Number"
@@ -6293,7 +6308,7 @@ function SecurityScanVerify() {
                 {/* CARRIER NAME */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-800 mb-1">
-                    Person Carrying the Item *
+                    Person Carrying the Item
                   </label>
 
                   <ValidatedInput rule={fieldRules.name} aria-label="Person Carrying Item"
@@ -6315,7 +6330,7 @@ function SecurityScanVerify() {
                 {/* CARRIER ID */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-800 mb-1">
-                    Student ID (Carrier) *
+                    Student ID (Carrier)
                   </label>
 
                   <ValidatedInput rule={fieldRules.id} aria-label="Carrier ID Number"
@@ -6339,7 +6354,7 @@ function SecurityScanVerify() {
                 {/* DIRECTION */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-800 mb-1">
-                    Direction *
+                    Direction
                   </label>
 
                   <select
@@ -7738,28 +7753,31 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
             className="h-12 min-w-[180px] max-w-full rounded-xl border border-[#bfceff] px-3 text-sm text-foreground outline-none focus:border-[#6488ff] dark:border-[#35537e] dark:bg-[#1b2b49] !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
           >
             <option value="all">
-              All Records ({periodLogs.length})
+              All Records
             </option>
 
             <option value="entry">
-              Entry ({entryLogs.length})
+              Entry
             </option>
 
             <option value="exit">
-              Exit ({exitLogs.length})
+              Exit
             </option>
 
             <option value="flagged">
-              Flagged ({flaggedIncidents.length})
+              Flagged
             </option>
 
             <option value="resolved">
-              Resolved ({resolvedIncidents.length})
+              Resolved
             </option>
           </select>
         }
       />
 
+
+      {/* QRPASS_CSU_ENTRY_EXIT_COUNTER_V1 */}
+      {!loading && <p data-qrpass-record-counter="csu-entry-exit" className="text-left text-sm text-[#64748b]" aria-live="polite">Showing <strong className="font-semibold text-[#17336d]">{entryExitTab === "flagged" ? shownFlaggedIncidents.length : entryExitTab === "resolved" ? shownResolvedIncidents.length : shownEntryLogs.length} of {entryExitTab === "flagged" ? flaggedIncidents.length : entryExitTab === "resolved" ? resolvedIncidents.length : periodLogs.length} records</strong></p>}
 
       {/* SUCCESSFUL ENTRY / EXIT */}
       {(entryExitTab === "all" || entryExitTab === "entry" || entryExitTab === "exit") && (
@@ -8519,7 +8537,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-foreground">
-                  Resolution Type *
+                  Resolution Type
                 </label>
 
                 <select
@@ -8572,7 +8590,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-foreground">
-                  Additional Resolution Details *
+                  Additional Resolution Details
                 </label>
 
                 <textarea
@@ -9148,7 +9166,7 @@ function CSULocationPicker(/* QRPASS_CSU_DROPDOWN_DOWNWARD_V1 */ {
 
   return (
     <div className="min-w-0 space-y-2">
-      <label className="block text-xs font-medium text-foreground">{label}{required ? " *" : ""}</label>
+      <label className="block text-xs font-medium text-foreground">{label}</label>
       <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
         {renderLocationChoice(
           "building", building, "Choose building",
@@ -9185,6 +9203,10 @@ function CSULocationPicker(/* QRPASS_CSU_DROPDOWN_DOWNWARD_V1 */ {
 
 /* QRPASS_CSU_LOSTFOUND_WHITE_TABS_V154 */
 function SecurityLostFound() {
+  /* QRPASS_CSU_CLAIM_FLOAT_V1 */
+  const [qrpassClaimConfirm, setQrpassClaimConfirm] = useState<any | null>(null);
+  const [csuViewDetailsId, setCsuViewDetailsId] = useState<string | null>(null);
+
   const [csuListSort, setCsuListSort] =
     useState<"newest" | "oldest">("newest");
   const [items, setItems] = useState<any[]>([]);
@@ -9331,12 +9353,10 @@ function SecurityLostFound() {
 
     return (
       <div className="space-y-4">
-        <p className="text-xs text-muted-foreground">
-          Describe only what can help identify the missing or surrendered item. Unknown details may be left blank.
-        </p>
+        
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs font-medium text-foreground">Item Name *</label>
+            <label className="mb-1 block text-xs font-medium text-foreground">Item Name</label>
             <CSUItemChoice
               label="Item Name"
               value={form.item_name}
@@ -10279,7 +10299,7 @@ function SecurityLostFound() {
     return local.toISOString().slice(0, 16);
   }
 
-  async function handleRecovered(item: any) {
+  async function handleRecovered(item: any, qrpassConfirmed = false) {
     const reportType = String(
       item.report_type ?? "found"
     ).toLowerCase();
@@ -10298,11 +10318,8 @@ function SecurityLostFound() {
     }
 
     // Found reports keep the existing claim-verification workflow.
-    const confirmed = window.confirm(
-      "CSU verification: Have you checked the student's ownership evidence and confirmed the item will be released to the rightful owner? This will change the status from Pending to Claimed."
-    );
-
-    if (!confirmed) {
+    if (!qrpassConfirmed) {
+      setQrpassClaimConfirm(item);
       return;
     }
 
@@ -10549,6 +10566,17 @@ function SecurityLostFound() {
         subtitle="Manage found and lost item reports in one registry, credit finders, identify owners, and process recoveries."
       />
 
+      {qrpassClaimConfirm && createPortal(
+        <div role="presentation" onClick={() => setQrpassClaimConfirm(null)} style={{position:"fixed",inset:0,zIndex:2147483500,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(15,23,42,.48)",padding:16}}>
+          <div role="alertdialog" aria-modal="true" aria-labelledby="qrpass-csu-claim-title" aria-describedby="qrpass-csu-claim-desc" onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key==="Escape"){e.stopPropagation();setQrpassClaimConfirm(null);} if(e.key==="Tab"){const buttons=e.currentTarget.querySelectorAll("button"); if(buttons.length===2){if(e.shiftKey&&document.activeElement===buttons[0]){e.preventDefault();buttons[1].focus();}else if(!e.shiftKey&&document.activeElement===buttons[1]){e.preventDefault();buttons[0].focus();}}}}} style={{width:"100%",maxWidth:520,maxHeight:"90vh",overflowY:"auto",background:"white",border:"1px solid #dbe3ef",borderRadius:20,padding:28,textAlign:"center",boxShadow:"0 20px 55px rgba(15,23,42,.25)"}}>
+            <h3 id="qrpass-csu-claim-title" style={{fontSize:22,fontWeight:700,color:"#17336d"}}>Verify Claim</h3>
+            <p id="qrpass-csu-claim-desc" style={{margin:"16px 0 24px",color:"#64748b",lineHeight:1.6}}>Have you verified the student's ownership evidence and confirmed the item will be released to the rightful owner? This will change the status from Pending to Claimed.</p>
+            <div className="flex justify-center gap-3">
+              <button type="button" autoFocus onClick={()=>setQrpassClaimConfirm(null)} className="rounded-xl border border-[#cbd5e1] bg-white px-8 py-3 font-semibold text-[#17336d] hover:bg-[#eef2ff]">No</button>
+              <button type="button" onClick={()=>{const item=qrpassClaimConfirm;setQrpassClaimConfirm(null);void handleRecovered(item,true);}} className="rounded-xl bg-[#24478d] px-8 py-3 font-semibold !text-white hover:bg-[#193671]">Yes</button>
+            </div>
+          </div>
+        </div>, document.body)}
       {error && null /* Main errors are displayed in the floating notification. */}
       {floatingLfError && createPortal(
         <div role="presentation" style={{position:"fixed",inset:0,zIndex:2147483600,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(15,23,42,.48)",padding:16}}>
@@ -10745,16 +10773,10 @@ function SecurityLostFound() {
                 onChange={value => setLostFoundFilter(value as typeof lostFoundFilter)}
                 className="csu-form-toolbar-select"
                 options={[
-                  { value: "all", label: `All Reports (${periodItems.length})` },
-                  ...(["lost", "found", "recovered"] as const).map(value => {
-                    const count = periodItems.filter(item => {
-                      const closed = ["claimed", "recovered"].includes(String(item.status ?? "").toLowerCase());
-                      const type = String(item.report_type ?? (value === "found" ? "found" : "")).toLowerCase();
-                      return value === "recovered" ? closed : !closed && type === value;
-                    }).length;
-                    const label = { lost: "Lost", found: "Found", recovered: "Recovered / Claimed" }[value];
-                    return { value, label: `${label} (${count})` };
-                  }),
+                  { value: "all", label: "All Reports" },
+                  { value: "lost", label: "Lost" },
+                  { value: "found", label: "Found" },
+                  { value: "recovered", label: "Recovered / Claimed" },
                 ]}
               />
             }
@@ -10771,6 +10793,8 @@ function SecurityLostFound() {
               />
             }
           />
+
+          {!loading && <p data-qrpass-record-counter="csu-lost-found" className="text-left text-sm text-[#64748b]" aria-live="polite">Showing <strong className="font-semibold text-[#17336d]">{shownLostFound.length} of {periodItems.length} records</strong></p>}
 
 
 
@@ -10797,7 +10821,8 @@ function SecurityLostFound() {
             </div>
           )}
 
-          {!loading &&
+          <div data-qrpass-csu-compact-cards="true" className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-2">
+{!loading &&
             shownLostFound.map((item) => {
               const reportType = String(
                 item.report_type ?? "found"
@@ -10819,11 +10844,26 @@ function SecurityLostFound() {
               return (
                 <div
                   key={item.id}
-                  className="w-full min-w-0 rounded-xl border border-border bg-card shadow-sm"
+                  className="w-full min-w-0 rounded-2xl border border-border bg-card shadow-sm h-full"
                 >
-                  <div className="p-4">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="min-w-0 flex-1">
+                  <div className="p-4 h-full">
+                    <div className="flex h-full min-w-0 flex-col gap-3">
+                      <div data-qrpass-csu-photo-details="true" className="min-w-0 flex-1 space-y-3">
+                        <div className="flex h-44 w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40 sm:h-48">
+                          {item.photo_url ? <img src={item.photo_url} alt={item.item_name || "Item photo"} className="h-full w-full object-contain" /> : <span className="text-sm text-muted-foreground">[Item photo]</span>}
+                        </div>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <h3 className="text-base font-semibold text-foreground">{item.item_name}</h3>
+                          <span className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusClass(status)}`}>{status}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground break-words">{[item.brand_model,item.color,item.category].filter(Boolean).join(" · ")}</p>
+                        <p className="text-sm text-muted-foreground break-words">{[isLostReport ? item.location_lost : item.location_found,formatDate(isLostReport ? item.date_lost : item.date_found)].filter(Boolean).join(" · ")}</p>
+                        <button type="button" className="w-full rounded-xl border border-[#cfd8e6] bg-white px-4 py-3 text-sm font-medium text-foreground hover:bg-[#eef2fc]" onClick={() => setCsuViewDetailsId(String(item.id))}>View Details</button>
+                        {csuViewDetailsId === String(item.id) && (
+                          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4" onClick={() => setCsuViewDetailsId(null)}>
+                            <div role="dialog" aria-modal="true" aria-label="Lost and Found report details" className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-xl" onClick={e => e.stopPropagation()}>
+                              <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Item Details</h2><button type="button" className="rounded-lg border border-border px-3 py-2 text-sm" onClick={() => setCsuViewDetailsId(null)}>Close</button></div>
+                              <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="text-base font-semibold text-foreground">
                             {item.item_name}
@@ -10854,7 +10894,7 @@ function SecurityLostFound() {
                           </span>
                         </div>
 
-                        <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm [&>div]:min-w-0 [&_p]:break-words">
                           <div>
                             <p className="text-xs text-muted-foreground">
                               Category
@@ -11090,8 +11130,12 @@ function SecurityLostFound() {
                           </div>
                         )}
                       </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
-                      <div className="flex flex-shrink-0 flex-col gap-2">
+                      <div className="mt-auto grid grid-cols-1 gap-2 sm:grid-cols-2 [&>button]:min-w-0 [&>button]:whitespace-normal [&>button:last-child:nth-child(odd)]:col-span-full [&>div]:col-span-full">
                         <button
                           type="button"
                           onClick={() =>
@@ -11155,6 +11199,7 @@ function SecurityLostFound() {
                 </div>
               );
             })}
+          </div>
         </div>
       )}
 
@@ -11170,22 +11215,9 @@ function SecurityLostFound() {
                 : "Report Lost Item"}
             </h3>
 
-            <p className="mt-1 text-xs text-muted-foreground">
-              {reportMode === "found"
-                ? "Use this form after a found item has been physically surrendered to the Security office."
-                : "Use this form when a student or employee reports an item as lost or missing."}
-            </p>
+            
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedReportGroup(null);
-                setError("");
-              }}
-              className="inline-flex h-10 items-center justify-center rounded-xl border border-[#cfd8e6] bg-white px-4 text-xs font-semibold text-primary hover:bg-[#eef2fc]"
-          >
-              Change Category
-            </button>
+            
           </div>
 
           <form
@@ -11195,7 +11227,7 @@ function SecurityLostFound() {
           >
             <div className="rounded-lg border border-[#cfd8e6] bg-muted/30 p-4">
               <label className="mb-1 block text-xs font-medium text-foreground">
-                Report Type *
+                Report Type
               </label>
 
               <QRPassChoiceSelect csuDownward
@@ -11213,9 +11245,7 @@ function SecurityLostFound() {
                 ]}
               />
 
-              <p className="mt-2 text-xs text-muted-foreground">
-                Choose whether Security is recording an item that was found and turned over, or an item reported as lost. The required fields below will change automatically.
-              </p>
+              
             </div>
 
             {reportMode === "found" ? (
@@ -11224,13 +11254,11 @@ function SecurityLostFound() {
                   <p className="text-sm font-semibold text-green-900">
                     Finder / Turnover Credit
                   </p>
-                  <p className="mt-1 text-xs text-green-700">
-                    Enter the Student or Employee ID of the person who found and physically turned over the item.
-                  </p>
+                  
                 </div>
 
                 <label className="mb-1 block text-xs font-medium text-green-900">
-                  Finder Student / Employee ID *
+                  Finder Student / Employee ID
                 </label>
 
                 <ValidatedInput rule={fieldRules.nonBlank} aria-label="Finder Student / Employee ID"
@@ -11249,13 +11277,11 @@ function SecurityLostFound() {
                   <p className="text-sm font-semibold text-red-900">
                     Person Reporting Lost Item
                   </p>
-                  <p className="mt-1 text-xs text-red-700">
-                    Enter the Student or Employee ID of the person who owns and reported the missing item.
-                  </p>
+                  
                 </div>
 
                 <label className="mb-1 block text-xs font-medium text-red-900">
-                  Owner Student / Employee ID *
+                  Owner Student / Employee ID
                 </label>
 
                 <ValidatedInput rule={fieldRules.nonBlank} aria-label="Owner Student / Employee ID"
@@ -11280,9 +11306,7 @@ function SecurityLostFound() {
                   <h3 className="text-base font-semibold text-foreground">
                     {activeReportCategory?.name}
                   </h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Item Identification Details
-                  </p>
+                  
                 </div>
               </div>
               <div className="p-3 sm:p-5">
@@ -11305,8 +11329,8 @@ function SecurityLostFound() {
               <div>
                 <label className="mb-1 block text-xs font-medium text-foreground">
                   {reportMode === "found"
-                    ? "Date & Time Found *"
-                    : "Date & Time Lost / Last Seen *"}
+                    ? "Date & Time Found"
+                    : "Date & Time Lost / Last Seen"}
                 </label>
                 <ValidatedInput
                   aria-label="Report date and time"
@@ -11347,9 +11371,7 @@ function SecurityLostFound() {
                 <p className="text-sm font-semibold text-foreground">
                   Item Photo
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Optional. CSU can take a photo on a phone or upload an existing image. JPG, PNG, or WEBP up to 5 MB.
-                </p>
+                
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -11705,8 +11727,8 @@ function SecurityLostFound() {
                   {String(
                     editingItem.report_type ?? "found"
                   ).toLowerCase() === "lost"
-                    ? "Owner Student / Employee ID *"
-                    : "Finder Student / Employee ID *"}
+                    ? "Owner Student / Employee ID"
+                    : "Finder Student / Employee ID"}
                 </label>
 
                 <ValidatedInput rule={fieldRules.nonBlank} aria-label="Student / Employee ID"
@@ -11726,7 +11748,7 @@ function SecurityLostFound() {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-foreground">
-                    Item Name *
+                    Item Name
                   </label>
                   <CSUItemChoice
                     label="Item Name"
@@ -11818,8 +11840,8 @@ function SecurityLostFound() {
                     {String(
                       editingItem.report_type ?? "found"
                     ).toLowerCase() === "lost"
-                      ? "Date & Time Lost / Last Seen *"
-                      : "Date & Time Found *"}
+                      ? "Date & Time Lost / Last Seen"
+                      : "Date & Time Found"}
                   </label>
                   <ValidatedInput
                     aria-label="Report date and time"
@@ -11986,7 +12008,7 @@ function SecurityLostFound() {
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-foreground">
-                  Found / Turned Over By Student or Employee ID *
+                  Found / Turned Over By Student or Employee ID
                 </label>
                 <ValidatedInput rule={fieldRules.nonBlank} aria-label="Found / Turned Over By Student or Employee ID"
                   type="text"
@@ -12013,7 +12035,7 @@ function SecurityLostFound() {
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-foreground">
-                  Date & Time Found / Turned Over *
+                  Date & Time Found / Turned Over
                 </label>
                 <ValidatedInput
                   type="datetime-local"
@@ -12901,13 +12923,13 @@ className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl
             className="h-12 min-w-[160px] flex-1 rounded-xl border border-[#bfceff]  px-3 text-sm text-foreground outline-none focus:border-[#6488ff]  dark:border-[#35537e] dark:bg-[#1b2b49] sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white !min-w-0 !w-full sm:!w-auto"
           >
             <option value="all">
-              All Items ({registeredItems.length})
+              All Items
             </option>
             <option value="active">
-              Active ({registeredItems.filter(item => !item.is_expired).length})
+              Active
             </option>
             <option value="expired">
-              Expired ({expiredCount})
+              Expired
             </option>
           </select>
 
@@ -12947,15 +12969,16 @@ className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl
       )}
 
 
+      {!adminView && !loading && <p data-qrpass-record-counter="pco-registered" className="text-left text-sm text-[#64748b]" aria-live="polite">Showing <strong className="font-semibold text-[#17336d]">{filteredItems.length} of {registeredItems.length} records</strong></p>}
       <Card title="Registered Items"
       >
-        {/* RESULT COUNT */}
+        {adminView && (<>{/* RESULT COUNT */}
         {search && !loading && (
           <div className="mb-3 text-xs text-muted-foreground">
             Showing {filteredItems.length} of{" "}
             {registeredItems.length} item(s)
           </div>
-        )}
+        )}</>)}
 
         {/* Mobile: summary item cards keep owner, QR, status and details visible. */}
         <div className="divide-y divide-border lg:hidden">
