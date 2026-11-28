@@ -2487,6 +2487,20 @@ export async function resetPassword(
 
 
 
+// QRPASS_ACCOUNT_PHOTO_SYNC_V1
+function qrpassNormalizeAccountPhoto(data: any) {
+  const normalize = (user: any) => {
+    if (!user || !Object.prototype.hasOwnProperty.call(user, 'profile_photo')) return;
+    const photo = user.profile_photo;
+    user.profile_photo_url = typeof photo === 'string' && photo
+      ? API_URL.replace(/\/api\/?$/, '') + '/storage/' + photo.split('/').map(encodeURIComponent).join('/')
+      : null;
+  };
+  normalize(data);
+  normalize(data?.user);
+  return data;
+}
+
 export async function getAccount() {
 
   const token = localStorage.getItem("token");
@@ -2521,7 +2535,7 @@ export async function getAccount() {
 
 
 
-  return data;
+  return qrpassNormalizeAccountPhoto(data);
 
 }
 
@@ -2532,6 +2546,7 @@ export async function updateAccountProfile(payload: {
   name: string;
 
   email?: string;
+  profilePhoto?: File | null;
 
 }) {
 
@@ -2539,25 +2554,21 @@ export async function updateAccountProfile(payload: {
 
 
 
+  // QRPASS_ACCOUNT_SAVE_ONLY_V1
+  const form = new FormData();
+  form.append("_method", "PUT");
+  form.append("name", payload.name);
+  if (payload.email !== undefined) form.append("email", payload.email);
+  if (payload.profilePhoto === null) form.append("photo_action", "remove");
+  else if (payload.profilePhoto) {
+    form.append("photo_action", "replace");
+    form.append("profile_photo", payload.profilePhoto);
+  }
   const response = await fetch(`${API_URL}/account/profile`, {
-
-    method: "PUT",
-
-    headers: {
-
-      Accept: "application/json",
-
-      "Content-Type": "application/json",
-
-      Authorization: `Bearer ${token}`,
-
-    },
-
-    body: JSON.stringify(payload),
-
+    method: "POST",
+    headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+    body: form,
   });
-
-
 
   const data = await response.json();
 
@@ -2577,7 +2588,7 @@ export async function updateAccountProfile(payload: {
 
 
 
-  return data;
+  return qrpassNormalizeAccountPhoto(data);
 
 }
 
@@ -2689,7 +2700,7 @@ export async function uploadAccountProfilePhoto(file: File) {
 
 
 
-  return data;
+  return qrpassNormalizeAccountPhoto(data);
 
 }
 
@@ -2741,7 +2752,7 @@ export async function removeAccountProfilePhoto() {
 
 
 
-  return data;
+  return qrpassNormalizeAccountPhoto(data);
 
 }
 

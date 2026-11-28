@@ -174,8 +174,7 @@ import {
 
   getAccount,
   updateAccountProfile,
-  uploadAccountProfilePhoto,
-  removeAccountProfilePhoto,
+
   updateAccountPassword,
 
   getActiveSessions,
@@ -1760,7 +1759,7 @@ options={qrpassItemBrandsV1(form.item_name)}
                       value={form.accessories_included}
                       onChange={event => updateField("accessories_included", event.target.value.replace(/[^\p{L}\p{M}\p{N} .,:/'’()+&-]/gu, ""))}
                       placeholder="e.g. Charger, mouse, laptop bag"
-                      className="w-full min-h-[44px] rounded-lg border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm text-[#17336d] outline-none transition-colors hover:bg-[#eef2ff] focus:bg-white focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20"
+                      className="w-full min-h-[44px] rounded-lg border border-[#c7d2fe] px-3 py-2.5 text-sm text-[#17336d] outline-none transition-colors focus:border-[#5278e7] focus:ring-2 focus:ring-[#5278e7]/20 !bg-white hover:!bg-[#e0f2fe] focus:!bg-white active:!bg-white"
                     />
                   </div>
                 </div>
@@ -3748,16 +3747,16 @@ function StudentPermitStatus() {
             className="h-12 min-w-[165px] flex-1 rounded-xl border border-[#bfceff] bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-[#6488ff]  focus:ring-2 focus:ring-[#6488ff]/15 sm:flex-none !bg-white hover:!bg-[#eef2ff] focus:!bg-white max-w-full min-w-0 w-full sm:w-auto"
           >
             <option value="all">
-              All Permits ({items.length})
+              All Permits
             </option>
             <option value="approved">
-              Approved ({approvedCount})
+              Approved
             </option>
             <option value="pending">
-              Pending ({pendingCount})
+              Pending
             </option>
             <option value="expired">
-              Expired ({expiredCount})
+              Expired
             </option>
           </select>
 
@@ -3829,6 +3828,12 @@ function StudentPermitStatus() {
             </div>
           </div>
         </div>
+      )}
+      {/* QRPASS_STUDENT_PERMIT_COUNTER_V1 */}
+      {!loading && (
+        <p className="text-left text-sm text-[#64748b]" aria-live="polite">
+          Showing <strong className="font-semibold text-[#17336d]">{visibleItems.length} of {items.length} records</strong>
+        </p>
       )}
       <Card
         title={
@@ -5728,6 +5733,8 @@ function SecurityScanVerify() {
 
 
   const [incidentMessage, setIncidentMessage] = useState("");
+  // QRPASS_CSU_FLAG_SUBMITTED_FLOATING_V1
+  const [flagSubmitted, setFlagSubmitted] = useState(false);
 
   const [pendingIncident, setPendingIncident] = useState<{
     code: string;
@@ -5736,6 +5743,8 @@ function SecurityScanVerify() {
   } | null>(null);
 
   const [savingIncident, setSavingIncident] = useState(false);
+  // QRPASS_FLAG_IDENTITY_VALIDATION_V1
+  const [flagIdentityError, setFlagIdentityError] = useState("");
   const [sameAsOwner, setSameAsOwner] = useState(false);
 
   const [flaggedForm, setFlaggedForm] = useState({
@@ -5762,12 +5771,21 @@ function SecurityScanVerify() {
 
     let incidentType = "";
 
+    // QRPASS_CSU_AUTO_FLAG_FORM_V1
     if (normalizedError.includes("not found")) {
       incidentType = "Unregistered Item";
     } else if (normalizedError.includes("not approved")) {
       incidentType = "Unapproved Item";
+    } else if (normalizedError.includes("expired")) {
+      incidentType = "Expired QR Permit";
+    } else if (normalizedError.includes("active qr code")) {
+      incidentType = "Inactive QR Code";
+    } else if (normalizedError.includes("currently flagged")) {
+      incidentType = "Flagged Item";
+    } else if (normalizedError.includes("valid qr id")) {
+      incidentType = "Invalid QR Code";
     } else {
-      // Network/server errors should not create a security incident.
+      // Connectivity, authorization and unknown server failures are not evidence of a security incident.
       setPendingIncident(null);
       return;
     }
@@ -5789,10 +5807,8 @@ function SecurityScanVerify() {
     });
   }
 
-  function updateFlaggedForm(
-    field: keyof typeof flaggedForm,
-    value: string
-  ) {
+  function updateFlaggedForm(field: keyof typeof flaggedForm, value: string) {
+    if (field === "owner_id_number" || field === "carrier_id_number") value = value.replace(/[^0-9]/g, "");
     setFlaggedForm((current) => {
       const next = {
         ...current,
@@ -5872,15 +5888,14 @@ function SecurityScanVerify() {
         carrier_id_number: flaggedForm.carrier_id_number.trim(),
         direction: flaggedForm.direction,
         gate: gateRef.current,
-        description:
-          pendingIncident.incidentType === "Unregistered Item"
-            ? `Unregistered QR ID or serial number "${pendingIncident.code}" was presented at ${gateRef.current}.`
-            : `An item that has not yet been approved was presented at ${gateRef.current}. Code: ${pendingIncident.code}.`,
+        description: `${pendingIncident.incidentType}: ${pendingIncident.errorMessage}. Code: ${pendingIncident.code}. Gate: ${gateRef.current}.`.slice(0, 1000),
       });
 
-      setIncidentMessage(
-        `${pendingIncident.incidentType} has been flagged and recorded at ${gateRef.current}.`
-      );
+      setIncidentMessage("");
+      setVerifyError("");
+      setScanResult(null);
+      setInput("");
+      setFlagSubmitted(true);
 
       setPendingIncident(null);
       setSameAsOwner(false);
@@ -5898,9 +5913,7 @@ function SecurityScanVerify() {
         incidentError
       );
 
-      setIncidentMessage(
-        "The item could not be verified, but the security incident could not be saved."
-      );
+      setFlagIdentityError(incidentError instanceof Error ? incidentError.message : "Unable to save the flagged item. Please try again.");
     } finally {
       setSavingIncident(false);
     }
@@ -5908,10 +5921,19 @@ function SecurityScanVerify() {
 
   async function verifyCode(code: string) {
     const cleanCode = code.trim();
+    // QRPASS_CSU_QR_ONLY_V1
+    if (cleanCode && !/^QRPASS-\d{5,}$/.test(cleanCode)) {
+      const message = "Please enter a valid QR ID (e.g. QRPASS-00004).";
+      setScanResult(null);
+      setIncidentMessage("");
+      setVerifyError(message);
+      prepareSecurityIncident(cleanCode, message);
+      return;
+    }
 
     if (!cleanCode) {
       setVerifyError(
-        "Please enter a QR ID or serial number."
+        "Please enter a QR ID."
       );
       setScanResult(null);
       setIncidentMessage("");
@@ -6009,7 +6031,7 @@ function SecurityScanVerify() {
 
 
   // Start the camera directly when the CSU scanning page opens.
-  // Manual QR ID / serial-number entry stays available if camera access is denied.
+  // Manual QR ID entry stays available if camera access is denied.
   const [cameraError, setCameraError] = useState("");
   const [cameraRetry, setCameraRetry] = useState(0);
   const scanBusyRef = useRef(false);
@@ -6067,11 +6089,20 @@ function SecurityScanVerify() {
     setCameraRetry(current => current + 1);
   }
 
-  return (
-    <div className="w-full min-w-0 space-y-5">
+  return (<> <div className="w-full min-w-0 space-y-5">
+      {flagSubmitted && createPortal(
+        <div style={{position:"fixed",inset:0,zIndex:2147483500,display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"rgba(15,23,42,.55)"}}>
+          <section role="dialog" aria-modal="true" aria-labelledby="qrpass-flag-submitted-title" className="w-full max-w-[460px] rounded-2xl border border-[#dbe3ef] bg-white p-8 text-center shadow-2xl">
+            <h2 id="qrpass-flag-submitted-title" className="text-xl font-bold text-[#17336d]">Flag Item Submitted</h2>
+            <p className="mt-4 text-sm leading-6 text-[#64748b]">The flagged item has been recorded successfully.</p>
+            <button type="button" autoFocus onClick={() => { setFlagSubmitted(false); resumeCamera(); }} className="mt-6 min-h-[46px] min-w-[110px] rounded-xl bg-[#24478d] px-6 text-sm font-semibold !text-white">OK</button>
+          </section>
+        </div>, document.body
+      )}
+
       <PageHeader
         title="Scan & Verify"
-        subtitle="Scan an item's QR code or manually enter the QR ID or serial number."
+        subtitle="Scan an item's QR code or manually enter the QR ID."
       />
 
       {/* SCANNER */}
@@ -6135,7 +6166,7 @@ function SecurityScanVerify() {
                     doScan();
                   }
                 }}
-                placeholder="QR ID or serial number..."
+                placeholder="QR ID..."
                 className="h-12 w-full min-w-0 rounded-xl border border-[#bfceff] pl-9 pr-3 text-sm text-foreground outline-none focus:border-[#6488ff] focus:ring-2 focus:ring-[#6488ff]/15 dark:border-[#35537e] dark:bg-[#1b2b49] !bg-white hover:!bg-[#eef2ff] focus:!bg-white"
               />
             </div>
@@ -6649,7 +6680,7 @@ function SecurityScanVerify() {
 
 
     </div>
-  );
+{flagIdentityError && createPortal(<div style={{position:"fixed",inset:0,zIndex:2147483600,display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"rgba(15,23,42,.55)"}}><section role="alertdialog" aria-modal="true" aria-label="Check Your Details" style={{width:"100%",maxWidth:460,background:"white",borderRadius:16,padding:32,textAlign:"center",boxShadow:"0 24px 60px rgba(0,0,0,.2)"}}><h2 style={{fontSize:20,fontWeight:700,color:"#17336d"}}>Check Your Details</h2><p style={{marginTop:16,color:"#64748b",fontSize:14}}>{flagIdentityError}</p><button type="button" autoFocus onClick={()=>setFlagIdentityError("")} style={{marginTop:24,background:"#24478d",color:"white",borderRadius:12,padding:"12px 40px",fontWeight:600}}>OK</button></section></div>,document.body)} </>);
 }
 
 
@@ -6954,6 +6985,8 @@ function QRpassDirectionBadge({
   );
 }
 function SecurityEntryExitLog() {
+  /* QRPASS_CSU_VERIFIED_VIEW_V1 */
+  const [selectedVerifiedLog, setSelectedVerifiedLog] = useState<any | null>(null);
   const [csuListSearch, setCsuListSearch] = useState("");
   const [csuListSort, setCsuListSort] =
     useState<"newest" | "oldest">("newest");
@@ -7316,6 +7349,12 @@ const visibleLogs = entryExitTab === "entry" ? entryLogs : entryExitTab === "exi
   const shownEntryLogs = csuOrderRows(visibleLogs);
   const shownFlaggedIncidents = csuOrderRows(flaggedIncidents);
   const shownResolvedIncidents = csuOrderRows(resolvedIncidents);
+  const unifiedRows = [
+    ...shownEntryLogs.map(row=>({row,kind:"scan",date:row.scanned_at})),
+    ...shownFlaggedIncidents.map(row=>({row,kind:"flagged",date:row.reported_at})),
+    ...shownResolvedIncidents.map(row=>({row,kind:"resolved",date:row.reported_at})),
+  ].sort((a,b)=>{const x=new Date(a.date ?? 0).getTime() || 0;const y=new Date(b.date ?? 0).getTime() || 0;return csuListSort === "newest" ? y-x : x-y;});
+
 
 
 // CSV export follows both the selected period and the selected tab.
@@ -7777,10 +7816,37 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
 
 
       {/* QRPASS_CSU_ENTRY_EXIT_COUNTER_V1 */}
-      {!loading && <p data-qrpass-record-counter="csu-entry-exit" className="text-left text-sm text-[#64748b]" aria-live="polite">Showing <strong className="font-semibold text-[#17336d]">{entryExitTab === "flagged" ? shownFlaggedIncidents.length : entryExitTab === "resolved" ? shownResolvedIncidents.length : shownEntryLogs.length} of {entryExitTab === "flagged" ? flaggedIncidents.length : entryExitTab === "resolved" ? resolvedIncidents.length : periodLogs.length} records</strong></p>}
+      {!loading && <p data-qrpass-record-counter="csu-entry-exit" className="text-left text-sm text-[#64748b]" aria-live="polite">Showing <strong className="font-semibold text-[#17336d]">{entryExitTab === "all" ? unifiedRows.length : entryExitTab === "flagged" ? shownFlaggedIncidents.length : entryExitTab === "resolved" ? shownResolvedIncidents.length : shownEntryLogs.length} of {entryExitTab === "all" ? periodLogs.length + flaggedIncidents.length + resolvedIncidents.length : entryExitTab === "flagged" ? flaggedIncidents.length : entryExitTab === "resolved" ? resolvedIncidents.length : visibleLogs.length} records</strong></p>}
 
+      {/* QRPASS_CSU_UNIFIED_ALL_RECORDS_V1 */}
+      {entryExitTab === "all" && (
+        <div className="w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+          <div className="border-b border-border px-5 py-4"><h2 className="text-lg font-bold text-foreground">Entry / Exit Records</h2></div>
+          <div className="w-full overflow-x-auto"><table className="w-full min-w-[1150px]">
+            <thead className="bg-muted/40"><tr>{["Date","Time","Owner","Item","QR Code","Gate","Direction","Result","Scanned / Reported By","Action"].map(h=><th key={h} className="px-3 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>)}</tr></thead>
+            <tbody className="divide-y divide-border">
+              {loading ? <tr><td colSpan={10} className="py-10 text-center text-muted-foreground">Loading records...</td></tr> : unifiedRows.length === 0 ? <tr><td colSpan={10} className="py-10 text-center text-muted-foreground">No records found.</td></tr> : unifiedRows.map(({row,kind,date})=>{
+                const incident=kind!=="scan";
+                const status=incident ? String(row.status ?? "Flagged") : String(row.result ?? "Verified");
+                const resolved=kind==="resolved";
+                return <tr key={kind+":"+row.id} className="hover:bg-muted/40">
+                  <td className="px-3 py-3 text-sm whitespace-nowrap">{formatDate(date)}</td>
+                  <td className="px-3 py-3 text-sm whitespace-nowrap">{formatTime(date)}</td>
+                  <td className="px-3 py-3"><div className="text-sm font-semibold">{(incident ? row.owner_name : undefined) ?? row.item?.user?.name ?? "Unknown"}</div><div className="text-xs text-muted-foreground">{(incident ? row.owner_id_number : undefined) ?? row.item?.user?.username ?? ""}</div></td>
+                  <td className="px-3 py-3"><div className="text-sm font-semibold">{row.item?.item_name ?? row.item_name ?? "Unknown Item"}</div><div className="text-xs text-muted-foreground">{row.item?.serial_number ?? row.serial_number ?? ""}</div></td>
+                  <td className="px-3 py-3 font-mono text-xs">{row.qr_code ?? row.scanned_code ?? "—"}</td>
+                  <td className="px-3 py-3 text-sm">{row.gate ?? "—"}</td>
+                  <td className="px-3 py-3">{row.direction ? <QRpassDirectionBadge direction={row.direction}/> : "—"}</td>
+                  <td className="px-3 py-3"><span className={"inline-flex rounded-full px-2.5 py-1 text-xs font-semibold "+(kind==="flagged"?"bg-red-100 text-red-700":resolved?"bg-blue-100 text-blue-700":"bg-green-100 text-green-700")}>{status}</span></td>
+                  <td className="px-3 py-3 text-sm">{(incident ? row.reporter?.name : row.scanner?.name) ?? "—"}</td>
+                  <td className="px-3 py-3"><div className="flex gap-2">{incident ? <><button type="button" onClick={()=>setSelectedIncident(row)} className="inline-flex h-9 items-center gap-1 rounded-xl border border-border bg-card px-3 text-xs font-semibold text-primary hover:bg-muted"><Eye size={13}/>View</button>{!resolved && <button type="button" onClick={()=>openResolveIncident(row)} className="h-9 rounded-xl bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-700">Resolve</button>}</> : <button type="button" onClick={()=>setSelectedVerifiedLog(row)} className="inline-flex h-9 items-center gap-1 rounded-xl border border-border bg-card px-3 text-xs font-semibold text-primary hover:bg-muted"><Eye size={13}/>View</button>}</div></td>
+                </tr>;
+              })}
+            </tbody></table></div>
+        </div>
+      )}
       {/* SUCCESSFUL ENTRY / EXIT */}
-      {(entryExitTab === "all" || entryExitTab === "entry" || entryExitTab === "exit") && (
+      {(entryExitTab === "entry" || entryExitTab === "exit") && (
       <div className="w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="px-5 py-4 border-b border-gray-200">
           <h2 className="text-lg font-bold text-gray-900">
@@ -7806,6 +7872,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                   "Direction",
                   "Result",
                   "Scanned By",
+                  "Action",
                 ].map((heading) => (
                   <th
                     key={heading}
@@ -7821,7 +7888,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
               {loading ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={10}
                     className="py-10 text-center text-gray-500"
                   >
                     Loading entry / exit records...
@@ -7830,7 +7897,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
               ) : shownEntryLogs.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={10}
                     className="py-10 text-center text-gray-500"
                   >
                     No entry / exit records found.
@@ -7903,6 +7970,7 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
                       {log.scanner?.name ??
                         "—"}
                     </td>
+                    <td className="py-3 px-3"><button type="button" onClick={()=>setSelectedVerifiedLog(log)} className="inline-flex h-9 items-center gap-1 rounded-xl border border-border bg-card px-3 text-xs font-semibold text-primary hover:bg-muted"><Eye size={13}/>View</button></td>
                   </tr>
                 ))
               )}
@@ -8034,6 +8102,30 @@ const exportIncidents = entryExitTab === "flagged" ? flaggedIncidents : entryExi
           INCIDENT / RESOLVED ITEM DETAILS MODAL
       ========================================================= */}
 
+      {selectedVerifiedLog && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4" onClick={()=>setSelectedVerifiedLog(null)}>
+          <div role="dialog" aria-modal="true" aria-label="Verified item details" className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-card shadow-2xl" onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key==='Escape')setSelectedVerifiedLog(null);}}>
+            <div className="flex items-center justify-between border-b border-border p-5"><div><p className="text-xs font-semibold text-muted-foreground">ENTRY / EXIT RECORD</p><h2 className="text-lg font-bold text-foreground">{selectedVerifiedLog.item?.item_name ?? "Verified Item Details"}</h2></div><button type="button" autoFocus aria-label="Close details" onClick={()=>setSelectedVerifiedLog(null)} className="rounded-lg p-2 text-muted-foreground hover:bg-muted"><X size={18}/></button></div>
+            <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">{[
+              ["Result",selectedVerifiedLog.result ?? "Verified"],
+              ["QR ID",selectedVerifiedLog.qr_code ?? selectedVerifiedLog.item?.qr_code],
+              ["Owner Name",selectedVerifiedLog.item?.user?.name],
+              ["Owner ID",selectedVerifiedLog.item?.user?.username],
+              ["Item Name",selectedVerifiedLog.item?.item_name],
+              ["Item Type",selectedVerifiedLog.item?.item_type],
+              ["Brand / Model",selectedVerifiedLog.item?.brand_model],
+              ["Serial Number",selectedVerifiedLog.item?.serial_number],
+              ["Quantity",selectedVerifiedLog.item?.quantity],
+              ["QR Expiration",selectedVerifiedLog.item?.qr_expires_at ? formatDate(selectedVerifiedLog.item.qr_expires_at) : null],
+              ["Gate",selectedVerifiedLog.gate],
+              ["Direction",selectedVerifiedLog.direction],
+              ["Scan Date",formatDate(selectedVerifiedLog.scanned_at)],
+              ["Scan Time",formatTime(selectedVerifiedLog.scanned_at)],
+              ["Scanned By",selectedVerifiedLog.scanner?.name],
+              ["Description",selectedVerifiedLog.item?.description]
+            ].map(([label,value])=><div key={label} className="min-w-0"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 break-words text-sm font-medium text-foreground">{value == null || value === "" ? "—" : String(value)}</p></div>)}</div>
+          </div>
+        </div>,document.body)}
       {selectedIncident && (
         <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/70 p-4">
           <div className="flex min-h-full items-center justify-center">
@@ -9203,6 +9295,8 @@ function CSULocationPicker(/* QRPASS_CSU_DROPDOWN_DOWNWARD_V1 */ {
 
 /* QRPASS_CSU_LOSTFOUND_WHITE_TABS_V154 */
 function SecurityLostFound() {
+
+  /* QRPASS_CSU_PENDING_COMPACT_V1 */
   /* QRPASS_CSU_CLAIM_FLOAT_V1 */
   const [qrpassClaimConfirm, setQrpassClaimConfirm] = useState<any | null>(null);
   const [csuViewDetailsId, setCsuViewDetailsId] = useState<string | null>(null);
@@ -9219,6 +9313,30 @@ function SecurityLostFound() {
     if (message) setFloatingLfError(message);
   }, []);
   const [success, setSuccess] = useState("");
+  /* QRPASS_CSU_LF_LIVE_POPUPS_V1 */
+  const [lfLiveNotice, setLfLiveNotice] = useState("");
+  const lfSnapshot = React.useRef<Map<string, string> | null>(null);
+  const lfRequestVersion = React.useRef(0);
+  function lfFingerprint(row: any) {
+    return JSON.stringify([row.status, row.updated_at, row.item_name, row.category, row.brand_model, row.color, row.location_found, row.location_lost, row.date_found, row.date_lost, row.claimed_at, row.claimant?.name, row.description, row.photo_url]);
+  }
+  function lfApplyList(list: any[], announce: boolean) {
+    const next = new globalThis.Map<string, string>(list.map(row => [String(row.id), lfFingerprint(row)]));
+    const old = lfSnapshot.current;
+    if (announce && old) {
+      const added = list.filter(row => !old.has(String(row.id)));
+      const changed = list.filter(row => old.has(String(row.id)) && old.get(String(row.id)) !== next.get(String(row.id)));
+      const removed = [...old.keys()].filter(id => !next.has(id));
+      const notices: string[] = [];
+      for (const row of added) notices.push("New report: " + (row.item_name || "Item"));
+      for (const row of changed) notices.push((row.item_name || "Item") + " — " + (String(row.status || "").toLowerCase() === "pending" ? "Pending verification (claim request or report update)." : "Report updated: " + (row.status || "Updated")));
+      if (removed.length) notices.push(removed.length + " report(s) removed from the registry.");
+      if (notices.length) setLfLiveNotice(previous => [previous, ...notices].filter(Boolean).join("\n"));
+    }
+    const differs = !old || old.size !== next.size || [...next].some(([id,value]) => old.get(id) !== value);
+    lfSnapshot.current = next;
+    if (differs || !announce) setItems(list);
+  }
   const [search, setSearch] = useState("");
 
   const [editingItem, setEditingItem] =
@@ -9249,7 +9367,7 @@ function SecurityLostFound() {
 
   const [tab, setTab] =
     useState<"registry" | "report">("registry");
-  const [lostFoundFilter, setLostFoundFilter] = useState<"all" | "lost" | "found" | "recovered">("all");
+  const [lostFoundFilter, setLostFoundFilter] = useState<"all" | "lost" | "found" | "recovered" | "pending">("all");
   const [lostFoundPeriod, setLostFoundPeriod] = useState<CSUDatePeriod>("all");
   const [lostFoundStart, setLostFoundStart] = useState("");
   const [lostFoundEnd, setLostFoundEnd] = useState("");
@@ -9502,6 +9620,7 @@ function SecurityLostFound() {
   }
 
   async function loadItems() {
+    const lfVersion = ++lfRequestVersion.current;
     try {
       setLoading(true);
       setError("");
@@ -9511,7 +9630,7 @@ function SecurityLostFound() {
         ? data
         : data?.items ?? [];
 
-      setItems(list);
+      if (lfVersion === lfRequestVersion.current) lfApplyList(list, false);
     } catch (err) {
       setError(
         err instanceof Error
@@ -9526,6 +9645,26 @@ function SecurityLostFound() {
   useEffect(() => {
     loadItems();
   }, []);
+
+  useEffect(() => {
+    if (loading || submitting || editSubmitting || deletingId !== null || recoveringId !== null) return;
+    let active = true;
+    let busy = false;
+    const tick = async () => {
+      if (!active || busy || document.hidden) return;
+      busy = true;
+      const version = ++lfRequestVersion.current;
+      try {
+        const data = await getLostFoundItems();
+        const list = Array.isArray(data) ? data : data?.items;
+        if (active && version === lfRequestVersion.current && Array.isArray(list)) lfApplyList(list, true);
+      } catch (_) { /* transient polling errors must not interrupt CSU work */ }
+      finally { busy = false; }
+    };
+    const timer = window.setInterval(tick, 3000);
+    document.addEventListener("visibilitychange", tick);
+    return () => { active = false; window.clearInterval(timer); document.removeEventListener("visibilitychange", tick); };
+  }, [loading, submitting, editSubmitting, deletingId, recoveringId]);
 
   useEffect(() => {
     if (!cameraOpen) {
@@ -9973,9 +10112,7 @@ function SecurityLostFound() {
       await loadItems();
       setTab("registry");
 
-      setTimeout(() => {
-        setSuccess("");
-      }, 5000);
+      
     } catch (err) {
       setError(
         err instanceof Error
@@ -10089,9 +10226,7 @@ function SecurityLostFound() {
 
       await loadItems();
 
-      setTimeout(() => {
-        setSuccess("");
-      }, 4000);
+      
     } catch (err) {
       setError(
         err instanceof Error
@@ -10275,9 +10410,7 @@ function SecurityLostFound() {
       setEditingItem(null);
       await loadItems();
 
-      setTimeout(() => {
-        setSuccess("");
-      }, 5000);
+      
     } catch (err) {
       setEditError(
         err instanceof Error
@@ -10339,9 +10472,7 @@ function SecurityLostFound() {
 
       await loadItems();
 
-      setTimeout(() => {
-        setSuccess("");
-      }, 5000);
+      
     } catch (err) {
       setError(
         err instanceof Error
@@ -10418,9 +10549,7 @@ function SecurityLostFound() {
 
       await loadItems();
 
-      setTimeout(() => {
-        setSuccess("");
-      }, 5000);
+      
     } catch (err) {
       setError(
         err instanceof Error
@@ -10445,7 +10574,8 @@ function SecurityLostFound() {
     const recovered = status === "recovered" || status === "claimed";
     if (lostFoundFilter === "recovered" && !recovered) return false;
     if (lostFoundFilter === "lost" && (recovered || reportType !== "lost")) return false;
-    if (lostFoundFilter === "found" && (recovered || reportType !== "found")) return false;
+    if (lostFoundFilter === "pending" && status !== "pending") return false;
+    if (lostFoundFilter === "found" && (recovered || status === "pending" || reportType !== "found")) return false;
 
     if (!query) {
       return true;
@@ -10581,17 +10711,21 @@ function SecurityLostFound() {
       {floatingLfError && createPortal(
         <div role="presentation" style={{position:"fixed",inset:0,zIndex:2147483600,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(15,23,42,.48)",padding:16}}>
           <div role="alertdialog" aria-modal="true" aria-label="Lost and Found error" aria-describedby="qrpass-csu-lf-error-message" style={{width:"100%",maxWidth:540,maxHeight:"90vh",overflowY:"auto",background:"white",border:"1px solid #dbe3ef",borderRadius:20,padding:32,textAlign:"center",boxShadow:"0 20px 55px rgba(15,23,42,.25)"}}>
-            <h3 style={{fontSize:22,fontWeight:700,color:"#17336d"}}>{/camera|permission/i.test(floatingLfError) ? "Camera Unavailable" : /date|time/i.test(floatingLfError) ? "Invalid Date or Time" : /required|please|complete|select|choose/i.test(floatingLfError) ? "Check Your Details" : /network|fetch|connection/i.test(floatingLfError) ? "Connection Error" : "Unable to Complete Request"}</h3>
+            <h3 style={{fontSize:22,fontWeight:700,color:"#17336d"}}>{/camera|permission/i.test(floatingLfError) ? "Camera Unavailable" : /date|time/i.test(floatingLfError) ? "Invalid Date or Time" : /required|please|complete|select|choose|student\s*\/\s*employee id|id number|no qrpass user|do not match/i.test(floatingLfError) /* QRPASS_CSU_LF_EXISTING_ID_FLOAT_V2 */ ? "Check Your Details" : /network|fetch|connection/i.test(floatingLfError) ? "Connection Error" : "Unable to Complete Request"}</h3>
             <p id="qrpass-csu-lf-error-message" style={{margin:"20px 0 28px",color:"#64748b",lineHeight:1.7,overflowWrap:"anywhere",whiteSpace:"pre-wrap"}}>{floatingLfError}</p>
             <button type="button" autoFocus onClick={() => setFloatingLfError("")} onKeyDown={event => { if(event.key === "Escape") { event.stopPropagation(); setFloatingLfError(""); } }} className="rounded-xl bg-[#24478d] px-8 py-3 font-semibold !text-white hover:bg-[#193671]" style={{minWidth:130}}>OK</button>
           </div>
         </div>, document.body)} 
 
-      {success && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          {success}
-        </div>
-      )}
+      {/* QRPASS_CSU_LF_CENTERED_POPUPS_V2 */}
+      {!floatingLfError && (success || lfLiveNotice) && createPortal(
+        <div role="presentation" style={{position:"fixed",inset:0,zIndex:2147483500,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(15,23,42,.48)",padding:16}}>
+          <div role="alertdialog" aria-modal="true" aria-labelledby="qrpass-csu-lf-notice-title" aria-describedby="qrpass-csu-lf-notice-message" style={{width:"100%",maxWidth:540,maxHeight:"90vh",overflowY:"auto",background:"white",border:"1px solid #dbe3ef",borderRadius:20,padding:32,textAlign:"center",boxShadow:"0 20px 55px rgba(15,23,42,.25)"}}>
+            <h3 id="qrpass-csu-lf-notice-title" style={{fontSize:22,fontWeight:700,color:"#17336d"}}>{success ? "Success" : "Lost & Found Update"}</h3>
+            <p id="qrpass-csu-lf-notice-message" style={{margin:"20px 0 28px",color:"#64748b",lineHeight:1.7,overflowWrap:"anywhere",whiteSpace:"pre-wrap"}}>{success || lfLiveNotice}</p>
+            <button type="button" autoFocus onClick={() => { if(success) setSuccess(""); else setLfLiveNotice(""); }} onKeyDown={event => {if(event.key === "Escape") {event.stopPropagation(); if(success) setSuccess(""); else setLfLiveNotice("");}}} className="rounded-xl bg-[#24478d] px-8 py-3 font-semibold !text-white hover:bg-[#193671]" style={{minWidth:130}}>OK</button>
+          </div>
+        </div>, document.body)}
 
       <StatisticalCardsSection>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -10638,6 +10772,10 @@ function SecurityLostFound() {
 
 
       <div className="csu-lost-found-tabs grid grid-cols-2 gap-2 border-b border-border pb-3 sm:flex sm:flex-wrap">
+        <style>{`
+          .csu-lost-found-tabs button[data-qrpass-csu-active-outline="true"][aria-pressed="true"] { outline: 2px solid #5278e7 !important; outline-offset: 3px !important; }
+          .csu-lost-found-tabs button[data-qrpass-csu-active-outline="true"][aria-pressed="false"]:not(:focus-visible) { outline: none !important; }
+        `}</style>
 
         <button
           type="button"
@@ -10646,7 +10784,8 @@ function SecurityLostFound() {
             setTab("registry");
             setError("");
           }}
-          className="csu-lost-found-tab"
+          className="csu-lost-found-tab" data-qrpass-csu-active-outline="true"
+          style={{ outline: tab === "registry" ? "2px solid #5278e7" : undefined, outlineOffset: tab === "registry" ? "3px" : undefined }}
         >
           Lost & Found Reports
         </button>
@@ -10660,7 +10799,8 @@ function SecurityLostFound() {
             setError("");
             setSuccess("");
           }}
-          className="csu-lost-found-tab"
+          className="csu-lost-found-tab" data-qrpass-csu-active-outline="true"
+          style={{ outline: tab === "report" ? "2px solid #5278e7" : undefined, outlineOffset: tab === "report" ? "3px" : undefined }}
         >
           + Record Lost / Found Item
         </button>
@@ -10776,6 +10916,7 @@ function SecurityLostFound() {
                   { value: "all", label: "All Reports" },
                   { value: "lost", label: "Lost" },
                   { value: "found", label: "Found" },
+                  { value: "pending", label: "Pending" },
                   { value: "recovered", label: "Recovered / Claimed" },
                 ]}
               />
@@ -10821,7 +10962,7 @@ function SecurityLostFound() {
             </div>
           )}
 
-          <div data-qrpass-csu-compact-cards="true" className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-2">
+          <div data-qrpass-csu-compact-cards="true" className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
 {!loading &&
             shownLostFound.map((item) => {
               const reportType = String(
@@ -10844,11 +10985,11 @@ function SecurityLostFound() {
               return (
                 <div
                   key={item.id}
-                  className="w-full min-w-0 rounded-2xl border border-border bg-card shadow-sm h-full"
+                  className="w-full min-w-0 rounded-2xl border border-border bg-card shadow-sm self-start"
                 >
-                  <div className="p-4 h-full">
-                    <div className="flex h-full min-w-0 flex-col gap-3">
-                      <div data-qrpass-csu-photo-details="true" className="min-w-0 flex-1 space-y-3">
+                  <div className="p-4">
+                    <div className="flex min-w-0 flex-col gap-3">
+                      <div data-qrpass-csu-photo-details="true" className="min-w-0 space-y-3">
                         <div className="flex h-44 w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40 sm:h-48">
                           {item.photo_url ? <img src={item.photo_url} alt={item.item_name || "Item photo"} className="h-full w-full object-contain" /> : <span className="text-sm text-muted-foreground">[Item photo]</span>}
                         </div>
@@ -11135,8 +11276,8 @@ function SecurityLostFound() {
                         )}
                       </div>
 
-                      <div className="mt-auto grid grid-cols-1 gap-2 sm:grid-cols-2 [&>button]:min-w-0 [&>button]:whitespace-normal [&>button:last-child:nth-child(odd)]:col-span-full [&>div]:col-span-full">
-                        <button
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 [&>button]:min-w-0 [&>button]:whitespace-normal [&>button:last-child:nth-child(odd)]:col-span-full [&>div]:col-span-full">
+                        {!isClaimed && (<button
                           type="button"
                           onClick={() =>
                             openEditReport(item)
@@ -11144,7 +11285,7 @@ function SecurityLostFound() {
                           className="rounded-lg border border-[#cfd8e6] bg-white px-4 py-2 text-sm font-medium text-primary hover:bg-[#eef2fc]"
           >
                           Edit Report
-                        </button>
+                        </button>)}
 
                         {!isPending && !isClaimed && !isRecovered && (
                           <button
@@ -11184,7 +11325,7 @@ function SecurityLostFound() {
 
                         {isClaimed && (
                           <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
-                            CSU verified ownership — Item Claimed
+                            Item Claimed
                           </div>
                         )}
 
@@ -17483,10 +17624,22 @@ function SysAdminUserAccounts() {
     );
   }
 
-  async function handleAddUser(
-    event: any
-  ) {
+  async function handleAddUser(event: any) {
     event.preventDefault();
+    if (creatingUser) return;
+    const missing = [
+      !newUser.name.trim() && "Full Name",
+      !newUser.email.trim() && "Email Address",
+      !newUser.username.trim() && "ID Number",
+      !["student", "security", "pco", "sysadmin"].includes(newUser.role) && "Role",
+      newUser.role === "student" && !newUser.year_level.trim() && "Year Level",
+      newUser.role === "student" && newUser.year_level !== "Senior High School" && !newUser.college.trim() && "Department",
+      !newUser.password.trim() && "Password",
+    ].filter(Boolean);
+    if (missing.length) {
+      setAddUserFloatingError("Please complete all required fields.");
+      return;
+    }
 
     setAddUserFloatingError("");
     setSuccess("");
@@ -17882,11 +18035,15 @@ function SysAdminUserAccounts() {
       </div>
 
       {/* SUCCESS MESSAGE */}
-      {success && (
-        <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-          {success}
-        </div>
-      )}
+      {/* QRPASS_ADD_USER_COMPLETE_FLOAT_V1 */}
+      {success && createPortal(
+        <div role="presentation" className="fixed inset-0 z-[2147483600] flex items-center justify-center bg-slate-900/55 p-4">
+          <div role="alertdialog" aria-modal="true" aria-labelledby="qrpass-user-success-title" aria-describedby="qrpass-user-success-message" className="w-full max-w-[540px] rounded-[22px] border border-[#dce3ee] bg-white p-8 text-center shadow-2xl" onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); setSuccess(""); } if (event.key === "Tab") event.preventDefault(); }}>
+            <h3 id="qrpass-user-success-title" className="text-xl font-bold text-[#17336d]">Success</h3>
+            <p id="qrpass-user-success-message" className="mt-5 whitespace-pre-wrap break-words text-sm leading-7 text-[#64748b]">{success}</p>
+            <button type="button" autoFocus onClick={() => setSuccess("")} className="mt-7 h-[52px] min-w-[130px] rounded-[16px] bg-[#24478d] px-6 font-semibold !text-white hover:bg-[#193671]">OK</button>
+          </div>
+        </div>, document.body)} 
 
       {/* ERROR MESSAGE */}
       {error && (
@@ -17911,7 +18068,7 @@ function SysAdminUserAccounts() {
           <div role="dialog" aria-modal="true" aria-label="Add New User Account" className="mx-auto w-full max-w-4xl rounded-2xl bg-white shadow-2xl">
             <Card title="Add New User Account">
           <form
-            onSubmit={handleAddUser}
+            onSubmit={handleAddUser} noValidate
             onInvalidCapture={(event) => {
               event.preventDefault();
               const field = event.target as HTMLInputElement | HTMLSelectElement;
@@ -18532,12 +18689,8 @@ function SysAdminUserAccounts() {
 
 
       {/* USER LIST */}
-      <Card
-        title="User List"
-
-      >
-
-        {/* QRPASS_ACCOUNTS_SEARCH_REPAIRED_V5 */}
+      
+      {/* QRPASS_ACCOUNTS_SEARCH_REPAIRED_V5 */}
         <div className="flex flex-col gap-3 border-b border-[#cfd8e6] px-4 py-3 sm:flex-row sm:items-center">
           <div className="relative min-w-0 flex-1">
             <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
@@ -18621,6 +18774,9 @@ function SysAdminUserAccounts() {
             <RefreshCw size={15} className={loading ? "animate-spin" : ""}/> Refresh
           </button>
         </div>
+        {/* QRPASS_SYSADMIN_COUNTER_LOADING_V3 */}
+      {!loading && <p className="text-left text-sm text-[#64748b]" aria-live="polite">Showing <strong className="font-semibold text-[#17336d]">{filteredUsers.length} of {users.length} records</strong></p>}
+      <Card title="User List">
         <div data-qrpass-users-table-v57="true" data-qrpass-users-responsive-v95="true" className="w-full min-w-0 overflow-hidden">
           <table data-qrpass-user-accounts-fit-v95="true" data-qrpass-user-accounts-v94="true" className="w-full min-w-0 table-fixed">
             <colgroup>
@@ -18656,12 +18812,10 @@ function SysAdminUserAccounts() {
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="py-12 text-center text-sm text-muted-foreground"
-                  >
-                    Loading user
-                    accounts...
+                  <td colSpan={7} className="py-12 !text-center text-sm text-muted-foreground">
+                    <div className="flex w-full flex-col items-center justify-center gap-2 !text-center" style={{ textAlign: "center" }}>
+                      <span className="block w-full !text-center" style={{ textAlign: "center" }}>Loading user accounts...</span>
+                    </div>
                   </td>
                 </tr>
               ) : filteredUsers.length ===
@@ -18776,19 +18930,7 @@ function SysAdminUserAccounts() {
           </table>
         </div>
 
-        {!loading &&
-          users.length > 0 && (
-            <div data-qrpass-users-footer-v57="true" className="px-4 py-3 border-t border-[#cfd8e6] flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-              <p className="text-xs text-muted-foreground">
-                Showing{" "}
-                {filteredUsers.length}{" "}
-                of {users.length} user
-                accounts
-              </p>
-
-
-            </div>
-          )}
+        
       </Card>
 
       {/* QRPASS_REVOKE_PURGE_NOTIFY_V181: floating success after confirmed backend response */}
@@ -23259,6 +23401,7 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
   const [codeError, setCodeError] = useState(false);
+  const [resetCodeMessageV2, setResetCodeMessageV2] = useState(""); // QRPASS_RESET_ERROR_FLOATING_V2
 
   const [verifiedResetCode, setVerifiedResetCode] = useState("");
 
@@ -23470,6 +23613,11 @@ const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] =
     try {
       const result = await register(name, email, registrationUsername, registrationPassword, "student", college, yearLevel, contactNumber, gmailSent && !resend ? gmailCode : undefined);
       if (result.verification_required === true) {
+        // QRPASS_OTP_PRECHECK_GATE_V2
+        if (result.mailbox_prechecked !== true) {
+          setRegistrationErrorV182("Email validation was not confirmed by the backend. Please contact the administrator.");
+          return;
+        }
         setGmailClock(Date.now());
         setGmailResendUntil(Date.now() + 20000);
         setGmailSent(true); setGmailCode("");
@@ -23533,6 +23681,7 @@ async function handleVerifySubmit(
     codeInputs.join("");
 
   if (enteredCode.length !== 6) {
+    setResetCodeMessageV2("Please enter the six-digit verification code.");
     setCodeError(true);
     return;
   }
@@ -23551,6 +23700,8 @@ async function handleVerifySubmit(
 
     setMode("reset");
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to verify the code. Please try again.";
+    setResetCodeMessageV2(/expired/i.test(message) ? "This verification code has already expired. Please request a new code." : /incorrect|invalid verification code/i.test(message) ? "Incorrect verification code. Please try again." : message);
     setCodeError(true);
   }
 }
@@ -24407,10 +24558,15 @@ async function handleTwoFactorSubmit(
               <div className="p-5">
 
 
-                {registrationErrorV182 && (
-                  <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-relaxed text-red-700">
-                    {registrationErrorV182}
-                  </div>
+                {/* QRPASS_REGISTRATION_FLOATING_ERROR_V1 */}
+                {registrationErrorV182 && createPortal(
+                  <div role="presentation" style={{position:"fixed",inset:0,zIndex:2147483600,display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"rgba(15,23,42,.55)"}}>
+                    <section role="alertdialog" aria-modal="true" aria-labelledby="qrpass-reg-error-title" aria-describedby="qrpass-reg-error-message" className="w-full max-w-[540px] max-h-[90dvh] overflow-y-auto rounded-2xl border border-[#dbe3ef] bg-white p-6 text-center shadow-2xl sm:p-8" onKeyDown={e=>{if(e.key === "Escape"){e.stopPropagation();setRegistrationErrorV182("");} if(e.key === "Tab"){e.preventDefault();}}}>
+                      <h2 id="qrpass-reg-error-title" className="text-xl font-bold text-[#17336d]">Check Your Details</h2>
+                      <p id="qrpass-reg-error-message" className="mt-5 text-sm leading-6 text-[#64748b]">{registrationErrorV182}</p>
+                      <button type="button" autoFocus onClick={()=>setRegistrationErrorV182("")} className="mt-6 min-h-[48px] min-w-[128px] rounded-xl bg-[#24478d] px-6 text-sm font-semibold !text-white hover:bg-[#193671]">OK</button>
+                    </section>
+                  </div>, document.body
                 )}
                 {/* REGISTRATION FORM */}
                 {regRole === "student" && (
@@ -24506,7 +24662,7 @@ async function handleTwoFactorSubmit(
     <section role="dialog" aria-modal="true" aria-labelledby="qrpass-gmail-floating-title" className="w-full max-w-[540px] max-h-[90dvh] overflow-y-auto rounded-2xl border border-[#dbe3ef] bg-white p-6 shadow-2xl sm:p-8">
       <h2 id="qrpass-gmail-floating-title" className="text-center text-xl font-bold text-[#17336d]">Verify your Gmail</h2>
       <p className="mt-4 text-center text-sm leading-6 text-[#64748b]">Enter the six-digit code sent to your Gmail. It expires after 10 minutes. Check Spam if needed.</p>
-      {registrationErrorV182 && <p role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{registrationErrorV182}</p>}
+      
       <label htmlFor="qrpass-gmail-floating-code" className="mt-5 block text-sm font-semibold text-[#17336d]">Verification Code</label>
       <input id="qrpass-gmail-floating-code" aria-label="Gmail verification code" autoFocus inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={gmailCode} disabled={gmailBusy} onChange={e=>setGmailCode(e.target.value.replace(/\D/g,""))} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();if(!gmailBusy && gmailCode.length===6) void handleRegister(e);}}} className="mt-2 h-12 w-full rounded-xl border border-[#cbd5e1] bg-white px-3 text-center text-lg tracking-[0.4em] text-[#17336d] outline-none focus:border-[#5278e7]" />
       <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -24920,19 +25076,20 @@ async function handleTwoFactorSubmit(
     }}
 
     className={`w-10 h-12 text-center text-lg font-bold rounded-md border-2 focus:outline-none focus:border-[#2f5fd6] focus:ring-2 focus:ring-[#2f5fd6]/15 transition-colors ${
-      codeError
-        ? "border-red-400 bg-red-50"
-        : "border-[#cfd8e6] bg-[#fafbfc] focus:border-primary"
+      "border-[#cfd8e6] bg-[#fafbfc] focus:border-primary"
     }`}
   />
 ))}
               </div>
 
-              {codeError && (
-                <p className="text-center text-xs text-red-500 mt-2">
-                  Incorrect code. Please
-                  try again.
-                </p>
+              {codeError && createPortal(
+                <div style={{position:"fixed",inset:0,zIndex:2147483640,display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"rgba(15,23,42,.55)"}}>
+                  <section role="alertdialog" aria-modal="true" aria-labelledby="reset-error-title-v2" className="w-full max-w-[460px] rounded-2xl border border-[#dbe3ef] bg-white p-8 text-center shadow-2xl">
+                    <h2 id="reset-error-title-v2" className="text-lg font-bold text-[#17336d]">{/expired/i.test(resetCodeMessageV2) ? "Verification Expired" : "Check Your Code"}</h2>
+                    <p className="mt-5 text-sm leading-6 text-[#64748b]">{resetCodeMessageV2}</p>
+                    <button autoFocus type="button" onClick={() => { setCodeError(false); setResetCodeMessageV2(""); }} className="mt-6 min-w-[112px] rounded-xl bg-[#24478d] px-6 py-3 text-sm font-semibold !text-white">OK</button>
+                  </section>
+                </div>, document.body
               )}
             </div>
 
@@ -25867,6 +26024,12 @@ function Dashboard({
 
   const [currentPassword, setCurrentPassword] =
     useState("");
+  /* QRPASS_ACCOUNT_PHOTO_EYES_V1 */
+  const [qrPhotoPreview, setQrPhotoPreview] = useState(false);
+  const [qrVisiblePasswords, setQrVisiblePasswords] = useState({currentPassword:false,newPassword:false,confirmPassword:false});
+  useEffect(() => { if (!changePasswordOpen) setQrVisiblePasswords({currentPassword:false,newPassword:false,confirmPassword:false}); }, [changePasswordOpen]);
+  useEffect(() => { if (!accountSettingsOpen) setQrPhotoPreview(false); }, [accountSettingsOpen]);
+  useEffect(() => { if (!qrPhotoPreview) return; const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setQrPhotoPreview(false); }; window.addEventListener('keydown', close); return () => window.removeEventListener('keydown', close); }, [qrPhotoPreview]);
 
   const [newPassword, setNewPassword] =
     useState("");
@@ -25895,6 +26058,19 @@ function Dashboard({
 
     const [uploadingProfilePhoto, setUploadingProfilePhoto] =
   useState(false);
+  // QRPASS_ACCOUNT_SAVE_ONLY_V1
+  const [qrDraftPhoto, setQrDraftPhoto] = useState<File | null | undefined>(undefined);
+  const [qrDraftPhotoUrl, setQrDraftPhotoUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!accountSettingsOpen) setQrDraftPhoto(undefined);
+  }, [accountSettingsOpen]);
+  useEffect(() => {
+    if (!qrDraftPhoto) { setQrDraftPhotoUrl(null); return; }
+    const preview = URL.createObjectURL(qrDraftPhoto);
+    setQrDraftPhotoUrl(preview);
+    return () => URL.revokeObjectURL(preview);
+  }, [qrDraftPhoto]);
+
   // =========================================================
   // NOTIFICATIONS
   // =========================================================
@@ -25980,102 +26156,21 @@ useEffect(() => {
       setProfileMessage("");
     }
   }, [accountSettingsOpen, currentUser]);
-const handleProfilePhotoUpload = async (
-  event: React.ChangeEvent<HTMLInputElement>
-) => {
+const handleProfilePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
   const file = event.target.files?.[0];
-
-  if (!file) {
-    return;
+  event.target.value = "";
+  if (!file || savingProfile || uploadingProfilePhoto) return;
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 2 * 1024 * 1024) {
+    setProfileMessage("Please choose a JPG, PNG, or WEBP image up to 2 MB."); return;
   }
-
-  try {
-    setUploadingProfilePhoto(true);
-    setProfileMessage("");
-
-    const data =
-      await uploadAccountProfilePhoto(file);
-
-    const updatedUser = {
-      ...currentUser,
-      profile_photo: data.profile_photo,
-      profile_photo_url: data.profile_photo_url,
-    };
-
-    setCurrentUser(updatedUser);
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(updatedUser)
-    );
-
-    setProfileMessage(
-      data.message ||
-        "Profile photo updated successfully."
-    );
-  } catch (error: any) {
-    setProfileMessage(
-      error?.errors?.profile_photo?.[0] ||
-        error?.message ||
-        "Failed to upload profile photo."
-    );
-  } finally {
-    setUploadingProfilePhoto(false);
-
-    // Allows selecting the same image again later.
-    event.target.value = "";
-  }
+  setProfileMessage("");
+  setQrDraftPhoto(file);
 };
-
 const handleRemoveProfilePhoto = async () => {
-  if (!currentUser?.profile_photo_url) {
-    return;
-  }
-
-  const confirmed = window.confirm(
-    "Remove your current profile photo?"
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-    setUploadingProfilePhoto(true);
-    setProfileMessage("");
-
-    const data = await removeAccountProfilePhoto();
-
-    const updatedUser =
-      data?.user ?? {
-        ...currentUser,
-        profile_photo:
-          data?.profile_photo ?? null,
-        profile_photo_url:
-          data?.profile_photo_url ?? null,
-      };
-
-    setCurrentUser(updatedUser);
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(updatedUser)
-    );
-
-    setProfileMessage(
-      data?.message ||
-        "Profile photo removed successfully."
-    );
-  } catch (error: any) {
-    setProfileMessage(
-      error?.message ||
-        "Failed to remove profile photo."
-    );
-  } finally {
-    setUploadingProfilePhoto(false);
-  }
+  if (savingProfile || uploadingProfilePhoto) return;
+  setQrDraftPhoto(null);
+  setProfileMessage("");
 };
-
 
 // =========================================================
 // CHANGE PASSWORD
@@ -26140,26 +26235,29 @@ const handleChangePassword = async () => {
 
 
 const handleSaveAccountProfile = async () => {
+  if (savingProfile) return;
   try {
     setShowProfileErrors(true);
     setProfileMessage("");
-    if (!isPersonName(profileName) || (profileEmail && !isEmail(profileEmail))) return;
+    if (!isPersonName(profileName) || !isEmail(profileEmail)) {
+      setProfileMessage("Please enter a valid full name and email address.");
+      return;
+    }
     setSavingProfile(true);
 
     const data = await updateAccountProfile({
       name: profileName.trim(),
       email: profileEmail.trim(),
+      profilePhoto: qrDraftPhoto,
     });
 
     if (data.user) {
-      setCurrentUser(data.user);
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
+      const updatedUser = { ...currentUser, ...data.user };
+      setCurrentUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
     }
 
+    setQrDraftPhoto(undefined);
     setProfileMessage(
       data.message ||
         "Account information updated successfully."
@@ -26794,204 +26892,61 @@ const handleSaveAccountProfile = async () => {
   // CLICKABLE NOTIFICATION NAVIGATION
   // =========================================================
 
-  function getNotificationTargetIndex(
-    type: string | null | undefined
-  ): number | null {
-    const normalizedType = String(type ?? "").toLowerCase();
-
-    /*
-    |--------------------------------------------------------------------------
-    | STUDENT
-    |--------------------------------------------------------------------------
-    */
-
+  // QRPASS_NOTIFICATION_LABEL_NAV_V1
+  function getNotificationTargetIndex(type: string | null | undefined, title?: string): number | null {
+    const t = String(type ?? "").toLowerCase();
+    const hint = String(title ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+    const value = t + "_" + hint;
+    const find = (...labels: string[]) => {
+      for (const label of labels) {
+        const i = navItems.findIndex(item => item?.label === label);
+        if (i >= 0 && pages[i]) return i;
+      }
+      return null;
+    };
+    const lost = /lost_found|lost|found|claim|recover/.test(value);
+    const incident = /incident|flagged|resolved|entry|exit|scan/.test(value);
+    const approved = /item_approved|qr_issued|qr_permit_ready|item_ready/.test(value);
+    const registration = /registration|item_submitted|approval|item_rejected|item_pending|permit/.test(value);
     if (role === "student") {
-      if (normalizedType === "item_approved") {
-        return 1; // QR Codes
-      }
-
-      if (
-        normalizedType === "item_submitted" ||
-        normalizedType.includes("permit")
-      ) {
-        return 2; // Permit Status
-      }
-
-      if (
-        normalizedType.includes("lost_found") ||
-        normalizedType.includes("lost") ||
-        normalizedType.includes("found")
-      ) {
-        return 3; // Lost & Found
-      }
-
-      return 0; // Register Item
+      if (lost) return find("Lost & Found");
+      if (approved) return find("QR Codes");
+      if (registration || /expired|rejected/.test(value)) return find("Permit Status");
+      if (incident) return find("Permit Status");
+      return null;
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | PCO
-    |--------------------------------------------------------------------------
-    */
-
     if (role === "pco") {
-      if (
-        normalizedType === "new_item_registration" ||
-        normalizedType === "item_submitted" ||
-        normalizedType.includes("approval")
-      ) {
-        return 0; // Registration Requests
-      }
-
-      if (
-        normalizedType === "item_approved" ||
-        normalizedType.includes("registry") ||
-        normalizedType.includes("qr")
-      ) {
-        return 1; // Registered Items
-      }
-
-      return 0;
+      if (approved || /registry|registered_item|qr_expired/.test(value)) return find("Registered Items");
+      if (registration) return find("Registration Requests");
+      if (incident || /report/.test(value)) return find("Reports");
+      return null;
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | CSU / SECURITY
-    |--------------------------------------------------------------------------
-    */
-
     if (role === "security") {
-      const destination = (label: string) => {
-        const index = navItems.findIndex(
-          item => item.label === label
-        );
-        return index >= 0 ? index : 0;
-      };
-
-      if (/lost_found|lost|found/.test(normalizedType))
-        return destination("Lost & Found");
-
-      if (/entry|exit/.test(normalizedType))
-        return destination("Entry / Exit Records");
-
-      if (normalizedType.includes("report"))
-        return destination("Reports");
-
-      return destination("Scan & Verify");
+      if (lost) return find("Lost & Found");
+      if (incident) return find("Entry / Exit Records");
+      if (approved || registration || /qr/.test(value)) return find("Scan & Verify");
+      if (/report/.test(value)) return find("Reports");
+      return null;
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | SYSTEM ADMINISTRATOR
-    |--------------------------------------------------------------------------
-    |
-    | 0 = Overview Dashboard
-    | 1 = Registered Items
-    | 2 = Lost & Found
-    | 3 = Reports & Analytics
-    | 4 = User Accounts
-    | 5 = System Logs
-    | 6 = Active Sessions
-    | 7 = System Settings
-    |
-    */
-
     if (role === "sysadmin") {
-      if (
-        normalizedType.includes("user_account") ||
-        normalizedType.includes("user") ||
-        normalizedType.includes("account")
-      ) {
-        return 4; // User Accounts
-      }
-
-      if (
-        normalizedType.includes("security_config") ||
-        normalizedType.includes("permission")
-      ) {
-        return 7; // System Settings (Security Config no longer appears in sidebar)
-      }
-
-      if (normalizedType.includes("setting")) {
-        return 7; // System Settings
-      }
-
-      if (
-        normalizedType.includes("incident") ||
-        normalizedType.includes("audit") ||
-        normalizedType.includes("login") ||
-        normalizedType.includes("failed") ||
-        normalizedType.includes("warning")
-      ) {
-        return 5; // System Logs
-      }
-
-      if (normalizedType.includes("report")) {
-        return 3; // Reports & Analytics
-      }
-
-      if (
-        normalizedType.includes("lost_found") ||
-        normalizedType.includes("lost") ||
-        normalizedType.includes("found")
-      ) {
-        return 2; // Lost & Found
-      }
-
-      if (
-        normalizedType.includes("item") ||
-        normalizedType.includes("registration") ||
-        normalizedType.includes("qr")
-      ) {
-        return 1; // Registered Items
-      }
-
-      return 0; // Overview Dashboard
+      if (/security_config|permission|setting|policy/.test(value)) return find("System Settings");
+      if (/user_account|account|user_created|user_disabled|user_revoked/.test(value)) return find("User Accounts");
+      if (lost) return find("Lost & Found", "Audit Logs");
+      if (incident || /audit|login|failed|warning/.test(value)) return find("Audit Logs");
+      if (approved || registration || /item|qr/.test(value)) return find("Registered Items", "Audit Logs");
+      if (/report/.test(value)) return find("Reports", "Reports & Analytics");
+      return null;
     }
-
     return null;
   }
 
-
-  async function handleHeaderNotificationOpen(
-    notification: any
-  ) {
-    if (
-      !notification?.is_read &&
-      notification?.id
-    ) {
-      await handleHeaderMarkRead(
-        notification.id
-      );
+  async function handleHeaderNotificationOpen(notification: any) {
+    const targetIndex = getNotificationTargetIndex(notification?.type, notification?.title);
+    if (targetIndex !== null) {
+      handleNavClick(targetIndex);
     }
-
-    const targetIndex =
-      getNotificationTargetIndex(
-        notification?.type
-      );
-
-    if (
-      targetIndex !== null &&
-      targetIndex >= 0 &&
-      targetIndex < pages.length
-    ) {
-      setActiveNav(
-        targetIndex
-      );
-    }
-
-    setNotificationOpen(
-      false
-    );
-
-    setAccountOpen(
-      false
-    );
-
-    if (isMobile) {
-      setSidebarOpen(
-        false
-      );
+    if (!notification?.is_read && notification?.id) {
+      await handleHeaderMarkRead(notification.id);
     }
   }
 
@@ -29280,12 +29235,12 @@ const handleSaveAccountProfile = async () => {
                     "0 8px 20px rgba(26, 58, 123, 0.20)",
                 }}
               >
-                {currentUser?.profile_photo_url ? (
-                  <img
-                    src={currentUser.profile_photo_url}
+                {(qrDraftPhoto === undefined ? currentUser?.profile_photo_url : qrDraftPhotoUrl) ? (
+                  <button type="button" className="h-full w-full cursor-zoom-in p-0 border-0 bg-transparent" aria-label="View profile photo" onClick={() => setQrPhotoPreview(true)}><img
+                    src={(qrDraftPhoto === undefined ? currentUser?.profile_photo_url : qrDraftPhotoUrl)}
                     alt="Profile"
                     className="w-full h-full object-cover"
-                  />
+                  /></button>
                 ) : (
                   <User
                     size={38}
@@ -29314,7 +29269,7 @@ const handleSaveAccountProfile = async () => {
     />
   </label>
 
-  {currentUser?.profile_photo_url && (
+  {(qrDraftPhoto === undefined ? currentUser?.profile_photo_url : qrDraftPhotoUrl) && (
     <button
       type="button"
       onClick={handleRemoveProfilePhoto}
@@ -29327,7 +29282,19 @@ const handleSaveAccountProfile = async () => {
 </div>
           </div>
 
-          {/* ACCOUNT SUMMARY */}
+          
+{/* QRPASS_PROFILE_BLACK_VIEWER_V2 */}
+{qrPhotoPreview && (qrDraftPhoto === undefined ? currentUser?.profile_photo_url : qrDraftPhotoUrl) && createPortal(
+  <div className="fixed inset-0 z-[2147483640] flex items-center justify-center bg-black/80 p-4" onClick={() => setQrPhotoPreview(false)}>
+    <div role="dialog" aria-modal="true" aria-label="Profile photo" className="w-[min(880px,92vw)] max-h-[90vh] overflow-hidden rounded-xl bg-black text-white shadow-2xl" onClick={event => event.stopPropagation()}>
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <div className="min-w-0"><div className="text-[11px] font-semibold text-white/60">PROFILE PHOTO</div><div className="truncate text-sm font-semibold text-white">{currentUser?.name || 'Profile'}</div></div>
+        <button type="button" autoFocus aria-label="Close photo preview" className="ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl !bg-white !text-[#17336d]" onClick={() => setQrPhotoPreview(false)}><X size={18}/></button>
+      </div>
+      <div className="flex items-center justify-center bg-black p-4"><img src={(qrDraftPhoto === undefined ? currentUser?.profile_photo_url : qrDraftPhotoUrl)} alt="Enlarged profile photo" className="block max-h-[72vh] max-w-full w-auto h-auto object-contain" /></div>
+    </div>
+  </div>, document.body)}
+{/* ACCOUNT SUMMARY */}
           <div className="flex-1 min-w-0 text-center sm:text-left">
             <h3 className="text-base sm:text-lg font-bold text-[#111827]">
               {currentUser?.name ??
@@ -29566,8 +29533,8 @@ const handleSaveAccountProfile = async () => {
               Current Password
             </label>
 
-            <input
-              type="password"
+            <div className="relative"><input
+              type={qrVisiblePasswords.currentPassword ? "text" : "password"}
               value={currentPassword}
               onChange={(e) => {
                 setCurrentPassword(e.target.value);
@@ -29575,10 +29542,11 @@ const handleSaveAccountProfile = async () => {
               }}
               autoComplete="current-password"
               placeholder="Enter your current password"
-              className="w-full rounded-lg border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none hover:bg-[#eef2ff] focus:border-[#6d91e8] focus:bg-white focus:ring-2 focus:ring-[#6d91e8]/15"
+              className="!pr-12 w-full rounded-lg border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none hover:bg-[#eef2ff] focus:border-[#6d91e8] focus:bg-white focus:ring-2 focus:ring-[#6d91e8]/15"
               data-qrpass-password-v166="true"
               style={{ backgroundColor: "#ffffff" }}
             />
+<button type="button" onClick={() => setQrVisiblePasswords(previous => ({...previous, currentPassword: !previous.currentPassword}))} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#7186b5] transition-colors hover:text-[#2f5fd6]" aria-label={qrVisiblePasswords.currentPassword ? "Hide password" : "Show password"} title={qrVisiblePasswords.currentPassword ? "Hide password" : "Show password"}>{qrVisiblePasswords.currentPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>
           </div>
 
           {/* NEW PASSWORD */}
@@ -29587,8 +29555,8 @@ const handleSaveAccountProfile = async () => {
               New Password
             </label>
 
-            <input
-              type="password"
+            <div className="relative"><input
+              type={qrVisiblePasswords.newPassword ? "text" : "password"}
               value={newPassword}
               onChange={(e) => {
                 setNewPassword(e.target.value);
@@ -29596,10 +29564,11 @@ const handleSaveAccountProfile = async () => {
               }}
               autoComplete="new-password"
               placeholder="At least 8 characters"
-              className="w-full rounded-lg border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none hover:bg-[#eef2ff] focus:border-[#6d91e8] focus:bg-white focus:ring-2 focus:ring-[#6d91e8]/15"
+              className="!pr-12 w-full rounded-lg border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none hover:bg-[#eef2ff] focus:border-[#6d91e8] focus:bg-white focus:ring-2 focus:ring-[#6d91e8]/15"
               data-qrpass-password-v166="true"
               style={{ backgroundColor: "#ffffff" }}
             />
+<button type="button" onClick={() => setQrVisiblePasswords(previous => ({...previous, newPassword: !previous.newPassword}))} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#7186b5] transition-colors hover:text-[#2f5fd6]" aria-label={qrVisiblePasswords.newPassword ? "Hide password" : "Show password"} title={qrVisiblePasswords.newPassword ? "Hide password" : "Show password"}>{qrVisiblePasswords.newPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>
 
 
           </div>
@@ -29610,8 +29579,8 @@ const handleSaveAccountProfile = async () => {
               Confirm New Password
             </label>
 
-            <input
-              type="password"
+            <div className="relative"><input
+              type={qrVisiblePasswords.confirmPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => {
                 setConfirmPassword(e.target.value);
@@ -29619,10 +29588,11 @@ const handleSaveAccountProfile = async () => {
               }}
               autoComplete="new-password"
               placeholder="Re-enter your new password"
-              className="w-full rounded-lg border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none hover:bg-[#eef2ff] focus:border-[#6d91e8] focus:bg-white focus:ring-2 focus:ring-[#6d91e8]/15"
+              className="!pr-12 w-full rounded-lg border border-[#c7d2fe] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none hover:bg-[#eef2ff] focus:border-[#6d91e8] focus:bg-white focus:ring-2 focus:ring-[#6d91e8]/15"
               data-qrpass-password-v166="true"
               style={{ backgroundColor: "#ffffff" }}
             />
+<button type="button" onClick={() => setQrVisiblePasswords(previous => ({...previous, confirmPassword: !previous.confirmPassword}))} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#7186b5] transition-colors hover:text-[#2f5fd6]" aria-label={qrVisiblePasswords.confirmPassword ? "Hide password" : "Show password"} title={qrVisiblePasswords.confirmPassword ? "Hide password" : "Show password"}>{qrVisiblePasswords.confirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>
           </div>
 
           {passwordMessage && (
@@ -29739,6 +29709,9 @@ const handleSaveAccountProfile = async () => {
 // ── App root ──────────────────────────────────────────────────────────────────
 // QRPASS_DIGITS_ONLY_ID_V178: input sanitization and guards are scoped to ID NUMBER fields.
 export default function App() {
+
+
+
 
   // QRPASS_ROLE_ONLY_SIZE_V176: Role dropdown (shows Student) size only, in Add/Edit User.
   React.useEffect(() => {
