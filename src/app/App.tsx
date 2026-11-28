@@ -1,3 +1,5 @@
+/* QRPASS_MOBILE_DOWNLOAD_UNIFORM_V1 */
+import './qrpass-mobile-download-uniform.js';
 import "./qrpass-pco-csu-quantity-reference.js";
 import "./qrpassPcoArrows.js";
 import "./qrpassSysadminArrows.js";
@@ -3261,13 +3263,13 @@ function StudentMyQRCodes() {
       )}
 
       {qrModalItem && (
-        <div
+        <div data-qrpass-mobile-qr-overlay="true"
           className="fixed inset-0 z-[9999] bg-black/55 flex items-center justify-center p-4"
           onClick={() =>
             setQrModalItem(null)
           }
         >
-          <div
+          <div data-qrpass-mobile-qr-panel="true"
             className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
             onClick={(e) =>
               e.stopPropagation()
@@ -3296,7 +3298,9 @@ function StudentMyQRCodes() {
             </div>
 
             <div className="p-6">
-              <div className="mx-auto w-fit rounded-2xl border border-[#dce3ee] bg-white p-5 shadow-sm">
+              <style>{"@media (max-width: 767px) {\n[data-qrpass-mobile-qr-overlay] { box-sizing: border-box !important; padding: 20px 16px !important; overflow-y: auto !important; align-items: center !important; }\n[data-qrpass-mobile-qr-panel] { box-sizing: border-box !important; width: 100% !important; max-width: min(420px, calc(100vw - 32px)) !important; max-height: calc(100dvh - 40px) !important; min-width: 0 !important; overflow-y: auto !important; overflow-x: hidden !important; margin: auto !important; }\n[data-qrpass-mobile-qr-frame] { box-sizing: border-box !important; width: min(100%, 264px) !important; max-width: 100% !important; min-width: 0 !important; height: auto !important; margin-inline: auto !important; padding: 14px !important; display: flex !important; justify-content: center !important; align-items: center !important; }\n[data-qrpass-mobile-qr-frame] > * { box-sizing: border-box !important; max-width: 100% !important; min-width: 0 !important; height: auto !important; margin-inline: auto !important; }\n[data-qrpass-mobile-qr-frame] :is(svg,canvas,img) { display: block !important; width: 100% !important; max-width: 100% !important; height: auto !important; aspect-ratio: 1 !important; object-fit: contain !important; margin-inline: auto !important; }\n}"}</style>
+              {/* QRPASS_MOBILE_QR_MODAL_V1 */}
+              <div data-qrpass-mobile-qr-frame="true" className="mx-auto w-fit rounded-2xl border border-[#dce3ee] bg-white p-5 shadow-sm">
                 <QRCodeDisplay
                   value={qrModalItem.qr_code}
                   size={300}
@@ -4381,6 +4385,49 @@ function useNotifs(role: "student" | "security") {
   return items;
 }
 
+
+/* QRPASS_MOBILE_LOST_FOUND_PHOTO_V1 */
+/* QRPASS_MOBILE_LOST_FOUND_PHOTO_V2 */
+function qrpassMobileLostFoundPhotoV1(event: { currentTarget: HTMLImageElement; preventDefault(): void; stopPropagation(): void }) {
+  const media = window.matchMedia('(max-width: 767px)');
+  if (!media.matches) return;
+  const source = event.currentTarget;
+  const url = source.currentSrc || source.src;
+  if (!url || !source.complete || !source.naturalWidth) return;
+  event.preventDefault();
+  event.stopPropagation();
+  if (document.querySelector('[data-qrpass-lf-photo-v1]')) return;
+  const dialog = document.createElement('dialog');
+  dialog.setAttribute('data-qrpass-lf-photo-v1', 'true');
+  dialog.setAttribute('aria-label', 'Lost and Found item photo');
+  Object.assign(dialog.style, { position: 'fixed', inset: '0', margin: 'auto', width: 'calc(100vw - 32px)', maxWidth: '480px', height: 'min(90dvh, calc(100dvh - 40px))', maxHeight: 'calc(100dvh - 40px)', padding: '0', border: '0', borderRadius: '18px', background: '#000', color: '#fff', overflow: 'hidden', boxSizing: 'border-box' });
+  const style = document.createElement('style');
+  style.textContent = '[data-qrpass-lf-photo-v1]::backdrop { background: rgba(0,0,0,.72); }';
+  const header = document.createElement('div');
+  Object.assign(header.style, { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexShrink: '0', padding: '12px 16px', borderBottom: '1px solid #252525' });
+  const title = document.createElement('div');
+  const caption = document.createElement('div'); caption.textContent = 'ITEM PHOTO';
+  Object.assign(caption.style, { fontSize: '11px', color: '#aaa', fontWeight: '600' });
+  const name = document.createElement('div'); name.textContent = source.alt || 'Lost and Found item';
+  Object.assign(name.style, { fontSize: '15px', fontWeight: '600', overflowWrap: 'anywhere' });
+  title.append(caption, name);
+  const close = document.createElement('button'); close.type = 'button'; close.textContent = '×'; close.setAttribute('aria-label', 'Close photo');
+  Object.assign(close.style, { width: '40px', height: '40px', flexShrink: '0', borderRadius: '50%', border: '0', background: '#fff', color: '#17336d', fontSize: '26px', display: 'grid', placeItems: 'center', cursor: 'pointer' });
+  header.append(title, close);
+  const body = document.createElement('div');
+  Object.assign(body.style, { padding: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'auto', flex: '1 1 0', minHeight: '0', boxSizing: 'border-box' });
+  const photo = document.createElement('img'); photo.src = url; photo.alt = source.alt || 'Item photo';
+  Object.assign(photo.style, { display: 'block', width: '100%', height: '100%', minHeight: '0', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', margin: 'auto' });
+  body.append(photo); dialog.append(header, body);
+  const onResize = () => { if (!media.matches && dialog.open) dialog.close(); };
+  const cleanup = () => { media.removeEventListener('change', onResize); dialog.remove(); style.remove(); };
+  close.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
+  dialog.addEventListener('close', cleanup, { once: true });
+  document.head.append(style); document.body.append(dialog);
+  try { dialog.showModal(); dialog.style.display = 'flex'; dialog.style.flexDirection = 'column'; media.addEventListener('change', onResize); close.focus(); } catch { cleanup(); }
+}
+
 function StudentLostAndFound() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -5052,7 +5099,7 @@ function StudentLostAndFound() {
                     {/* PHOTO */}
                     <div className="relative flex h-36 items-center justify-center overflow-hidden bg-muted sm:h-44">
                       {item.photo_url ? (
-                        <img
+                        <img onClickCapture={qrpassMobileLostFoundPhotoV1}
                           src={
                             item.photo_url
                           }
@@ -5194,7 +5241,7 @@ function StudentLostAndFound() {
 
             {selectedItem.photo_url && (
               <div className="border-b border-border bg-muted">
-                <img
+                <img onClickCapture={qrpassMobileLostFoundPhotoV1}
                   src={
                     selectedItem.photo_url
                   }
@@ -6234,9 +6281,9 @@ function SecurityScanVerify() {
                 {pendingIncident.code}
               </span>
             </p>
-            <p className="mt-2 text-xs leading-relaxed text-[#64748b]">
+            <p data-qrpass-mobile-flagged-form-v1="true" className="mt-2 text-xs leading-relaxed text-[#64748b]">
               Complete the details below before recording this item as a security incident.
-            </p>
+            </p><style>{"@media (max-width:767px){[data-qrpass-mobile-flagged-form-v1]{display:none!important;}}@media (max-width:767px){[data-qrpass-mobile-flagged-form-v1-footer]{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;width:100%!important;align-items:stretch!important;box-sizing:border-box!important;}[data-qrpass-mobile-flagged-form-v1-footer]>button{width:100%!important;min-width:0!important;max-width:none!important;height:44px!important;min-height:44px!important;margin:0!important;padding:0 8px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;grid-column:auto!important;}}"}</style>
           </div>
         </div>
 
@@ -6421,7 +6468,7 @@ function SecurityScanVerify() {
 
                     </div>
 
-      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-[#e5eaf2] bg-[#fbfcfe] px-4 py-3 sm:px-6">
+      <div data-qrpass-mobile-flagged-form-v1-footer="true" className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-[#e5eaf2] bg-[#fbfcfe] px-4 py-3 sm:px-6">
                 <button
                   type="button"
                   onClick={() => {
@@ -10991,7 +11038,7 @@ function SecurityLostFound() {
                     <div className="flex min-w-0 flex-col gap-3">
                       <div data-qrpass-csu-photo-details="true" className="min-w-0 space-y-3">
                         <div className="flex h-44 w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40 sm:h-48">
-                          {item.photo_url ? <img src={item.photo_url} alt={item.item_name || "Item photo"} className="h-full w-full object-contain" /> : <span className="text-sm text-muted-foreground">[Item photo]</span>}
+                          {item.photo_url ? <img onClickCapture={qrpassMobileLostFoundPhotoV1} src={item.photo_url} alt={item.item_name || "Item photo"} className="h-full w-full object-contain" /> : <span className="text-sm text-muted-foreground">[Item photo]</span>}
                         </div>
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <h3 className="text-base font-semibold text-foreground">{item.item_name}</h3>
@@ -11235,7 +11282,7 @@ function SecurityLostFound() {
                                 style={{ height: "220px" }}
                                 title="View full image"
                               >
-                                <img
+                                <img onClickCapture={qrpassMobileLostFoundPhotoV1}
                                   src={item.photo_url}
                                   alt={`${item.item_name || "Lost and Found item"} photo`}
                                   className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-[1.02]"
@@ -12733,15 +12780,9 @@ function PCOPermitRequests() {
             <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#cfd8e6] bg-card px-5 py-4 sm:px-6">
               <div>
                 <h3 className="font-semibold text-foreground">Item Details</h3>
-                <p className="mt-1 text-xs text-muted-foreground">Review the full item details and description.</p>
+                {/* QRPASS_PCO_ITEM_DETAILS_HEADER_ALL_V2 */}
               </div>
-              <button
-                type="button"
-                onClick={() => setViewingItemV96(null)}
-                className="rounded-md border border-[#d9e2ef] bg-white px-3 py-1.5 text-sm font-medium text-[#244780] transition hover:bg-[#eef4ff]"
-           data-qrpass-neutral-v169="true">
-                Close
-              </button>
+              
             </div>
 
             <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-4 sm:px-6 sm:pb-5">
@@ -13300,9 +13341,7 @@ className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl
                                         Registered Item Details
                                       </h2>
 
-                                      <p className="mt-0.5 text-xs text-muted-foreground">
-                                        Complete registration information for this campus item.
-                                      </p>
+                                      {/* QRPASS_PCO_REGISTERED_ITEM_SUBTITLE_REMOVED */}
                                     </div>
 
                                     <button
@@ -18691,7 +18730,7 @@ function SysAdminUserAccounts() {
       {/* USER LIST */}
       
       {/* QRPASS_ACCOUNTS_SEARCH_REPAIRED_V5 */}
-        <div className="flex flex-col gap-3 border-b border-[#cfd8e6] px-4 py-3 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 border-b border-[#cfd8e6] px-4 py-3 sm:flex-row sm:items-center" data-qrpass-user-toolbar-match-audit="true">
           <div className="relative min-w-0 flex-1">
             <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
             <input type="search" aria-label="Search user accounts" value={search}
@@ -19284,6 +19323,39 @@ function QRPassReportsChoiceDropdownV210({
 }
 
 function SysAdminSettings() {
+  /* QRPASS_SETTINGS_DOWNWARD_V1 */
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const style = document.createElement('style');
+    style.textContent = '@media(max-width:767px){html[data-qp-settings-downward] [data-qp-settings-menu]{bottom:auto!important;top:var(--qp-settings-menu-top)!important;max-height:var(--qp-settings-menu-height)!important;overflow-y:auto!important;overscroll-behavior:contain;}}';
+    document.head.appendChild(style);
+    document.documentElement.setAttribute('data-qp-settings-downward','');
+    let frame=0;
+    let active: HTMLElement | null=null;
+    const clear=()=>{if(active){active.removeAttribute('data-qp-settings-menu');active.style.removeProperty('--qp-settings-menu-top');active.style.removeProperty('--qp-settings-menu-height');active=null;}};
+    const update=()=>{
+      if(!media.matches){clear();return;}
+      const trigger=document.querySelector<HTMLElement>('.qrpass-main [aria-expanded="true"][aria-controls]');
+      const id=trigger?.getAttribute('aria-controls');
+      const menu=id?document.getElementById(id):null;
+      if(!trigger||!menu||!menu.matches('[role="listbox"],[role="menu"], [data-state="open"]')){clear();return;}
+      if(active!==menu){clear();active=menu;}
+      const target=trigger.getBoundingClientRect().bottom+4;
+      const available=Math.max(40,window.innerHeight-target-8);
+      const fixed=getComputedStyle(menu).position==='fixed';
+      const parent=menu.offsetParent;
+      const top=fixed?target:target-(parent instanceof HTMLElement?parent.getBoundingClientRect().top-parent.scrollTop+parent.clientTop:0);
+      menu.style.setProperty('--qp-settings-menu-top',top+'px');
+      menu.style.setProperty('--qp-settings-menu-height',available+'px');
+      menu.setAttribute('data-qp-settings-menu','');
+    };
+    const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+    const observer=new MutationObserver(schedule);
+    observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['aria-expanded','aria-controls','data-state']});
+    window.addEventListener('scroll',schedule,true);window.addEventListener('resize',schedule);media.addEventListener('change',schedule);schedule();
+    return()=>{observer.disconnect();cancelAnimationFrame(frame);window.removeEventListener('scroll',schedule,true);window.removeEventListener('resize',schedule);media.removeEventListener('change',schedule);clear();style.remove();document.documentElement.removeAttribute('data-qp-settings-downward');};
+  }, []);
+
   // QRPASS_INPUT_ONLY_V2
   const [settings, setSettings] = useState({
     system_name: "QRpass",
@@ -24679,7 +24751,8 @@ async function handleTwoFactorSubmit(
     </section>
   </div>, document.body
 )}
-                    <div className={gmailSent ? "hidden" : "flex gap-3 mt-5 justify-end"}>
+                    <div className={gmailSent ? "hidden" : "flex gap-3 mt-5 justify-end"} data-qrpass-registration-actions-v2="true">
+<style>{"/* QRPASS_REGISTRATION_BUTTONS_V3 */\n@media (max-width:767px){\nhtml body #root [data-qrpass-registration-actions-v2=\"true\"]:is(*,#qrpass-unused-a):is(*,#qrpass-unused-b):is(*,#qrpass-unused-c){display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;width:100%!important;min-width:0!important;max-width:100%!important;align-items:stretch!important;justify-items:stretch!important;box-sizing:border-box!important;}\nhtml body #root [data-qrpass-registration-actions-v2=\"true\"]:is(*,#qrpass-unused-a):is(*,#qrpass-unused-b):is(*,#qrpass-unused-c)>button{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;height:46px!important;min-height:46px!important;max-height:46px!important;margin:0!important;padding:4px 7px!important;gap:3px!important;font-size:11px!important;line-height:1.2!important;white-space:normal!important;overflow-wrap:normal!important;word-break:normal!important;text-align:center!important;border-radius:12px!important;}\nhtml body #root [data-qrpass-registration-actions-v2=\"true\"]:is(*,#qrpass-unused-a):is(*,#qrpass-unused-b):is(*,#qrpass-unused-c)>button :is(span,strong){font-size:inherit!important;line-height:inherit!important;white-space:normal!important;min-width:0!important;}\nhtml body #root [data-qrpass-registration-actions-v2=\"true\"]:is(*,#qrpass-unused-a):is(*,#qrpass-unused-b):is(*,#qrpass-unused-c)>button svg{flex-shrink:0!important;width:12px!important;height:12px!important;}\n}"}</style>
                       <button
                         type="button"
                         onClick={() =>
@@ -25790,7 +25863,8 @@ async function handleTwoFactorSubmit(
               </div>
 
               {/* REMEMBER ME + FORGOT PASSWORD */}
-              <div className="flex items-center justify-between gap-3">
+              <div data-qrpass-login-inline-mobile-v2="true" className="flex items-center justify-between gap-3">
+<style>{"@media (max-width:767px){html body #root [data-qrpass-login-inline-mobile-v2]{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:space-between!important;width:100%!important;gap:6px!important;}html body #root [data-qrpass-login-inline-mobile-v2] > label,html body #root [data-qrpass-login-inline-mobile-v2] > button{width:auto!important;min-width:0!important;max-width:none!important;flex:0 0 auto!important;margin:0!important;padding:0!important;font-size:clamp(11px,3.2vw,13px)!important;white-space:nowrap!important;}html body #root [data-qrpass-login-inline-mobile-v2] > label{display:inline-flex!important;align-items:center!important;gap:6px!important;text-align:left!important;}html body #root [data-qrpass-login-inline-mobile-v2] > label input{flex-shrink:0!important;}html body #root [data-qrpass-login-inline-mobile-v2] > button{display:inline-flex!important;align-items:center!important;justify-content:flex-end!important;text-align:right!important;}}"}</style>
                 <label className="flex cursor-pointer select-none items-center gap-2 text-[13px] text-[#5e6f8f]">
                   <input
                     type="checkbox"
@@ -25930,7 +26004,9 @@ function Dashboard({
     let mounted = true;
     const refreshBrand = async () => {
       try {
-        const response = await getSystemSettings();
+        /* QRPASS_FOOTER_403_ROLE_GUARD_V1 */
+          if (role !== "sysadmin") return;
+          const response = await getSystemSettings();
         if (mounted && response?.settings) {
           const brand = {
             institution: String(response.settings.institution || "University of Cebu"),
@@ -26278,7 +26354,979 @@ const handleSaveAccountProfile = async () => {
   }
 };
 
-  const roleInfo =
+  // QRPass mobile user filter alignment v1
+  useEffect(() => {
+    if (role !== "sysadmin") return;
+    const style = document.createElement("style");
+    style.textContent = "@media (max-width: 767px) {\n    html[data-qrpass-admin-mobile] .qrpass-main button[data-qrpass-user-filter-center] { position: relative !important; justify-content: center !important; text-align: center !important; padding-inline: 36px !important; }\n    html[data-qrpass-admin-mobile] .qrpass-main button[data-qrpass-user-filter-center] > :is(span,div):not(:has(svg)) { text-align: center !important; flex: 0 1 auto !important; margin-inline: 0 !important; }\n    html[data-qrpass-admin-mobile] .qrpass-main button[data-qrpass-user-filter-center] > :is(svg,span:has(> svg),div:has(> svg)):last-child { position: absolute !important; right: 12px !important; top: 50% !important; translate: 0 -50%; margin: 0 !important; }\n  }";
+    document.head.appendChild(style);
+    const attr = "data-qrpass-user-filter-center";
+    const update = () => {
+      const main = document.querySelector(".qrpass-main");
+      if (!main) return;
+      const buttons = Array.from(main.querySelectorAll("button"));
+      const label = (el: Element) => (el.textContent || "").replace(/\s+/g, " ").trim();
+      const userPage = buttons.some(b => b.hasAttribute("data-qrpass-mobile-add-user") || label(b) === "Add User");
+      for (const button of buttons) {
+        if (!userPage) { if (button.hasAttribute(attr)) button.removeAttribute(attr); continue; }
+        if (button.querySelector("svg") && /^(All Roles|Newest first)$/i.test(label(button))) button.setAttribute(attr, "true");
+      }
+    };
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.body, {childList: true, subtree: true, characterData: true});
+    return () => { observer.disconnect(); style.remove(); document.querySelectorAll("[" + attr + "]").forEach(el => el.removeAttribute(attr)); };
+  }, [role]);
+
+  // QRPass mobile user toolbar v2
+  useEffect(() => {
+    if (role !== "sysadmin") return;
+    const style = document.createElement("style");
+    style.textContent = "@media (max-width:767px){\n [data-qp-ut2-root] [data-qp-ut2-wrap]{width:100%!important;max-width:100%!important;min-width:0!important;flex-basis:100%!important;align-self:stretch!important;box-sizing:border-box!important;}\n [data-qp-ut2-root] [data-qp-ut2-control]{display:flex!important;width:100%!important;max-width:100%!important;min-width:0!important;height:var(--qp-ut2-height,44px)!important;min-height:var(--qp-ut2-height,44px)!important;box-sizing:border-box!important;justify-content:center!important;align-items:center!important;text-align:center!important;align-self:stretch!important;}\n [data-qp-ut2-root] [data-qp-ut2-control=\"filter\"]{position:relative!important;padding-inline:36px!important;text-align-last:center!important;}\n [data-qp-ut2-root] select[data-qp-ut2-control]{display:block!important;}\n [data-qp-ut2-root] [data-qp-ut2-control=\"filter\"] [data-qp-ut2-label]{flex:0 1 auto!important;width:auto!important;margin-inline:0!important;text-align:center!important;}\n [data-qp-ut2-root] [data-qp-ut2-arrow]{position:absolute!important;right:12px!important;top:50%!important;margin:0!important;translate:0 -50%!important;}\n }";
+    document.head.appendChild(style);
+    const attrs = ["data-qp-ut2-root","data-qp-ut2-wrap","data-qp-ut2-control","data-qp-ut2-label","data-qp-ut2-arrow"];
+    const media = window.matchMedia("(max-width: 767px)");
+    const clean = () => { for (const attr of attrs) document.querySelectorAll("["+attr+"]").forEach(el => el.removeAttribute(attr)); };
+    const label = (el: Element) => (el.textContent || "").replace(/\s+/g," ").trim();
+    const update = () => {
+      clean();
+      if (!media.matches) return;
+      const main = document.querySelector(".qrpass-main") || document.querySelector("main");
+      if (!main || !Array.from(main.querySelectorAll("h1,h2,h3")).some(el => label(el).toLowerCase() === "user accounts")) return;
+      const search = Array.from(main.querySelectorAll("input")).find(el => /search.*(name|user id|email|role)/i.test(el.placeholder));
+      if (!search) return;
+      const candidates = Array.from(main.querySelectorAll("button,[role=button],[role=combobox],select"));
+      const add = candidates.find(el => /^\+?\s*add user$/i.test(label(el)));
+      if (!add) return;
+      let toolbar: Element | null = search.parentElement;
+      while (toolbar && toolbar !== main && !toolbar.contains(add)) toolbar = toolbar.parentElement;
+      if (!toolbar || toolbar === main) return;
+      const controls = candidates.filter(el => toolbar!.contains(el));
+      const filters = controls.filter(el => el !== add && (/^(all roles|newest first|oldest first|student|system administrator|sysadmin|csu|pco|security|faculty|staff)$/i.test(el instanceof HTMLSelectElement ? el.selectedOptions[0]?.text || "" : label(el)) || (el instanceof HTMLSelectElement && Array.from(el.options).some(o => /all roles|newest first/i.test(o.text)))));
+      if (filters.length !== 2) return;
+      toolbar.setAttribute("data-qp-ut2-root","true");
+      const height = filters[0].getBoundingClientRect().height;
+      if (height >= 32 && height <= 80) (toolbar as HTMLElement).style.setProperty("--qp-ut2-height",height+"px");
+      for (const el of [add,...filters]) {
+        el.setAttribute("data-qp-ut2-control",el === add ? "add" : "filter");
+        let parent = el.parentElement;
+        while (parent && parent !== toolbar && !parent.contains(search) && ![add,...filters].some(other => other !== el && parent!.contains(other))) { parent.setAttribute("data-qp-ut2-wrap","true"); parent = parent.parentElement; }
+        if (el === add || el instanceof HTMLSelectElement) continue;
+        for (const child of Array.from(el.children)) {
+          if (child.matches("svg") || (child.querySelector("svg") && !label(child))) child.setAttribute("data-qp-ut2-arrow","true");
+          else if (label(child)) child.setAttribute("data-qp-ut2-label","true");
+        }
+      }
+    };
+    let frame = 0;
+    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(update); };
+    const observer = new MutationObserver(schedule);
+    observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+    media.addEventListener("change",schedule);
+    schedule();
+    return () => { observer.disconnect(); cancelAnimationFrame(frame); media.removeEventListener("change",schedule); clean(); style.remove(); };
+  }, [role]);
+
+  // QRPass mobile add user width v3
+  useEffect(() => {
+    if (role !== "sysadmin") return;
+    const media = window.matchMedia("(max-width: 767px)");
+    const saved = new globalThis.Map<HTMLElement, Map<string, [string,string]>>();
+    const set = (el: HTMLElement, key: string, value: string) => {
+      if (!saved.has(el)) saved.set(el,new globalThis.Map());
+      const props = saved.get(el)!;
+      if (!props.has(key)) props.set(key,[el.style.getPropertyValue(key),el.style.getPropertyPriority(key)]);
+      if (el.style.getPropertyValue(key)!==value || el.style.getPropertyPriority(key)!=="important") el.style.setProperty(key,value,"important");
+    };
+    const restore = () => { for (const [el,props] of saved) for (const [key,[value,priority]] of props) { if(value) el.style.setProperty(key,value,priority); else el.style.removeProperty(key); } saved.clear(); };
+    const label = (el: Element) => (el.textContent || "").replace(/\s+/g," ").trim();
+    let frame = 0;
+    const update = () => {
+      if(!media.matches){restore();return;}
+      const main = document.querySelector(".qrpass-main") || document.querySelector("main");
+      if(!main || !Array.from(main.querySelectorAll("h1,h2,h3")).some(el=>label(el).toLowerCase()==="user accounts")){restore();return;}
+      const controls = Array.from(main.querySelectorAll<HTMLElement>("button,[role=button],[role=combobox],select"));
+      const add = controls.find(el=>/^\+?\s*add user$/i.test(label(el)));
+      const search = Array.from(main.querySelectorAll("input")).find(el=>/search.*(name|user id|email|role)/i.test(el.placeholder));
+      if(!add || !search){restore();return;}
+      let toolbar = add.parentElement;
+      while(toolbar && toolbar!==main && !toolbar.contains(search)) toolbar=toolbar.parentElement;
+      if(!toolbar || toolbar===main){restore();return;}
+      const refs = controls.filter(el=>el!==add && toolbar!.contains(el) && (el.matches('[data-qp-ut2-control="filter"]') || /^(newest first|oldest first|all roles)$/i.test(label(el))));
+      const ref = refs.find(el=>/^(newest first|oldest first)$/i.test(label(el))) || refs[0];
+      if(!ref){restore();return;}
+      if(Array.from(saved.keys()).some(el=>!el.isConnected || (el!==add && !el.contains(add)))) restore();
+      const r = ref.getBoundingClientRect();
+      if(r.width<80 || r.height<24) return;
+      const w = r.width+"px", h = r.height+"px";
+      // Explicit measured size overrides shrink-to-fit and competing !important rules.
+      for(let p = add.parentElement; p && p!==toolbar && !p.contains(ref) && !p.contains(search); p=p.parentElement){
+        if(controls.some(el=>el!==add && p!.contains(el))) break;
+        set(p,"width",w);set(p,"min-width",w);set(p,"max-width",w);set(p,"flex-shrink","0");set(p,"align-self","stretch");set(p,"box-sizing","border-box");
+      }
+      set(add,"width",w);set(add,"min-width",w);set(add,"max-width",w);
+      set(add,"height",h);set(add,"min-height",h);set(add,"max-height",h);
+      set(add,"box-sizing","border-box");set(add,"display","flex");set(add,"flex-shrink","0");set(add,"justify-content","center");set(add,"align-items","center");set(add,"align-self","stretch");
+    };
+    const schedule = () => {cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+    const observer = new MutationObserver(schedule);
+    observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+    window.addEventListener("resize",schedule); media.addEventListener("change",schedule);schedule();
+    return () => {observer.disconnect();cancelAnimationFrame(frame);window.removeEventListener("resize",schedule);media.removeEventListener("change",schedule);restore();};
+  }, [role]);
+
+  // QRPass mobile audit toolbar v1
+ useEffect(() => {
+   if (role !== "sysadmin") return;
+   const style = document.createElement("style");
+   style.textContent = "@media(max-width:767px){\n html[data-qrpass-admin-mobile] .qrpass-main [data-qp-audit-root] [data-qp-audit-wrap]{width:100%!important;max-width:100%!important;min-width:0!important;flex:0 0 auto!important;align-self:stretch!important;box-sizing:border-box!important;}\n html[data-qrpass-admin-mobile] .qrpass-main [data-qp-audit-root] [data-qp-audit-control]{width:100%!important;max-width:100%!important;min-width:0!important;height:var(--qp-audit-height,48px)!important;min-height:var(--qp-audit-height,48px)!important;box-sizing:border-box!important;display:flex!important;flex:0 0 auto!important;align-self:stretch!important;align-items:center!important;justify-content:center!important;text-align:center!important;}\n html[data-qrpass-admin-mobile] .qrpass-main [data-qp-audit-root] [data-qp-audit-control=\"filter\"]{position:relative!important;padding-inline:36px!important;text-align-last:center!important;}\n html[data-qrpass-admin-mobile] .qrpass-main [data-qp-audit-root] select[data-qp-audit-control]{display:block!important;}\n html[data-qrpass-admin-mobile] .qrpass-main [data-qp-audit-root] [data-qp-audit-label]{flex:0 1 auto!important;text-align:center!important;margin-inline:0!important;}\n html[data-qrpass-admin-mobile] .qrpass-main [data-qp-audit-root] [data-qp-audit-arrow]{position:absolute!important;right:12px!important;top:50%!important;translate:0 -50%!important;margin:0!important;}\n }";
+   document.head.appendChild(style);
+   const media = window.matchMedia("(max-width: 767px)");
+   const attrs = ["data-qp-audit-root","data-qp-audit-wrap","data-qp-audit-control","data-qp-audit-label","data-qp-audit-arrow"];
+   const clean = () => {
+     document.querySelectorAll<HTMLElement>("[data-qp-audit-root]").forEach(el => el.style.removeProperty("--qp-audit-height"));
+     for (const attr of attrs) document.querySelectorAll("["+attr+"]").forEach(el => el.removeAttribute(attr));
+   };
+   const label = (el: Element) => (el.textContent || "").replace(/\s+/g," ").trim();
+   const visible = (el: Element) => el.getClientRects().length > 0;
+   const update = () => {
+     clean();
+     if (!media.matches) return;
+     const main = document.querySelector(".qrpass-main");
+     if (!main || !Array.from(main.querySelectorAll("h1,h2,h3")).some(el => label(el).toLowerCase() === "audit logs")) return;
+     const search = Array.from(main.querySelectorAll("input")).find(el => /search.*user.*action.*module/i.test(el.placeholder));
+     if (!search) return;
+     const candidates = Array.from(main.querySelectorAll("button,select,[role=combobox]")).filter(visible);
+     const refresh = candidates.find(el => /^refresh$/i.test(label(el)) || /^refresh$/i.test(el.getAttribute("title") || ""));
+     if (!refresh) return;
+     let toolbar: Element | null = search.parentElement;
+     while (toolbar && toolbar !== main && !toolbar.contains(refresh)) toolbar = toolbar.parentElement;
+     if (!toolbar || toolbar === main) return;
+     const controls = candidates.filter(el => toolbar!.contains(el));
+     const sort = controls.find(el => /^(newest|oldest) first$/i.test(label(el)) || (el instanceof HTMLSelectElement && Array.from(el.options).some(o => /newest first/i.test(o.text))));
+     if (!sort) return;
+     const manage = controls.find(el => /manage.*(logs|records)|manage audit/i.test([label(el),el.getAttribute("title"),el.getAttribute("aria-label")].join(" "))) || controls.find(el => el !== sort && el !== refresh && !label(el) && !!el.querySelector("svg") && !!(sort.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) && !!(el.compareDocumentPosition(refresh) & Node.DOCUMENT_POSITION_FOLLOWING));
+     const activity = controls.find(el => el !== sort && el !== refresh && el !== manage && (/all activity/i.test(label(el)) || el instanceof HTMLSelectElement || el.getAttribute("aria-haspopup") === "listbox" || el.getAttribute("aria-expanded") !== null)) || controls.find(el => el !== sort && el !== refresh && el !== manage && !!label(el) && !!(el.compareDocumentPosition(sort) & Node.DOCUMENT_POSITION_FOLLOWING));
+     if (!activity || !manage) return;
+     const targets = [activity,sort,manage,refresh];
+     toolbar.setAttribute("data-qp-audit-root","true");
+     const height=search.getBoundingClientRect().height;
+     if(height>=32 && height<=90) (toolbar as HTMLElement).style.setProperty("--qp-audit-height",height+"px");
+     for(const el of targets){
+       const filter=el===activity||el===sort;
+       el.setAttribute("data-qp-audit-control",filter?"filter":"action");
+       let parent=el.parentElement;
+       while(parent && parent!==toolbar && !parent.contains(search) && !targets.some(other=>other!==el && parent!.contains(other))){parent.setAttribute("data-qp-audit-wrap","true");parent=parent.parentElement;}
+       if(filter && !(el instanceof HTMLSelectElement)) for(const child of Array.from(el.children)){
+         if(child.matches("svg") || (child.querySelector("svg") && !label(child))) child.setAttribute("data-qp-audit-arrow","true");
+         else if(label(child)) child.setAttribute("data-qp-audit-label","true");
+       }
+     }
+   };
+   let frame=0;
+   const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+   const observer=new MutationObserver(schedule);
+   observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+   media.addEventListener("change",schedule);window.addEventListener("resize",schedule);
+   schedule();
+   return ()=>{observer.disconnect();cancelAnimationFrame(frame);media.removeEventListener("change",schedule);window.removeEventListener("resize",schedule);clean();style.remove();};
+ }, [role]);
+
+ // QRPass mobile audit compact actions v1
+ useEffect(() => {
+   if (role !== "sysadmin") return;
+   const style=document.createElement("style");style.textContent="@media(max-width:767px){\n html[data-qrpass-admin-mobile] [data-qp-audit-actions-grid]{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;width:100%!important;max-width:100%!important;min-width:0!important;flex:1 1 100%!important;align-self:stretch!important;justify-items:stretch!important;margin:0!important;padding:0!important;}\n html[data-qrpass-admin-mobile] [data-qp-audit-actions-item]{width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important;box-sizing:border-box!important;}\n html[data-qrpass-admin-mobile] button[data-qp-audit-actions-button]{width:100%!important;min-width:0!important;max-width:100%!important;height:44px!important;min-height:44px!important;max-height:44px!important;box-sizing:border-box!important;display:flex!important;justify-content:center!important;align-items:center!important;text-align:center!important;margin:0!important;padding:4px 8px!important;white-space:nowrap!important;}\n }";document.head.appendChild(style);
+   const media=window.matchMedia("(max-width: 767px)");
+   const attrs=["data-qp-audit-actions-grid","data-qp-audit-actions-item","data-qp-audit-actions-button"];
+   const clear=()=>{for(const a of attrs) document.querySelectorAll("["+a+"]").forEach(e=>e.removeAttribute(a));};
+   const label=(e:Element)=>(e.textContent||"").replace(/\s+/g," ").trim().toLowerCase();
+   const update=()=>{
+     clear();if(!media.matches)return;
+     const main=document.querySelector(".qrpass-main");
+     if(!main||!Array.from(main.querySelectorAll("h1,h2,h3")).some(e=>label(e)==="audit logs"))return;
+     const names=["select all","download","archive","delete"];
+     for(const first of Array.from(document.querySelectorAll("button"))){
+       if(!["select all","deselect all","clear selection","unselect all"].includes(label(first))||!first.getClientRects().length)continue;
+       let group=first.parentElement;
+       while(group&&group!==document.body){
+         const buttons=Array.from(group.querySelectorAll("button"));
+         const matched=buttons.filter(b=>b===first||names.slice(1).includes(label(b)));
+         if(matched.length===4&&new Set(matched.map(b=>b===first?"select all":label(b))).size===4){
+           // Refuse to restyle a large panel or an unrelated group.
+           if(buttons.length!==4)break;
+           const kids=Array.from(group.children);
+           if(kids.length===4&&kids.every(k=>matched.some(b=>k===b||k.contains(b)))&&kids.every(k=>matched.filter(b=>k===b||k.contains(b)).length===1)){
+             group.setAttribute(attrs[0],"true");for(const k of kids)k.setAttribute(attrs[1],"true");for(const b of matched)b.setAttribute(attrs[2],"true");
+           }
+           break;
+         }
+         if(buttons.length>4)break;
+         group=group.parentElement;
+       }
+     }
+   };
+   let frame=0;const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+   const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+   media.addEventListener("change",schedule);window.addEventListener("resize",schedule);schedule();
+   return()=>{observer.disconnect();cancelAnimationFrame(frame);media.removeEventListener("change",schedule);window.removeEventListener("resize",schedule);clear();style.remove();};
+ },[role]);
+
+ // QRPass all roles mobile manage dialogs v1
+ useEffect(() => {
+   const media=window.matchMedia('(max-width: 767px)');
+   const style=document.createElement('style');style.textContent="@media(max-width:767px){\n [data-qp-manage-mobile-panel]{width:100%!important;min-width:0!important;max-width:min(420px,calc(100vw - 20px))!important;max-height:calc(100dvh - 20px)!important;overflow-y:auto!important;overscroll-behavior:contain;box-sizing:border-box!important;}\n [data-qp-manage-mobile-panel] [data-qp-manage-mobile-header]{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;min-width:0!important;}\n [data-qp-manage-mobile-header] :is(h1,h2,h3,h4){min-width:0!important;overflow-wrap:anywhere;line-height:1.35!important;}\n [data-qp-manage-mobile-header] button{flex-shrink:0!important;min-height:44px!important;}\n [data-qp-manage-mobile-wide]{width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important;}\n button[data-qp-manage-mobile-wide]{min-height:44px!important;justify-content:center!important;}\n input[data-qp-manage-mobile-wide]{min-height:44px!important;font-size:16px!important;}\n [data-qp-manage-mobile-table]{max-width:100%!important;min-width:0!important;overflow-x:auto!important;overscroll-behavior-x:contain;}\n [data-qp-manage-mobile-panel] [data-qp-manage-mobile-grid]{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;width:100%!important;min-width:0!important;max-width:100%!important;flex:1 1 100%!important;align-self:stretch!important;margin:0!important;padding:0!important;}\n [data-qp-manage-mobile-panel] [data-qp-manage-mobile-item]{width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important;box-sizing:border-box!important;}\n [data-qp-manage-mobile-panel] button[data-qp-manage-mobile-action]{width:100%!important;min-width:0!important;max-width:100%!important;height:44px!important;min-height:44px!important;max-height:44px!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;margin:0!important;padding:4px 6px!important;box-sizing:border-box!important;white-space:normal!important;line-height:1.15!important;}\n }";document.head.appendChild(style);
+   const attrs=['data-qp-manage-mobile-panel','data-qp-manage-mobile-header','data-qp-manage-mobile-wide','data-qp-manage-mobile-table','data-qp-manage-mobile-grid','data-qp-manage-mobile-item','data-qp-manage-mobile-action'];
+   const clear=()=>{for(const a of attrs)document.querySelectorAll('['+a+']').forEach(e=>e.removeAttribute(a));};
+   const label=(e:Element)=>(e.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+   const selection=/^(select all|deselect all|clear selection|unselect all)$/;
+   const action=/^(select all|deselect all|clear selection|unselect all|download(?: (?:pdf|excel|csv|selected))?|archive(?: selected)?|delete(?: selected| permanently)?|restore(?: selected)?|unarchive(?: selected)?|retrieve(?: selected)?)$/;
+   const mark=(e:Element,a:number)=>e.setAttribute(attrs[a],'true');
+   const update=()=>{
+     clear();if(!media.matches)return;
+     for(const heading of Array.from(document.querySelectorAll('h1,h2,h3,h4,[role=heading]'))){
+       if(!/^manage\b/.test(label(heading))||!heading.getClientRects().length)continue;
+       // Locate the nearest actual modal panel; require a close control and records table.
+       let panel:Element|null=heading.parentElement;
+       while(panel&&panel!==document.body){
+         const buttons=Array.from(panel.querySelectorAll('button'));
+         if(panel.querySelector('table')&&buttons.some(b=>label(b)==='close'||/close/i.test(b.getAttribute('aria-label')||''))&&buttons.some(b=>selection.test(label(b))))break;
+         panel=panel.parentElement;
+       }
+       if(!panel||panel===document.body)continue;
+       const modal=panel.closest('[role=dialog],[aria-modal=true],[data-qrpass-manage-logs-overlay],.fixed.inset-0');
+       if(!modal)continue;
+       mark(panel,0);
+       const close=Array.from(panel.querySelectorAll('button')).find(b=>label(b)==='close'||/close/i.test(b.getAttribute('aria-label')||''));
+       let header=heading.parentElement;
+       while(header&&header!==panel&&close&&!header.contains(close))header=header.parentElement;
+       if(header&&header!==panel&&close)mark(header,1);
+       for(const b of Array.from(panel.querySelectorAll('button')))if(/^view (archive|archives|archived records)$/.test(label(b))){mark(b,2);if(b.parentElement&&b.parentElement.children.length===1)mark(b.parentElement,2);}
+       for(const input of Array.from(panel.querySelectorAll('input[type=search],input[placeholder]')))if(input.getAttribute('type')==='search'||/search/i.test(input.getAttribute('placeholder')||'')){mark(input,2);if(input.parentElement)mark(input.parentElement,2);}
+       for(const table of Array.from(panel.querySelectorAll('table')))if(table.parentElement)mark(table.parentElement,3);
+       for(const first of Array.from(panel.querySelectorAll('button')).filter(b=>selection.test(label(b)))){
+         let group=first.parentElement;
+         while(group&&group!==panel){
+           const buttons=Array.from(group.querySelectorAll('button'));
+           if(buttons.length>8||buttons.some(b=>!action.test(label(b))))break;
+           if(buttons.length>=2){
+             const kids=Array.from(group.children);
+             if(kids.length===buttons.length&&kids.every(k=>buttons.filter(b=>k===b||k.contains(b)).length===1)){
+               mark(group,4);for(const k of kids)mark(k,5);for(const b of buttons)mark(b,6);break;
+             }
+           }
+           group=group.parentElement;
+         }
+       }
+     }
+   };
+   let frame=0;const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+   const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+   media.addEventListener('change',schedule);window.addEventListener('resize',schedule);schedule();
+   return()=>{observer.disconnect();cancelAnimationFrame(frame);media.removeEventListener('change',schedule);window.removeEventListener('resize',schedule);clear();style.remove();};
+ },[role]);
+
+ 
+ // QRPass mobile manage width v2
+ useEffect(()=>{
+   const media=window.matchMedia('(max-width: 767px)');
+   const saved=new globalThis.Map<HTMLElement,globalThis.Map<string,[string,string]>>();
+   const set=(el:HTMLElement,k:string,v:string)=>{if(!saved.has(el))saved.set(el,new globalThis.Map());const p=saved.get(el)!;if(!p.has(k))p.set(k,[el.style.getPropertyValue(k),el.style.getPropertyPriority(k)]);el.style.setProperty(k,v,'important');};
+   const restore=()=>{for(const [el,props] of saved)for(const [k,[v,p]] of props){if(v)el.style.setProperty(k,v,p);else el.style.removeProperty(k);}saved.clear();};
+   const label=(e:Element)=>(e.textContent||'').replace(/\s+/g,' ').trim();
+   let frame=0;
+   const update=()=>{
+     restore();if(!media.matches)return;
+     const main=document.querySelector('.qrpass-main')||document.querySelector('main');if(!main)return;
+     const visible=(e:HTMLElement)=>e.getClientRects().length>0&&!e.closest('[role=dialog],[data-qrpass-manage-logs-overlay]');
+     const controls=Array.from(main.querySelectorAll<HTMLElement>('button,[role=button],[role=combobox],select')).filter(visible);
+     const sorts=controls.filter(e=>/^(newest|oldest) first$/i.test(e instanceof HTMLSelectElement?e.selectedOptions[0]?.text||'':label(e)));
+     for(const sort of sorts){
+       const rect=sort.getBoundingClientRect();if(rect.width<100||rect.height<24)continue;
+       const candidates=controls.filter(e=>e!==sort&&!!(sort.compareDocumentPosition(e)&Node.DOCUMENT_POSITION_FOLLOWING));
+       const manage=candidates.find(e=>{const r=e.getBoundingClientRect();if(r.top<rect.bottom-3||r.top-rect.bottom>100||r.width>rect.width+5||r.right>rect.right+8||r.left<rect.left-8)return false;const name=[label(e),e.title,e.getAttribute('aria-label')||'',e.getAttribute('data-state')||''].join(' ');const svg=e.querySelector('svg');return /\bmanage\b/i.test(name)||(!label(e)&&!!svg&&(/sliders|settings-2|list-filter/i.test(svg.getAttribute('class')||'')|| (Math.abs(r.width-r.height)<8&&Math.abs(r.right-rect.right)<12&&!/refresh|reload|close|delete|archive/i.test(name))));});
+       if(!manage)continue;
+       const w=rect.width+'px',h=rect.height+'px';
+       for(let p=manage.parentElement;p&&p!==main&&!p.contains(sort)&&!controls.some(e=>e!==manage&&p!.contains(e));p=p.parentElement){for(const k of ['width','min-width','max-width'])set(p,k,w);set(p,'flex-shrink','0');set(p,'align-self','stretch');set(p,'box-sizing','border-box');}
+       for(const k of ['width','min-width','max-width'])set(manage,k,w);
+       for(const k of ['height','min-height','max-height'])set(manage,k,h);
+       set(manage,'display','flex');set(manage,'justify-content','center');set(manage,'align-items','center');set(manage,'box-sizing','border-box');set(manage,'flex-shrink','0');set(manage,'margin-inline','0');
+     }
+   };
+   const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+   const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,characterData:true});window.addEventListener('resize',schedule);media.addEventListener('change',schedule);schedule();
+   return()=>{observer.disconnect();cancelAnimationFrame(frame);window.removeEventListener('resize',schedule);media.removeEventListener('change',schedule);restore();};
+ },[role]);
+ // QRPass all mobile floating spacing v1
+ useEffect(() => {
+   const media=window.matchMedia('(max-width: 767px)');
+   const style=document.createElement('style');style.textContent="@media (max-width: 767px) {\n html body [data-qp-floating-overlay-v1] { box-sizing:border-box!important; padding:20px 16px!important; padding-top:max(20px,env(safe-area-inset-top))!important; padding-bottom:max(20px,env(safe-area-inset-bottom))!important; overflow-y:auto!important; }\n html body [data-qp-floating-panel-v1][data-qp-floating-panel-v1] { box-sizing:border-box!important; min-width:0!important; max-width:min(420px,calc(100vw - 32px))!important; min-height:0!important; max-height:calc(100vh - 40px)!important; max-height:calc(100dvh - max(20px,env(safe-area-inset-top)) - max(20px,env(safe-area-inset-bottom)))!important; overflow-y:auto!important; overflow-x:hidden!important; overscroll-behavior:contain; border-radius:16px!important; margin:auto!important; flex-shrink:1!important; }\n html body [data-qp-floating-panel-v1] :is(input,select,textarea) {max-width:100%;box-sizing:border-box;}\n }";document.head.appendChild(style);
+   const overlayAttr='data-qp-floating-overlay-v1', panelAttr='data-qp-floating-panel-v1';
+   const clear=()=>{document.querySelectorAll('['+overlayAttr+'],['+panelAttr+']').forEach(e=>{e.removeAttribute(overlayAttr);e.removeAttribute(panelAttr);});};
+   const overlaySelector='.fixed.inset-0,[data-qrpass-manage-logs-overlay],[data-qrpass-mobile-qr-overlay]';
+   const update=()=>{
+     clear();if(!media.matches)return;
+     for(const overlay of Array.from(document.querySelectorAll(overlaySelector))){
+       if(!(overlay instanceof HTMLElement)||!overlay.getClientRects().length)continue;
+       const panel=Array.from(overlay.children).find(e=>e instanceof HTMLElement && (e.matches('[role=dialog],[aria-modal=true],[data-qp-manage-mobile-panel],[data-qrpass-mobile-qr-panel]') || (Array.from(e.classList).some(c=>/^rounded(?:-|$)/.test(c)) && (e.querySelector('button') || e.querySelector('form')) && Array.from(e.classList).some(c=>/^max-w-|^w-full$|^bg-white$/.test(c)))));
+       if(!panel)continue;
+       overlay.setAttribute(overlayAttr,'true');panel.setAttribute(panelAttr,'true');
+     }
+     for(const panel of Array.from(document.querySelectorAll('[role=dialog][aria-modal=true],[role=alertdialog][aria-modal=true]'))){
+       if(panel instanceof HTMLElement && panel.getClientRects().length && !panel.hasAttribute(overlayAttr))panel.setAttribute(panelAttr,'true');
+     }
+   };
+   let frame=0;const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+   const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true});
+   media.addEventListener('change',schedule);window.addEventListener('resize',schedule);schedule();
+   return()=>{observer.disconnect();cancelAnimationFrame(frame);media.removeEventListener('change',schedule);window.removeEventListener('resize',schedule);clear();style.remove();};
+ },[role]);
+
+ 
+ /* QRPASS_MOBILE_CENTER_REFRESH_V3 */
+ useEffect(()=>{
+  const media=window.matchMedia('(max-width: 767px)');
+  const saved=new globalThis.Map<HTMLElement,globalThis.Map<string,[string,string]>>();
+  const set=(el:HTMLElement,k:string,v:string)=>{let p=saved.get(el);if(!p){p=new globalThis.Map();saved.set(el,p);}if(!p.has(k))p.set(k,[el.style.getPropertyValue(k),el.style.getPropertyPriority(k)]);el.style.setProperty(k,v,'important');};
+  const restore=()=>{for(const [el,props] of saved){for(const [k,[v,p]] of props){if(v)el.style.setProperty(k,v,p);else el.style.removeProperty(k);}}saved.clear();};
+  const label=(e:Element)=>(e.textContent||'').replace(/\s+/g,' ').trim();
+  const visible=(e:HTMLElement)=>e.getClientRects().length>0&&!e.closest('[role=dialog],[data-qrpass-manage-logs-overlay],.fixed.inset-0');
+  let frame=0;
+  const update=()=>{
+   restore();if(!media.matches)return;
+   const main=document.querySelector('.qrpass-main')||document.querySelector('main');if(!main)return;
+   const controls=Array.from(main.querySelectorAll<HTMLElement>('button,[role=button],select,[role=combobox],input')).filter(visible);
+   const follows=(a:Element,b:Element)=>!!(a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING);
+   const searches=controls.filter(e=>e instanceof HTMLInputElement&&/search/i.test([e.placeholder,e.type,e.getAttribute('aria-label')].join(' ')));
+   for(const btn of controls){
+    if(btn instanceof HTMLInputElement||btn instanceof HTMLSelectElement)continue;
+    if(!/^refresh(?:ing)?(?:\.{3}|…)?$/i.test(label(btn))&&!/^refresh$/i.test(btn.getAttribute('aria-label')||btn.title))continue;
+    const r=btn.getBoundingClientRect();
+    const search=searches.filter(s=>{const q=s.getBoundingClientRect();return follows(s,btn)&&q.width>=140&&r.top>=q.bottom-4&&r.top-q.bottom<520&&r.left>=q.left-24&&r.right<=q.right+24;}).pop();
+    if(!search)continue;
+    const q=search.getBoundingClientRect();
+    const between=controls.filter(e=>e!==search&&e!==btn&&follows(search,e)&&follows(e,btn));
+    const hasSort=between.some(e=>/\b(newest|oldest) first\b/i.test(e instanceof HTMLSelectElement?e.selectedOptions[0]?.text||'':label(e)));
+    const hasManage=between.some(e=>/\bmanage\b|sliders-horizontal|list-filter/i.test([label(e),e.title,e.getAttribute('aria-label'),e.querySelector('svg')?.getAttribute('class')].join(' ')));
+    const csuEntry=role==='security'&&/search\s+qr\s*id/i.test((search as HTMLInputElement).placeholder);
+    if(!hasSort&&!hasManage&&!csuEntry)continue;
+    // Use the search field as the real toolbar width reference, not the refresh wrapper.
+    const width=q.width+'px';
+    let outer=btn;
+    for(let p=btn.parentElement;p&&p!==main&&!p.contains(search)&&!controls.some(c=>c!==btn&&p!.contains(c));p=p.parentElement){outer=p;}
+    if(outer!==btn){for(const k of ['width','min-width','max-width'])set(outer,k,width);set(outer,'box-sizing','border-box');set(outer,'flex','0 0 auto');set(outer,'display','flex');set(outer,'justify-content','center');set(outer,'align-items','center');set(outer,'grid-column','1 / -1');}
+    for(const k of ['width','min-width','max-width'])set(btn,k,width);
+    set(btn,'box-sizing','border-box');set(btn,'display','flex');set(btn,'justify-content','center');set(btn,'align-items','center');set(btn,'margin-inline','0');set(btn,'flex','0 0 auto');set(btn,'grid-column','1 / -1');
+    // Correct right-aligned ancestors by measuring the final actual position.
+    const now=btn.getBoundingClientRect(),delta=q.left-now.left;
+    if(Math.abs(delta)>0.5){set(outer,'position','relative');set(outer,'left',delta+'px');set(outer,'right','auto');}
+   }
+  };
+  const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+  const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+  window.addEventListener('resize',schedule);media.addEventListener('change',schedule);schedule();
+  return()=>{observer.disconnect();cancelAnimationFrame(frame);window.removeEventListener('resize',schedule);media.removeEventListener('change',schedule);restore();};
+ },[role]);
+ // QRPass CSU mobile details footer v3
+ useEffect(() => {
+  if (role !== 'security') return;
+  const media=window.matchMedia('(max-width: 767px)');
+  const style=document.createElement('style');style.textContent="@media(max-width:767px){\n [data-qp-csu-verified-footer]{position:sticky;bottom:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#f5f7fa;border-top:1px solid #dce3ee;box-sizing:border-box;flex-shrink:0;width:100%;}\n [data-qp-csu-verified-footer] span{border:1px solid #86efac;border-radius:999px;background:#ecfdf5;color:#047857;padding:7px 14px;font-size:13px;font-weight:600;}\n [data-qp-csu-verified-footer] button{border:1px solid #a5b4fc;border-radius:12px;background:white;color:#17336d;padding:9px 20px;min-height:44px;font-size:14px;font-weight:600;}\n html body [data-qp-csu-flag-footer]{display:grid!important;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr)!important;gap:6px!important;align-items:center!important;padding:10px 8px!important;width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important;justify-content:stretch!important;}\n html body [data-qp-csu-flag-footer] [data-qp-csu-flag-wrap]{display:contents!important;}\n html body [data-qp-csu-flag-footer] [data-qp-csu-flag-badge]{grid-column:1!important;grid-row:1!important;justify-self:start!important;margin:0!important;padding:6px 7px!important;font-size:11px!important;white-space:nowrap!important;}\n html body [data-qp-csu-flag-footer] button[data-qp-csu-flag-action]{grid-row:1!important;width:100%!important;min-width:0!important;max-width:none!important;height:44px!important;min-height:44px!important;max-height:44px!important;padding:3px 4px!important;font-size:12px!important;line-height:1.1!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;white-space:normal!important;box-sizing:border-box!important;}\n html body [data-qp-csu-flag-footer] button[data-qp-csu-flag-action=\"close\"]{grid-column:2!important;}\n html body [data-qp-csu-flag-footer] button[data-qp-csu-flag-action=\"resolve\"]{grid-column:3!important;}\n }";document.head.appendChild(style);
+  const norm=(e:Element)=> (e.textContent||'').trim().replace(/\s+/g,' ').toLowerCase();
+  const clear=()=>{document.querySelectorAll('[data-qp-csu-verified-footer]').forEach(e=>e.remove());document.querySelectorAll('[data-qp-csu-flag-footer],[data-qp-csu-flag-action],[data-qp-csu-flag-wrap],[data-qp-csu-flag-badge]').forEach(e=>{for(const a of ['data-qp-csu-flag-footer','data-qp-csu-flag-action','data-qp-csu-flag-wrap','data-qp-csu-flag-badge'])e.removeAttribute(a);});};
+  const update=()=>{
+   if(!media.matches){clear();return;}
+   const panels=new Set<Element>();
+   document.querySelectorAll('[data-qp-floating-panel-v1],[role=dialog],.fixed.inset-0 > div').forEach(p=>{if(p instanceof HTMLElement && p.getClientRects().length)panels.add(p);});
+   for(const panel of panels){
+    const labels=Array.from(panel.querySelectorAll('h1,h2,h3,h4,p,span,div')).filter(e=>e.children.length===0);
+    const buttons=Array.from(panel.querySelectorAll('button'));
+    const isFlag=labels.some(e=>norm(e)==='security incident details');
+    if(isFlag){
+     const close=buttons.find(b=>norm(b)==='close');const resolve=buttons.find(b=>norm(b)==='resolve incident');
+     if(close&&resolve){
+      const badges=labels.filter(e=>norm(e)==='flagged'&&!e.closest('button'));
+      let row=close.parentElement;
+      while(row&&row!==panel&&(!row.contains(resolve)||!badges.some(b=>row!.contains(b))))row=row.parentElement;
+      if(row&&row!==panel){
+       const badge=badges.find(b=>row!.contains(b));
+       if(badge){
+        const controls=[badge,close,resolve];
+        const wrappers=new Set<Element>();
+        for(const control of controls){let p=control.parentElement;while(p&&p!==row){wrappers.add(p);p=p.parentElement;}}
+        // Only flatten wrappers containing these three controls, not other content.
+        const safe=Array.from(wrappers).every(w=>Array.from(w.children).every(c=>controls.some(k=>c===k||c.contains(k))));
+        if(safe&&Array.from(row.children).every(c=>controls.some(k=>c===k||c.contains(k)))){
+         row.setAttribute('data-qp-csu-flag-footer','');badge.setAttribute('data-qp-csu-flag-badge','');close.setAttribute('data-qp-csu-flag-action','close');resolve.setAttribute('data-qp-csu-flag-action','resolve');wrappers.forEach(w=>w.setAttribute('data-qp-csu-flag-wrap',''));
+        }
+       }
+      }
+     }
+    }
+    const isEntry=labels.some(e=>/^entry\s*\/\s*exit record$/.test(norm(e)));
+    const verified=labels.some(e=>norm(e)==='verified');
+    const existing=panel.querySelector('[data-qp-csu-verified-footer]');
+    if(!isEntry||!verified){existing?.remove();continue;}
+    if(existing||buttons.some(b=>norm(b)==='close'))continue;
+    const close=buttons.find(b=>b.querySelector('svg.lucide-x')||/^(close|close details)$/i.test(b.getAttribute('aria-label')||b.getAttribute('title')||''));
+    if(!close)continue;
+    const footer=document.createElement('div');footer.setAttribute('data-qp-csu-verified-footer','');
+    const badge=document.createElement('span');badge.textContent='Verified';const button=document.createElement('button');button.type='button';button.textContent='Close';button.addEventListener('click',()=>close.click());footer.append(badge,button);panel.appendChild(footer);
+   }
+  };
+  let frame=0;const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+  const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,characterData:true});media.addEventListener('change',schedule);schedule();
+  return()=>{observer.disconnect();cancelAnimationFrame(frame);media.removeEventListener('change',schedule);clear();style.remove();};
+ },[role]);
+
+ 
+
+ // QRPass CSU desktop lost found photo first v1
+// QRPass mobile lost found photo first v2
+ useEffect(()=>{
+ if(role!=="student"&&role!=="security")return;
+ const media=window.matchMedia('(max-width: 767px)');
+ const desktopPhotoAllowed=role==="security";
+ const style=document.createElement('style');style.textContent="@media(max-width:767px){\n [data-qp-lf2-layout=\"block\"]{display:flex!important;flex-direction:column!important;min-width:0!important;}\n [data-qp-lf2-layout=\"flex\"]{flex-direction:column!important;}\n [data-qp-lf2-photo]{order:-100!important;grid-column:1/-1!important;min-width:0!important;max-width:100%!important;align-self:stretch!important;}\n [data-qp-lf2-heading]{order:-200!important;grid-column:1/-1!important;}\n }";if(desktopPhotoAllowed)style.textContent=(style.textContent||"").replace("@media(max-width:767px)","@media all");document.head.appendChild(style);
+ const attrs=['data-qp-lf2-layout','data-qp-lf2-photo','data-qp-lf2-heading'];
+ const clear=()=>{for(const a of attrs)document.querySelectorAll('['+a+']').forEach(e=>e.removeAttribute(a));};
+ const norm=(e:Element)=>(e.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+ const update=()=>{
+ clear();if(!media.matches&&!desktopPhotoAllowed)return;
+ const headings=Array.from(document.querySelectorAll('h1,h2,h3,h4,p,span,div')).filter(e=>e.children.length===0&&['item details','lost & found record','lost and found record'].includes(norm(e))&&e.getClientRects().length);
+ for(const heading of headings){
+ let panel:HTMLElement|null=heading.parentElement;
+ while(panel&&!panel.matches('[data-qp-floating-panel-v1],[role="dialog"],.fixed.inset-0 > div,[data-qp-floating-panel]'))panel=panel.parentElement;
+ if(!panel||!panel.querySelector('img'))continue;
+ const labels=Array.from(panel.querySelectorAll('p,span,label,h2,h3,h4,div')).filter(e=>e.children.length===0&&norm(e)==='item photo');
+ let section:HTMLElement|null=null;
+ for(const label of labels){let n=label.parentElement;while(n&&n!==panel&&!n.querySelector('img'))n=n.parentElement;if(n&&n!==panel){section=n;break;}}
+ if(!section){if(norm(heading)==='item details')continue;const img=panel.querySelector('img');if(img&&img.parentElement&&img.parentElement!==panel)section=img.parentElement;}
+ if(!section)continue;
+ if(!media.matches){
+ const parent=section.parentElement;
+ if(!parent||parent.children.length<2)continue;
+ const display=getComputedStyle(parent).display;
+ if(!(display==="block"||display.includes("flex")||display.includes("grid")))continue;
+ parent.setAttribute(attrs[0],display.includes("grid")?"grid":display.includes("flex")?"flex":"block");
+ section.setAttribute(attrs[1],"");
+ for(const sibling of Array.from(parent.children)){if(sibling!==section&&sibling.contains(heading))sibling.setAttribute(attrs[2],"");}
+ continue;
+ }
+ // Reorder the photo branch at every nested level, leaving the title first.
+ let branch:HTMLElement=section;
+ while(branch.parentElement&&panel.contains(branch.parentElement)){
+ const parent:HTMLElement=branch.parentElement;
+ if(parent.children.length>1){const display=getComputedStyle(parent).display;if(display==='block'||display.includes('flex')||display.includes('grid')){
+ parent.setAttribute(attrs[0],display.includes('grid')?'grid':display.includes('flex')?'flex':'block');
+ branch.setAttribute(attrs[1],'');
+ for(const sibling of Array.from(parent.children)){if(sibling!==branch&&sibling.contains(heading))sibling.setAttribute(attrs[2],'');}
+ }}
+ if(parent===panel)break;branch=parent;
+ }
+ }
+ };
+ let frame=0;const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+ const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+ media.addEventListener('change',schedule);window.addEventListener('resize',schedule);schedule();
+ return()=>{observer.disconnect();cancelAnimationFrame(frame);media.removeEventListener('change',schedule);window.removeEventListener('resize',schedule);clear();style.remove();};
+ },[role]);
+
+ // QRPass CSU mobile lost found filters v1
+ useEffect(()=>{
+ if(role!=="security")return;
+ const media=window.matchMedia('(max-width: 767px)');
+ const style=document.createElement('style');style.textContent="@media(max-width:767px){\n .qrpass-main [data-qp-csu-lf-filter-wrap]{width:100%!important;min-width:0!important;max-width:100%!important;flex:0 0 auto!important;align-self:stretch!important;box-sizing:border-box!important;}\n .qrpass-main [data-qp-csu-lf-filter]{width:100%!important;min-width:0!important;max-width:100%!important;height:var(--qp-csu-lf-height,48px)!important;min-height:var(--qp-csu-lf-height,48px)!important;box-sizing:border-box!important;align-self:stretch!important;flex:0 0 auto!important;}\n }";document.head.appendChild(style);
+ const attrs=['data-qp-csu-lf-filter','data-qp-csu-lf-filter-wrap','data-qp-csu-lf-toolbar'];
+ const clear=()=>{document.querySelectorAll<HTMLElement>('['+attrs[2]+']').forEach(e=>e.style.removeProperty('--qp-csu-lf-height'));for(const a of attrs)document.querySelectorAll('['+a+']').forEach(e=>e.removeAttribute(a));};
+ const label=(e:Element)=>(e.textContent||'').replace(/\s+/g,' ').trim();
+ const update=()=>{
+ clear();if(!media.matches)return;
+ const main=document.querySelector('.qrpass-main');if(!main)return;
+ const search=Array.from(main.querySelectorAll('input')).find(e=>/search.*report.*item.*owner/i.test(e.placeholder)&&e.getClientRects().length);
+ if(!search)return;
+ const candidates=Array.from(main.querySelectorAll('button,select,[role=combobox]')).filter(e=>e.getClientRects().length&&!e.closest('[role=listbox],[role=menu]'));
+ const isSort=(e:Element)=>/^(newest|oldest) first$/i.test(label(e))||(e instanceof HTMLSelectElement&&Array.from(e.options).some(o=>/newest first/i.test(o.text)));
+ const isFilter=(e:Element)=>/^(all reports|all records|lost reports?|found reports?|lost|found|recovered|pending( verification)?|claimed)$/i.test(label(e))||(e instanceof HTMLSelectElement&&Array.from(e.options).some(o=>/all reports/i.test(o.text)));
+ let toolbar:HTMLElement|null=search.parentElement;
+ while(toolbar&&toolbar!==main){if(candidates.some(e=>toolbar!.contains(e)&&isSort(e))&&candidates.some(e=>toolbar!.contains(e)&&isFilter(e)))break;toolbar=toolbar.parentElement;}
+ if(!toolbar||toolbar===main)return;
+ const sort=candidates.find(e=>toolbar!.contains(e)&&isSort(e));
+ const filter=candidates.find(e=>toolbar!.contains(e)&&e!==sort&&isFilter(e)&&(e instanceof HTMLSelectElement||e.matches('[role=combobox]')||!!e.querySelector('svg')||e.hasAttribute('aria-expanded')));
+ if(!sort||!filter)return;
+ toolbar.setAttribute(attrs[2],'');const h=search.getBoundingClientRect().height;if(h>=32&&h<=90)toolbar.style.setProperty('--qp-csu-lf-height',h+'px');
+ for(const el of [filter,sort]){el.setAttribute(attrs[0],'');let p=el.parentElement;while(p&&p!==toolbar&&!p.contains(search)&&!(p.contains(filter)&&p.contains(sort))){p.setAttribute(attrs[1],'');p=p.parentElement;}}
+ };
+ let frame=0;const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+ const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,characterData:true});media.addEventListener('change',schedule);window.addEventListener('resize',schedule);schedule();
+ return()=>{observer.disconnect();cancelAnimationFrame(frame);media.removeEventListener('change',schedule);window.removeEventListener('resize',schedule);clear();style.remove();};
+ },[role]);
+
+ // QRPass mobile confirmation message alignment v1
+ useEffect(()=>{
+   const media=window.matchMedia('(max-width:767px)');
+   const attr='data-qp-confirm-message-left';
+   const style=document.createElement('style');style.textContent="@media (max-width:767px){html body [data-qp-confirm-message-left][data-qp-confirm-message-left]{text-align:left!important;white-space:normal;overflow-wrap:break-word;}}";document.head.appendChild(style);
+   const clear=()=>document.querySelectorAll('['+attr+']').forEach(el=>el.removeAttribute(attr));
+   const label=(el:Element)=>(el.textContent||'').trim().toLowerCase();
+   const update=()=>{
+     clear();if(!media.matches)return;
+     const panels=new Set<Element>();
+     for(const el of Array.from(document.querySelectorAll('[role=alertdialog],[role=dialog],[data-qp-floating-panel-v1],.fixed.inset-0'))){
+       if(!el.getClientRects().length)continue;
+       const buttons=Array.from(el.querySelectorAll('button'));
+       const yes=buttons.find(b=>['yes','confirm','ok','okay','proceed'].includes(label(b)));
+       const no=buttons.find(b=>['no','cancel'].includes(label(b)));
+       if(yes&&no){let p=yes.parentElement;while(p&&p!==el&&!p.contains(no))p=p.parentElement;if(p){let panel=p;while(panel!==el&&panel.parentElement&&!panel.querySelector('p,[data-slot=alert-dialog-description],[data-slot=dialog-description]'))panel=panel.parentElement;panels.add(panel);}}
+       else if(el.matches('[role=alertdialog]'))panels.add(el);
+     }
+     for(const panel of panels){
+       for(const message of Array.from(panel.querySelectorAll('p,[data-slot=alert-dialog-description],[data-slot=dialog-description]'))){
+         if(message.closest('button,label,h1,h2,h3,h4,[role=heading]')||message.querySelector('button,input,select'))continue;
+         const words=(message.textContent||'').trim().split(/\s+/);if(words.length<4)continue;
+         message.setAttribute(attr,'true');
+       }
+     }
+   };
+   let frame=0;const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+   const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+   media.addEventListener('change',schedule);schedule();
+   return()=>{observer.disconnect();cancelAnimationFrame(frame);media.removeEventListener('change',schedule);clear();style.remove();};
+ },[role]);
+
+ // QRPass mobile sysadmin left dropdowns v1
+  useEffect(() => {
+    if (role !== "sysadmin") return;
+    const style = document.createElement("style");
+    style.textContent = "@media(max-width:767px){\nhtml[data-qrpass-admin-mobile] .qrpass-main button[data-qrpass-user-filter-center],\nhtml[data-qrpass-admin-mobile] .qrpass-main [data-qp-ut2-root] [data-qp-ut2-control=\"filter\"],\nhtml[data-qrpass-admin-mobile] .qrpass-main [data-qp-audit-root] [data-qp-audit-control=\"filter\"]{justify-content:flex-start!important;text-align:left!important;text-align-last:left!important;padding-left:16px!important;padding-right:36px!important;}\nhtml[data-qrpass-admin-mobile] .qrpass-main button[data-qrpass-user-filter-center] > :is(span,div):not(:has(svg)),\nhtml[data-qrpass-admin-mobile] .qrpass-main [data-qp-ut2-root] [data-qp-ut2-control=\"filter\"] > :is(span,div):not(:has(svg)),\nhtml[data-qrpass-admin-mobile] .qrpass-main [data-qp-audit-root] [data-qp-audit-control=\"filter\"] > :is(span,div):not(:has(svg)),\nhtml[data-qrpass-admin-mobile] .qrpass-main [data-qp-ut2-root] [data-qp-ut2-label],\nhtml[data-qrpass-admin-mobile] .qrpass-main [data-qp-audit-root] [data-qp-audit-label]{text-align:left!important;text-align-last:left!important;justify-content:flex-start!important;margin-left:0!important;margin-right:auto!important;}\n}";
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, [role]);
+
+  /* QRPASS_MOBILE_RECORD_REFRESH_STYLE_V1 */
+ useEffect(()=>{
+  const media=window.matchMedia('(max-width: 767px)');
+  const style=document.createElement('style');
+  style.textContent="@media (max-width:767px) {\n html body .qrpass-main [data-qp-record-refresh=\"true\"][data-qp-record-refresh=\"true\"] {\n background:transparent!important; border-color:transparent!important; box-shadow:none!important; border-width:0!important;\n display:inline-flex!important; align-items:center!important; justify-content:center!important; text-align:center!important;\n gap:8px!important; min-height:44px!important; padding:8px 12px!important; box-sizing:border-box!important;\n color:#17336d!important; font-weight:500!important; align-self:center!important;\n }\n html.dark body .qrpass-main [data-qp-record-refresh=\"true\"][data-qp-record-refresh=\"true\"] {color:#bfdbfe!important;}\n html body .qrpass-main [data-qp-record-refresh=\"true\"]:focus-visible {outline:2px solid #5278e7!important;outline-offset:2px!important;}\n html body .qrpass-main [data-qp-record-refresh=\"true\"]:disabled {opacity:.55;}\n html body .qrpass-main [data-qp-record-refresh=\"true\"] svg {width:16px!important;height:16px!important;flex-shrink:0!important;}\n html body .qrpass-main [data-qp-record-refresh-wrap=\"true\"] {width:100%!important;max-width:100%!important;min-width:0!important;display:flex!important;justify-content:center!important;align-items:center!important;align-self:stretch!important;grid-column:1 / -1;box-sizing:border-box!important;}\n html body .qrpass-main [data-qp-record-refresh=\"true\"][data-qp-refresh-no-icon=\"true\"]::before {content:\"\";display:inline-block;width:16px;height:16px;flex:0 0 16px;background:currentColor;mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 7v5h-5M4 17v-5h5M5 12a7 7 0 0 1 12-5l3 5M19 12a7 7 0 0 1-12 5l-3-5'/%3E%3C/svg%3E\") center/contain no-repeat;}\n }";
+  document.head.appendChild(style);
+  const attrs=['data-qp-record-refresh','data-qp-record-refresh-wrap','data-qp-refresh-no-icon'];
+  const clear=()=>{for(const a of attrs)document.querySelectorAll('['+a+']').forEach(e=>e.removeAttribute(a));};
+  const label=(e:Element)=>(e.textContent||'').replace(/\s+/g,' ').trim();
+  const visible=(e:Element)=>e.getClientRects().length>0&&!e.closest('[role=dialog],[data-qrpass-manage-logs-overlay],.fixed.inset-0');
+  let frame=0;
+  const update=()=>{
+   clear();if(!media.matches)return;
+   const main=document.querySelector('.qrpass-main');if(!main)return;
+   const searches=Array.from(main.querySelectorAll<HTMLInputElement>('input')).filter(e=>visible(e)&&/search/i.test([e.placeholder,e.type,e.getAttribute('aria-label')].join(' ')));
+   const controls=Array.from(main.querySelectorAll<HTMLElement>('button,[role=button],select,input,[role=combobox]')).filter(visible);
+   for(const btn of controls){
+    if(!btn.matches('button,[role=button]'))continue;
+    if(!/^refresh(?:ing)?(?:\.{3}|…)?$/i.test(label(btn))&&!/^refresh$/i.test(btn.getAttribute('aria-label')||btn.title))continue;
+    const r=btn.getBoundingClientRect();
+    const search=searches.filter(e=>{const q=e.getBoundingClientRect();return !!(e.compareDocumentPosition(btn)&Node.DOCUMENT_POSITION_FOLLOWING)&&r.top>=q.bottom-4&&r.top-q.bottom<600&&q.width>=120;}).pop();
+    if(!search)continue;
+    btn.setAttribute(attrs[0],'true');if(!btn.querySelector('svg,img'))btn.setAttribute(attrs[2],'true');
+    for(let p=btn.parentElement;p&&p!==main&&!p.contains(search)&&!controls.some(c=>c!==btn&&p!.contains(c));p=p.parentElement){p.setAttribute(attrs[1],'true');}
+   }
+  };
+  const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+  const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+  window.addEventListener('resize',schedule);media.addEventListener('change',schedule);schedule();
+  return()=>{observer.disconnect();cancelAnimationFrame(frame);window.removeEventListener('resize',schedule);media.removeEventListener('change',schedule);clear();style.remove();};
+ },[role]);
+ 
+ // QRPass compact mobile how it works v3
+ useEffect(()=>{
+ const media=window.matchMedia('(max-width:767px)');
+ const style=document.createElement('style');style.textContent="@media(max-width:767px){\n html body [data-qp-how-panel][data-qp-how-panel]{width:100%!important;max-width:min(360px,calc(100vw - 32px))!important;max-height:calc(100dvh - 40px)!important;min-height:0!important;padding:16px!important;overflow-y:auto!important;box-sizing:border-box!important;}\n html body [data-qp-how-panel] :is(h1,h2,h3){font-size:18px!important;line-height:1.35!important;overflow-wrap:normal!important;word-break:normal!important;}\n html body [data-qp-how-panel] p{font-size:13px!important;line-height:1.5!important;overflow-wrap:break-word!important;word-break:normal!important;}\n html body [data-qp-how-steps]{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important;margin-top:10px!important;}\n html body [data-qp-how-step]{padding:10px!important;margin:0!important;min-width:0!important;min-height:0!important;}\n html body [data-qp-how-subtitle]{display:none!important;}\n html body [data-qp-how-header-copy]{flex:1 1 0%!important;min-width:0!important;width:auto!important;}\n html body [data-qp-how-row]{display:flex!important;flex-direction:row!important;align-items:center!important;gap:10px!important;padding:0!important;}\n html body [data-qp-how-number]{width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;flex:0 0 30px!important;font-size:13px!important;}\n html body [data-qp-how-copy]{flex:1 1 0%!important;min-width:0!important;width:auto!important;text-align:left!important;}\n html body [data-qp-how-copy] :is(p,h3,h4){margin-top:0!important;margin-bottom:3px!important;text-align:left!important;}\n }";document.head.appendChild(style);
+ const attrs=['data-qp-how-panel','data-qp-how-steps','data-qp-how-step','data-qp-how-row','data-qp-how-number','data-qp-how-copy','data-qp-how-subtitle','data-qp-how-header-copy'];
+ const clear=()=>{for(const a of attrs)document.querySelectorAll('['+a+']').forEach(e=>e.removeAttribute(a));};
+ const mark=(e:Element,a:string)=>e.setAttribute(a,'true');
+ const update=()=>{clear();if(!media.matches)return;
+ for(const heading of Array.from(document.querySelectorAll('h1,h2,h3,h4'))){
+ if(!/^how\s+.+?\s+works?[.!]?$/i.test((heading.textContent||'').trim()))continue;
+ const overlay=heading.closest('.fixed.inset-0,[role=dialog],[aria-modal=true]');if(!overlay)continue;
+ const panel=heading.closest('[data-qp-floating-panel-v1]') || (overlay.matches('[role=dialog],[aria-modal=true]')?overlay:Array.from(overlay.children).find(e=>e.contains(heading)));if(!panel)continue;
+ mark(panel,attrs[0]);
+ // Only the introductory paragraph immediately following the heading, not step descriptions.
+ const headCopy=heading.parentElement;
+ if(headCopy && headCopy!==panel){
+   mark(headCopy,attrs[7]);
+   const after=heading.nextElementSibling;
+   if(after?.matches('p,div,span') && !after.querySelector('h1,h2,h3,h4') && !after.querySelector('button,input'))mark(after,attrs[6]);
+   else if(!after){
+     const next=headCopy.nextElementSibling;
+     if(next?.matches('p,div,span') && !next.querySelector('h1,h2,h3,h4') && !next.querySelector('button,input'))mark(next,attrs[6]);
+   }
+ }
+ else if(heading.nextElementSibling?.matches('p'))mark(heading.nextElementSibling,attrs[6]);
+ for(const n of Array.from(panel.querySelectorAll('div,span'))){
+ if(n.children.length || !/^\d{1,2}$/.test((n.textContent||'').trim()))continue;
+ const row=n.parentElement;if(!row||row.children.length!==2)continue;
+ const copy=Array.from(row.children).find(e=>e!==n);if(!copy||!(copy.textContent||'').trim()||!copy.querySelector('p,h3,h4,span'))continue;
+ const card=row.parentElement; if(!card||card===panel)continue;
+ mark(n,attrs[4]);mark(row,attrs[3]);mark(copy,attrs[5]);
+ if(card.children.length===1){mark(card,attrs[2]);const group=card.parentElement;if(group&&group!==panel&&group.children.length>=2)mark(group,attrs[1]);}else{mark(row,attrs[2]);}
+ }
+ }
+ };
+ let frame=0;const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+ const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,characterData:true});media.addEventListener('change',schedule);window.addEventListener('resize',schedule);schedule();
+ return()=>{observer.disconnect();cancelAnimationFrame(frame);media.removeEventListener('change',schedule);window.removeEventListener('resize',schedule);clear();style.remove();};
+ },[role]);
+ /* QRPASS_MOBILE_PCO_REFRESH_MATCH_CSU_V1 */
+ useEffect(()=>{
+  if(role!=='pco')return;
+  const media=window.matchMedia('(max-width: 767px)');
+  const attr='data-qp-pco-refresh-match';
+  const style=document.createElement('style');style.textContent="@media (max-width:767px) {\n html body .qrpass-main button[data-qp-pco-refresh-match][data-qp-pco-refresh-match][data-qp-pco-refresh-match][data-qp-pco-refresh-match],\n html body .qrpass-main [role=button][data-qp-pco-refresh-match][data-qp-pco-refresh-match][data-qp-pco-refresh-match][data-qp-pco-refresh-match] {\n background:transparent!important;background-color:transparent!important;background-image:none!important;border:0!important;box-shadow:none!important;\n color:#17336d!important;display:flex!important;justify-content:center!important;align-items:center!important;gap:8px!important;text-align:center!important;font-weight:500!important;min-height:44px!important;box-sizing:border-box!important;\n }\n html.dark body .qrpass-main [data-qp-pco-refresh-match][data-qp-pco-refresh-match][data-qp-pco-refresh-match][data-qp-pco-refresh-match] {color:#bfdbfe!important;}\n html body .qrpass-main [data-qp-pco-refresh-match] svg {width:16px!important;height:16px!important;flex-shrink:0!important;color:inherit!important;}\n html body .qrpass-main [data-qp-pco-refresh-match]:focus-visible {outline:2px solid #5278e7!important;outline-offset:2px!important;}\n html body .qrpass-main [data-qp-pco-refresh-match]:disabled {opacity:.55;}\n html body .qrpass-main [data-qp-pco-refresh-match] > :is(span,div) {background:transparent!important;color:inherit!important;box-shadow:none!important;}\n }";document.head.appendChild(style);
+  const clear=()=>document.querySelectorAll('['+attr+']').forEach(el=>el.removeAttribute(attr));
+  let frame=0;
+  const update=()=>{
+   clear();if(!media.matches)return;
+   const main=document.querySelector('.qrpass-main');if(!main)return;
+   for(const btn of main.querySelectorAll<HTMLElement>('button,[role=button]')){
+    if(btn.closest('[role=dialog],[data-qrpass-manage-logs-overlay],.fixed.inset-0'))continue;
+    const text=(btn.textContent||'').replace(/\s+/g,' ').trim();
+    if(!/^refresh(?:ing)?(?:\.{3}|…)?$/i.test(text))continue;
+    btn.setAttribute(attr,'true');
+   }
+  };
+  const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+  const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+  media.addEventListener('change',schedule);schedule();
+  return()=>{observer.disconnect();cancelAnimationFrame(frame);media.removeEventListener('change',schedule);clear();style.remove();};
+ },[role]);
+ /* QRPASS_MOBILE_PCO_REFRESH_MATCH_CSU_V2 */
+ useEffect(()=>{
+  if(role!=='pco')return;
+  const media=window.matchMedia('(max-width: 767px)');
+  const saved=new globalThis.Map<HTMLElement,globalThis.Map<string,[string,string]>>();
+  const rules:Record<string,string>={'background-color':'transparent','background-image':'none','border-color':'transparent','box-shadow':'none'};
+  const restore=(el:HTMLElement)=>{const props=saved.get(el);if(!props)return;for(const [k,[v,p]] of props){if(v)el.style.setProperty(k,v,p);else el.style.removeProperty(k);}saved.delete(el);};
+  const apply=(el:HTMLElement)=>{let props=saved.get(el);if(!props){props=new globalThis.Map();saved.set(el,props);}for(const [k,v] of Object.entries(rules)){if(!props.has(k))props.set(k,[el.style.getPropertyValue(k),el.style.getPropertyPriority(k)]);if(el.style.getPropertyValue(k)!==v||el.style.getPropertyPriority(k)!=='important')el.style.setProperty(k,v,'important');}};
+  let frame=0;
+  const update=()=>{
+   const targets=new globalThis.Set<HTMLElement>();
+   const main=document.querySelector('.qrpass-main')||document.querySelector('main');
+   if(media.matches&&main){for(const btn of main.querySelectorAll<HTMLElement>('button,[role=button]')){
+    if(btn.closest('[role=dialog],[data-qrpass-manage-logs-overlay],.fixed.inset-0'))continue;
+    const label=(btn.textContent||'').replace(/\s+/g,' ').trim();
+    if(!/^refresh(?:ing)?(?:\.{3}|…)?$/i.test(label)&&!/^refresh$/i.test(btn.getAttribute('aria-label')||btn.getAttribute('title')||''))continue;
+    targets.add(btn);
+   }}
+   for(const el of saved.keys())if(!targets.has(el))restore(el);
+   for(const el of targets)apply(el);
+  };
+  const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+  const observer=new MutationObserver(records=>{if(records.some(r=>r.type!=='attributes'||(r.target instanceof HTMLElement&&saved.has(r.target)&&Object.entries(rules).some(([k,v])=>r.target instanceof HTMLElement&&(r.target.style.getPropertyValue(k)!==v||r.target.style.getPropertyPriority(k)!=='important')))))schedule();});
+  observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style']});
+  media.addEventListener('change',schedule);schedule();
+  return()=>{observer.disconnect();cancelAnimationFrame(frame);media.removeEventListener('change',schedule);for(const el of saved.keys())restore(el);};
+ },[role]);
+ 
+  useEffect(() => {
+    if (role !== "sysadmin") return;
+    const media = window.matchMedia('(max-width:767px)');
+    const saved = new globalThis.Map<HTMLElement, globalThis.Map<string, [string,string]>>();
+    let frame=0;
+    const put=(el:HTMLElement,k:string,v:string)=>{
+      if(!saved.has(el)) saved.set(el,new globalThis.Map<string,[string,string]>());
+      const m=saved.get(el)!;
+      if(!m.has(k))m.set(k,[el.style.getPropertyValue(k),el.style.getPropertyPriority(k)]);
+      if(el.style.getPropertyValue(k)!==v || el.style.getPropertyPriority(k)!=='important')el.style.setProperty(k,v,'important');
+    };
+    const restore=()=>{for(const [el,m] of saved){for(const [k,[v,p]] of m){if(v)el.style.setProperty(k,v,p);else el.style.removeProperty(k);}}saved.clear();};
+    const apply=()=>{
+      if(!media.matches){restore();return;}
+      for(const el of saved.keys())if(!el.isConnected)saved.delete(el);
+      document.querySelectorAll<HTMLElement>('.qrpass-main [data-qrpass-users-responsive-v95="true"] table[data-qrpass-user-accounts-fit-v95="true"] > tbody > tr > td:nth-child(7):last-child').forEach(cell=>{
+        const buttons=Array.from(cell.querySelectorAll<HTMLButtonElement>('button'));
+        if(buttons.length!==3)return;
+        const set=(el:HTMLElement,props:Record<string,string>)=>Object.entries(props).forEach(([k,v])=>put(el,k,v));
+        set(cell,{'display':'grid','grid-template-columns':'repeat(3,minmax(0,1fr))','width':'100%','max-width':'none','min-width':'0','gap':'6px','justify-items':'stretch','align-items':'stretch'});
+        buttons.forEach(b=>{
+          for(let w=b.parentElement;w&&w!==cell;w=w.parentElement)put(w,'display','contents');
+          set(b,{'display':'flex','grid-row':'2','width':'100%','min-width':'0','max-width':'none','height':'44px','min-height':'44px','max-height':'44px','padding':'0 3px','margin':'0','justify-content':'center','align-items':'center','box-sizing':'border-box','font-size':'12px','white-space':'nowrap'});
+        });
+      });
+    };
+    const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(apply);};
+    const obs=new MutationObserver(schedule);obs.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style']});
+    media.addEventListener('change',schedule);schedule();
+    return()=>{obs.disconnect();cancelAnimationFrame(frame);media.removeEventListener('change',schedule);restore();};
+  },[role]);
+
+  // QRPass SysAdmin mobile v1
+  useEffect(() => {
+    if (role !== "sysadmin") return;
+    const html = document.documentElement;
+    html.setAttribute("data-qrpass-admin-mobile", "true");
+    const mobileStyle = document.createElement("style");
+    mobileStyle.textContent = "\n@media (max-width: 767px) {\n  html[data-qrpass-admin-mobile] .qrpass-main { padding: 12px !important; min-width: 0; overscroll-behavior-y: contain; }\n  html[data-qrpass-admin-mobile] header:has(+ div aside) { gap: 6px; min-width: 0; }\n  html[data-qrpass-admin-mobile] header:has(+ div aside) button { min-height: 44px; min-width: 40px; }\n  html[data-qrpass-admin-mobile] header:has(+ div aside) > div { min-width: 0; }\n  html[data-qrpass-admin-mobile] aside:has(nav) { height: calc(100dvh - 48px) !important; max-width: 88vw; }\n  html[data-qrpass-admin-mobile] aside:has(nav):not([style*=\"width: 0px\"]):not([style*=\"width:0px\"]) { width: min(280px, 88vw) !important; }\n  html[data-qrpass-admin-mobile] aside nav button { min-height: 48px; white-space: normal; }\n  html[data-qrpass-admin-mobile] aside nav button .truncate { white-space: normal; overflow: visible; }\n  html[data-qrpass-admin-mobile] .qrpass-main > * { min-width: 0; max-width: 100%; }\n  html[data-qrpass-admin-mobile] .qrpass-main :is(.grid-cols-3,.grid-cols-4,.grid-cols-5,.grid-cols-6) { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }\n  html[data-qrpass-admin-mobile] .qrpass-main .grid > * { min-width: 0; }\n  html[data-qrpass-admin-mobile] .qrpass-main .grid > * :is(h1,h2,h3,p) { overflow-wrap: anywhere; }\n  html[data-qrpass-admin-mobile] .qrpass-main :is(h1,h2) { overflow-wrap: anywhere; }\n  html[data-qrpass-admin-mobile] .qrpass-main :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]), select, textarea) { max-width: 100%; font-size: 16px !important; }\n  html[data-qrpass-admin-mobile] .qrpass-main :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]), select, button) { min-height: 44px; }\n  html[data-qrpass-admin-mobile] .qrpass-main .flex:has(> input):not(:has(> svg)) { flex-wrap: wrap; min-width: 0; }\n  html[data-qrpass-admin-mobile] .qrpass-main .flex:has(> input[type=search]),\n  html[data-qrpass-admin-mobile] .qrpass-main .flex:has(> input[placeholder*=\"Search\" i]) { width: 100%; min-width: 0; max-width: 100%; }\n  html[data-qrpass-admin-mobile] .qrpass-main .flex:has(> select) { flex-wrap: wrap; }\n  html[data-qrpass-admin-mobile] .qrpass-main .flex:has(> .relative > input[placeholder*=\"Search\" i]) { flex-wrap: wrap; }\n  html[data-qrpass-admin-mobile] .qrpass-main .flex:has(> .relative > input[placeholder*=\"Search\" i]) > .relative:has(> input) { flex: 1 1 100%; width: 100%; min-width: 0; }\n  html[data-qrpass-admin-mobile] .qrpass-main :is(div,section):has(> table) { max-width: 100%; min-width: 0; overflow-x: auto !important; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }\n  html[data-qrpass-admin-mobile] .qrpass-main table { width: 100%; min-width: 560px; }\n  html[data-qrpass-admin-mobile] .qrpass-main table :is(th,td) { white-space: nowrap; }\n  html[data-qrpass-admin-mobile] :is([role=dialog],[data-qrpass-manage-logs-overlay] > div) { max-width: calc(100vw - 24px) !important; max-height: calc(100dvh - 24px) !important; overflow-y: auto !important; overscroll-behavior: contain; }\n  html[data-qrpass-admin-mobile] .fixed.inset-0:has(> div.rounded-2xl) { padding: 12px !important; }\n  html[data-qrpass-admin-mobile] .fixed.inset-0 > div.rounded-2xl { max-width: 100% !important; max-height: calc(100dvh - 24px) !important; overflow-y: auto !important; }\n  html[data-qrpass-admin-mobile] :is([role=dialog],.fixed.inset-0 > div.rounded-2xl) :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea) { font-size: 16px !important; max-width: 100%; }\n  html[data-qrpass-admin-mobile] :is([role=dialog],.fixed.inset-0 > div.rounded-2xl) button { min-height: 44px; }\n}\n@media (max-width: 359px) {\n  html[data-qrpass-admin-mobile] .qrpass-main :is(.grid-cols-2,.grid-cols-3,.grid-cols-4,.grid-cols-5,.grid-cols-6) { grid-template-columns: minmax(0,1fr) !important; }\n}\n";
+    /* QRPASS_MOBILE_ORGANIZED_USER_CARDS_V1 */
+    mobileStyle.textContent += "@media (max-width: 767px) {\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:12px 14px !important; padding:16px !important; text-align:left !important; }\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) > td { display:flex !important; flex-direction:column !important; align-items:flex-start !important; justify-content:flex-start !important; text-align:left !important; width:auto !important; min-width:0 !important; max-width:100% !important; padding:0 !important; margin:0 !important; gap:5px !important; white-space:normal !important; overflow-wrap:anywhere !important; grid-column:auto !important; grid-row:auto !important; }\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) > td::before { text-align:left !important; align-self:flex-start !important; margin:0 !important; }\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) > td:nth-child(1) { grid-area:1 / 1 / 2 / 3 !important; border-bottom:1px solid #e5eaf2 !important; padding-bottom:12px !important; }\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) > td:nth-child(2) { grid-area:2 / 1 / 3 / 2 !important; }\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) > td:nth-child(3) { grid-area:3 / 1 / 4 / 3 !important; }\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) > td:nth-child(4) { grid-area:2 / 2 / 3 / 3 !important; }\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) > td:nth-child(5) { grid-area:4 / 1 / 5 / 2 !important; }\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) > td:nth-child(6) { grid-area:4 / 2 / 5 / 3 !important; }\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) > td:nth-child(7) { grid-area:5 / 1 / 6 / 3 !important; align-items:center !important; text-align:center !important; border-top:1px solid #e5eaf2 !important; padding-top:12px !important; }\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) > td:nth-child(7)::before { align-self:center !important; text-align:center !important; width:100% !important; }\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) > td:nth-child(7) :is(div,span):has(> button) { display:flex !important; justify-content:center !important; align-items:center !important; flex-wrap:wrap !important; gap:6px !important; width:100% !important; }\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr:has(> td:nth-child(7)):not(:has(> td:nth-child(8))) > td:nth-child(7) button { flex:1 1 0 !important; min-width:0 !important; max-width:100% !important; min-height:44px !important; height:44px !important; padding:4px 6px !important; font-size:12px !important; justify-content:center !important; text-align:center !important; }\n }";
+    
+    
+    /* QRPASS_MOBILE_EQUAL_USER_ACTIONS_V5 */
+    mobileStyle.textContent += "@media (max-width:767px){\n:is(#qrpass-v5-specificity,html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr > td:nth-child(7):last-child):nth-child(7):last-child{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:auto!important;grid-column:1/-1!important;width:100%!important;max-width:none!important;min-width:0!important;justify-self:stretch!important;align-items:stretch!important;justify-items:stretch!important;gap:6px!important;box-sizing:border-box!important;}\n:is(#qrpass-v5-specificity,html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr > td:nth-child(7):last-child):nth-child(7):last-child::before{grid-column:1/-1!important;grid-row:1!important;text-align:center!important;width:100%!important;}\n:is(#qrpass-v5-specificity,html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr > td:nth-child(7):last-child):nth-child(7):last-child :is(div,span):has(button){display:contents!important;}\n:is(#qrpass-v5-specificity,html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-users-responsive-v95=\"true\"] table[data-qrpass-user-accounts-fit-v95=\"true\"] > tbody > tr > td:nth-child(7):last-child):nth-child(7):last-child button{display:flex!important;grid-row:2!important;grid-column:auto!important;width:100%!important;min-width:0!important;max-width:none!important;height:44px!important;min-height:44px!important;max-height:44px!important;margin:0!important;padding:0 3px!important;box-sizing:border-box!important;align-items:center!important;justify-content:center!important;justify-self:stretch!important;white-space:nowrap!important;font-size:12px!important;}\n}";
+    /* QRPASS_USER_TOOLBAR_MATCH_AUDIT_V1 */
+    mobileStyle.textContent += "@media(max-width:767px){\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-user-toolbar-match-audit]{padding-inline:0!important;padding-block:0!important;border-bottom:0!important;box-sizing:border-box!important;width:100%!important;max-width:none!important;min-width:0!important;gap:12px!important;}\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-user-toolbar-match-audit] input[aria-label=\"Search user accounts\"]{width:100%!important;height:48px!important;min-height:48px!important;max-height:48px!important;box-sizing:border-box!important;}\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-user-toolbar-match-audit] :is([data-qp-ut2-control],button[data-qrpass-mobile-add-user],button[data-qrpass-user-filter-center]){width:100%!important;min-width:0!important;max-width:none!important;height:48px!important;min-height:48px!important;max-height:48px!important;box-sizing:border-box!important;}\n html[data-qrpass-admin-mobile] .qrpass-main [data-qrpass-user-toolbar-match-audit] [data-qp-ut2-wrap]{width:100%!important;max-width:none!important;min-width:0!important;}\n }";
+    document.head.appendChild(mobileStyle);
+    const media = window.matchMedia("(max-width: 767px)");
+    const onMobileChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setSidebarOpen(false);
+    };
+    if (media.matches) setSidebarOpen(false);
+    media.addEventListener("change", onMobileChange);
+    return () => {
+      media.removeEventListener("change", onMobileChange);
+      mobileStyle.remove();
+      html.removeAttribute("data-qrpass-admin-mobile");
+    };
+  }, [role]);
+
+  
+
+  /* QRPASS_MOBILE_REFRESH_BUTTONS_V1 */
+  useEffect(() => {
+    const html = document.documentElement;
+    const style = document.createElement("style");
+    style.setAttribute("data-qrpass-mobile-refresh-style", "true");
+    style.textContent = `
+@media (max-width: 767px) {
+  html[data-qrpass-mobile-refresh-buttons="true"] button[data-qrpass-mobile-refresh-btn="true"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 44px !important;
+    height: 56px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 0 16px !important;
+    border-radius: 14px !important;
+    text-align: center !important;
+    margin: 0 !important;
+  }
+
+  html[data-qrpass-mobile-refresh-buttons="true"] button[data-qrpass-mobile-refresh-btn="true"] > * {
+    text-align: center !important;
+  }
+
+  html[data-qrpass-mobile-refresh-buttons="true"] button[data-qrpass-mobile-refresh-btn="true"] svg {
+    flex-shrink: 0 !important;
+  }
+
+  html[data-qrpass-mobile-refresh-buttons="true"] button[data-qrpass-mobile-refresh-btn="true"] span,
+  html[data-qrpass-mobile-refresh-buttons="true"] button[data-qrpass-mobile-refresh-btn="true"] div,
+  html[data-qrpass-mobile-refresh-buttons="true"] button[data-qrpass-mobile-refresh-btn="true"] p {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  html[data-qrpass-mobile-refresh-buttons="true"] .qrpass-main button[data-qrpass-mobile-refresh-btn="true"] {
+    flex: 1 1 100% !important;
+  }
+}
+`;
+    document.head.appendChild(style);
+    html.setAttribute("data-qrpass-mobile-refresh-buttons", "true");
+
+    let frame = 0;
+    const attr = 'data-qrpass-mobile-refresh-btn';
+
+    const labelOf = (el) => (el.textContent || '').replace(/s+/g, ' ').trim().toLowerCase();
+
+    const apply = () => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      buttons.forEach((button) => {
+        const text = labelOf(button);
+        const isRefresh = text === 'refresh' || text.endsWith(' refresh') || text.includes(' refresh ');
+        if (isRefresh) {
+          button.setAttribute(attr, 'true');
+        }
+      });
+    };
+
+    const schedule = () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(apply);
+    };
+
+    schedule();
+
+    const observer = new MutationObserver(schedule);
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener('resize', schedule, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('resize', schedule);
+      style.remove();
+      html.removeAttribute('data-qrpass-mobile-refresh-buttons');
+    };
+  }, []);
+
+  /* QRPASS_MOBILE_ALL_STATS_V1 */
+  useEffect(() => {
+    const style=document.createElement('style');
+    style.textContent="@media(max-width:767px){\n .qrpass-main [data-qrpass-stat-mobile] {display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;gap:8px!important;min-width:0!important;min-height:140px!important;box-sizing:border-box!important;padding:12px!important;}\n .qrpass-main [data-qrpass-stat-mobile] > * {min-width:0!important;max-width:100%!important;flex-shrink:0!important;}\n .qrpass-main [data-qrpass-stat-body] {width:100%!important;text-align:center!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:4px!important;}\n .qrpass-main [data-qrpass-stat-label] {white-space:normal!important;overflow-wrap:normal!important;word-break:normal!important;text-align:center!important;font-size:12px!important;line-height:1.35!important;max-width:100%!important;}\n .qrpass-main [data-qrpass-stat-value] {text-align:center!important;white-space:normal!important;overflow-wrap:anywhere!important;line-height:1.2!important;}\n .qrpass-main [data-qrpass-stat-icon] {flex-shrink:0!important;margin:0!important;}\n }";
+    document.head.appendChild(style);
+    const media=window.matchMedia('(max-width:767px)');
+    const attrs=['data-qrpass-stat-mobile','data-qrpass-stat-body','data-qrpass-stat-label','data-qrpass-stat-value','data-qrpass-stat-icon'];
+    let frame=0;
+    const clear=()=>{document.querySelectorAll(attrs.map(a=>'['+a+']').join(',')).forEach(e=>attrs.forEach(a=>e.removeAttribute(a)));};
+    const update=()=>{
+      clear(); if(!media.matches)return;
+      const main=document.querySelector('.qrpass-main');if(!main)return;
+      const norm=(e:Element)=>(e.textContent||'').replace(/\s+/g,' ').trim();
+      const numeric=/^(?:[₱$€£]\s*)?[-+]?\d[\d,.]*(?:\s*(?:%|ms|s|GB|MB|KB|K|M|B|\/\d+))?$/i;
+      for(const card of Array.from(main.querySelectorAll<HTMLElement>('div.flex,section.flex,article.flex'))){
+        if(card.children.length!==2||card.closest('table,[role=dialog],form,button,a'))continue;
+        const parts=Array.from(card.children);
+        const icon=parts.find(e=>!!e.querySelector('svg')&&!norm(e));
+        if(!icon)continue;
+        const body=parts.find(e=>e!==icon);if(!body||body.querySelector('svg,button,a,input,select,table'))continue;
+        const leaves=Array.from(body.querySelectorAll('p,span,h1,h2,h3,h4,h5,h6,div,strong')).filter(e=>e.children.length===0&&!!norm(e));
+        const value=leaves.find(e=>numeric.test(norm(e)));if(!value)continue;
+        const label=leaves.find(e=>e!==value&&/^[\p{L}][\p{L}\p{N} ()&/–-]{1,55}$/u.test(norm(e))&&!numeric.test(norm(e)));if(!label)continue;
+        // Only compact metric cards: no descriptions, links, actions or tables.
+        if(leaves.length>3||norm(body).length>100)continue;
+        const grid=card.parentElement?.closest('.grid');
+        if(!grid||!main.contains(grid))continue;
+        card.setAttribute(attrs[0],'true');body.setAttribute(attrs[1],'true');label.setAttribute(attrs[2],'true');value.setAttribute(attrs[3],'true');icon.setAttribute(attrs[4],'true');
+      }
+    };
+    const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};
+    const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+    media.addEventListener('change',schedule);schedule();
+    return()=>{observer.disconnect();cancelAnimationFrame(frame);media.removeEventListener('change',schedule);clear();style.remove();};
+  }, []);
+  
+
+  
+
+
+  /* QRPASS_LOGIN_REMEMBER_FORGOT_ALIGN_V1 */
+  useEffect(() => {
+    const html = document.documentElement;
+    const style = document.createElement("style");
+    style.setAttribute("data-qrpass-login-remember-forgot-style", "true");
+    style.textContent = `
+html[data-qrpass-login-remember-forgot="true"] [data-qrpass-login-remember-forgot-row="true"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+html[data-qrpass-login-remember-forgot="true"] [data-qrpass-login-remember-wrap="true"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+html[data-qrpass-login-remember-forgot="true"] [data-qrpass-login-forgot-wrap="true"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  text-align: right !important;
+  margin-left: auto !important;
+  flex: 0 0 auto !important;
+  min-width: fit-content !important;
+  white-space: nowrap !important;
+}
+
+html[data-qrpass-login-remember-forgot="true"] [data-qrpass-login-remember-wrap="true"] label,
+html[data-qrpass-login-remember-forgot="true"] [data-qrpass-login-remember-wrap="true"] span,
+html[data-qrpass-login-remember-forgot="true"] [data-qrpass-login-remember-wrap="true"] p {
+  margin: 0 !important;
+  text-align: left !important;
+}
+
+html[data-qrpass-login-remember-forgot="true"] [data-qrpass-login-forgot-wrap="true"] a,
+html[data-qrpass-login-remember-forgot="true"] [data-qrpass-login-forgot-wrap="true"] button,
+html[data-qrpass-login-remember-forgot="true"] [data-qrpass-login-forgot-wrap="true"] span,
+html[data-qrpass-login-remember-forgot="true"] [data-qrpass-login-forgot-wrap="true"] p {
+  margin: 0 !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+}
+`;
+    document.head.appendChild(style);
+    html.setAttribute("data-qrpass-login-remember-forgot", "true");
+
+    let frame = 0;
+    const textOf = (el) => ((el?.textContent || '') + '').replace(/s+/g, ' ').trim().toLowerCase();
+
+    const clearMarkers = () => {
+      document.querySelectorAll('[data-qrpass-login-remember-forgot-row="true"]').forEach((el) => el.removeAttribute('data-qrpass-login-remember-forgot-row'));
+      document.querySelectorAll('[data-qrpass-login-remember-wrap="true"]').forEach((el) => el.removeAttribute('data-qrpass-login-remember-wrap'));
+      document.querySelectorAll('[data-qrpass-login-forgot-wrap="true"]').forEach((el) => el.removeAttribute('data-qrpass-login-forgot-wrap'));
+    };
+
+    const apply = () => {
+      clearMarkers();
+
+      const all = Array.from(document.querySelectorAll('label, span, p, a, button, div'));
+      let rememberEl = null;
+      let forgotEl = null;
+
+      for (const el of all) {
+        const txt = textOf(el);
+        if (!rememberEl && txt === 'remember me') rememberEl = el;
+        if (!forgotEl && txt === 'forgot password?') forgotEl = el;
+        if (rememberEl && forgotEl) break;
+      }
+
+      if (!rememberEl || !forgotEl) return;
+
+      const rememberWrap = rememberEl.closest('label, div, p, span') || rememberEl.parentElement;
+      const forgotWrap = forgotEl.closest('a, button, div, p, span') || forgotEl.parentElement;
+      if (!(rememberWrap instanceof HTMLElement) || !(forgotWrap instanceof HTMLElement)) return;
+
+      let row = rememberWrap.parentElement;
+      if (!(row instanceof HTMLElement)) return;
+
+      const sameParent = forgotWrap.parentElement === row;
+      if (!sameParent) {
+        const common = [rememberWrap, rememberWrap.parentElement, rememberWrap.parentElement?.parentElement].find((candidate) => candidate instanceof HTMLElement && candidate.contains(forgotWrap));
+        if (common instanceof HTMLElement) row = common;
+      }
+
+      row.setAttribute('data-qrpass-login-remember-forgot-row', 'true');
+      rememberWrap.setAttribute('data-qrpass-login-remember-wrap', 'true');
+      forgotWrap.setAttribute('data-qrpass-login-forgot-wrap', 'true');
+    };
+
+    const schedule = () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(apply);
+    };
+
+    schedule();
+
+    const observer = new MutationObserver(schedule);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+    window.addEventListener('resize', schedule, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('resize', schedule);
+      clearMarkers();
+      style.remove();
+      html.removeAttribute('data-qrpass-login-remember-forgot');
+    };
+  }, []);
+const roleInfo =
     ROLES.find((r) => r.id === role)!;
 
   const ActivePage =
@@ -28231,12 +29279,13 @@ const handleSaveAccountProfile = async () => {
                         Notifications
                       </p>
 
-                      <p className="mt-0.5 text-[11px] text-[#64748b] dark:text-slate-400">
+                      <p data-qrpass-mobile-notification-subheader-hidden="true" className="mt-0.5 text-[11px] text-[#64748b] dark:text-slate-400">
                         {unreadNotificationCount} unread{" "}
                         {unreadNotificationCount === 1
                           ? "notification"
                           : "notifications"}
                       </p>
+<style>{"@media (max-width: 767px) { html body p[data-qrpass-mobile-notification-subheader-hidden] { display:none!important; } }"}</style>
                     </div>
 
                     {unreadNotificationCount > 0 && (
@@ -28735,8 +29784,8 @@ const handleSaveAccountProfile = async () => {
 
 
                 {/* NOTIFICATION FOOTER */}
-                <div className="flex items-center justify-between gap-3 border-t border-[#e5eaf2] bg-[#fbfcfe] px-4 py-2.5 dark:border-[#29415f] dark:bg-[#13243c]">
-                  <span className="text-[10px] text-[#64748b] dark:text-slate-400">
+                <div data-qp-notification-footer-v2="true" className="flex items-center justify-between gap-3 border-t border-[#e5eaf2] bg-[#fbfcfe] px-4 py-2.5 dark:border-[#29415f] dark:bg-[#13243c]">
+                  <span data-qp-notification-count-v2="true" className="text-[10px] text-[#64748b] dark:text-slate-400">
                     Showing{" "}
                     <span className="font-semibold text-[#111827] dark:text-slate-100">
                       {
@@ -28751,7 +29800,7 @@ const handleSaveAccountProfile = async () => {
                     </span>
                   </span>
 
-                  <button data-qrpass-notification-refresh-v203="true"
+                  <button data-qp-notification-refresh-v2="true" data-qrpass-notification-refresh-v203="true"
                     type="button"
                     onClick={() =>
                       loadHeaderNotifications(
@@ -28776,6 +29825,7 @@ const handleSaveAccountProfile = async () => {
                       ? "Refreshing..."
                       : "Refresh"}
                   </button>
+<style>{"@media (max-width: 767px) {\nhtml body [data-qp-notification-footer-v2][data-qp-notification-footer-v2] {display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;padding:8px 12px!important;min-width:0!important;flex-shrink:0!important;box-sizing:border-box!important;}\nhtml body [data-qp-notification-footer-v2] > [data-qp-notification-count-v2] {display:block!important;white-space:nowrap!important;width:auto!important;max-width:100%!important;flex:none!important;margin:0!important;text-align:left!important;font-size:12px!important;line-height:1.4!important;}\nhtml body [data-qp-notification-footer-v2] > [data-qp-notification-refresh-v2][data-qp-notification-refresh-v2] {display:inline-flex!important;visibility:visible!important;opacity:1!important;color:#17336d!important;-webkit-text-fill-color:currentColor!important;background:transparent!important;border:0!important;box-shadow:none!important;align-items:center!important;justify-content:center!important;gap:7px!important;width:auto!important;min-width:0!important;max-width:100%!important;min-height:44px!important;height:44px!important;flex:none!important;align-self:center!important;margin:0 0 0 auto!important;padding:6px 4px!important;text-align:center!important;white-space:nowrap!important;font-size:14px!important;line-height:1.2!important;font-weight:500!important;}\nhtml body [data-qp-notification-footer-v2] > [data-qp-notification-refresh-v2] svg {color:inherit!important;stroke:currentColor!important;width:16px!important;height:16px!important;flex-shrink:0!important;}\nhtml.dark body [data-qp-notification-footer-v2] > [data-qp-notification-refresh-v2][data-qp-notification-refresh-v2] {color:#bfdbfe!important;}\nhtml body [data-qp-notification-footer-v2] > [data-qp-notification-refresh-v2][data-qp-notification-refresh-v2]:disabled {opacity:.75!important;cursor:wait;}\nhtml body [data-qp-notification-refresh-v2]:focus-visible {outline:2px solid #5278e7!important;outline-offset:2px!important;}\n}\n/* QRPASS_NOTIFICATION_FOOTER_ALIGN_V3 */"}</style>
                 </div>
               </div>
             )}
